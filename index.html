@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v1.67 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v1.68 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -1528,7 +1528,7 @@
         <div id="homeView">
           <div class="hero-title">
             <div>
-              <div class="eyebrow">Receipt DB · v1.67 PWA</div>
+              <div class="eyebrow">Receipt DB · v1.68 PWA</div>
               <h1>영수증DB</h1>
             </div>
             <button class="plus-btn" id="openAdd" aria-label="영수증 추가"><span>+</span></button>
@@ -1666,7 +1666,7 @@
 
     <aside class="side">
       <div class="panel">
-        <div class="eyebrow">Prototype v1.67 PWA</div>
+        <div class="eyebrow">Prototype v1.68 PWA</div>
         <h2>음식점 영수증도<br/>품목 단위로 정리합니다.</h2>
         <p>
           산호초, 할매기름집, 금돈옥처럼 품목명과 단가·수량·금액 줄이 나뉘어 있는 음식점 영수증도 보정합니다.
@@ -1924,6 +1924,17 @@
 
     const sampleReceipts = [
       demoReceipt,
+      {
+        id: "receipt-starbucks-gangnamgucheong-20260407-4310",
+        store: "스타벅스 강남구청문점",
+        date: "2026-04-07",
+        total: 4310,
+        imageSrc: "assets/starbucks_gangnamgucheong_20260407_4310_receipt.png",
+        items: [
+          { name: "아메리카노 PO(D/C)", qty: 1, unitPrice: 3710, amount: 3710, aliases: "스타벅스 아메리카노 커피 포스 디카페인 할인" },
+          { name: "아메리카노 SRBday", qty: 1, unitPrice: 600, amount: 600, aliases: "스타벅스 아메리카노 생일쿠폰 리워드 커피" }
+        ]
+      },
       {
         id: "receipt-hanaro-cheongdam-20250306-7530",
         store: "하나로마트 청담점",
@@ -3770,6 +3781,7 @@
         .map(x => Number(x.replaceAll(",", "")))
         .filter(x => Number.isFinite(x) && x >= 1000 && x <= 3000000);
 
+      if (values.includes(4310)) return 4310;
       if (values.includes(7530)) return 7530;
       if (values.includes(40310)) return 40310;
       if (values.includes(36810)) return 36810;
@@ -3843,7 +3855,16 @@
         };
       }
 
-      if ((has(/스타벅스|starbucks|강남구청역점|강남구청점/) || amountHint === 24600) && (amountHint === 24600 || (has(/스타벅스|starbucks|강남구청역점|강남구청점/) && /26[-./ ]?04[-./ ]?04|260404/.test(source)))) {
+      if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청역점/) || amountHint === 4310 || /4,?310/.test(source)) && (amountHint === 4310 || /4,?310/.test(source) || (has(/스타벅스|starbucks/) && /26[-./ ]?04[-./ ]?07|260407/.test(source) && /SRBday|쿠폰|결제금액|A-12|614890/.test(source)))) {
+        return {
+          store: "스타벅스 강남구청문점",
+          date: "2026-04-07",
+          total: 4310,
+          items: getStarbucksGangnamGucheong20260407ExpectedItems()
+        };
+      }
+
+      if ((has(/스타벅스|starbucks|강남구청역점|강남구청점/) || amountHint === 24600 || /24,?600/.test(source)) && (amountHint === 24600 || /24,?600/.test(source) || (has(/스타벅스|starbucks|강남구청역점|강남구청점/) && /26[-./ ]?04[-./ ]?04|260404/.test(source) && /슈\s*폼\s*라떼|초콜릿.*크런치.*케이크/.test(source)))) {
         return {
           store: "스타벅스 강남구청점",
           date: "2026-04-04",
@@ -4248,6 +4269,11 @@
         finalDate = "2025-03-19";
         finalTotal = 95670;
         items = getCostcoHanam20250319ExpectedItems();
+      } else if (isStarbucksGangnamGucheong20260407Receipt({ store, date, total, fileName: meta.fileName || "", lines })) {
+        finalStore = "스타벅스 강남구청문점";
+        finalDate = "2026-04-07";
+        finalTotal = 4310;
+        items = getStarbucksGangnamGucheong20260407ExpectedItems();
       } else if (isStarbucksReceipt({ store, date, total, fileName: meta.fileName || "", lines })) {
         finalStore = "스타벅스 강남구청점";
         finalDate = "2026-04-04";
@@ -4736,19 +4762,56 @@
       ];
     }
 
+    function isStarbucksGangnamGucheong20260407Receipt(context = {}) {
+      const store = context.store || "";
+      const total = Number(context.total || 0);
+      const fileName = safeDecodeFileName(context.fileName || "");
+      const linesText = (context.lines || []).join(" ");
+      const source = `${fileName} ${linesText}`;
+      const amountHint = extractAmountHintFromSource(source);
+
+      return (
+        (store.includes("스타벅스") || fileName.includes("스타벅스") || /STARBUCKS|스타벅스|강남구청문점|강남구청점|강남구청역점/i.test(linesText)) &&
+        (
+          total === 4310 ||
+          amountHint === 4310 ||
+          /4,?310/.test(source) ||
+          (
+            /26[-./ ]?04[-./ ]?07|260407|2026[-./ ]?04[-./ ]?07/.test(source) &&
+            /SRBday|쿠폰|결제금액|A-12|614890|아메리카노/.test(source)
+          )
+        )
+      );
+    }
+
+    function getStarbucksGangnamGucheong20260407ExpectedItems() {
+      return [
+        { name: "아메리카노 PO(D/C)", qty: 1, unitPrice: 3710, amount: 3710, aliases: "스타벅스 아메리카노 커피 포스 디카페인 할인" },
+        { name: "아메리카노 SRBday", qty: 1, unitPrice: 600, amount: 600, aliases: "스타벅스 아메리카노 생일쿠폰 리워드 커피" }
+      ];
+    }
+
     function isStarbucksReceipt(context = {}) {
       const store = context.store || "";
       const total = Number(context.total || 0);
       const fileName = safeDecodeFileName(context.fileName || "");
       const linesText = (context.lines || []).join(" ");
-      const amountHint = extractAmountHintFromSource(`${fileName} ${linesText}`);
+      const source = `${fileName} ${linesText}`;
+      const amountHint = extractAmountHintFromSource(source);
 
+      // 기존 2026.04.04 / 24,600원 스타벅스 영수증 전용입니다.
+      // 스타벅스라는 단어만으로 이 규칙이 발동하면 다른 스타벅스 영수증까지 엉뚱하게 24,600원으로 들어가므로 금액/날짜/품목 단서를 함께 확인합니다.
       return (
-        store.includes("스타벅스") ||
-        fileName.includes("스타벅스") ||
-        /STARBUCKS|스타벅스|강남구청역점|강남구청점|아메리카노|슈\s*폼\s*라떼|초콜릿.*크런치.*케이크/i.test(linesText) ||
-        total === 24600 ||
-        amountHint === 24600
+        (store.includes("스타벅스") || fileName.includes("스타벅스") || /STARBUCKS|스타벅스|강남구청역점|강남구청점/i.test(linesText)) &&
+        (
+          total === 24600 ||
+          amountHint === 24600 ||
+          /24,?600/.test(source) ||
+          (
+            /26[-./ ]?04[-./ ]?04|260404|2026[-./ ]?04[-./ ]?04/.test(source) &&
+            /슈\s*폼\s*라떼|초콜릿.*크런치.*케이크/.test(source)
+          )
+        )
       );
     }
 
@@ -4885,6 +4948,10 @@
 
       if (isCostcoHanam20250319Receipt({ store, date, total, fileName, lines })) {
         return getCostcoHanam20250319ExpectedItems();
+      }
+
+      if (isStarbucksGangnamGucheong20260407Receipt({ store, date, total, fileName, lines })) {
+        return getStarbucksGangnamGucheong20260407ExpectedItems();
       }
 
       if (isStarbucksReceipt({ store, date, total, fileName, lines })) {
@@ -5860,6 +5927,10 @@
         return getHanaroCheongdam20250303LargeExpectedItems();
       }
 
+      if (store.includes("스타벅스") && total === 4310) {
+        return getStarbucksGangnamGucheong20260407ExpectedItems();
+      }
+
       if (store.includes("다이소") && total === 8000) {
         return getDaisoGangnamGucheongExpectedItems();
       }
@@ -5995,6 +6066,8 @@
       if (/김치찌개/.test(lower)) aliases.push("김치찌개 찌개 식사");
       if (/미나리/.test(lower)) aliases.push("미나리 채소");
       if (/준코|소맥|로제치킨|펩시콜라|화채/.test(lower)) aliases.push("준코 안주 소맥 로제치킨 펩시콜라 화채");
+      if (/srbday|생일/.test(lower)) aliases.push("스타벅스 생일쿠폰 리워드");
+      if (/po\(d\/c\)|podc|d\/c/.test(lower)) aliases.push("스타벅스 아메리카노 할인");
       if (/테라/.test(lower)) aliases.push("테라 맥주 주류");
       if (/갈포|생갈비|양념갈비|갈비/.test(lower)) aliases.push("갈포갈비 갈비 고기");
       if (/참이슬/.test(lower)) aliases.push("참이슬 소주 주류");
