@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#111113"/>
+  <rect x="92" y="81" width="327" height="348" rx="40" fill="#ffffff"/>
+  <text x="50%" y="47%" text-anchor="middle" font-size="61" font-weight="900" font-family="Arial, sans-serif" fill="#111113">영수증</text>
+  <text x="50%" y="63%" text-anchor="middle" font-size="92" font-weight="900" font-family="Arial, sans-serif" fill="#111113">DB</text>
+</svg>
