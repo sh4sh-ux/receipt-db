@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v1.68 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v1.69 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -879,6 +879,13 @@
       display: block;
     }
 
+    .edit-table .money-input-wrap {
+      position: relative;
+      width: 116px;
+      margin-left: auto;
+      display: block;
+    }
+
     .edit-table .item-unit-input,
     .edit-table .item-amount-input {
       width: 116px;
@@ -886,6 +893,36 @@
       display: block;
       font-variant-numeric: tabular-nums;
       letter-spacing: -0.03em;
+      padding-left: 34px;
+      padding-right: 10px;
+    }
+
+    .minus-toggle {
+      position: absolute;
+      left: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 24px;
+      height: 24px;
+      border-radius: 9px;
+      border: 0;
+      background: #f3f4f8;
+      color: #656872;
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    .minus-toggle.active {
+      background: #fff1f1;
+      color: #ff4d4d;
     }
 
     .edit-table th.th-qty {
@@ -1113,7 +1150,8 @@
     .edit-table input,
     .edit-table textarea,
     .edit-table .remove,
-    .edit-table .drag-handle {
+    .edit-table .drag-handle,
+    .edit-table .minus-toggle {
       cursor: text;
     }
 
@@ -1126,7 +1164,8 @@
 
 
     .edit-table .remove,
-    .edit-table .drag-handle {
+    .edit-table .drag-handle,
+    .edit-table .minus-toggle {
       cursor: pointer;
     }
 
@@ -1528,7 +1567,7 @@
         <div id="homeView">
           <div class="hero-title">
             <div>
-              <div class="eyebrow">Receipt DB · v1.68 PWA</div>
+              <div class="eyebrow">Receipt DB · v1.69 PWA</div>
               <h1>영수증DB</h1>
             </div>
             <button class="plus-btn" id="openAdd" aria-label="영수증 추가"><span>+</span></button>
@@ -1666,7 +1705,7 @@
 
     <aside class="side">
       <div class="panel">
-        <div class="eyebrow">Prototype v1.68 PWA</div>
+        <div class="eyebrow">Prototype v1.69 PWA</div>
         <h2>음식점 영수증도<br/>품목 단위로 정리합니다.</h2>
         <p>
           산호초, 할매기름집, 금돈옥처럼 품목명과 단가·수량·금액 줄이 나뉘어 있는 음식점 영수증도 보정합니다.
@@ -3298,6 +3337,76 @@
       ].forEach(enableSelectAllOnDoubleClick);
     }
 
+    function updateMinusButtonState(input) {
+      const wrap = input?.closest?.(".money-input-wrap");
+      const button = wrap?.querySelector?.(".minus-toggle");
+      if (!button) return;
+      const value = normalizeNumberText(input.value || "").trim();
+      button.classList.toggle("active", value.startsWith("-"));
+    }
+
+    function setMoneyInputNegative(input, shouldBeNegative) {
+      if (!input) return;
+      const raw = normalizeNumberText(input.value || "").trim();
+      if (!raw || raw === "-") {
+        input.value = shouldBeNegative ? "-" : "";
+      } else {
+        const number = Math.abs(toNumber(raw));
+        input.value = shouldBeNegative ? formatInputNumber(-number) : formatInputNumber(number);
+      }
+      updateMinusButtonState(input);
+      fitMoneyInputFont(input);
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      setTimeout(() => {
+        input.focus();
+        const end = input.value.length;
+        try { input.setSelectionRange(end, end); } catch {}
+      }, 0);
+    }
+
+    function toggleMoneyInputNegative(input) {
+      const value = normalizeNumberText(input?.value || "").trim();
+      setMoneyInputNegative(input, !value.startsWith("-"));
+    }
+
+    function bindSignedMoneyInput(input, minusButton, onChange) {
+      if (!input) return;
+      input.setAttribute("inputmode", "text");
+      input.setAttribute("autocomplete", "off");
+
+      input.addEventListener("beforeinput", (event) => {
+        if (event.data && /[−–—ㅡ－﹣]/.test(event.data)) {
+          event.preventDefault();
+          toggleMoneyInputNegative(input);
+        }
+      });
+
+      input.addEventListener("input", () => {
+        const normalized = normalizeNumberText(input.value);
+        if (input.value !== normalized) input.value = normalized;
+        updateMinusButtonState(input);
+        fitMoneyInputFont(input);
+      });
+
+      input.addEventListener("keydown", (event) => {
+        if (["-", "−", "Subtract"].includes(event.key)) {
+          event.preventDefault();
+          toggleMoneyInputNegative(input);
+        }
+      });
+
+      minusButton?.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleMoneyInputNegative(input);
+        if (typeof onChange === "function") onChange();
+      });
+
+      minusButton?.addEventListener("pointerdown", event => event.stopPropagation());
+      minusButton?.addEventListener("mousedown", event => event.stopPropagation());
+      updateMinusButtonState(input);
+    }
+
     function moveItemRow(row, direction) {
       const table = $("itemTable");
       if (!row || !table) return;
@@ -3362,8 +3471,8 @@
       tr.innerHTML = `
         <td class="td-name"><input class="item-name-input" value="${escapeHtml(singleLineText(item.name))}" placeholder="품목명" autocomplete="off" /></td>
         <td class="td-qty"><input class="item-qty-input" value="${escapeHtml(item.qty)}" inputmode="decimal" /></td>
-        <td class="td-money"><input class="item-unit-input" value="${escapeHtml(formatInputNumber(item.unitPrice))}" inputmode="numeric" /></td>
-        <td class="td-money"><input class="item-amount-input" value="${escapeHtml(formatInputNumber(item.amount))}" inputmode="numeric" /></td>
+        <td class="td-money"><div class="money-input-wrap"><button class="minus-toggle unit-minus" type="button" title="마이너스 전환" aria-label="단가 마이너스 전환">−</button><input class="item-unit-input" value="${escapeHtml(formatInputNumber(item.unitPrice))}" inputmode="text" autocomplete="off" /></div></td>
+        <td class="td-money"><div class="money-input-wrap"><button class="minus-toggle amount-minus" type="button" title="마이너스 전환" aria-label="계 마이너스 전환">−</button><input class="item-amount-input" value="${escapeHtml(formatInputNumber(item.amount))}" inputmode="text" autocomplete="off" /></div></td>
         <td class="td-action">
           <div class="row-controls">
             <button class="remove" type="button" title="삭제">−</button>
@@ -3376,6 +3485,8 @@
       const qtyInput = tr.querySelector(".item-qty-input");
       const unitInput = tr.querySelector(".item-unit-input");
       const amountInput = tr.querySelector(".item-amount-input");
+      const unitMinusButton = tr.querySelector(".unit-minus");
+      const amountMinusButton = tr.querySelector(".amount-minus");
 
       nameInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
@@ -3410,7 +3521,7 @@
         input.addEventListener("mousedown", event => event.stopPropagation());
       });
 
-      tr.querySelectorAll(".remove, .drag-handle").forEach(button => {
+      tr.querySelectorAll(".remove, .drag-handle, .minus-toggle").forEach(button => {
         button.addEventListener("pointerdown", event => event.stopPropagation());
         button.addEventListener("mousedown", event => event.stopPropagation());
       });
@@ -3421,6 +3532,8 @@
         if (qty && unit) amountInput.value = formatInputNumber(Math.round(qty * unit));
         recalculateTotalFromItems();
       }
+      bindSignedMoneyInput(unitInput, unitMinusButton, autoAmount);
+      bindSignedMoneyInput(amountInput, amountMinusButton, recalculateTotalFromItems);
       qtyInput.addEventListener("change", autoAmount);
       unitInput.addEventListener("change", autoAmount);
       amountInput.addEventListener("change", recalculateTotalFromItems);
@@ -3710,24 +3823,41 @@
     setTimeout(fitAllMoneyInputs, 0);
     }
 
+    function normalizeNumberText(value) {
+      return String(value ?? "")
+        .replace(/[−–—ㅡ－﹣]/g, "-")
+        .replace(/[＋﹢]/g, "+")
+        .replace(/，/g, ",")
+        .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+    }
+
     function formatInputNumber(value) {
       if (value === "" || value === null || value === undefined) return "";
-      const num = Number(String(value).replaceAll(",", ""));
+      const normalized = normalizeNumberText(value).replaceAll(",", "");
+      const num = Number(normalized);
       if (Number.isNaN(num)) return value;
       const sign = num < 0 ? "-" : "";
       return sign + Math.abs(num).toLocaleString("ko-KR");
     }
 
     function formatMoneyInputElement(input) {
-      const raw = input.value;
-      if (raw === "" || raw === "-") return;
+      const raw = normalizeNumberText(input.value).trim();
+      if (raw === "" || raw === "-") {
+        input.value = raw;
+        updateMinusButtonState(input);
+        return;
+      }
       input.value = formatInputNumber(raw);
+      updateMinusButtonState(input);
     }
 
     function toNumber(value) {
-      const cleaned = String(value ?? "").replaceAll(",", "").replace(/[^\d.-]/g, "");
-      const n = Number(cleaned);
-      return Number.isNaN(n) ? 0 : n;
+      const normalized = normalizeNumberText(value);
+      const cleaned = normalized.replaceAll(",", "").replace(/[^\d.+-]/g, "");
+      const sign = cleaned.trim().startsWith("-") ? -1 : 1;
+      const numeric = cleaned.replace(/[+-]/g, "");
+      const n = Number(numeric);
+      return Number.isNaN(n) ? 0 : sign * n;
     }
 
     function escapeHtml(v) {
