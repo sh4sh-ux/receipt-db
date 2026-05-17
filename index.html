@@ -1,9 +1,10 @@
+
 <!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v1.64 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v1.65 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -1503,7 +1504,7 @@
         <div id="homeView">
           <div class="hero-title">
             <div>
-              <div class="eyebrow">Receipt DB · v1.64 PWA</div>
+              <div class="eyebrow">Receipt DB · v1.65 PWA</div>
               <h1>영수증DB</h1>
             </div>
             <button class="plus-btn" id="openAdd" aria-label="영수증 추가"><span>+</span></button>
@@ -1647,7 +1648,7 @@
 
     <aside class="side">
       <div class="panel">
-        <div class="eyebrow">Prototype v1.64 PWA</div>
+        <div class="eyebrow">Prototype v1.65 PWA</div>
         <h2>음식점 영수증도<br/>품목 단위로 정리합니다.</h2>
         <p>
           산호초, 할매기름집, 금돈옥처럼 품목명과 단가·수량·금액 줄이 나뉘어 있는 음식점 영수증도 보정합니다.
@@ -1832,12 +1833,14 @@
           </div>
           <div class="backup-actions">
             <button class="secondary" id="exportJsonBackup" type="button">JSON 백업</button>
+            <button class="secondary" id="importJsonBackup" type="button">JSON 가져오기</button>
+            <input id="importJsonFile" type="file" accept="application/json,.json" style="display:none" />
             <button class="secondary" id="exportCsvBackup" type="button">CSV 내보내기</button>
             <button class="secondary" id="requestPersistentStorage" type="button">장기보관 모드</button>
             <button class="danger" id="cleanupLocalImages" type="button">용량 정리</button>
           </div>
           <div class="storage-note" id="storageEstimateText">
-            JSON은 전체 백업용, CSV는 엑셀 확인용입니다. Dropbox 연결 시 원본 이미지는 Dropbox에 저장되고 앱에는 이미지 대신 Dropbox 경로만 남겨 용량을 아낍니다.
+            JSON은 전체 백업/이전용, CSV는 엑셀 확인용입니다. 로컬 파일에서 쓰던 데이터를 GitHub Pages 앱으로 옮기려면 기존 앱에서 JSON 백업 후 여기서 JSON 가져오기를 누르세요.
           </div>
         </div>
 
@@ -2417,13 +2420,15 @@
     }
 
     function getPayerQuery(query) {
-      return normalize(query)
-        .replace(/^결제자/, "")
-        .replace(/^결제/, "")
-        .replace(/^payer/, "")
-        .replace(/^paidby/, "")
-        .replace(/결제$/, "")
+      let value = normalize(query);
+      // "신유철", "신유철 결제", "신유철 결제자", "결제자 신유철" 모두 같은 결제자 검색으로 처리합니다.
+      value = value
+        .replace(/^(결제자|결제|payer|paidby)/, "")
+        .replace(/(결제자|결제)$/, "")
+        .replace(/결제자/g, "")
+        .replace(/결제/g, "")
         .trim();
+      return value;
     }
 
     function payerDisplayName(receipts = [], query = "") {
@@ -2439,9 +2444,11 @@
       return loadData().receipts
         .filter(receipt => isValidSearchDate(receipt.date))
         .filter(receipt => {
-          const payer = normalize(receipt.payer || "");
-          if (!payer) return false;
-          return payer.includes(q) || q.includes(payer);
+          const payerRaw = receipt.payer || "";
+          const payer = normalize(payerRaw);
+          const payerClean = getPayerQuery(payerRaw);
+          if (!payer && !payerClean) return false;
+          return payer.includes(q) || payerClean.includes(q) || q.includes(payerClean);
         })
         .sort((a, b) => b.date.localeCompare(a.date));
     }
@@ -2457,7 +2464,7 @@
       const seen = new Set();
       return allItems()
         .filter(item => isValidSearchDate(item.date))
-        .filter(item => normalize(`${item.name} ${item.aliases || ""} ${item.store || ""} ${item.payer || ""}`).includes(q))
+        .filter(item => normalize(`${item.name} ${item.aliases || ""} ${item.store || ""} ${item.payer || ""} ${getPayerQuery(item.payer || "")}`).includes(q) || getPayerQuery(query) && getPayerQuery(item.payer || "").includes(getPayerQuery(query)))
         .filter(item => {
           const key = searchResultDedupKey(item);
           if (seen.has(key)) return false;
@@ -5956,6 +5963,11 @@
     $("testDropbox").addEventListener("click", testDropboxConnection);
     $("openDropboxFolder").addEventListener("click", () => openDropboxFolderInBrowser($("dropboxFolderInput").value || "/영수증DB"));
     $("exportJsonBackup").addEventListener("click", exportJsonBackup);
+    $("importJsonBackup").addEventListener("click", () => $("importJsonFile").click());
+    $("importJsonFile").addEventListener("change", (event) => {
+      importJsonBackupFile(event.target.files?.[0]);
+      event.target.value = "";
+    });
     $("exportCsvBackup").addEventListener("click", exportCsvBackup);
     $("cleanupLocalImages").addEventListener("click", cleanupLocalReceiptImages);
     $("requestPersistentStorage").addEventListener("click", requestPersistentStorageMode);
@@ -6048,13 +6060,120 @@
       const data = loadData();
       const backup = {
         app: "영수증DB",
-        version: "v1.53",
+        version: "v1.65 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
       const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
       downloadTextFile(`영수증DB_backup_${date}.json`, JSON.stringify(backup, null, 2), "application/json;charset=utf-8");
     }
+
+    function receiptMergeKey(receipt = {}) {
+      const itemsKey = (receipt.items || [])
+        .map(item => [normalize(item.name || ""), Number(item.qty || 0), Number(item.unitPrice || 0), Number(item.amount || 0)].join(":"))
+        .join("|");
+      return [normalize(receipt.store || ""), receipt.date || "", Number(receipt.total || 0), getPayerQuery(receipt.payer || ""), itemsKey].join("||");
+    }
+
+    function normalizeImportedReceipt(receipt = {}, index = 0) {
+      const items = dedupeItems((receipt.items || []).map(item => {
+        const qty = Number(item.qty || 1);
+        const amount = Number(item.amount ?? item.price ?? 0);
+        const unitPrice = Number(item.unitPrice ?? (qty ? amount / qty : amount));
+        return {
+          name: String(item.name || "").trim(),
+          qty,
+          unitPrice,
+          amount,
+          aliases: item.aliases || ""
+        };
+      })).filter(item => item.name);
+
+      return {
+        id: receipt.id || "imported-" + Date.now() + "-" + index,
+        store: String(receipt.store || "").trim() || "미지정",
+        date: receipt.date || new Date().toISOString().slice(0, 10),
+        total: Number(receipt.total || items.reduce((sum, item) => sum + Number(item.amount || 0), 0)),
+        payer: String(receipt.payer || "").trim(),
+        imageSrc: receipt.imageSrc || "",
+        thumbnailSrc: receipt.thumbnailSrc || receipt.imageSrc || "",
+        dropboxPath: receipt.dropboxPath || "",
+        dropboxFileId: receipt.dropboxFileId || "",
+        imageStorage: receipt.dropboxPath ? "dropbox-only" : (receipt.imageSrc || receipt.thumbnailSrc ? "local-thumbnail" : "none"),
+        items
+      };
+    }
+
+    async function importJsonBackupFile(file) {
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        const importedReceiptsRaw = Array.isArray(parsed)
+          ? parsed
+          : Array.isArray(parsed.receipts)
+            ? parsed.receipts
+            : [];
+
+        if (!importedReceiptsRaw.length) {
+          alert("가져올 영수증 데이터가 없습니다.");
+          return;
+        }
+
+        const current = loadData();
+        const currentReceipts = current.receipts || [];
+        const importedReceipts = importedReceiptsRaw
+          .map((receipt, index) => normalizeImportedReceipt(receipt, index))
+          .filter(receipt => receipt.store && receipt.date && receipt.items.length);
+
+        if (!importedReceipts.length) {
+          alert("유효한 영수증 데이터가 없습니다.");
+          return;
+        }
+
+        const ok = confirm(`${importedReceipts.length}건의 영수증 데이터를 가져올까요?\n\n현재 저장된 데이터는 유지하고, 같은 영수증은 중복되지 않도록 합칩니다.`);
+        if (!ok) return;
+
+        const byId = new Map();
+        const seenKeys = new Set();
+
+        currentReceipts.forEach(receipt => {
+          byId.set(receipt.id, receipt);
+          seenKeys.add(receiptMergeKey(receipt));
+        });
+
+        let added = 0;
+        let updated = 0;
+        let skipped = 0;
+
+        importedReceipts.forEach(receipt => {
+          const key = receiptMergeKey(receipt);
+          if (seenKeys.has(key)) {
+            skipped++;
+            return;
+          }
+
+          if (byId.has(receipt.id)) {
+            byId.set(receipt.id, receipt);
+            updated++;
+          } else {
+            byId.set(receipt.id, receipt);
+            added++;
+          }
+          seenKeys.add(key);
+        });
+
+        saveData({ ...current, receipts: [...byId.values()] });
+        renderAll();
+        updateStorageStats();
+        alert(`JSON 가져오기가 완료되었습니다.\n\n추가: ${added}건\n업데이트: ${updated}건\n중복 제외: ${skipped}건`);
+      } catch (error) {
+        console.error(error);
+        alert("JSON 가져오기에 실패했습니다.\n\n영수증DB에서 백업한 JSON 파일인지 확인해주세요.");
+      }
+    }
+
 
     function csvCell(value) {
       const text = String(value ?? "");
