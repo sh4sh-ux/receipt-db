@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v1.65 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v1.66 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -67,7 +67,7 @@
     .screen {
       flex: 1;
       overflow: auto;
-      padding: 58px 20px 18px;
+      padding: 22px 20px 18px;
     }
 
     .screen::-webkit-scrollbar, .side::-webkit-scrollbar {
@@ -469,13 +469,16 @@
       margin-top: 12px;
     }
 
-    .bottom-bar {
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 8;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 6px;
-      padding: 10px 14px 22px;
-      background: rgba(255,255,255,.82);
-      border-top: 1px solid rgba(0,0,0,.05);
+      padding: calc(12px + env(safe-area-inset-top)) 14px 10px;
+      background: rgba(255,255,255,.88);
+      border-bottom: 1px solid rgba(0,0,0,.06);
       backdrop-filter: blur(20px);
     }
 
@@ -1499,12 +1502,17 @@
 
 <body>
   <div class="app-shell">
-    <main class="phone" aria-label="샀던가격 앱">
+    <main class="phone" aria-label="영수증DB 앱">
+      <nav class="top-bar" aria-label="주요 메뉴">
+        <button class="tab active" id="tabSearch">검색</button>
+        <button class="tab" id="tabReceipts">영수증</button>
+        <button class="tab" id="tabSettings">설정</button>
+      </nav>
       <div class="screen">
         <div id="homeView">
           <div class="hero-title">
             <div>
-              <div class="eyebrow">Receipt DB · v1.65 PWA</div>
+              <div class="eyebrow">Receipt DB · v1.66 PWA</div>
               <h1>영수증DB</h1>
             </div>
             <button class="plus-btn" id="openAdd" aria-label="영수증 추가"><span>+</span></button>
@@ -1540,7 +1548,7 @@
 
           <section class="section" id="receiptSection">
             <div class="section-head">
-              <div class="section-title">저장한 영수증</div>
+              <div class="section-title" id="receiptSectionTitle">최근 영수증 5개</div>
             </div>
             <div id="receiptList"></div>
           </section>
@@ -1638,17 +1646,11 @@
           </section>
         </div>
       </div>
-
-      <nav class="bottom-bar">
-        <button class="tab active" id="tabSearch">검색</button>
-        <button class="tab" id="tabReceipts">영수증</button>
-        <button class="tab" id="tabSettings">설정</button>
-      </nav>
     </main>
 
     <aside class="side">
       <div class="panel">
-        <div class="eyebrow">Prototype v1.65 PWA</div>
+        <div class="eyebrow">Prototype v1.66 PWA</div>
         <h2>음식점 영수증도<br/>품목 단위로 정리합니다.</h2>
         <p>
           산호초, 할매기름집, 금돈옥처럼 품목명과 단가·수량·금액 줄이 나뉘어 있는 음식점 영수증도 보정합니다.
@@ -2567,18 +2569,29 @@
       });
     }
 
-    function renderReceipts(scroll = false) {
+    function renderReceipts(scroll = false, options = {}) {
       const data = loadData();
       const list = $("receiptList");
+      const title = $("receiptSectionTitle");
+      const limit = Number.isFinite(options.limit) ? options.limit : 5;
+      const showAll = options.showAll === true;
       list.innerHTML = "";
 
-      const sorted = [...data.receipts].sort((a,b) => b.date.localeCompare(a.date));
+      const sorted = [...data.receipts].sort((a,b) => {
+        const dateCompare = String(b.date || "").localeCompare(String(a.date || ""));
+        if (dateCompare !== 0) return dateCompare;
+        return String(b.id || "").localeCompare(String(a.id || ""));
+      });
+
+      const visibleReceipts = showAll ? sorted : sorted.slice(0, limit);
+      if (title) title.textContent = showAll ? `저장한 영수증 전체 ${sorted.length}개` : `최근 영수증 ${Math.min(sorted.length, limit)}개`;
+
       if (!sorted.length) {
         list.innerHTML = `<div class="card empty">등록된 영수증이 없습니다.</div>`;
         return;
       }
 
-      sorted.forEach(receipt => {
+      visibleReceipts.forEach(receipt => {
         const div = document.createElement("div");
         div.className = "card simple-card receipt-card";
         div.style.marginBottom = "10px";
@@ -2597,6 +2610,23 @@
         list.appendChild(div);
       });
 
+      if (!showAll && sorted.length > limit) {
+        const more = document.createElement("button");
+        more.className = "secondary";
+        more.type = "button";
+        more.style.width = "100%";
+        more.style.marginTop = "4px";
+        more.textContent = `전체 영수증 ${sorted.length}개 보기`;
+        more.addEventListener("click", () => {
+          setActiveTab("tabReceipts");
+          showHome();
+          $("searchInput").value = "";
+          renderSearch();
+          renderReceipts(true, { showAll: true });
+        });
+        list.appendChild(more);
+      }
+
       if (scroll) $("receiptSection").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
@@ -2612,6 +2642,7 @@
         resultsSection.classList.add("hidden");
         recentSection.classList.remove("hidden");
         receiptSection.classList.remove("hidden");
+        renderReceipts(false, { limit: 5 });
         return;
       }
 
@@ -2847,6 +2878,67 @@
       $("receiptView").classList.add("hidden");
       $("itemDetailView").classList.add("hidden");
     }
+
+    function goBackOneStep() {
+      if ($("modalBackdrop").classList.contains("show")) {
+        requestCloseModal();
+        return true;
+      }
+      if ($("settingsBackdrop").classList.contains("show")) {
+        closeSettingsModal();
+        return true;
+      }
+      if (!$("receiptView").classList.contains("hidden") || !$("itemDetailView").classList.contains("hidden")) {
+        showHome();
+        setActiveTab("tabSearch");
+        return true;
+      }
+      return false;
+    }
+
+    function setupSwipeBack() {
+      const phone = document.querySelector(".phone");
+      if (!phone || phone.dataset.swipeBackBound === "true") return;
+      phone.dataset.swipeBackBound = "true";
+
+      let startX = 0;
+      let startY = 0;
+      let startTarget = null;
+
+      const isInteractiveTarget = (target) => !!target?.closest?.("input, textarea, select, button, a, .table-wrap, .modal, .image-backdrop");
+
+      phone.addEventListener("touchstart", (event) => {
+        if (!event.touches || event.touches.length !== 1) return;
+        startTarget = event.target;
+        startX = event.touches[0].clientX;
+        startY = event.touches[0].clientY;
+      }, { passive: true });
+
+      phone.addEventListener("touchend", (event) => {
+        if (!startX || !event.changedTouches || event.changedTouches.length !== 1) return;
+        if (isInteractiveTarget(startTarget)) {
+          startX = 0;
+          startY = 0;
+          startTarget = null;
+          return;
+        }
+
+        const endX = event.changedTouches[0].clientX;
+        const endY = event.changedTouches[0].clientY;
+        const dx = endX - startX;
+        const dy = endY - startY;
+
+        // 사용자가 요청한 왼쪽 스와이프: 오른쪽에서 왼쪽으로 밀면 전 단계로 이동합니다.
+        if (dx < -72 && Math.abs(dy) < 58) {
+          goBackOneStep();
+        }
+
+        startX = 0;
+        startY = 0;
+        startTarget = null;
+      }, { passive: true });
+    }
+
 
     function showHome() {
       hideAllViews();
@@ -5917,13 +6009,14 @@
       if (receipt) openModal("edit", receipt);
     });
 
-    $("backFromReceipt").addEventListener("click", () => showHome());
-    $("backFromItem").addEventListener("click", () => showHome());
+    $("backFromReceipt").addEventListener("click", () => goBackOneStep() || showHome());
+    $("backFromItem").addEventListener("click", () => goBackOneStep() || showHome());
 
     $("tabSearch").addEventListener("click", () => {
       setActiveTab("tabSearch");
       showHome();
       $("searchInput").focus();
+      renderReceipts(false, { limit: 5 });
     });
 
     $("tabReceipts").addEventListener("click", () => {
@@ -5931,7 +6024,7 @@
       showHome();
       $("searchInput").value = "";
       renderSearch();
-      renderReceipts(true);
+      renderReceipts(true, { showAll: true });
     });
 
     $("tabSettings").addEventListener("click", () => {
@@ -5958,6 +6051,7 @@
       $("dropboxFolderInput").value = "/영수증DB";
       updateDropboxStatus();
     setupPwaInstall();
+    setupSwipeBack();
       alert("Dropbox 연결이 해제되었습니다.");
     });
     $("testDropbox").addEventListener("click", testDropboxConnection);
