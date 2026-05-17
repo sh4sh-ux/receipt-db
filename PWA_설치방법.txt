@@ -1,4 +1,4 @@
-# 영수증DB v1.71 PWA 실행 방법
+# 영수증DB v1.72 PWA 실행 방법
 
 ## 가장 쉬운 앱처럼 사용 방법
 1. 이 폴더를 GitHub Pages 또는 Netlify에 올립니다.
