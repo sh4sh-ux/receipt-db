@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v1.66 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v1.67 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -386,6 +386,22 @@
       text-align: center;
       color: var(--muted);
     }
+
+    .empty-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .empty-actions .secondary {
+      min-height: 38px;
+      border-radius: 14px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
 
     .receipt-image-wrap {
       background: #f2f2f6;
@@ -1512,7 +1528,7 @@
         <div id="homeView">
           <div class="hero-title">
             <div>
-              <div class="eyebrow">Receipt DB · v1.66 PWA</div>
+              <div class="eyebrow">Receipt DB · v1.67 PWA</div>
               <h1>영수증DB</h1>
             </div>
             <button class="plus-btn" id="openAdd" aria-label="영수증 추가"><span>+</span></button>
@@ -1650,7 +1666,7 @@
 
     <aside class="side">
       <div class="panel">
-        <div class="eyebrow">Prototype v1.66 PWA</div>
+        <div class="eyebrow">Prototype v1.67 PWA</div>
         <h2>음식점 영수증도<br/>품목 단위로 정리합니다.</h2>
         <p>
           산호초, 할매기름집, 금돈옥처럼 품목명과 단가·수량·금액 줄이 나뉘어 있는 음식점 영수증도 보정합니다.
@@ -2277,10 +2293,27 @@
       }
     }
 
+    function getReceiptPayer(receipt = {}) {
+      const candidates = [
+        receipt.payer,
+        receipt.payerName,
+        receipt.paidBy,
+        receipt.paidby,
+        receipt.paymentBy,
+        receipt.paymentPerson,
+        receipt.payPerson,
+        receipt.cardOwner,
+        receipt.buyer,
+        receipt.person
+      ];
+      const found = candidates.find(value => String(value || "").trim());
+      return String(found || "").replace(/\s*(결제자|결제)\s*$/g, "").trim();
+    }
+
     function migrateData(data) {
       data.receipts = (data.receipts || []).map(receipt => ({
         ...receipt,
-        payer: receipt.payer || "",
+        payer: getReceiptPayer(receipt),
         imageSrc: receipt.imageSrc || receipt.thumbnailSrc || "",
         thumbnailSrc: receipt.thumbnailSrc || receipt.imageSrc || "",
         imageStorage: receipt.dropboxPath ? "dropbox+thumbnail" : (receipt.imageSrc ? "local-thumbnail" : "none"),
@@ -2414,7 +2447,7 @@
           store: receipt.store,
           date: receipt.date,
           receiptTotal: receipt.total,
-          payer: receipt.payer || "",
+          payer: getReceiptPayer(receipt),
           imageSrc: receipt.imageSrc,
           itemIndex: idx
         }))
@@ -2435,8 +2468,11 @@
 
     function payerDisplayName(receipts = [], query = "") {
       const q = getPayerQuery(query);
-      const match = receipts.find(receipt => receipt.payer && normalize(receipt.payer).includes(q));
-      return match?.payer || query;
+      const match = receipts.find(receipt => {
+        const payer = getReceiptPayer(receipt);
+        return payer && normalize(payer).includes(q);
+      });
+      return getReceiptPayer(match || {}) || getPayerQuery(query) || query;
     }
 
     function searchReceiptsByPayer(query) {
@@ -2444,15 +2480,14 @@
       if (!q) return [];
 
       return loadData().receipts
-        .filter(receipt => isValidSearchDate(receipt.date))
         .filter(receipt => {
-          const payerRaw = receipt.payer || "";
+          const payerRaw = getReceiptPayer(receipt);
           const payer = normalize(payerRaw);
           const payerClean = getPayerQuery(payerRaw);
           if (!payer && !payerClean) return false;
           return payer.includes(q) || payerClean.includes(q) || q.includes(payerClean);
         })
-        .sort((a, b) => b.date.localeCompare(a.date));
+        .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
     }
 
     function isPayerFocusedSearch(query) {
@@ -2465,7 +2500,6 @@
 
       const seen = new Set();
       return allItems()
-        .filter(item => isValidSearchDate(item.date))
         .filter(item => normalize(`${item.name} ${item.aliases || ""} ${item.store || ""} ${item.payer || ""} ${getPayerQuery(item.payer || "")}`).includes(q) || getPayerQuery(query) && getPayerQuery(item.payer || "").includes(getPayerQuery(query)))
         .filter(item => {
           const key = searchResultDedupKey(item);
@@ -2599,7 +2633,7 @@
           <div class="row-between">
             <div>
               <div class="store">${escapeHtml(receipt.store)}</div>
-              <div class="muted small" style="margin-top:4px;">${formatDate(receipt.date)} · ${receipt.items.length}개 품목${receipt.payer ? " · 결제자 " + escapeHtml(receipt.payer) : ""}</div>
+              <div class="muted small" style="margin-top:4px;">${formatDate(receipt.date)} · ${receipt.items.length}개 품목${getReceiptPayer(receipt) ? " · 결제자 " + escapeHtml(getReceiptPayer(receipt)) : ""}</div>
               <div class="muted tiny" style="margin-top:5px;">${receipt.dropboxPath ? "Dropbox 원본 저장됨" : (receipt.imageSrc ? "앱 썸네일 저장됨" : "이미지 없음")}</div>
             </div>
             <div class="price">${formatWon(receipt.total)}</div>
@@ -2628,6 +2662,52 @@
       }
 
       if (scroll) $("receiptSection").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function searchDebugSummary(query = "") {
+      const data = loadData();
+      const receipts = data.receipts || [];
+      const payerReceipts = receipts.filter(receipt => !!getReceiptPayer(receipt));
+      const samplePayers = [...new Set(payerReceipts.map(receipt => getReceiptPayer(receipt)).filter(Boolean))].slice(0, 8);
+      const q = getPayerQuery(query);
+      const matches = searchReceiptsByPayer(query);
+
+      return [
+        `현재 휴대전화 앱에 저장된 영수증: ${receipts.length}건`,
+        `결제자가 입력된 영수증: ${payerReceipts.length}건`,
+        `검색어: ${q || query || "(없음)"}`,
+        `결제자 검색 결과: ${matches.length}건`,
+        samplePayers.length ? `저장된 결제자 예시: ${samplePayers.join(", ")}` : "저장된 결제자 이름이 아직 없습니다.",
+        "",
+        "컴퓨터에서 보이던 데이터라면 컴퓨터 앱에서 JSON 백업 후, 휴대전화 앱 설정에서 JSON 가져오기를 해야 합니다."
+      ].join("\n");
+    }
+
+    function showSearchDebug(query = "") {
+      alert(searchDebugSummary(query));
+    }
+
+    function renderNoSearchResults(query) {
+      const data = loadData();
+      const receipts = data.receipts || [];
+      const payerReceipts = receipts.filter(receipt => !!getReceiptPayer(receipt));
+      const message = !receipts.length
+        ? "휴대전화 앱 안에 저장된 영수증 데이터가 아직 없습니다."
+        : !payerReceipts.length
+          ? `휴대전화 앱에는 영수증 ${receipts.length}건이 있지만, 결제자 이름이 입력된 영수증이 없습니다.`
+          : "검색 결과가 없습니다.";
+
+      return `
+        <div class="card empty">
+          ${message}<br/>
+          <span class="small">컴퓨터에서 보이던 데이터는 자동으로 휴대전화에 옮겨지지 않습니다.</span>
+          <div class="empty-actions">
+            <button class="secondary" id="emptyImportJson" type="button">JSON 가져오기</button>
+            <button class="secondary" id="emptyShowAllReceipts" type="button">전체 영수증 보기</button>
+            <button class="secondary" id="emptySearchDebug" type="button">검색 상태 확인</button>
+          </div>
+        </div>
+      `;
     }
 
     function renderSearch() {
@@ -2666,7 +2746,7 @@
             <div class="row-between">
               <div>
                 <div class="item-name">${escapeHtml(receipt.store)}</div>
-                <div class="muted small">${formatDate(receipt.date)} · ${receipt.items.length}개 품목 · 결제자 ${escapeHtml(receipt.payer || "")}</div>
+                <div class="muted small">${formatDate(receipt.date)} · ${receipt.items.length}개 품목 · 결제자 ${escapeHtml(getReceiptPayer(receipt) || "")}</div>
               </div>
               <span class="pill">영수증</span>
             </div>
@@ -2690,7 +2770,15 @@
       $("resultCount").textContent = `${items.length}건`;
 
       if (!items.length) {
-        resultList.innerHTML = `<div class="card empty">검색 결과가 없습니다.<br/>품목명 또는 결제자 이름으로 검색해보세요.</div>`;
+        resultList.innerHTML = renderNoSearchResults(query);
+        $("emptyImportJson")?.addEventListener("click", () => $("importJsonFile").click());
+        $("emptyShowAllReceipts")?.addEventListener("click", () => {
+          setActiveTab("tabReceipts");
+          $("searchInput").value = "";
+          renderSearch();
+          renderReceipts(true, { showAll: true });
+        });
+        $("emptySearchDebug")?.addEventListener("click", () => showSearchDebug(query));
         return;
       }
 
@@ -2732,7 +2820,7 @@
       setActiveTab("tabReceipts");
 
       $("receiptTitle").textContent = receipt.store;
-      $("receiptMeta").textContent = `${formatDate(receipt.date)} · ${receipt.items.length}개 품목${receipt.payer ? " · 결제자 " + receipt.payer : ""}`;
+      $("receiptMeta").textContent = `${formatDate(receipt.date)} · ${receipt.items.length}개 품목${getReceiptPayer(receipt) ? " · 결제자 " + getReceiptPayer(receipt) : ""}`;
       $("receiptTotal").textContent = formatWon(receipt.total);
       $("receiptItemCount").textContent = `${receipt.items.length}개`;
 
@@ -6188,7 +6276,7 @@
         store: String(receipt.store || "").trim() || "미지정",
         date: receipt.date || new Date().toISOString().slice(0, 10),
         total: Number(receipt.total || items.reduce((sum, item) => sum + Number(item.amount || 0), 0)),
-        payer: String(receipt.payer || "").trim(),
+        payer: getReceiptPayer(receipt),
         imageSrc: receipt.imageSrc || "",
         thumbnailSrc: receipt.thumbnailSrc || receipt.imageSrc || "",
         dropboxPath: receipt.dropboxPath || "",
@@ -6261,7 +6349,8 @@
         saveData({ ...current, receipts: [...byId.values()] });
         renderAll();
         updateStorageStats();
-        alert(`JSON 가져오기가 완료되었습니다.\n\n추가: ${added}건\n업데이트: ${updated}건\n중복 제외: ${skipped}건`);
+        const payerCount = loadData().receipts.filter(receipt => !!getReceiptPayer(receipt)).length;
+        alert(`JSON 가져오기가 완료되었습니다.\n\n추가: ${added}건\n업데이트: ${updated}건\n중복 제외: ${skipped}건\n결제자 입력 영수증: ${payerCount}건`);
       } catch (error) {
         console.error(error);
         alert("JSON 가져오기에 실패했습니다.\n\n영수증DB에서 백업한 JSON 파일인지 확인해주세요.");
