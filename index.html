@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v1.76 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v1.77 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -308,6 +308,23 @@
     .result-card {
       padding: 15px 16px;
       cursor: pointer;
+    }
+
+    .receipt-search-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+
+    .receipt-edit-action {
+      border-radius: 999px;
+      background: #111113;
+      color: #fff;
+      padding: 6px 10px;
+      font-size: 12px;
+      line-height: 1;
     }
 
     .summary-card {
@@ -1623,7 +1640,7 @@
         <div id="homeView">
           <div class="hero-title">
             <div>
-              <div class="eyebrow">Receipt DB · v1.76 PWA</div>
+              <div class="eyebrow">Receipt DB · v1.77 PWA</div>
               <h1>영수증DB</h1>
             </div>
             <button class="plus-btn" id="openAdd" aria-label="영수증 추가"><span>+</span></button>
@@ -1769,7 +1786,7 @@
 
     <aside class="side">
       <div class="panel">
-        <div class="eyebrow">Prototype v1.76 PWA</div>
+        <div class="eyebrow">Prototype v1.77 PWA</div>
         <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
         <p>
           품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -2728,6 +2745,66 @@
       `;
     }
 
+    function renderStoreSummaryCard(storeName, receipts = []) {
+      const summary = summarizePayerReceipts(receipts);
+      if (!summary.count) return "";
+
+      return `
+        <div class="card summary-card">
+          <div class="summary-title">${escapeHtml(storeName)} 영수증 요약</div>
+          <div class="summary-main">${formatWon(summary.totalAmount)}</div>
+          <div class="summary-sub">
+            최근 영수증: ${summary.latest ? `${formatDate(summary.latest.date)} · ${formatWon(summary.latest.total)}` : "-"}
+          </div>
+          <div class="stat-grid">
+            <div class="stat-cell"><div class="label">영수증</div><div class="value">${summary.count.toLocaleString("ko-KR")}건</div></div>
+            <div class="stat-cell"><div class="label">평균 결제</div><div class="value">${formatWon(summary.averageAmount)}</div></div>
+            <div class="stat-cell"><div class="label">장소 수</div><div class="value">${summary.storeCount.toLocaleString("ko-KR")}곳</div></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function appendReceiptResultCard(resultList, receipt, options = {}) {
+      const items = receipt.items || [];
+      const previewItems = items.slice(0, 3).map(item => escapeHtml(item.name)).join(", ");
+      const moreCount = Math.max(0, items.length - 3);
+      const payer = getReceiptPayer(receipt);
+      const badge = options.badge || "영수증";
+      const meta = [
+        `${formatDate(receipt.date)} · ${items.length}개 품목`,
+        options.showPayer && payer ? `결제자 ${escapeHtml(payer)}` : ""
+      ].filter(Boolean).join(" · ");
+      const div = document.createElement("div");
+      div.className = "card result-card receipt-result-card";
+      div.innerHTML = `
+        <div class="row-between">
+          <div>
+            <div class="item-name">${escapeHtml(receipt.store)}</div>
+            <div class="muted small">${meta}</div>
+          </div>
+          <div class="receipt-search-actions">
+            <span class="pill">${escapeHtml(badge)}</span>
+            ${options.allowEdit ? `<button class="tiny-action receipt-edit-action" type="button">수정</button>` : ""}
+          </div>
+        </div>
+        <div class="receipt-result-summary">
+          <div class="summary-text">
+            ${previewItems || "품목 없음"}${moreCount ? ` 외 ${moreCount}개` : ""}
+          </div>
+          <div class="summary-total">${formatWon(receipt.total)}</div>
+        </div>
+      `;
+      div.addEventListener("click", () => showReceipt(receipt.id));
+      div.querySelector(".receipt-edit-action")?.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        currentReceiptId = receipt.id;
+        openModal("edit", receipt);
+      });
+      resultList.appendChild(div);
+    }
+
     function getPayerQuery(query) {
       let value = normalize(query);
       // "신유철", "신유철 결제", "신유철 결제자", "결제자 신유철" 모두 같은 결제자 검색으로 처리합니다.
@@ -2762,6 +2839,24 @@
           return payer.includes(q) || payerClean.includes(q) || q.includes(payerClean);
         })
         .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+    }
+
+    function searchReceiptsByStore(query) {
+      const q = normalize(query);
+      if (!q) return [];
+
+      return loadData().receipts
+        .filter(receipt => {
+          const store = normalize(receipt.store || "");
+          return store && (store.includes(q) || q.includes(store));
+        })
+        .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+    }
+
+    function storeDisplayName(receipts = [], query = "") {
+      const stores = [...new Set(receipts.map(receipt => receipt.store).filter(Boolean))];
+      if (stores.length === 1) return stores[0];
+      return query;
     }
 
     function isPayerFocusedSearch(query) {
@@ -3000,11 +3095,26 @@
         return;
       }
 
+      const storeReceipts = searchReceiptsByStore(query);
       const payerReceipts = searchReceiptsByPayer(query);
       resultsSection.classList.remove("hidden");
       recentSection.classList.add("hidden");
       receiptSection.classList.add("hidden");
       resultList.innerHTML = "";
+
+      if (storeReceipts.length) {
+        const storeName = storeDisplayName(storeReceipts, query);
+        $("resultTitle").innerHTML = `${escapeHtml(storeName)} <span class="muted small">영수증</span>`;
+        $("resultCount").textContent = `${storeReceipts.length}건`;
+        resultList.innerHTML = renderStoreSummaryCard(storeName, storeReceipts);
+
+        storeReceipts.forEach(receipt => {
+          appendReceiptResultCard(resultList, receipt, { badge: "영수증", allowEdit: true });
+        });
+
+        addRecentQuery(query);
+        return;
+      }
 
       if (payerReceipts.length) {
         const payerName = payerDisplayName(payerReceipts, query);
@@ -3013,27 +3123,7 @@
         resultList.innerHTML = renderPayerSummaryCard(payerName, payerReceipts);
 
         payerReceipts.forEach(receipt => {
-          const previewItems = (receipt.items || []).slice(0, 3).map(item => escapeHtml(item.name)).join(", ");
-          const moreCount = Math.max(0, (receipt.items || []).length - 3);
-          const div = document.createElement("div");
-          div.className = "card result-card";
-          div.innerHTML = `
-            <div class="row-between">
-              <div>
-                <div class="item-name">${escapeHtml(receipt.store)}</div>
-                <div class="muted small">${formatDate(receipt.date)} · ${receipt.items.length}개 품목 · 결제자 ${escapeHtml(getReceiptPayer(receipt) || "")}</div>
-              </div>
-              <span class="pill">영수증</span>
-            </div>
-            <div class="receipt-result-summary">
-              <div class="summary-text">
-                ${previewItems || "품목 없음"}${moreCount ? ` 외 ${moreCount}개` : ""}
-              </div>
-              <div class="summary-total">${formatWon(receipt.total)}</div>
-            </div>
-          `;
-          div.addEventListener("click", () => showReceipt(receipt.id));
-          resultList.appendChild(div);
+          appendReceiptResultCard(resultList, receipt, { badge: "영수증", showPayer: true, allowEdit: true });
         });
 
         addRecentQuery(query);
@@ -7155,7 +7245,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       const backup = {
         app: "영수증DB",
-        version: "v1.76 PWA",
+        version: "v1.77 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
