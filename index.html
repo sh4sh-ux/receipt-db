@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v1.85 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v1.86 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -297,6 +297,13 @@
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+    }
+
+    .empty-recent {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 680;
+      padding: 8px 0 2px;
     }
 
     .chip {
@@ -1698,7 +1705,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v1.85 PWA</span>
+                <span class="eyebrow">Receipt DB · v1.86 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -1718,7 +1725,7 @@
           <section class="section" id="recentSection">
             <div class="section-head">
               <div class="section-title">최근 검색</div>
-              <button class="tiny-action" id="resetData">데모 초기화</button>
+              <button class="tiny-action" id="clearRecentSearches">최근 검색 지우기</button>
             </div>
             <div class="chips" id="chips"></div>
           </section>
@@ -1846,7 +1853,7 @@
 
     <aside class="side">
       <div class="panel">
-        <div class="eyebrow">Prototype v1.85 PWA</div>
+        <div class="eyebrow">Prototype v1.86 PWA</div>
         <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
         <p>
           품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -2038,6 +2045,7 @@
             <button class="secondary" id="restoreDropboxBackup" type="button">Dropbox 백업 불러오기</button>
             <button class="secondary" id="requestPersistentStorage" type="button">장기보관 모드</button>
             <button class="danger" id="cleanupLocalImages" type="button">용량 정리</button>
+            <button class="danger" id="resetData" type="button">데모 데이터 초기화</button>
           </div>
           <div class="storage-note" id="storageEstimateText">
             JSON은 전체 백업/이전용, CSV는 엑셀 확인용입니다. Dropbox 연결 후 저장하면 전체 DB 백업도 Dropbox에 보관하고 다시 불러올 수 있습니다.
@@ -2082,6 +2090,7 @@
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
     const PAYER_MEMORY_KEY = "satdeon_receipt_payers_v1";
+    const DEFAULT_RECENT_QUERIES = ["레몬", "치즈", "베이컨", "크래커"];
 
     const demoReceipt = {
       id: "receipt-costco-20260508",
@@ -2741,9 +2750,12 @@
 
     function getRecentQueries() {
       try {
-        return JSON.parse(localStorage.getItem(RECENT_KEY)) || ["레몬", "치즈", "베이컨", "크래커"];
+        const saved = localStorage.getItem(RECENT_KEY);
+        if (saved === null) return DEFAULT_RECENT_QUERIES;
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : DEFAULT_RECENT_QUERIES;
       } catch {
-        return ["레몬", "치즈", "베이컨", "크래커"];
+        return DEFAULT_RECENT_QUERIES;
       }
     }
 
@@ -3178,8 +3190,15 @@
 
     function renderChips() {
       const chips = $("chips");
+      const queries = getRecentQueries();
+      const clearButton = $("clearRecentSearches");
+      if (clearButton) clearButton.hidden = !queries.length;
       chips.innerHTML = "";
-      getRecentQueries().forEach(q => {
+      if (!queries.length) {
+        chips.innerHTML = `<div class="empty-recent">최근 검색어가 없습니다.</div>`;
+        return;
+      }
+      queries.forEach(q => {
         const btn = document.createElement("button");
         btn.className = "chip";
         btn.textContent = q;
@@ -7384,6 +7403,12 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       renderSearch();
       $("searchInput").focus();
     });
+    $("clearRecentSearches").addEventListener("click", () => {
+      if (!getRecentQueries().length) return;
+      if (!confirm("최근 검색어를 모두 지울까요?")) return;
+      localStorage.setItem(RECENT_KEY, JSON.stringify([]));
+      renderChips();
+    });
     $("searchInput").addEventListener("keydown", (e) => {
       if (e.key === "Enter" && $("searchInput").value.trim()) showItemDetail($("searchInput").value.trim());
     });
@@ -7495,9 +7520,10 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         $("searchInput").value = "";
         showHome();
         renderAll();
-    updatePayerChipState();
-    enableFormSelectAllShortcuts();
-    setTimeout(fitAllMoneyInputs, 0);
+        updatePayerChipState();
+        enableFormSelectAllShortcuts();
+        setTimeout(fitAllMoneyInputs, 0);
+        closeSettingsModal();
       }
     });
 
@@ -7574,7 +7600,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       const backup = {
         app: "영수증DB",
-        version: "v1.85 PWA",
+        version: "v1.86 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
@@ -7586,7 +7612,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       return {
         app: "영수증DB",
-        version: "v1.85 PWA",
+        version: "v1.86 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
