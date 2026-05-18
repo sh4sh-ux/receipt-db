@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v1.75 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v1.76 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -308,6 +308,63 @@
     .result-card {
       padding: 15px 16px;
       cursor: pointer;
+    }
+
+    .summary-card {
+      padding: 16px;
+      cursor: default;
+    }
+
+    .summary-card .summary-title {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 780;
+      margin-bottom: 8px;
+    }
+
+    .summary-card .summary-main {
+      font-size: 24px;
+      line-height: 1.12;
+      font-weight: 840;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .summary-card .summary-sub {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .stat-cell {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fbfbfd;
+      padding: 11px;
+    }
+
+    .stat-cell .label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 780;
+      margin-bottom: 5px;
+    }
+
+    .stat-cell .value {
+      font-size: 15px;
+      font-weight: 820;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .item-name {
@@ -1566,7 +1623,7 @@
         <div id="homeView">
           <div class="hero-title">
             <div>
-              <div class="eyebrow">Receipt DB · v1.75 PWA</div>
+              <div class="eyebrow">Receipt DB · v1.76 PWA</div>
               <h1>영수증DB</h1>
             </div>
             <button class="plus-btn" id="openAdd" aria-label="영수증 추가"><span>+</span></button>
@@ -1675,6 +1732,14 @@
                 <div class="label">가장 낮은 단가</div>
                 <div class="value" id="lowestUnitPrice"></div>
               </div>
+              <div class="info">
+                <div class="label">평균 단가</div>
+                <div class="value" id="averageUnitPrice"></div>
+              </div>
+              <div class="info">
+                <div class="label">총 구매액</div>
+                <div class="value" id="totalItemSpend"></div>
+              </div>
             </div>
 
             <div class="section">
@@ -1704,11 +1769,11 @@
 
     <aside class="side">
       <div class="panel">
-        <div class="eyebrow">Prototype v1.75 PWA</div>
-        <h2>음식점 영수증도<br/>품목 단위로 정리합니다.</h2>
+        <div class="eyebrow">Prototype v1.76 PWA</div>
+        <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
         <p>
-          산호초, 할매기름집, 금돈옥처럼 품목명과 단가·수량·금액 줄이 나뉘어 있는 음식점 영수증도 보정합니다.
-          매장명과 일자, 품목별 수량과 금액을 정확히 정리하도록 규칙을 추가했습니다.
+          품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
+          결제자 이름을 검색하면 누가 언제 어디서 얼마를 결제했는지 요약합니다.
         </p>
 
         <div class="feature-list">
@@ -1722,11 +1787,11 @@
           </div>
           <div class="feature">
             <div class="icon">⌕</div>
-            <div><b>수량·단가·계 검색</b><span>레몬을 검색하면 구매일, 매장, 품목, 수량, 단가, 계를 같이 보여줍니다.</span></div>
+            <div><b>가격 요약</b><span>품목별 최저가, 최근가, 평균 단가와 구매 이력을 같이 보여줍니다.</span></div>
           </div>
           <div class="feature">
             <div class="icon">◉</div>
-            <div><b>이미지 보관</b><span>업로드한 영수증 이미지를 브라우저 저장소에 보관해 다시 볼 수 있습니다.</span></div>
+            <div><b>결제자 검색</b><span>이름을 검색하면 총 결제액, 결제 횟수, 최근 결제 내역을 먼저 보여줍니다.</span></div>
           </div>
         </div>
       </div>
@@ -2551,6 +2616,118 @@
       );
     }
 
+    function itemQty(item = {}) {
+      const qty = Number(item.qty || 1);
+      return Number.isFinite(qty) && qty > 0 ? qty : 1;
+    }
+
+    function itemAmount(item = {}) {
+      const amount = Number(item.amount || 0);
+      if (Number.isFinite(amount) && amount !== 0) return amount;
+      const unitPrice = Number(item.unitPrice || 0);
+      return Number.isFinite(unitPrice) ? Math.round(unitPrice * itemQty(item)) : 0;
+    }
+
+    function itemUnitPrice(item = {}) {
+      const unitPrice = Number(item.unitPrice || 0);
+      if (Number.isFinite(unitPrice) && unitPrice !== 0) return unitPrice;
+      const qty = itemQty(item);
+      const amount = Number(item.amount || 0);
+      return Number.isFinite(amount) && qty ? Math.round(amount / qty) : 0;
+    }
+
+    function withItemMetrics(item = {}) {
+      return {
+        ...item,
+        qty: itemQty(item),
+        amount: itemAmount(item),
+        unitPrice: itemUnitPrice(item)
+      };
+    }
+
+    function positivePurchaseItems(items = []) {
+      return (items || [])
+        .map(withItemMetrics)
+        .filter(item => Number(item.unitPrice) > 0 && Number(item.amount) > 0);
+    }
+
+    function summarizeItemResults(items = []) {
+      const positive = positivePurchaseItems(items);
+      const latest = [...positive].sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))[0] || null;
+      const lowest = [...positive].sort((a, b) => Number(a.unitPrice) - Number(b.unitPrice))[0] || null;
+      const totalAmount = positive.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+      const totalQty = positive.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+      const averageUnitPrice = totalQty ? Math.round(totalAmount / totalQty) : 0;
+      const storeCount = new Set(positive.map(item => item.store).filter(Boolean)).size;
+      return {
+        count: positive.length,
+        latest,
+        lowest,
+        totalAmount,
+        totalQty,
+        averageUnitPrice,
+        storeCount
+      };
+    }
+
+    function summarizePayerReceipts(receipts = []) {
+      const sorted = [...receipts].sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+      const totalAmount = receipts.reduce((sum, receipt) => sum + Number(receipt.total || 0), 0);
+      const latest = sorted[0] || null;
+      const averageAmount = receipts.length ? Math.round(totalAmount / receipts.length) : 0;
+      const storeCount = new Set(receipts.map(receipt => receipt.store).filter(Boolean)).size;
+      return {
+        count: receipts.length,
+        totalAmount,
+        latest,
+        averageAmount,
+        storeCount
+      };
+    }
+
+    function renderItemSummaryCard(query, items = []) {
+      const summary = summarizeItemResults(items);
+      if (!summary.count) return "";
+
+      const lowest = summary.lowest;
+      const latest = summary.latest;
+      return `
+        <div class="card summary-card">
+          <div class="summary-title">${escapeHtml(query)} 가격 요약</div>
+          <div class="summary-main">${formatWon(lowest.unitPrice)}</div>
+          <div class="summary-sub">
+            최저가: ${formatDate(lowest.date)} · ${escapeHtml(lowest.store)} · ${escapeHtml(lowest.name)}<br/>
+            최근가: ${latest ? `${formatWon(latest.unitPrice)} · ${formatDate(latest.date)} · ${escapeHtml(latest.store)}` : "-"}
+          </div>
+          <div class="stat-grid">
+            <div class="stat-cell"><div class="label">평균 단가</div><div class="value">${formatWon(summary.averageUnitPrice)}</div></div>
+            <div class="stat-cell"><div class="label">구매 기록</div><div class="value">${summary.count.toLocaleString("ko-KR")}건</div></div>
+            <div class="stat-cell"><div class="label">매장 수</div><div class="value">${summary.storeCount.toLocaleString("ko-KR")}곳</div></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPayerSummaryCard(payerName, receipts = []) {
+      const summary = summarizePayerReceipts(receipts);
+      if (!summary.count) return "";
+
+      return `
+        <div class="card summary-card">
+          <div class="summary-title">${escapeHtml(payerName)} 결제 요약</div>
+          <div class="summary-main">${formatWon(summary.totalAmount)}</div>
+          <div class="summary-sub">
+            최근 결제: ${summary.latest ? `${formatDate(summary.latest.date)} · ${escapeHtml(summary.latest.store)} · ${formatWon(summary.latest.total)}` : "-"}
+          </div>
+          <div class="stat-grid">
+            <div class="stat-cell"><div class="label">결제 횟수</div><div class="value">${summary.count.toLocaleString("ko-KR")}건</div></div>
+            <div class="stat-cell"><div class="label">평균 결제</div><div class="value">${formatWon(summary.averageAmount)}</div></div>
+            <div class="stat-cell"><div class="label">장소 수</div><div class="value">${summary.storeCount.toLocaleString("ko-KR")}곳</div></div>
+          </div>
+        </div>
+      `;
+    }
+
     function getPayerQuery(query) {
       let value = normalize(query);
       // "신유철", "신유철 결제", "신유철 결제자", "결제자 신유철" 모두 같은 결제자 검색으로 처리합니다.
@@ -2833,6 +3010,7 @@
         const payerName = payerDisplayName(payerReceipts, query);
         $("resultTitle").innerHTML = `<span class="payer-badge">${escapeHtml(payerName)} <span class="suffix">결제</span></span>`;
         $("resultCount").textContent = `${payerReceipts.length}건`;
+        resultList.innerHTML = renderPayerSummaryCard(payerName, payerReceipts);
 
         payerReceipts.forEach(receipt => {
           const previewItems = (receipt.items || []).slice(0, 3).map(item => escapeHtml(item.name)).join(", ");
@@ -2862,7 +3040,7 @@
         return;
       }
 
-      const items = searchItems(query);
+      const items = searchItems(query).map(withItemMetrics);
       $("resultTitle").textContent = query;
       $("resultCount").textContent = `${items.length}건`;
 
@@ -2879,6 +3057,7 @@
         return;
       }
 
+      resultList.innerHTML = renderItemSummaryCard(query, items);
       items.forEach(item => {
         const div = document.createElement("div");
         div.className = "card result-card";
@@ -2895,7 +3074,7 @@
           </div>
           <div class="mini-table">
             <div class="muted">${escapeHtml(item.name)}</div>
-            <div class="num">${Number(item.qty).toLocaleString("ko-KR")}</div>
+            <div class="num">${Number(item.qty || 0).toLocaleString("ko-KR")}</div>
             <div class="num">${formatWon(item.unitPrice)}</div>
             <div class="num"><strong>${formatWon(item.amount)}</strong></div>
           </div>
@@ -3014,31 +3193,34 @@
       const body = $("receiptItemsBody");
       body.innerHTML = "";
       receipt.items.forEach(item => {
+        const metrics = withItemMetrics(item);
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td style="white-space:pre-line;word-break:keep-all;">${escapeHtml(item.name)}</td>
-          <td class="right">${Number(item.qty).toLocaleString("ko-KR")}</td>
-          <td class="right">${formatWon(item.unitPrice)}</td>
-          <td class="right"><strong>${formatWon(item.amount)}</strong></td>
+          <td class="right">${Number(metrics.qty || 0).toLocaleString("ko-KR")}</td>
+          <td class="right">${formatWon(metrics.unitPrice)}</td>
+          <td class="right"><strong>${formatWon(metrics.amount)}</strong></td>
         `;
         body.appendChild(tr);
       });
     }
 
     function showItemDetail(query) {
-      const items = searchItems(query);
+      const items = searchItems(query).map(withItemMetrics);
       hideAllViews();
       $("itemDetailView").classList.remove("hidden");
       setActiveTab("tabSearch");
       $("detailName").textContent = query;
       $("detailCount").textContent = `${items.length}건`;
 
-      const positive = items.filter(x => Number(x.unitPrice) > 0);
-      const latest = [...positive].sort((a,b) => b.date.localeCompare(a.date))[0] || items[0];
-      const lowest = [...positive].sort((a,b) => Number(a.unitPrice) - Number(b.unitPrice))[0] || items[0];
+      const summary = summarizeItemResults(items);
+      const latest = summary.latest || items[0];
+      const lowest = summary.lowest || items[0];
 
       $("latestUnitPrice").textContent = latest ? formatWon(latest.unitPrice) : "-";
       $("lowestUnitPrice").textContent = lowest ? formatWon(lowest.unitPrice) : "-";
+      $("averageUnitPrice").textContent = summary.count ? formatWon(summary.averageUnitPrice) : "-";
+      $("totalItemSpend").textContent = summary.count ? formatWon(summary.totalAmount) : "-";
 
       const body = $("historyBody");
       body.innerHTML = "";
@@ -3048,7 +3230,7 @@
           <td>${formatDate(item.date)}</td>
           <td>${escapeHtml(item.store)}</td>
           <td style="white-space:pre-line;word-break:keep-all;">${escapeHtml(item.name)}</td>
-          <td class="right">${Number(item.qty).toLocaleString("ko-KR")}</td>
+          <td class="right">${Number(item.qty || 0).toLocaleString("ko-KR")}</td>
           <td class="right">${formatWon(item.unitPrice)}</td>
           <td class="right"><strong>${formatWon(item.amount)}</strong></td>
         `;
@@ -6973,7 +7155,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       const backup = {
         app: "영수증DB",
-        version: "v1.75 PWA",
+        version: "v1.76 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
