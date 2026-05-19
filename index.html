@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v1.91 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v1.92 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -1807,7 +1807,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v1.91 PWA</span>
+                <span class="eyebrow">Receipt DB · v1.92 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -1955,7 +1955,7 @@
 
     <aside class="side">
       <div class="panel">
-        <div class="eyebrow">Prototype v1.91 PWA</div>
+        <div class="eyebrow">Prototype v1.92 PWA</div>
         <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
         <p>
           품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -3039,16 +3039,51 @@
         const saved = localStorage.getItem(RECENT_KEY);
         if (saved === null) return DEFAULT_RECENT_QUERIES;
         const parsed = JSON.parse(saved);
-        return Array.isArray(parsed) ? parsed : DEFAULT_RECENT_QUERIES;
+        return Array.isArray(parsed) ? cleanRecentQueries(parsed) : DEFAULT_RECENT_QUERIES;
       } catch {
         return DEFAULT_RECENT_QUERIES;
       }
     }
 
+    function shouldSaveRecentQuery(query = "") {
+      const text = String(query || "").trim();
+      if (text.length < 2) return false;
+      if (/^[ㄱ-ㅎㅏ-ㅣ]+$/.test(text)) return false;
+      return /[가-힣A-Za-z0-9]/.test(text);
+    }
+
+    function cleanRecentQueries(queries = []) {
+      const cleaned = [];
+      for (const raw of queries || []) {
+        const query = String(raw || "").trim();
+        if (!shouldSaveRecentQuery(query)) continue;
+        const queryKey = normalize(query);
+        if (!queryKey) continue;
+        if (cleaned.some(item => {
+          const existingKey = normalize(item);
+          return existingKey.length > queryKey.length && existingKey.startsWith(queryKey);
+        })) continue;
+
+        for (let i = cleaned.length - 1; i >= 0; i--) {
+          const existingKey = normalize(cleaned[i]);
+          if (queryKey.length >= existingKey.length && queryKey.startsWith(existingKey)) {
+            cleaned.splice(i, 1);
+          }
+        }
+
+        if (!cleaned.some(item => normalize(item) === queryKey)) cleaned.push(query);
+      }
+      return cleaned.slice(0, 6);
+    }
+
     function addRecentQuery(q) {
       const query = q.trim();
-      if (!query) return;
-      const next = [query, ...getRecentQueries().filter(x => normalize(x) !== normalize(query))].slice(0, 6);
+      if (!shouldSaveRecentQuery(query)) return;
+      const queryKey = normalize(query);
+      const next = [query, ...getRecentQueries().filter(x => {
+        const existingKey = normalize(x);
+        return existingKey !== queryKey && !queryKey.startsWith(existingKey) && !existingKey.startsWith(queryKey);
+      })].slice(0, 6);
       localStorage.setItem(RECENT_KEY, JSON.stringify(next));
       renderChips();
     }
@@ -8304,7 +8339,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       const backup = {
         app: "영수증DB",
-        version: "v1.91 PWA",
+        version: "v1.92 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
@@ -8316,7 +8351,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       return {
         app: "영수증DB",
-        version: "v1.91 PWA",
+        version: "v1.92 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
