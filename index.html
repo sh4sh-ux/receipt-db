@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v1.86 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v1.88 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -1488,6 +1488,61 @@
       margin: 12px 0 0;
     }
 
+    .validation-card {
+      margin-top: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fbfbfd;
+    }
+
+    .validation-card.ok {
+      border-color: rgba(52,199,89,.28);
+      background: #f3fcf6;
+    }
+
+    .validation-card.warn {
+      border-color: rgba(255,149,0,.32);
+      background: #fff8ed;
+    }
+
+    .validation-card.error {
+      border-color: rgba(255,59,48,.28);
+      background: #fff5f4;
+    }
+
+    .validation-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 14px;
+      font-weight: 820;
+    }
+
+    .validation-list {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      font-weight: 680;
+    }
+
+    .validation-list .bad {
+      color: var(--red);
+    }
+
+    .validation-list .good {
+      color: var(--green);
+    }
+
+    .validation-actions {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
     .settings-grid {
       display: grid;
       gap: 12px;
@@ -1705,7 +1760,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v1.86 PWA</span>
+                <span class="eyebrow">Receipt DB · v1.88 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -1853,7 +1908,7 @@
 
     <aside class="side">
       <div class="panel">
-        <div class="eyebrow">Prototype v1.86 PWA</div>
+        <div class="eyebrow">Prototype v1.88 PWA</div>
         <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
         <p>
           품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -1924,6 +1979,19 @@
       <div class="notice">
         이미지를 업로드하면 코스트코/하나로마트/음식점처럼 품목명과 금액 줄이 분리된 영수증도 자동 정리합니다.
         입력창에서 글자를 선택해도 행 이동이 작동하지 않도록 조정했습니다.
+      </div>
+
+      <div class="validation-card" id="validationCard">
+        <div class="validation-head">
+          <span id="validationTitle">금액 검증 대기</span>
+          <span class="pill" id="validationBadge">대기</span>
+        </div>
+        <div class="validation-list" id="validationList">
+          품목을 입력하면 수량×단가, 계 금액, 총액을 확인합니다.
+        </div>
+        <div class="validation-actions">
+          <button class="secondary hidden" id="useCalculatedTotal" type="button">품목 합계를 총액으로 사용</button>
+        </div>
       </div>
 
       <div class="demo-payer-row">
@@ -2090,6 +2158,7 @@
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
     const PAYER_MEMORY_KEY = "satdeon_receipt_payers_v1";
+    const RECEIPT_EDIT_MEMORY_KEY = "satdeon_receipt_edits_v1";
     const DEFAULT_RECENT_QUERIES = ["레몬", "치즈", "베이컨", "크래커"];
 
     const demoReceipt = {
@@ -2099,8 +2168,8 @@
       total: 163390,
       imageSrc: "assets/costco_receipt.jpg",
       items: [
-        { name: "샤프로 6캔", qty: 1, unitPrice: 11990, amount: 11990, aliases: "맥주 샤프로" },
-        { name: "샤프로 맥주 IRC", qty: 1, unitPrice: -1800, amount: -1800, aliases: "맥주 할인 쿠폰" },
+        { name: "삿포로 6캔", qty: 1, unitPrice: 11990, amount: 11990, aliases: "맥주 삿포로" },
+        { name: "삿포로 맥주 IRC", qty: 1, unitPrice: -1800, amount: -1800, aliases: "맥주 할인 쿠폰 삿포로" },
         { name: "테라 452ML X24", qty: 1, unitPrice: 31590, amount: 31590, aliases: "맥주 테라" },
         { name: "치움슈터 1.6L X2", qty: 1, unitPrice: 7490, amount: 7490, aliases: "청소 생활용품" },
         { name: "EZ N일회용 비닐장갑", qty: 1, unitPrice: 11990, amount: 11990, aliases: "장갑 비닐장갑" },
@@ -2437,6 +2506,8 @@
     let lastOcrText = "";
     let currentImageFileName = "";
     let lastStorageWarning = ""; 
+    let currentReceiptTotalHint = null;
+    let currentReceiptTotalHintIgnored = false;
 
     const $ = (id) => document.getElementById(id);
 
@@ -2631,20 +2702,171 @@
       };
     }
 
-    function migrateData(data) {
-      const payerMemory = loadPayerMemory();
-      data.receipts = (data.receipts || []).map(receipt => ({
+    function loadReceiptEditMemory() {
+      try {
+        return JSON.parse(localStorage.getItem(RECEIPT_EDIT_MEMORY_KEY)) || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveReceiptEditMemory(memory) {
+      try {
+        localStorage.setItem(RECEIPT_EDIT_MEMORY_KEY, JSON.stringify(memory || {}));
+      } catch {
+        // 수정값 보조 저장 실패가 영수증 저장 자체를 막으면 안 됩니다.
+      }
+    }
+
+    function normalizeReceiptItemsForStorage(items = []) {
+      return dedupeItems((items || []).map(item => {
+        const qty = Number(item.qty || 1);
+        const amount = Number(item.amount ?? item.price ?? 0);
+        const unitPrice = Number(item.unitPrice ?? (qty ? amount / qty : amount));
+        return {
+          name: String(item.name || "").trim(),
+          qty,
+          unitPrice,
+          amount,
+          aliases: item.aliases || ""
+        };
+      })).filter(item => item.name);
+    }
+
+    function applyKnownReceiptCorrections(receipt = {}) {
+      const isCostcoDemo =
+        receipt.id === "receipt-costco-20260508" ||
+        (normalize(receipt.store || "") === normalize("코스트코 하남점") && receipt.date === "2026-05-08");
+
+      if (!isCostcoDemo) return receipt;
+
+      return {
+        ...receipt,
+        items: (receipt.items || []).map(item => ({
+          ...item,
+          name: String(item.name || "").replace(/샤프로/g, "삿포로"),
+          aliases: String(item.aliases || "").replace(/샤프로/g, "삿포로")
+        }))
+      };
+    }
+
+    function normalizeReceiptForApp(receipt = {}, payerMemory = loadPayerMemory()) {
+      return applyKnownReceiptCorrections({
         ...restoreRememberedPayer(receipt, payerMemory),
         imageSrc: receipt.imageSrc || receipt.thumbnailSrc || "",
         thumbnailSrc: receipt.thumbnailSrc || receipt.imageSrc || "",
-        imageStorage: receipt.dropboxPath ? "dropbox+thumbnail" : (receipt.imageSrc ? "local-thumbnail" : "none"),
-        items: dedupeItems((receipt.items || []).map(item => {
-          const amount = Number(item.amount ?? item.price ?? 0);
-          const qty = Number(item.qty || 1);
-          const unitPrice = Number(item.unitPrice ?? (qty ? amount / qty : amount));
-          return { ...item, qty, unitPrice, amount, aliases: item.aliases || "" };
+        imageStorage: receipt.dropboxPath ? "dropbox+thumbnail" : (receipt.imageSrc ? "local-thumbnail" : (receipt.imageStorage || "none")),
+        receiptTotalHint: Number(receipt.receiptTotalHint || receipt.extractedTotal || 0) || "",
+        items: normalizeReceiptItemsForStorage(receipt.items || [])
+      });
+    }
+
+    function receiptEditMemoryKeys(receipt = {}) {
+      const store = normalize(receipt.store || "");
+      const date = receipt.date || "";
+      const total = Number(receipt.total || 0);
+      return [
+        receipt.id ? `id:${receipt.id}` : "",
+        receipt.dropboxPath ? `dropbox:${receipt.dropboxPath}` : "",
+        store && date && total ? `header:${store}|${date}|${total}` : ""
+      ].filter(Boolean);
+    }
+
+    function compactReceiptForEditMemory(receipt = {}) {
+      return {
+        id: receipt.id || "",
+        store: String(receipt.store || "").trim(),
+        date: receipt.date || "",
+        total: Number(receipt.total || 0),
+        payer: getReceiptPayer(receipt),
+        dropboxPath: receipt.dropboxPath || "",
+        dropboxFileId: receipt.dropboxFileId || "",
+        imageStorage: receipt.imageStorage || "none",
+        receiptTotalHint: Number(receipt.receiptTotalHint || receipt.extractedTotal || 0) || "",
+        items: normalizeReceiptItemsForStorage(receipt.items || [])
+      };
+    }
+
+    function rememberReceiptEdit(receipt = {}, memory = loadReceiptEditMemory()) {
+      const compact = compactReceiptForEditMemory(receipt);
+      if (!compact.store || !compact.date || !compact.items.length) return memory;
+      receiptEditMemoryKeys(receipt).forEach(key => {
+        memory[key] = compact;
+      });
+      return memory;
+    }
+
+    function rememberedReceiptEditFor(receipt = {}, memory = loadReceiptEditMemory()) {
+      return receiptEditMemoryKeys(receipt).map(key => memory[key]).find(Boolean) || null;
+    }
+
+    function sampleReceiptFor(receipt = {}) {
+      if (!receipt.id) return null;
+      return sampleReceipts.find(sample => sample.id === receipt.id) || null;
+    }
+
+    function receiptEditFingerprint(receipt = {}) {
+      const normalized = applyKnownReceiptCorrections({
+        store: receipt.store || "",
+        date: receipt.date || "",
+        total: Number(receipt.total || 0),
+        items: normalizeReceiptItemsForStorage(receipt.items || [])
+      });
+      return JSON.stringify({
+        store: normalize(normalized.store || ""),
+        date: normalized.date || "",
+        total: Number(normalized.total || 0),
+        items: (normalized.items || []).map(item => ({
+          name: normalize(item.name || ""),
+          qty: Number(item.qty || 0),
+          unitPrice: Number(item.unitPrice || 0),
+          amount: Number(item.amount || 0)
         }))
-      }));
+      });
+    }
+
+    function receiptDiffersFromSample(receipt = {}) {
+      const sample = sampleReceiptFor(receipt);
+      if (!sample) return false;
+      return receiptEditFingerprint(receipt) !== receiptEditFingerprint(sample);
+    }
+
+    function receiptHasUserEdits(receipt = {}, memory = loadReceiptEditMemory()) {
+      return !!rememberedReceiptEditFor(receipt, memory) || receiptDiffersFromSample(receipt);
+    }
+
+    function rememberChangedSampleReceiptEdits(receipts = [], memory = loadReceiptEditMemory()) {
+      (receipts || []).forEach(receipt => {
+        if (receiptDiffersFromSample(receipt)) rememberReceiptEdit(receipt, memory);
+      });
+      saveReceiptEditMemory(memory);
+      return memory;
+    }
+
+    function restoreRememberedReceiptEdit(receipt = {}, memory = loadReceiptEditMemory()) {
+      const remembered = rememberedReceiptEditFor(receipt, memory);
+      if (!remembered) return receipt;
+
+      return applyKnownReceiptCorrections({
+        ...receipt,
+        store: remembered.store || receipt.store,
+        date: remembered.date || receipt.date,
+        total: Number.isFinite(Number(remembered.total)) ? Number(remembered.total) : Number(receipt.total || 0),
+        payer: getReceiptPayer(remembered) || getReceiptPayer(receipt),
+        dropboxPath: remembered.dropboxPath || receipt.dropboxPath || "",
+        dropboxFileId: remembered.dropboxFileId || receipt.dropboxFileId || "",
+        imageStorage: receipt.dropboxPath ? receipt.imageStorage : (remembered.imageStorage || receipt.imageStorage || "none"),
+        receiptTotalHint: remembered.receiptTotalHint || receipt.receiptTotalHint || "",
+        items: remembered.items?.length ? normalizeReceiptItemsForStorage(remembered.items) : (receipt.items || [])
+      });
+    }
+
+    function migrateData(data) {
+      const payerMemory = loadPayerMemory();
+      const editMemory = loadReceiptEditMemory();
+      const normalizedReceipts = (data.receipts || []).map(receipt => normalizeReceiptForApp(receipt, payerMemory));
+      rememberChangedSampleReceiptEdits(normalizedReceipts, editMemory);
+      data.receipts = normalizedReceipts.map(receipt => restoreRememberedPayer(restoreRememberedReceiptEdit(receipt, editMemory), payerMemory));
       rememberAllReceiptPayers(data.receipts);
       return data;
     }
@@ -2723,8 +2945,12 @@
 
     function seedData() {
       const payerMemory = loadPayerMemory();
+      const editMemory = loadReceiptEditMemory();
       const data = {
-        receipts: sampleReceipts.map(receipt => restoreRememberedPayer({ ...receipt }, payerMemory))
+        receipts: sampleReceipts.map(receipt => {
+          const cloned = { ...receipt, items: (receipt.items || []).map(item => ({ ...item })) };
+          return restoreRememberedPayer(restoreRememberedReceiptEdit(normalizeReceiptForApp(cloned, payerMemory), editMemory), payerMemory);
+        })
       };
       saveData(data);
       return data;
@@ -2739,6 +2965,9 @@
       const idx = data.receipts.findIndex(r => r.id === receipt.id);
       if (idx >= 0) data.receipts[idx] = receipt;
       else data.receipts.unshift(receipt);
+      const editMemory = loadReceiptEditMemory();
+      rememberReceiptEdit(receipt, editMemory);
+      saveReceiptEditMemory(editMemory);
       saveData(data);
     }
 
@@ -3754,6 +3983,8 @@
       $("modalBackdrop").classList.remove("show");
       editingReceiptId = null;
       currentImageData = "";
+      currentReceiptTotalHint = null;
+      currentReceiptTotalHintIgnored = false;
       formBaseline = "";
       pendingClose = false;
     }
@@ -3799,6 +4030,8 @@
       $("totalInput").value = formatInputNumber(receipt.total) || "";
       $("payerInput").value = receipt.payer || "";
       updatePayerChipState();
+      currentReceiptTotalHint = Number(receipt.receiptTotalHint || receipt.extractedTotal || 0) || null;
+      currentReceiptTotalHintIgnored = false;
       currentImageData = receipt.thumbnailSrc || receipt.imageSrc || "";
       currentOriginalImageData = "";
       currentImageFileName = "";
@@ -3826,6 +4059,8 @@
       $("totalInput").value = "";
       $("payerInput").value = "";
       updatePayerChipState();
+      currentReceiptTotalHint = null;
+      currentReceiptTotalHintIgnored = false;
       $("itemTable").innerHTML = "";
       $("preview").style.display = "none";
       $("preview").src = "";
@@ -3869,6 +4104,7 @@
         $("totalInput").value = "";
         fitMoneyInputFont($("totalInput"));
         updateMoveButtons();
+        updateReceiptValidation();
         return 0;
       }
 
@@ -3886,7 +4122,93 @@
       $("totalInput").value = formatInputNumber(total);
       fitMoneyInputFont($("totalInput"));
       updateMoveButtons();
+      updateReceiptValidation();
       return total;
+    }
+
+    function collectReceiptMathValidation() {
+      const rows = [...$("itemTable").querySelectorAll("tr")];
+      const issues = [];
+      const warnings = [];
+      let calculatedTotal = 0;
+      let filledRows = 0;
+
+      rows.forEach((row, index) => {
+        const rowNo = index + 1;
+        const name = singleLineText(row.querySelector(".item-name-input")?.value || "");
+        const qtyText = String(row.querySelector(".item-qty-input")?.value || "").trim();
+        const unitText = String(row.querySelector(".item-unit-input")?.value || "").trim();
+        const amountText = String(row.querySelector(".item-amount-input")?.value || "").trim();
+
+        if (!name && !qtyText && !unitText && !amountText) return;
+        filledRows++;
+
+        const qty = toNumber(qtyText || 1);
+        const unitPrice = toNumber(unitText || 0);
+        const amount = toNumber(amountText || 0);
+
+        if (!name) issues.push(`${rowNo}행: 품목명이 비어 있습니다.`);
+        if (!Number.isFinite(qty) || qty <= 0) issues.push(`${name || rowNo + "행"}: 수량을 확인해주세요.`);
+        if (!amountText) issues.push(`${name || rowNo + "행"}: 계 금액이 비어 있습니다.`);
+
+        const expectedAmount = Math.round(qty * unitPrice);
+        if (amountText && Number.isFinite(qty) && Number.isFinite(unitPrice) && Math.abs(expectedAmount - amount) > 1) {
+          issues.push(`${name || rowNo + "행"}: 수량×단가(${formatWon(expectedAmount)})와 계(${formatWon(amount)})가 맞지 않습니다.`);
+        }
+
+        if (name && !isSeparateSupportDiscount(name) && !isIncludedOptionItem(name, rows)) {
+          calculatedTotal += amount;
+        }
+      });
+
+      const totalHint = currentReceiptTotalHintIgnored ? null : Number(currentReceiptTotalHint || 0);
+      if (filledRows && totalHint && Math.abs(calculatedTotal - totalHint) > 1) {
+        issues.push(`품목 합계 ${formatWon(calculatedTotal)}와 인식 총액 ${formatWon(totalHint)}이 맞지 않습니다.`);
+      }
+
+      if (!filledRows) warnings.push("품목을 입력하면 금액 검증을 시작합니다.");
+
+      return {
+        issues,
+        warnings,
+        calculatedTotal,
+        totalHint: totalHint || null,
+        filledRows
+      };
+    }
+
+    function updateReceiptValidation() {
+      const card = $("validationCard");
+      if (!card) return;
+      const validation = collectReceiptMathValidation();
+      const hasError = validation.issues.length > 0;
+      const hasWarning = !hasError && validation.warnings.length > 0;
+      card.classList.toggle("error", hasError);
+      card.classList.toggle("warn", hasWarning);
+      card.classList.toggle("ok", !hasError && !hasWarning && validation.filledRows > 0);
+
+      $("validationTitle").textContent = hasError
+        ? "확인 필요"
+        : hasWarning
+          ? "금액 검증 대기"
+          : "금액 검증 완료";
+      $("validationBadge").textContent = hasError ? "저장 보류" : hasWarning ? "대기" : "저장 가능";
+
+      const lines = [];
+      if (validation.issues.length) {
+        lines.push(...validation.issues.map(issue => `<div class="bad">• ${escapeHtml(issue)}</div>`));
+      } else if (validation.warnings.length) {
+        lines.push(...validation.warnings.map(warning => `<div>• ${escapeHtml(warning)}</div>`));
+      } else {
+        lines.push(`<div class="good">• 모든 품목의 수량×단가=계 금액이 맞습니다.</div>`);
+        lines.push(`<div class="good">• 저장 총액: ${formatWon(validation.calculatedTotal)}</div>`);
+        if (validation.totalHint) lines.push(`<div class="good">• 인식 총액과 품목 합계가 일치합니다.</div>`);
+      }
+      $("validationList").innerHTML = lines.join("");
+
+      const canUseCalculated = validation.issues.some(issue => issue.includes("품목 합계") && issue.includes("인식 총액"));
+      $("useCalculatedTotal")?.classList.toggle("hidden", !canUseCalculated);
+      return validation;
     }
 
     function isSeparateSupportDiscount(name) {
@@ -4380,7 +4702,13 @@
       recalculateTotalFromItems();
       const store = $("storeInput").value.trim();
       const date = $("dateInput").value;
-      const total = recalculateTotalFromItems();
+      const validation = collectReceiptMathValidation();
+      if (validation.issues.length) {
+        updateReceiptValidation();
+        alert("금액 검증을 통과해야 저장할 수 있습니다.\n\n" + validation.issues.join("\n"));
+        return;
+      }
+      const total = validation.calculatedTotal;
       const payer = $("payerInput").value.trim();
       const items = readItemsFromForm();
 
@@ -4401,6 +4729,7 @@
         dropboxPath: previousReceipt?.dropboxPath || "",
         dropboxFileId: previousReceipt?.dropboxFileId || "",
         imageStorage: previousReceipt?.imageStorage || (currentImageData ? "local-thumbnail" : "none"),
+        receiptTotalHint: currentReceiptTotalHintIgnored ? "" : (currentReceiptTotalHint || previousReceipt?.receiptTotalHint || ""),
         items
       };
 
@@ -4987,7 +5316,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         const itemMessage = parsed.ocrSafetyMode
           ? "품목을 확정하기 어려워 안전모드로 총액 1행만 입력했습니다. 엉뚱한 품목 자동입력을 막기 위한 처리입니다."
           : parsed.items.length
-            ? `${parsed.items.length}개 상품 품목을 자동 입력했습니다. 수량·단가·계를 확인해주세요.`
+            ? `${parsed.items.length}개 상품 품목을 자동 입력했습니다. 아래 금액 검증을 통과해야 저장할 수 있습니다.`
             : "상품 품목을 안전하게 확정하지 못했습니다. 엉뚱한 품목을 넣지 않도록 자동 입력을 보류했습니다. 원문 보기에서 확인하거나 직접 수정해주세요.";
 
         updateOcrStatus(`OCR 완료: ${itemMessage}`, 100, true);
@@ -7243,7 +7572,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       if (/cheese|치즈|하바티/.test(lower)) aliases.push("치즈");
       if (/bacon|베이컨/.test(lower)) aliases.push("베이컨 bacon");
       if (/cracker|크래커/.test(lower)) aliases.push("과자 크래커");
-      if (/맥주|terra|테라|샤프로/.test(lower)) aliases.push("맥주");
+      if (/맥주|terra|테라|삿포로|샤프로/.test(lower)) aliases.push("맥주");
       if (/롤케익|롤케이크|케익|케이크/.test(lower)) aliases.push("케이크 롤케익 디저트");
       if (/깐마늘|마늘/.test(lower)) aliases.push("마늘 깐마늘 농산물");
       if (/막걸리|서울장수/.test(lower)) aliases.push("막걸리 주류 서울장수");
@@ -7366,6 +7695,8 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
 
     function applyParsedReceipt(parsed) {
       parsed = parsed?.ocrSafetyMode === undefined ? stabilizeParsedReceipt(parsed || {}) : parsed;
+      currentReceiptTotalHint = Number(parsed.total || 0) || null;
+      currentReceiptTotalHintIgnored = false;
       if (parsed.store) $("storeInput").value = parsed.store;
       if (parsed.date) $("dateInput").value = parsed.date;
       if (parsed.total) $("totalInput").value = formatInputNumber(parsed.total);
@@ -7408,6 +7739,20 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       if (!confirm("최근 검색어를 모두 지울까요?")) return;
       localStorage.setItem(RECENT_KEY, JSON.stringify([]));
       renderChips();
+    });
+    $("useCalculatedTotal").addEventListener("click", () => {
+      const validation = collectReceiptMathValidation();
+      if (!validation.totalHint) return;
+      const ok = confirm(
+        "인식 총액과 품목 합계가 다릅니다.\n\n" +
+        `인식 총액: ${formatWon(validation.totalHint)}\n` +
+        `품목 합계: ${formatWon(validation.calculatedTotal)}\n\n` +
+        "원본 영수증을 직접 확인했고 품목 합계를 총액으로 사용하겠습니까?"
+      );
+      if (!ok) return;
+      currentReceiptTotalHintIgnored = true;
+      currentReceiptTotalHint = null;
+      updateReceiptValidation();
     });
     $("searchInput").addEventListener("keydown", (e) => {
       if (e.key === "Enter" && $("searchInput").value.trim()) showItemDetail($("searchInput").value.trim());
@@ -7600,7 +7945,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       const backup = {
         app: "영수증DB",
-        version: "v1.86 PWA",
+        version: "v1.88 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
@@ -7612,7 +7957,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       return {
         app: "영수증DB",
-        version: "v1.86 PWA",
+        version: "v1.88 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
@@ -7626,9 +7971,20 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
     }
 
     function mergeReceiptPreservingPayer(existing = {}, incoming = {}) {
+      const editMemory = loadReceiptEditMemory();
+      const existingHasEdits = receiptHasUserEdits(existing, editMemory);
+      const incomingHasEdits = receiptHasUserEdits(incoming, editMemory);
+      const base = existingHasEdits && !incomingHasEdits
+        ? existing
+        : incomingHasEdits && !existingHasEdits
+          ? incoming
+          : existingHasEdits && incomingHasEdits
+            ? existing
+            : incoming;
       const payer = getReceiptPayer(incoming) || getReceiptPayer(existing) || rememberedPayerFor(incoming) || rememberedPayerFor(existing);
+      const restored = restoreRememberedReceiptEdit(base, editMemory);
       return {
-        ...incoming,
+        ...restored,
         payer
       };
     }
@@ -7647,7 +8003,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         };
       })).filter(item => item.name);
 
-      return restoreRememberedPayer({
+      const normalizedReceipt = normalizeReceiptForApp({
         id: receipt.id || "imported-" + Date.now() + "-" + index,
         store: String(receipt.store || "").trim() || "미지정",
         date: receipt.date || new Date().toISOString().slice(0, 10),
@@ -7658,8 +8014,10 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         dropboxPath: receipt.dropboxPath || "",
         dropboxFileId: receipt.dropboxFileId || "",
         imageStorage: receipt.dropboxPath ? "dropbox-only" : (receipt.imageSrc || receipt.thumbnailSrc ? "local-thumbnail" : "none"),
+        receiptTotalHint: Number(receipt.receiptTotalHint || receipt.extractedTotal || 0) || "",
         items
       });
+      return restoreRememberedPayer(restoreRememberedReceiptEdit(normalizedReceipt), loadPayerMemory());
     }
 
     async function importJsonBackupFile(file, options = {}) {
@@ -8222,7 +8580,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       }
       const parsed = safeParseReceiptText(text, { fileName: currentImageFileName || "" });
       applyParsedReceipt(parsed);
-      updateOcrStatus(`원문을 다시 정리했습니다. ${parsed.items.length}개 상품 품목을 확인해주세요.`, 100, true);
+      updateOcrStatus(`원문을 다시 정리했습니다. ${parsed.items.length}개 상품 품목을 금액 검증과 함께 확인해주세요.`, 100, true);
     });
 
     document.addEventListener("click", (event) => {
