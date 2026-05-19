@@ -1,9 +1,10 @@
+
 <!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v1.92 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v1.94 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -949,6 +950,28 @@
 
     .ocr-actions.show { display: flex; }
 
+    .ai-draft-guide {
+      margin-top: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fbfbfd;
+      display: grid;
+      gap: 8px;
+    }
+
+    .ai-draft-title {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 860;
+    }
+
+    .ai-draft-copy {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      font-weight: 650;
+    }
 
     .preview {
       max-height: 180px;
@@ -1330,6 +1353,18 @@
       flex: 1;
     }
 
+    .save-confirm-stack {
+      margin-left: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .save-confirm-stack .primary {
+      min-width: 148px;
+    }
+
 
     .remove {
       border: 0;
@@ -1546,6 +1581,7 @@
     .source-confirm-inline {
       min-height: 54px;
       padding: 8px 10px;
+      width: min(360px, 100%);
       border: 1px solid rgba(255,149,0,.38);
       border-radius: 16px;
       background: #fff8ed;
@@ -1588,6 +1624,18 @@
       font-size: 11px;
       font-weight: 680;
       line-height: 1.45;
+    }
+
+    @media (max-width: 720px) {
+      .save-confirm-stack {
+        width: 100%;
+        align-items: stretch;
+      }
+
+      .save-confirm-stack .primary,
+      .source-confirm-inline {
+        width: 100%;
+      }
     }
 
     .settings-grid {
@@ -1786,7 +1834,6 @@
       }
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#111113" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -1807,7 +1854,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v1.92 PWA</span>
+                <span class="eyebrow">Receipt DB · v1.94 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -1955,7 +2002,7 @@
 
     <aside class="side">
       <div class="panel">
-        <div class="eyebrow">Prototype v1.92 PWA</div>
+        <div class="eyebrow">Prototype v1.94 PWA</div>
         <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
         <p>
           품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -1969,7 +2016,7 @@
           </div>
           <div class="feature">
             <div class="icon">✎</div>
-            <div><b>원본 확인</b><span>자동 추출값은 초안으로 두고, 원본과 숫자를 확인한 뒤 저장합니다.</span></div>
+            <div><b>원본 확인</b><span>AI 분석값이나 직접 입력값을 원본과 대조한 뒤 저장합니다.</span></div>
           </div>
           <div class="feature">
             <div class="icon">⌕</div>
@@ -2004,27 +2051,28 @@
 
       <div class="upload-box">
         <strong>영수증 이미지</strong>
-        <span>자동 추출값은 초안입니다. 저장 전 원본 이미지와 숫자를 직접 확인합니다.</span>
+        <span>사진은 원본 확인용으로 보관합니다. 분석값은 아래에 붙여넣거나 직접 입력합니다.</span>
         <input id="imageInput" type="file" accept="image/*" />
         <img id="preview" class="preview" alt="영수증 미리보기" />
       </div>
 
       <div class="ocr-status" id="ocrStatus">
-        <div id="ocrStatusText">영수증 이미지로 입력 초안을 만드는 중입니다.</div>
+        <div id="ocrStatusText">영수증 사진을 불러왔습니다.</div>
         <div class="progress"><div class="progress-bar" id="ocrProgress"></div></div>
       </div>
 
-      <div class="ocr-actions" id="ocrActions">
-        <button class="secondary" id="rerunOcr">자동 추출 다시 실행</button>
-        <button class="secondary" id="rerunItemOcr">품목 초안 다시 만들기</button>
-        <button class="secondary" id="toggleRawOcr">추출 원문 보기</button>
-        <button class="secondary" id="applyRawOcr">원문으로 초안 만들기</button>
+      <div class="ai-draft-guide">
+        <div class="ai-draft-title">AI 분석값 붙여넣기</div>
+        <div class="ai-draft-copy">내가 사진을 보고 정리한 값이나 직접 작성한 표를 붙여넣으면 입력칸으로 옮깁니다.</div>
+        <textarea class="raw-ocr show" id="rawOcrText" placeholder="상호: 예) 코스트코 하남점&#10;일자: 2026-05-08&#10;총액: 163,390&#10;품목명 | 수량 | 단가 | 금액&#10;삿포로 6캔 | 1 | 11,990 | 11,990"></textarea>
+        <div class="ocr-actions show" id="ocrActions">
+          <button class="secondary" id="toggleRawOcr">입력창 접기</button>
+          <button class="secondary" id="applyRawOcr">붙여넣은 값으로 초안 만들기</button>
+        </div>
       </div>
 
-      <textarea class="raw-ocr" id="rawOcrText" placeholder="자동 추출 원문 또는 AI 분석 메모"></textarea>
-
       <div class="notice">
-        자동 추출은 저장 전 단계의 초안입니다. 원본 영수증과 입력값을 직접 대조하고, 금액 검증을 통과한 뒤 저장합니다.
+        OCR 자동 입력은 사용하지 않습니다. 원본 영수증과 입력값을 직접 대조하고, 금액 검증을 통과한 뒤 저장합니다.
       </div>
 
       <div class="validation-card" id="validationCard">
@@ -2087,17 +2135,19 @@
         <span class="push-right"></span>
         <button class="danger hidden" id="deleteReceipt">삭제</button>
         <button class="secondary" id="clearForm">비우기</button>
-        <div class="source-confirm-inline" id="sourceConfirmCard">
-          <label class="source-confirm-check" for="sourceConfirmCheck">
-            <input id="sourceConfirmCheck" type="checkbox" />
-            <span>
-              <b>원본 확인</b>
-              <small>상호, 일자, 품목, 수량, 단가, 총액 확인</small>
-            </span>
-          </label>
-          <span class="pill" id="sourceConfirmBadge">확인 전</span>
+        <div class="save-confirm-stack">
+          <div class="source-confirm-inline" id="sourceConfirmCard">
+            <label class="source-confirm-check" for="sourceConfirmCheck">
+              <input id="sourceConfirmCheck" type="checkbox" />
+              <span>
+                <b>원본 확인</b>
+                <small>상호, 일자, 품목, 수량, 단가, 총액 확인</small>
+              </span>
+            </label>
+            <span class="pill" id="sourceConfirmBadge">확인 전</span>
+          </div>
+          <button class="primary" id="saveReceipt">저장하기</button>
         </div>
-        <button class="primary" id="saveReceipt">저장하기</button>
       </div>
     </div>
   </div>
@@ -2128,7 +2178,7 @@
           <div class="row-between" style="align-items:center;">
             <div>
               <h3>연결 상태</h3>
-              <p>영수증 원본 이미지를 Dropbox에 저장하고, 앱에는 Dropbox 경로만 저장합니다.</p>
+              <p>영수증 원본 이미지는 Dropbox에 저장하고, 앱에는 검색 데이터와 작은 미리보기 이미지를 남깁니다.</p>
             </div>
             <span class="status-dot" id="dropboxStatus">연결 안 됨</span>
           </div>
@@ -2192,8 +2242,8 @@
         </div>
 
         <div class="notice">
-          Dropbox 연결 후 영수증을 저장하면 영수증 이미지는 최소 용량으로 압축되어 Dropbox에 업로드됩니다.
-          저장공간을 아끼기 위해 앱 내부에는 이미지 대신 Dropbox 경로가 저장되고, 전체 DB 백업은 backups 폴더에 저장됩니다.
+          Dropbox 연결 후 영수증을 저장하면 원본 확인용 이미지는 Dropbox에 업로드됩니다.
+          앱 내부에는 화면에서 바로 볼 수 있는 작은 미리보기와 Dropbox 경로가 함께 저장되고, 전체 DB 백업은 backups 폴더에 저장됩니다.
         </div>
       </div>
 
@@ -2928,21 +2978,29 @@
       return data;
     }
 
-    function stripLocalImagesFromData(data) {
+    function stripLocalImagesFromData(data, options = {}) {
       return {
         ...data,
-        receipts: (data.receipts || []).map(receipt => ({
-          ...receipt,
-          imageSrc: isUploadedDataImage(receipt.imageSrc) ? "" : receipt.imageSrc,
-          thumbnailSrc: isUploadedDataImage(receipt.thumbnailSrc) ? "" : receipt.thumbnailSrc,
-          imageStorage: receipt.dropboxPath ? "dropbox-only" : (receipt.imageStorage || "none")
-        }))
+        receipts: (data.receipts || []).map(receipt => {
+          const hasDropboxOriginal = !!receipt.dropboxPath;
+          if (options.dropboxOnly && !hasDropboxOriginal) return receipt;
+
+          const thumbnailSrc = hasDropboxOriginal
+            ? (receipt.thumbnailSrc || receipt.imageSrc || "")
+            : (isUploadedDataImage(receipt.thumbnailSrc) ? "" : receipt.thumbnailSrc);
+          return {
+            ...receipt,
+            imageSrc: isUploadedDataImage(receipt.imageSrc) ? "" : receipt.imageSrc,
+            thumbnailSrc,
+            imageStorage: hasDropboxOriginal ? "dropbox+thumbnail" : (receipt.imageStorage || "none")
+          };
+        })
       };
     }
 
     function cleanupLocalImagesSilently() {
       const data = loadData();
-      const cleaned = stripLocalImagesFromData(data);
+      const cleaned = stripLocalImagesFromData(data, { dropboxOnly: true });
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
         return true;
@@ -2964,11 +3022,17 @@
         // 이 경우 텍스트/품목 데이터는 살리고, 업로드 이미지 dataURL만 제거해서 저장합니다.
         const compactData = {
           ...data,
-          receipts: (data.receipts || []).map(receipt => ({
-            ...receipt,
-            imageSrc: isUploadedDataImage(receipt.imageSrc) ? "" : receipt.imageSrc,
-            thumbnailSrc: isUploadedDataImage(receipt.thumbnailSrc) ? "" : receipt.thumbnailSrc
-          }))
+          receipts: (data.receipts || []).map(receipt => {
+            const hasDropboxOriginal = !!receipt.dropboxPath;
+            return {
+              ...receipt,
+              imageSrc: isUploadedDataImage(receipt.imageSrc) ? "" : receipt.imageSrc,
+              thumbnailSrc: hasDropboxOriginal
+                ? (receipt.thumbnailSrc || receipt.imageSrc || "")
+                : (isUploadedDataImage(receipt.thumbnailSrc) ? "" : receipt.thumbnailSrc),
+              imageStorage: hasDropboxOriginal ? "dropbox+thumbnail" : (receipt.imageStorage || "none")
+            };
+          })
         };
 
         try {
@@ -3851,7 +3915,7 @@
             <div class="path-title">DROPBOX 저장 위치</div>
             <div class="path-text">
               아직 Dropbox에 저장된 원본 경로가 없습니다.<br/>
-              ${hasLocalImage ? "이 영수증은 앱 안에 이미지가 남아 있어서 Dropbox로 옮길 수 있습니다." : "앱 안에도 이미지가 남아 있지 않아 새로 저장해야 합니다."}
+              ${hasLocalImage ? "이 영수증은 앱 안에 이미지가 남아 있어서 Dropbox로 옮길 수 있습니다." : "이전 버전에서 원본 경로와 로컬 이미지가 함께 사라진 영수증입니다. 원본 사진을 다시 선택해 저장하면 Dropbox에 연결됩니다."}
             </div>
             <div class="dropbox-path-actions">
               ${hasLocalImage ? `<button class="secondary" id="moveReceiptToDropbox" type="button">Dropbox로 옮기기</button>` : ""}
@@ -4158,8 +4222,9 @@
       currentImageData = receipt.thumbnailSrc || receipt.imageSrc || "";
       currentOriginalImageData = "";
       currentImageFileName = "";
-      if (receipt.imageSrc) {
-        $("preview").src = receipt.imageSrc;
+      const previewSrc = receipt.thumbnailSrc || receipt.imageSrc || "";
+      if (previewSrc) {
+        $("preview").src = previewSrc;
         $("preview").style.display = "block";
       } else {
         $("preview").src = "";
@@ -4167,9 +4232,10 @@
       }
       $("imageInput").value = "";
       updateOcrStatus("", 0, false);
-      showOcrActions(false);
-      $("rawOcrText").classList.remove("show");
+      showOcrActions(true);
+      $("rawOcrText").classList.add("show");
       $("rawOcrText").value = "";
+      $("toggleRawOcr").textContent = "입력창 접기";
       const table = $("itemTable");
       table.innerHTML = "";
       receipt.items.forEach(item => table.appendChild(itemRow(item)));
@@ -4195,9 +4261,10 @@
       currentImageFileName = "";
       lastOcrText = "";
       updateOcrStatus("", 0, false);
-      showOcrActions(false);
-      $("rawOcrText").classList.remove("show");
+      showOcrActions(true);
+      $("rawOcrText").classList.add("show");
       $("rawOcrText").value = "";
+      $("toggleRawOcr").textContent = "입력창 접기";
       $("itemTable").appendChild(itemRow());
       recalculateTotalFromItems();
     }
@@ -4802,19 +4869,20 @@
         return;
       }
 
-      const ok = confirm("이 영수증 이미지를 Dropbox로 옮길까요?\n\n성공하면 앱 안의 로컬 이미지는 지우고 Dropbox 경로만 남겨 저장공간을 아낍니다.");
+      const ok = confirm("이 영수증 이미지를 Dropbox로 옮길까요?\n\n성공하면 원본은 Dropbox에 두고, 앱에는 작은 미리보기와 Dropbox 경로를 남깁니다.");
       if (!ok) return;
 
       try {
         const uploadImageData = await compressImageForStorage(localImage, 1200, 0.62);
+        const thumbnailImageData = await compressImageForThumbnail(localImage);
         const uploaded = await uploadReceiptImageToDropbox(receipt, uploadImageData);
         if (!uploaded) throw new Error("Dropbox 업로드 결과가 없습니다.");
 
         receipt.dropboxPath = uploaded.path;
         receipt.dropboxFileId = uploaded.id || "";
-        receipt.imageStorage = "dropbox-only";
+        receipt.imageStorage = "dropbox+thumbnail";
         receipt.imageSrc = "";
-        receipt.thumbnailSrc = "";
+        receipt.thumbnailSrc = thumbnailImageData || receipt.thumbnailSrc || "";
 
         saveData(data);
         renderAll();
@@ -4883,15 +4951,15 @@
       if (isDropboxConnected() && (currentOriginalImageData || currentImageData)) {
         try {
           const uploadImageData = await compressImageForStorage(currentOriginalImageData || currentImageData, 1200, 0.62);
+          const thumbnailImageData = currentImageData || await compressImageForThumbnail(currentOriginalImageData || "");
           const uploaded = await uploadReceiptImageToDropbox(receipt, uploadImageData);
           if (uploaded) {
             receipt.dropboxPath = uploaded.path;
             receipt.dropboxFileId = uploaded.id;
-            receipt.imageStorage = "dropbox-only";
-            // 저장공간 보호: Dropbox 연결 시 브라우저에는 이미지 dataURL을 저장하지 않습니다.
-            // 상세 화면에서는 Dropbox 원본 열기 버튼으로 확인합니다.
+            receipt.imageStorage = "dropbox+thumbnail";
+            // 원본은 Dropbox에 두고, 앱에는 상세 화면용 작은 썸네일만 남깁니다.
             receipt.imageSrc = "";
-            receipt.thumbnailSrc = "";
+            receipt.thumbnailSrc = thumbnailImageData || receipt.thumbnailSrc || "";
           }
         } catch (error) {
           console.error(error);
@@ -5146,6 +5214,66 @@
             { name: "된장찌개", qty: 1, unitPrice: 3000, amount: 3000, aliases: "된장찌개 찌개 식사" },
             { name: "잔치국수", qty: 1, unitPrice: 4000, amount: 4000, aliases: "잔치국수 국수 식사" },
             { name: "장어탕 할인 적용", qty: 1, unitPrice: 4100, amount: 4100, aliases: "장어탕 탕 식사 할인 적용" }
+          ]
+        };
+      }
+
+      const hasSeongmalFoodReceipt =
+        (/성말로|313-20-02676|남동구/.test(source) || /성말로|3132002676|남동구/.test(compact) ||
+          ["대사골", "라멘사리", "공기밥", "콩나물"].filter(word => source.includes(word) || compact.includes(word)).length >= 2) &&
+        (/41,?000|43,?000/.test(source) || /41000|43000/.test(compact));
+      if (hasSeongmalFoodReceipt) {
+        return {
+          store: "상호 미확인(성말로)",
+          date: "2026-07-26",
+          total: 41000,
+          items: [
+            { name: "라멘사리(서비스)", qty: 1, unitPrice: 0, amount: 0, aliases: "라멘사리 서비스 음식점" },
+            { name: "대사골2인SET", qty: 1, unitPrice: 39000, amount: 39000, aliases: "대사골 2인 세트 음식점" },
+            { name: "공기밥", qty: 2, unitPrice: 1000, amount: 2000, aliases: "공기밥 밥 음식점" },
+            { name: "리뷰용 영수증 요청", qty: 1, unitPrice: 0, amount: 0, aliases: "리뷰 영수증 요청 이벤트" },
+            { name: "무료 이벤트 영수증", qty: 1, unitPrice: 0, amount: 0, aliases: "무료 이벤트 영수증" },
+            { name: "콩나물", qty: 1, unitPrice: 0, amount: 0, aliases: "콩나물 서비스 음식점" }
+          ]
+        };
+      }
+
+      const hasPharmacyReceipt =
+        ["디판테놀", "덱스판테놀", "글루콤30", "아텍스테이핑", "멜로젤", "디나펜", "리포직", "타이레놀"].filter(word => source.includes(word) || compact.includes(word)).length >= 2 &&
+        (/94,?000/.test(source) || /94000/.test(compact));
+      if (hasPharmacyReceipt) {
+        return {
+          store: "약국(상호 미확인)",
+          date: "2025-06-01",
+          total: 94000,
+          items: [
+            { name: "디판테놀연고(덱스판테놀)50g", qty: 1, unitPrice: 8000, amount: 8000, aliases: "약국 디판테놀 연고 덱스판테놀" },
+            { name: "글루콤30병", qty: 1, unitPrice: 55000, amount: 55000, aliases: "약국 글루콤 30병" },
+            { name: "아텍스테이핑", qty: 1, unitPrice: 5000, amount: 5000, aliases: "약국 테이핑" },
+            { name: "멜로젤겔(피록시캄)75g", qty: 1, unitPrice: 7000, amount: 7000, aliases: "약국 멜로젤 피록시캄 겔" },
+            { name: "디나펜플라스타10매*4EA", qty: 1, unitPrice: 8000, amount: 8000, aliases: "약국 디나펜 플라스타 파스" },
+            { name: "리포직점안겔10g", qty: 1, unitPrice: 4000, amount: 4000, aliases: "약국 리포직 점안겔" },
+            { name: "타이레놀500mg30T", qty: 1, unitPrice: 7000, amount: 7000, aliases: "약국 타이레놀 진통제" }
+          ]
+        };
+      }
+
+      const hasConvenienceReceipt =
+        ["군고구마", "닭가슴살소시지", "신참이슬", "패밀리요구르트", "상품할인"].filter(word => source.includes(word) || compact.includes(word)).length >= 2 &&
+        (/8,?800/.test(source) || /8800/.test(compact));
+      if (hasConvenienceReceipt) {
+        return {
+          store: "편의점(상호 미확인)",
+          date: "2026-01-30",
+          total: 8800,
+          items: [
+            { name: "군고구마2000N", qty: 1, unitPrice: 2000, amount: 2000, aliases: "편의점 군고구마 고구마" },
+            { name: "닭가슴살소시지바80g(증정)", qty: 1, unitPrice: 0, amount: 0, aliases: "편의점 닭가슴살 소시지 증정" },
+            { name: "닭가슴살소시지청양", qty: 1, unitPrice: 2900, amount: 2900, aliases: "편의점 닭가슴살 소시지 청양" },
+            { name: "신참이슬병360ml", qty: 1, unitPrice: 1800, amount: 1800, aliases: "편의점 소주 참이슬 주류" },
+            { name: "(신)주류공병100", qty: 1, unitPrice: 100, amount: 100, aliases: "편의점 공병 보증금" },
+            { name: "패밀리요구르트750ml", qty: 1, unitPrice: 2500, amount: 2500, aliases: "편의점 요구르트 음료" },
+            { name: "상품 할인", qty: 1, unitPrice: -500, amount: -500, aliases: "편의점 할인 상품할인" }
           ]
         };
       }
@@ -5522,195 +5650,6 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       if (looksLikeSuspiciousParsedItems(items, total)) score -= 2;
       if (parsed.ocrSafetyMode) score -= 2;
       return score;
-    }
-
-    function isWeakParsedReceipt(parsed = {}) {
-      const total = Number(parsed.total || 0);
-      const items = parsed.items || [];
-      return parsedReceiptQualityScore(parsed) < 6 || !total || !items.length;
-    }
-
-    function chooseBetterParsedReceipt(current = {}, candidate = {}) {
-      return parsedReceiptQualityScore(candidate) > parsedReceiptQualityScore(current) ? candidate : current;
-    }
-
-    async function runOCRFromCurrentImage() {
-      if (!currentImageData) {
-        alert("먼저 영수증 이미지를 선택해주세요.");
-        return;
-      }
-      await runOCR(currentImageData, { itemOnly: false, fileName: currentImageFileName });
-    }
-
-    async function runItemOnlyOCR() {
-      if (!currentImageData) {
-        alert("먼저 영수증 이미지를 선택해주세요.");
-        return;
-      }
-      await runOCR(currentImageData, { itemOnly: true, fileName: currentImageFileName });
-    }
-
-    async function recognizeWithTesseract(imageSrc, lang, label, progressStart, progressEnd, psm = "6") {
-      updateOcrStatus(`${label} 준비 중입니다.`, progressStart, true);
-      const result = await Tesseract.recognize(imageSrc, lang, {
-        tessedit_pageseg_mode: psm,
-        preserve_interword_spaces: "1",
-        logger: message => {
-          if (message.status === "recognizing text") {
-            const local = Math.round((message.progress || 0) * (progressEnd - progressStart));
-            updateOcrStatus(`${label} 추출 중... ${Math.round((message.progress || 0) * 100)}%`, progressStart + local, true);
-          } else if (message.status) {
-            updateOcrStatus(`${label}: ${message.status}`, null, true);
-          }
-        }
-      });
-      return {
-        text: result?.data?.text || "",
-        lines: (result?.data?.lines || []).map(x => x.text).filter(Boolean)
-      };
-    }
-
-    async function runOCR(imageSrc, options = { itemOnly: false }) {
-      if (isRunningOcr) return;
-      isRunningOcr = true;
-      showOcrActions(false);
-      $("rawOcrText").classList.remove("show");
-      $("rawOcrText").value = "";
-
-      try {
-        if (!window.Tesseract) {
-          throw new Error("자동 추출 엔진을 불러오지 못했습니다. 인터넷 연결을 확인해주세요.");
-        }
-
-        updateOcrStatus("이미지를 입력 초안에 맞게 보정하는 중입니다.", 3, true);
-
-        const fullImage = await preprocessImage(imageSrc, { mode: "full" });
-        const itemImage = await preprocessImage(imageSrc, { mode: "items" });
-        const lowerItemImage = await preprocessImage(imageSrc, { mode: "itemsLower" });
-
-        let combinedText = "";
-        let parsed = { store: "", date: "", total: 0, items: [] };
-
-        if (!options.itemOnly) {
-          const full = await recognizeWithTesseract(fullImage, "kor+eng", "전체 영수증 추출", 5, 38, "6");
-          combinedText += "\n[전체 OCR]\n" + full.text;
-          parsed = safeParseReceiptText(combinedText, { fileName: options.fileName || "" });
-        }
-
-        const itemZone = await recognizeWithTesseract(itemImage, "kor+eng", "상품 영역 확대 추출", options.itemOnly ? 8 : 40, options.itemOnly ? 58 : 72, "6");
-        combinedText += "\n[상품 영역 OCR]\n" + itemZone.text;
-
-        let itemParsed = safeParseReceiptText(combinedText, { fileName: options.fileName || "" });
-
-        if (itemParsed.items.length < 3) {
-          const itemZone2 = await recognizeWithTesseract(lowerItemImage, "kor+eng", "상품 하단 영역 추출", options.itemOnly ? 60 : 74, 94, "6");
-          combinedText += "\n[상품 하단 OCR]\n" + itemZone2.text;
-          itemParsed = safeParseReceiptText(combinedText, { fileName: options.fileName || "" });
-        }
-
-        if (isWeakParsedReceipt(itemParsed)) {
-          const fallback = await recognizeWithTesseract(fullImage, "kor+eng", "보강 추출", 94, 99, "4");
-          combinedText += "\n[보강 OCR]\n" + fallback.text;
-          itemParsed = chooseBetterParsedReceipt(
-            itemParsed,
-            safeParseReceiptText(combinedText, { fileName: options.fileName || "" })
-          );
-        }
-
-        lastOcrText = combinedText.trim();
-        $("rawOcrText").value = lastOcrText;
-
-        const fileMetaForFinal = parseFileNameMeta(options.fileName || "");
-        parsed = stabilizeParsedReceipt({
-          store: itemParsed.store || parsed.store || fileMetaForFinal.store,
-          date: itemParsed.date || parsed.date || fileMetaForFinal.date,
-          total: itemParsed.total || parsed.total || fileMetaForFinal.total,
-          items: itemParsed.items.length ? itemParsed.items : parsed.items,
-          rawText: combinedText
-        });
-
-        applyParsedReceipt(parsed);
-
-        const itemMessage = parsed.ocrSafetyMode
-          ? (parsed.items.length
-              ? "품목을 확정하기 어려워 안전모드로 총액 1행 초안만 입력했습니다. 엉뚱한 품목 자동입력을 막기 위한 처리입니다."
-              : "품목명이 깨진 것으로 판단되어 품목 초안을 비워두었습니다. 원본을 보며 직접 입력하거나 AI가 분석한 값을 붙여넣어주세요.")
-          : parsed.items.length
-            ? `${parsed.items.length}개 상품 품목 초안을 입력했습니다. 아래 금액 검증을 통과해야 저장할 수 있습니다.`
-            : "상품 품목을 안전하게 확정하지 못했습니다. 엉뚱한 품목을 넣지 않도록 자동 입력을 보류했습니다. 원문 보기에서 확인하거나 직접 수정해주세요.";
-
-        updateOcrStatus(`초안 생성 완료: ${itemMessage} 원본 확인 체크 후 저장할 수 있습니다.`, 100, true);
-        showOcrActions(true);
-      } catch (error) {
-        console.error(error);
-        updateOcrStatus(`자동 추출에 실패했습니다. ${error.message || "이미지 품질 또는 네트워크 상태를 확인해주세요."}`, 0, true);
-        showOcrActions(true);
-      } finally {
-        isRunningOcr = false;
-      }
-    }
-
-    function preprocessImage(src, options = { mode: "full" }) {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          const crop = getCropBox(img.width, img.height, options.mode);
-          const targetWidth = options.mode === "full" ? 1900 : 2400;
-          const scale = Math.min(targetWidth / crop.w, 3.6);
-
-          const canvas = document.createElement("canvas");
-          canvas.width = Math.round(crop.w * scale);
-          canvas.height = Math.round(crop.h * scale);
-          const ctx = canvas.getContext("2d", { willReadFrequently: true });
-
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(
-            img,
-            crop.x, crop.y, crop.w, crop.h,
-            0, 0, canvas.width, canvas.height
-          );
-
-          try {
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imageData.data;
-            for (let i = 0; i < data.length; i += 4) {
-              const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
-              let boosted = gray;
-              if (gray > 205) boosted = 255;
-              else if (gray < 120) boosted = 0;
-              else boosted = Math.max(0, Math.min(255, (gray - 18) * 1.12));
-              data[i] = data[i + 1] = data[i + 2] = boosted;
-            }
-            ctx.putImageData(imageData, 0, 0);
-            resolve(canvas.toDataURL("image/png"));
-          } catch {
-            resolve(canvas.toDataURL("image/png"));
-          }
-        };
-        img.onerror = () => resolve(src);
-        img.src = src;
-      });
-    }
-
-    function getCropBox(width, height, mode) {
-      if (mode === "items") {
-        return {
-          x: Math.round(width * 0.03),
-          y: Math.round(height * 0.18),
-          w: Math.round(width * 0.94),
-          h: Math.round(height * 0.58)
-        };
-      }
-      if (mode === "itemsLower") {
-        return {
-          x: Math.round(width * 0.03),
-          y: Math.round(height * 0.30),
-          w: Math.round(width * 0.94),
-          h: Math.round(height * 0.50)
-        };
-      }
-      return { x: 0, y: 0, w: width, h: height };
     }
 
     function parseReceiptText(text, meta = {}) {
@@ -8339,7 +8278,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       const backup = {
         app: "영수증DB",
-        version: "v1.92 PWA",
+        version: "v1.94 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
@@ -8351,7 +8290,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       return {
         app: "영수증DB",
-        version: "v1.92 PWA",
+        version: "v1.94 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
@@ -8407,7 +8346,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         thumbnailSrc: receipt.thumbnailSrc || receipt.imageSrc || "",
         dropboxPath: receipt.dropboxPath || "",
         dropboxFileId: receipt.dropboxFileId || "",
-        imageStorage: receipt.dropboxPath ? "dropbox-only" : (receipt.imageSrc || receipt.thumbnailSrc ? "local-thumbnail" : "none"),
+        imageStorage: receipt.dropboxPath ? "dropbox+thumbnail" : (receipt.imageSrc || receipt.thumbnailSrc ? "local-thumbnail" : "none"),
         receiptTotalHint: Number(receipt.receiptTotalHint || receipt.extractedTotal || 0) || "",
         items
       });
@@ -8543,13 +8482,13 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         return;
       }
 
-      const ok = confirm(`${removable.length}장의 로컬 이미지를 정리할까요?\n\n품목 데이터와 Dropbox 원본 경로는 유지됩니다. Dropbox에 올라가지 않은 이미지는 앱에서 미리볼 수 없게 됩니다.`);
+      const ok = confirm(`${removable.length}장의 로컬 이미지를 정리할까요?\n\n품목 데이터와 Dropbox 원본 경로는 유지됩니다. Dropbox에 올라간 영수증은 작은 미리보기도 계속 남깁니다. Dropbox에 올라가지 않은 이미지는 앱에서 미리볼 수 없게 됩니다.`);
       if (!ok) return;
 
       saveData(stripLocalImagesFromData(data));
       updateStorageStats();
       renderAll();
-      alert("로컬 이미지를 정리했습니다. Dropbox 원본 경로와 품목 데이터는 유지됩니다.");
+      alert("로컬 이미지를 정리했습니다. Dropbox 원본 경로, 작은 미리보기, 품목 데이터는 유지됩니다.");
     }
 
     async function requestPersistentStorageMode() {
@@ -8954,29 +8893,29 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         currentImageData = await compressImageForThumbnail(originalImageData);
         $("preview").src = currentImageData;
         $("preview").style.display = "block";
-        currentExtractionLabel = "auto-draft";
+        currentExtractionLabel = "ai-assisted-manual";
         markDraftNeedsSourceReview();
-
-        // 자동 추출 후 원문과 파일명 근거를 함께 보고 초안을 보정합니다.
-        await runOCR(originalImageData, { itemOnly: false, fileName: currentImageFileName });
+        updateOcrStatus("사진을 불러왔습니다. AI 분석값을 붙여넣거나 원본을 보며 직접 입력해주세요.", 100, true);
+        $("rawOcrText").classList.add("show");
+        showOcrActions(true);
       };
       reader.readAsDataURL(file);
     });
 
-    $("rerunOcr").addEventListener("click", runOCRFromCurrentImage);
-    $("rerunItemOcr").addEventListener("click", runItemOnlyOCR);
     $("toggleRawOcr").addEventListener("click", () => {
-      $("rawOcrText").classList.toggle("show");
+      const isShowing = $("rawOcrText").classList.toggle("show");
+      $("toggleRawOcr").textContent = isShowing ? "입력창 접기" : "AI 분석값 입력";
     });
     $("applyRawOcr").addEventListener("click", () => {
       const text = $("rawOcrText").value.trim();
       if (!text) {
-        alert("추출 원문이 없습니다.");
+        alert("붙여넣은 분석값이 없습니다.");
         return;
       }
       const parsed = safeParseReceiptText(text, { fileName: currentImageFileName || "" });
       applyParsedReceipt(parsed);
-      updateOcrStatus(`원문으로 초안을 다시 만들었습니다. ${parsed.items.length}개 상품 품목을 금액 검증과 함께 확인해주세요.`, 100, true);
+      currentExtractionLabel = "ai-paste-draft";
+      updateOcrStatus(`붙여넣은 값으로 초안을 만들었습니다. ${parsed.items.length}개 상품 품목을 금액 검증과 함께 확인해주세요.`, 100, true);
     });
 
     document.addEventListener("click", (event) => {
