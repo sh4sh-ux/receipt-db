@@ -1,4 +1,4 @@
-const CACHE_NAME = "receipt-db-v1-98-pwa";
+const CACHE_NAME = "receipt-db-v1-99-pwa";
 const APP_SHELL = [
   "./",
   "./index.html",
