@@ -1,0 +1,42 @@
+영수증DB AI 자동 분석 서버 연결 방법
+
+핵심
+- OpenAI API 키는 index.html 안에 넣지 않습니다.
+- API 키는 Cloudflare Worker의 Secret으로만 저장합니다.
+- 앱은 Worker 주소만 알고, Worker가 OpenAI Vision API를 대신 호출합니다.
+
+1. Cloudflare Worker 만들기
+- Cloudflare 대시보드에 로그인합니다.
+- Workers & Pages > Create application > Worker를 선택합니다.
+- Worker 이름은 예: receipt-ai-worker 로 만듭니다.
+- 코드 편집 화면에 receipt-ai-worker.js 내용을 붙여넣고 저장/배포합니다.
+
+2. 비밀값 설정
+Worker 설정의 Variables and Secrets에서 아래 값을 추가합니다.
+
+필수 Secret
+- OPENAI_API_KEY: OpenAI API 키
+
+선택 값
+- OPENAI_MODEL: gpt-5.4-mini
+- RECEIPT_DB_APP_TOKEN: 원하는 긴 임의 문자열
+
+RECEIPT_DB_APP_TOKEN을 설정했다면 영수증DB 앱 설정에도 같은 값을 넣어야 합니다.
+
+3. 영수증DB 앱 설정
+- 앱에서 설정 탭을 엽니다.
+- AI 자동 분석 서버에 Worker 주소를 넣습니다.
+  예: https://receipt-ai-worker.계정명.workers.dev
+- 연결 토큰을 설정했다면 같은 토큰을 입력합니다.
+- AI 연결 테스트를 누릅니다.
+- 성공하면 AI 설정 저장을 누릅니다.
+
+4. 사용 방법
+- 영수증 추가에서 사진을 선택합니다.
+- AI 서버가 연결되어 있으면 사진 선택 후 자동으로 초안을 만듭니다.
+- 필요하면 AI 자동 분석 버튼으로 다시 분석할 수 있습니다.
+- 저장 전에는 반드시 원본 이미지와 상호, 일자, 품목, 수량, 단가, 금액, 총액을 직접 확인합니다.
+
+주의
+- OpenAI API 키를 GitHub, index.html, README 등에 절대 붙여넣지 마세요.
+- AI 분석값은 초안입니다. 숫자 검증과 원본 확인 후 저장하는 구조를 유지해야 합니다.
