@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v1.99 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.00 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -1344,24 +1344,25 @@
     }
 
     .bottom-actions {
-      justify-content: flex-end;
+      justify-content: space-between;
       align-items: center;
+      gap: 12px;
     }
 
     .bottom-actions .push-right {
       flex: 1;
     }
 
-    .save-confirm-stack {
-      margin-left: auto;
+    .bottom-actions-right {
       display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
     }
 
-    .save-confirm-stack .primary {
-      min-width: 148px;
+    .bottom-actions .primary {
+      min-width: 170px;
     }
 
 
@@ -1578,20 +1579,53 @@
     }
 
     .source-confirm-inline {
-      min-height: 54px;
-      padding: 8px 10px;
-      width: min(360px, 100%);
-      border: 1px solid rgba(255,149,0,.38);
-      border-radius: 16px;
+      margin-top: 16px;
+      min-height: 74px;
+      padding: 16px 18px;
+      width: 100%;
+      border: 0;
+      border-radius: 26px;
       background: #fff8ed;
-      display: flex;
+      display: grid;
+      grid-template-columns: max-content 1fr auto auto;
       align-items: center;
-      gap: 8px;
+      gap: 18px;
     }
 
     .source-confirm-inline.ok {
-      border-color: rgba(52,199,89,.32);
       background: #f3fcf6;
+    }
+
+    .source-confirm-title {
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 860;
+      white-space: nowrap;
+    }
+
+    .source-confirm-desc {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .source-confirm-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .source-confirm-box input {
+      width: 32px;
+      height: 32px;
+      min-height: 32px;
+      margin: 0;
+      accent-color: #111113;
+      cursor: pointer;
     }
 
     .source-confirm-check {
@@ -1626,14 +1660,44 @@
     }
 
     @media (max-width: 720px) {
-      .save-confirm-stack {
+      .bottom-actions,
+      .bottom-actions-right {
         width: 100%;
         align-items: stretch;
       }
 
-      .save-confirm-stack .primary,
+      .bottom-actions-right {
+        justify-content: stretch;
+      }
+
+      .bottom-actions .primary,
+      .bottom-actions .secondary,
+      .bottom-actions .danger {
+        flex: 1 1 140px;
+      }
+
       .source-confirm-inline {
+        grid-template-columns: 1fr auto;
         width: 100%;
+      }
+
+      .source-confirm-title,
+      .source-confirm-desc {
+        grid-column: 1;
+      }
+
+      .source-confirm-inline .pill,
+      .source-confirm-box {
+        grid-column: 2;
+      }
+
+      .source-confirm-inline .pill {
+        grid-row: 1;
+      }
+
+      .source-confirm-box {
+        grid-row: 2;
+        justify-self: end;
       }
     }
 
@@ -1853,7 +1917,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v1.99 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.00 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -2001,7 +2065,7 @@
 
     <aside class="side">
       <div class="panel">
-        <div class="eyebrow">Prototype v1.99 PWA</div>
+        <div class="eyebrow">Prototype v2.00 PWA</div>
         <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
         <p>
           품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -2130,22 +2194,21 @@
         </table>
       </div>
 
+      <div class="source-confirm-inline" id="sourceConfirmCard">
+        <b class="source-confirm-title">원본 확인</b>
+        <span class="source-confirm-desc">상호, 일자, 품목, 수량, 단가, 총액 확인</span>
+        <span class="pill" id="sourceConfirmBadge">확인 전</span>
+        <label class="source-confirm-box" for="sourceConfirmCheck" aria-label="원본 이미지와 입력값 확인">
+          <input id="sourceConfirmCheck" type="checkbox" />
+        </label>
+      </div>
+
       <div class="action-row bottom-actions">
         <button class="secondary" id="addRow">품목 행 추가</button>
         <span class="push-right"></span>
-        <button class="danger hidden" id="deleteReceipt">삭제</button>
-        <button class="secondary" id="clearForm">비우기</button>
-        <div class="save-confirm-stack">
-          <div class="source-confirm-inline" id="sourceConfirmCard">
-            <label class="source-confirm-check" for="sourceConfirmCheck">
-              <input id="sourceConfirmCheck" type="checkbox" />
-              <span>
-                <b>원본 확인</b>
-                <small>상호, 일자, 품목, 수량, 단가, 총액 확인</small>
-              </span>
-            </label>
-            <span class="pill" id="sourceConfirmBadge">확인 전</span>
-          </div>
+        <div class="bottom-actions-right">
+          <button class="danger hidden" id="deleteReceipt">삭제</button>
+          <button class="secondary" id="clearForm">비우기</button>
           <button class="primary" id="saveReceipt">저장하기</button>
         </div>
       </div>
@@ -8335,7 +8398,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       const backup = {
         app: "영수증DB",
-        version: "v1.99 PWA",
+        version: "v2.00 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
@@ -8347,7 +8410,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       return {
         app: "영수증DB",
-        version: "v1.99 PWA",
+        version: "v2.00 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
@@ -9055,6 +9118,15 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
 
       if (/api key|authentication|unauthorized|incorrect|OPENAI_API_KEY/i.test(combined)) {
         return "OpenAI API 키가 올바르지 않습니다. Cloudflare Secret의 OPENAI_API_KEY 값에 실제 API 키가 들어갔는지 확인해주세요.";
+      }
+
+      if (/quota|billing|insufficient_quota|exceeded your current quota|usage limit|credit/i.test(combined)) {
+        return [
+          "OpenAI API 크레딧이나 사용 한도가 부족해서 분석하지 못했습니다.",
+          "",
+          "앱 연결은 성공했지만, OpenAI Platform의 결제/크레딧을 확인해야 합니다.",
+          "ChatGPT 유료 구독과 API 크레딧은 별도라서 API 결제 설정이 필요할 수 있습니다."
+        ].join("\n");
       }
 
       if (/model|does not exist|not found|OPENAI_MODEL/i.test(combined)) {
