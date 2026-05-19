@@ -4,6 +4,8 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type,X-Receipt-DB-Token"
 };
 
+const DEFAULT_MODEL = "gpt-4.1-mini";
+
 const RECEIPT_SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -54,7 +56,8 @@ export default {
       return json({
         ok: true,
         name: "receipt-ai-worker",
-        model: env.OPENAI_MODEL || "gpt-5.4-mini"
+        model: env.OPENAI_MODEL || DEFAULT_MODEL,
+        ready: !!env.OPENAI_API_KEY
       });
     }
 
@@ -85,45 +88,59 @@ export default {
       return json({ error: "image must be a data:image/* URL" }, 400);
     }
 
-    const model = env.OPENAI_MODEL || "gpt-5.4-mini";
-    const openaiResponse = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model,
-        input: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "input_text",
-                text: buildPrompt(payload.fileName || "")
-              },
-              {
-                type: "input_image",
-                image_url: image
-              }
-            ]
+    const model = env.OPENAI_MODEL || DEFAULT_MODEL;
+    let openaiResponse;
+    try {
+      openaiResponse = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model,
+          input: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "input_text",
+                  text: buildPrompt(payload.fileName || "")
+                },
+                {
+                  type: "input_image",
+                  image_url: image,
+                  detail: "high"
+                }
+              ]
+            }
+          ],
+          text: {
+            format: {
+              type: "json_schema",
+              name: "receipt_extract",
+              strict: true,
+              schema: RECEIPT_SCHEMA
+            }
           }
-        ],
-        text: {
-          format: {
-            type: "json_schema",
-            name: "receipt_extract",
-            strict: true,
-            schema: RECEIPT_SCHEMA
-          }
-        }
-      })
-    });
+        })
+      });
+    } catch (error) {
+      return json({
+        error: "OpenAI API에 연결하지 못했습니다. 잠시 후 다시 시도하거나 Worker 배포 상태를 확인해주세요.",
+        errorCode: "openai_network_error",
+        details: String(error?.message || error)
+      }, 502);
+    }
 
     const result = await openaiResponse.json().catch(() => ({}));
     if (!openaiResponse.ok) {
+      const openaiError = normalizeOpenAiError(result);
       return json({
-        error: result?.error?.message || result?.error || "OpenAI request failed",
+        error: openaiError.error,
+        errorCode: openaiError.errorCode,
+        openaiMessage: openaiError.openaiMessage,
+        model,
         details: result
       }, openaiResponse.status);
     }
@@ -160,6 +177,43 @@ function buildPrompt(fileName = "") {
     "If a receipt table clearly shows unit price, quantity, and amount, preserve those exact numbers.",
     `File name hint: ${fileName || "(none)"}`
   ].join("\n");
+}
+
+function normalizeOpenAiError(result = {}) {
+  const raw = result?.error || result || {};
+  const message = String(raw.message || raw.error || raw || "OpenAI request failed");
+  const code = String(raw.code || "");
+  const combined = `${message} ${code}`;
+
+  if (/country|region|territory|unsupported/i.test(combined)) {
+    return {
+      errorCode: "openai_region_unsupported",
+      error: "OpenAI API 지역 제한으로 분석하지 못했습니다. Cloudflare Worker 실행 위치가 OpenAI API 지원 지역으로 잡히지 않았을 가능성이 큽니다. Cloudflare Worker의 Smart Placement를 켜거나, Vercel 같은 고정 지원 지역 서버로 옮겨야 합니다.",
+      openaiMessage: message
+    };
+  }
+
+  if (/api key|authentication|unauthorized|incorrect/i.test(combined)) {
+    return {
+      errorCode: "openai_api_key_invalid",
+      error: "OpenAI API 키가 올바르지 않습니다. Cloudflare Secret의 OPENAI_API_KEY 값에 실제 API 키가 들어갔는지 확인해주세요.",
+      openaiMessage: message
+    };
+  }
+
+  if (/model|does not exist|not found/i.test(combined)) {
+    return {
+      errorCode: "openai_model_error",
+      error: "OpenAI 모델 설정에 문제가 있습니다. Worker의 OPENAI_MODEL 값이 있다면 gpt-4.1-mini로 바꾸거나 비워주세요.",
+      openaiMessage: message
+    };
+  }
+
+  return {
+    errorCode: code || "openai_request_failed",
+    error: message,
+    openaiMessage: message
+  };
 }
 
 function extractOutputText(result = {}) {

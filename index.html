@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v1.97 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v1.98 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -1853,7 +1853,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v1.97 PWA</span>
+                <span class="eyebrow">Receipt DB · v1.98 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -2001,7 +2001,7 @@
 
     <aside class="side">
       <div class="panel">
-        <div class="eyebrow">Prototype v1.97 PWA</div>
+        <div class="eyebrow">Prototype v1.98 PWA</div>
         <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
         <p>
           품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -8335,7 +8335,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       const backup = {
         app: "영수증DB",
-        version: "v1.97 PWA",
+        version: "v1.98 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
@@ -8347,7 +8347,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       return {
         app: "영수증DB",
-        version: "v1.97 PWA",
+        version: "v1.98 PWA",
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
@@ -9039,6 +9039,31 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       };
     }
 
+    function buildAiAnalysisErrorMessage(result = {}) {
+      const errorText = String(result?.error || result?.message || "AI 분석 실패");
+      const openaiText = String(result?.openaiMessage || result?.details?.error?.message || "");
+      const combined = `${errorText} ${openaiText}`;
+
+      if (/country|region|territory|unsupported|지역 제한/i.test(combined)) {
+        return [
+          "OpenAI API 지역 제한으로 분석하지 못했습니다.",
+          "",
+          "앱이나 영수증 문제가 아니라, Cloudflare Worker가 OpenAI API를 호출하는 위치가 막힌 상태입니다.",
+          "Cloudflare Worker의 Smart Placement를 켜거나, 분석 서버를 Vercel 같은 고정 지원 지역 서버로 옮겨야 합니다."
+        ].join("\n");
+      }
+
+      if (/api key|authentication|unauthorized|incorrect|OPENAI_API_KEY/i.test(combined)) {
+        return "OpenAI API 키가 올바르지 않습니다. Cloudflare Secret의 OPENAI_API_KEY 값에 실제 API 키가 들어갔는지 확인해주세요.";
+      }
+
+      if (/model|does not exist|not found|OPENAI_MODEL/i.test(combined)) {
+        return "OpenAI 모델 설정에 문제가 있습니다. Worker의 OPENAI_MODEL 값이 있다면 gpt-4.1-mini로 바꾸거나 비워주세요.";
+      }
+
+      return errorText;
+    }
+
     async function analyzeCurrentReceiptWithAi(options = {}) {
       const settings = loadAiSettings();
       if (!settings.endpoint) {
@@ -9069,7 +9094,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         });
 
         const result = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(result?.error || result?.message || "AI 분석 실패");
+        if (!response.ok) throw new Error(buildAiAnalysisErrorMessage(result));
 
         const parsed = normalizeAiAnalysisResult(result);
         if (!parsed.store && !parsed.date && !parsed.items.length) {
