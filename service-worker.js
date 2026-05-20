@@ -1,4 +1,4 @@
-const CACHE_NAME = "receipt-db-v2-01-pwa";
+const CACHE_NAME = "receipt-db-v2-03-pwa";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -25,12 +25,35 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
 
+  const url = new URL(request.url);
+  const isSameOrigin = url.origin === self.location.origin;
+  const isNavigation = request.mode === "navigate";
+  const isAppShell = isSameOrigin && (
+    isNavigation ||
+    url.pathname.endsWith("/") ||
+    url.pathname.endsWith("/index.html")
+  );
+
+  if (isAppShell) {
+    event.respondWith(
+      fetch(request).then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put("./index.html", copy.clone());
+          cache.put(request, copy);
+        });
+        return response;
+      }).catch(() => caches.match(request).then((cached) => cached || caches.match("./index.html")))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
         const copy = response.clone();
-        if (new URL(request.url).origin === self.location.origin) {
+        if (isSameOrigin) {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
         }
         return response;
