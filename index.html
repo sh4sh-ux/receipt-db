@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.03 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.04 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -1977,7 +1977,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.03 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.04 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -2125,7 +2125,7 @@
 
     <aside class="side">
       <div class="panel">
-        <div class="eyebrow">Prototype v2.03 PWA</div>
+        <div class="eyebrow">Prototype v2.04 PWA</div>
         <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
         <p>
           품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -2155,8 +2155,8 @@
       <div class="panel">
         <h2>실제 앱으로 확장할 때</h2>
         <p>
-          현재는 브라우저 안에서만 저장되는 프로토타입입니다.
-          다음 단계에서는 AI 분석 API, Supabase 데이터베이스, 로그인, 클라우드 이미지 저장을 연결하면 실제 서비스 형태로 확장할 수 있습니다.
+          기본은 로컬 저장이지만, 설정에서 Supabase 동기화를 연결하면 모바일과 데스크탑이 같은 데이터를 봅니다.
+          다음 단계에서는 로그인과 클라우드 이미지 저장을 더 단단하게 붙이면 실제 서비스 형태로 확장할 수 있습니다.
         </p>
       </div>
     </aside>
@@ -2186,8 +2186,8 @@
 
         <div class="ai-draft-guide">
           <div class="ai-draft-title">AI 분석 초안</div>
-        <div class="ai-draft-copy">AI 분석 서버가 연결되어 있으면 사진 선택만으로 초안을 만듭니다. 서버가 없을 때는 분석값을 붙여넣거나 원본을 보며 직접 입력합니다.</div>
-        <textarea class="raw-ocr show" id="rawOcrText" placeholder="상호: 예) 코스트코 하남점&#10;일자: 2026-05-08&#10;총액: 163,390&#10;품목명 | 수량 | 단가 | 금액&#10;삿포로 6캔 | 1 | 11,990 | 11,990"></textarea>
+        <div class="ai-draft-copy">GPT에게 영수증 사진을 JSON으로 분석해달라고 한 뒤 결과를 붙여넣으면 입력칸으로 옮깁니다. 서버가 없을 때도 이 방식으로 사용할 수 있습니다.</div>
+        <textarea class="raw-ocr show" id="rawOcrText" placeholder="{&#10;  &quot;store&quot;: &quot;이마트 부천점&quot;,&#10;  &quot;date&quot;: &quot;2025-03-19&quot;,&#10;  &quot;total&quot;: 59000,&#10;  &quot;items&quot;: [&#10;    { &quot;name&quot;: &quot;아가방 10,000&quot;, &quot;qty&quot;: 5, &quot;unitPrice&quot;: 10000, &quot;amount&quot;: 50000 }&#10;  ]&#10;}"></textarea>
         <div class="ocr-actions show" id="ocrActions">
           <button class="secondary" id="analyzeReceiptAi">AI 자동 분석</button>
           <button class="secondary" id="toggleRawOcr">입력창 접기</button>
@@ -2297,11 +2297,40 @@
       </div>
 
       <div class="settings-grid">
+        <div class="settings-card" id="cloudSyncSettingsCard">
+          <div class="row-between" style="align-items:flex-start; gap:12px;">
+            <div>
+              <h3>모바일·데스크탑 동기화</h3>
+              <p>Supabase 주소와 anon key를 넣으면 휴대전화와 데스크탑이 같은 영수증 DB를 사용합니다. 인터넷이 없으면 로컬에 저장했다가 다시 연결되면 맞춥니다.</p>
+            </div>
+            <span class="status-dot" id="cloudSyncStatus">연결 안 됨</span>
+          </div>
+          <input id="cloudSupabaseUrlInput" class="settings-input" placeholder="https://프로젝트.supabase.co" autocomplete="off" />
+          <input id="cloudSupabaseKeyInput" class="settings-input secret" type="password" placeholder="Supabase anon public key" autocomplete="off" />
+          <input id="cloudSyncSpaceInput" class="settings-input secret" type="password" placeholder="나만의 동기화 비밀번호" autocomplete="off" />
+          <label class="source-confirm-check" style="margin-top:10px;">
+            <input id="cloudAutoSyncInput" type="checkbox" />
+            <span>
+              <b>자동 동기화</b>
+              <small>앱을 열 때, 저장 후, 일정 시간마다 양쪽 데이터를 맞춥니다.</small>
+            </span>
+          </label>
+          <div class="backup-actions">
+            <button class="secondary" id="testCloudSync" type="button">동기화 연결 테스트</button>
+            <button class="secondary" id="runCloudSyncNow" type="button">지금 동기화</button>
+            <button class="primary" id="saveCloudSyncSettings" type="button">동기화 설정 저장</button>
+            <button class="danger" id="disconnectCloudSync" type="button">동기화 해제</button>
+          </div>
+          <div class="storage-note" id="cloudSyncStatusText">
+            아직 연결되지 않았습니다. 같은 Supabase 설정과 동기화 비밀번호를 모바일과 데스크탑에 똑같이 넣으면 같은 데이터가 보입니다.
+          </div>
+        </div>
+
         <div class="settings-card" id="aiSettingsCard">
           <div class="row-between" style="align-items:flex-start; gap:12px;">
             <div>
               <h3>AI 자동 분석 서버</h3>
-              <p>Cloudflare Worker 주소를 넣으면 영수증 사진을 OpenAI Vision으로 분석해 입력 초안을 만듭니다.</p>
+              <p>분석 서버 주소를 넣으면 영수증 사진을 OpenAI Vision으로 분석해 입력 초안을 만듭니다. 서버가 없으면 GPT JSON을 직접 붙여넣어도 됩니다.</p>
             </div>
             <span class="status-dot" id="aiStatus">연결 안 됨</span>
           </div>
@@ -2361,6 +2390,7 @@
             <button class="secondary" id="importJsonBackup" type="button">JSON 가져오기</button>
             <input id="importJsonFile" type="file" accept="application/json,.json" style="display:none" />
             <button class="secondary" id="exportCsvBackup" type="button">CSV 내보내기</button>
+            <button class="secondary" id="exportExcelBackup" type="button">엑셀 전체 다운로드</button>
             <button class="secondary" id="uploadDropboxBackup" type="button">Dropbox 백업 저장</button>
             <button class="secondary" id="restoreDropboxBackup" type="button">Dropbox 백업 불러오기</button>
             <button class="secondary" id="requestPersistentStorage" type="button">장기보관 모드</button>
@@ -2406,10 +2436,13 @@
   </div>
 
   <script>
+    const APP_VERSION = "v2.04 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
     const AI_SETTINGS_KEY = "satdeon_ai_settings_v1";
+    const CLOUD_SYNC_KEY = "satdeon_cloud_sync_settings_v1";
+    const SYNC_DELETED_KEY = "satdeon_cloud_deleted_receipts_v1";
     const PAYER_MEMORY_KEY = "satdeon_receipt_payers_v1";
     const RECEIPT_EDIT_MEMORY_KEY = "satdeon_receipt_edits_v1";
     const DEFAULT_RECENT_QUERIES = ["레몬", "치즈", "베이컨", "크래커"];
@@ -2762,6 +2795,11 @@
     let currentReceiptTotalHint = null;
     let currentReceiptTotalHintIgnored = false;
     let currentExtractionLabel = "manual";
+    let cloudSyncTimer = null;
+    let cloudSyncRunning = false;
+    let cloudSyncSpaceIdCache = "";
+    let cloudSyncSpaceKeyCache = "";
+    let cloudSyncInterval = null;
 
     const $ = (id) => document.getElementById(id);
 
@@ -2812,6 +2850,18 @@
       return date ? date.replaceAll("-", ".") : "";
     }
 
+    function formatDateTime(value = "") {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+      return date.toLocaleString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
     function normalize(text) {
       return String(text || "")
         .toLowerCase()
@@ -2856,6 +2906,69 @@
       const year = Number(match[1]);
       // OCR 오인식으로 생긴 2004년 같은 날짜는 검색 결과에서 제외합니다.
       return year >= 2020 && year <= 2035;
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function receiptTimestampValue(value = "") {
+      const time = Date.parse(value || "");
+      return Number.isFinite(time) ? time : 0;
+    }
+
+    function loadDeletedReceiptSyncs() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(SYNC_DELETED_KEY)) || {};
+        return saved && typeof saved === "object" ? saved : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveDeletedReceiptSyncs(deleted = {}) {
+      try {
+        localStorage.setItem(SYNC_DELETED_KEY, JSON.stringify(deleted || {}));
+      } catch {
+        // 삭제 동기화 보조 저장 실패가 앱 사용을 막으면 안 됩니다.
+      }
+    }
+
+    function markReceiptDeletedForSync(id, deletedAt = nowIso()) {
+      if (!id) return;
+      const deleted = loadDeletedReceiptSyncs();
+      deleted[id] = deletedAt;
+      saveDeletedReceiptSyncs(deleted);
+    }
+
+    function forgetDeletedReceiptSync(id) {
+      if (!id) return;
+      const deleted = loadDeletedReceiptSyncs();
+      if (!deleted[id]) return;
+      delete deleted[id];
+      saveDeletedReceiptSyncs(deleted);
+    }
+
+    function pruneDeletedReceiptSyncs() {
+      const deleted = loadDeletedReceiptSyncs();
+      const monthAgo = Date.now() - 1000 * 60 * 60 * 24 * 45;
+      let changed = false;
+      Object.entries(deleted).forEach(([id, deletedAt]) => {
+        if (receiptTimestampValue(deletedAt) < monthAgo) {
+          delete deleted[id];
+          changed = true;
+        }
+      });
+      if (changed) saveDeletedReceiptSyncs(deleted);
+    }
+
+    function normalizeReceiptTimestamps(receipt = {}, options = {}) {
+      const baseTime = receipt.updatedAt || receipt.confirmedAt || receipt.createdAt || nowIso();
+      return {
+        ...receipt,
+        createdAt: receipt.createdAt || receipt.confirmedAt || baseTime,
+        updatedAt: options.preserveUpdatedAt ? baseTime : nowIso()
+      };
     }
 
     function loadData() {
@@ -3007,9 +3120,11 @@
     function normalizeReceiptForApp(receipt = {}, payerMemory = loadPayerMemory()) {
       return applyKnownReceiptCorrections({
         ...restoreRememberedPayer(receipt, payerMemory),
-        imageSrc: receipt.imageSrc || receipt.thumbnailSrc || "",
+        createdAt: receipt.createdAt || receipt.confirmedAt || receipt.updatedAt || nowIso(),
+        updatedAt: receipt.updatedAt || receipt.confirmedAt || receipt.createdAt || nowIso(),
+        imageSrc: receipt.imageSrc || "",
         thumbnailSrc: receipt.thumbnailSrc || receipt.imageSrc || "",
-        imageStorage: receipt.dropboxPath ? "dropbox+thumbnail" : (receipt.imageSrc ? "local-thumbnail" : (receipt.imageStorage || "none")),
+        imageStorage: receipt.dropboxPath ? "dropbox+thumbnail" : (receipt.imageSrc || receipt.thumbnailSrc ? "local-thumbnail" : (receipt.imageStorage || "none")),
         receiptTotalHint: Number(receipt.receiptTotalHint || receipt.extractedTotal || 0) || "",
         items: normalizeReceiptItemsForStorage(receipt.items || [])
       });
@@ -3228,21 +3343,32 @@
       return loadData().receipts.find(r => r.id === id);
     }
 
-    function upsertReceipt(receipt) {
+    function upsertReceipt(receipt, options = {}) {
       const data = loadData();
+      const previous = data.receipts.find(r => r.id === receipt.id);
+      const normalizedReceipt = normalizeReceiptTimestamps({
+        ...receipt,
+        createdAt: receipt.createdAt || previous?.createdAt || receipt.confirmedAt || nowIso()
+      }, { preserveUpdatedAt: !!options.preserveUpdatedAt });
       const idx = data.receipts.findIndex(r => r.id === receipt.id);
-      if (idx >= 0) data.receipts[idx] = receipt;
-      else data.receipts.unshift(receipt);
+      if (idx >= 0) data.receipts[idx] = normalizedReceipt;
+      else data.receipts.unshift(normalizedReceipt);
       const editMemory = loadReceiptEditMemory();
-      rememberReceiptEdit(receipt, editMemory);
+      rememberReceiptEdit(normalizedReceipt, editMemory);
       saveReceiptEditMemory(editMemory);
       saveData(data);
+      forgetDeletedReceiptSync(normalizedReceipt.id);
+      if (!options.skipSync) scheduleCloudSync();
     }
 
-    function removeReceipt(id) {
+    function removeReceipt(id, options = {}) {
       const data = loadData();
       data.receipts = data.receipts.filter(r => r.id !== id);
       saveData(data);
+      if (!options.skipSync) {
+        markReceiptDeletedForSync(id);
+        scheduleCloudSync();
+      }
     }
 
     function getRecentQueries() {
@@ -3919,7 +4045,7 @@
               <div>
                 <div class="store">${escapeHtml(receipt.store)}</div>
                 <div class="muted small" style="margin-top:4px;">${formatDate(receipt.date)} · ${receipt.items.length}개 품목${getReceiptPayer(receipt) ? " · 결제자 " + escapeHtml(getReceiptPayer(receipt)) : ""}</div>
-                <div class="muted tiny" style="margin-top:5px;">${receipt.dropboxPath ? "Dropbox 원본 저장됨" : (receipt.imageSrc ? "앱 썸네일 저장됨" : "이미지 없음")}</div>
+                <div class="muted tiny" style="margin-top:5px;">${receipt.dropboxPath ? "Dropbox 원본 저장됨" : (receipt.thumbnailSrc || receipt.imageSrc ? "앱 썸네일 저장됨" : "이미지 없음")}</div>
               </div>
               <div class="receipt-card-actions">
                 <div class="price">${formatWon(receipt.total)}</div>
@@ -3967,7 +4093,7 @@
         `결제자 검색 결과: ${matches.length}건`,
         samplePayers.length ? `저장된 결제자 예시: ${samplePayers.join(", ")}` : "저장된 결제자 이름이 아직 없습니다.",
         "",
-        "컴퓨터에서 보이던 데이터라면 컴퓨터 앱에서 JSON 백업 후, 휴대전화 앱 설정에서 JSON 가져오기를 해야 합니다."
+        "컴퓨터와 휴대전화에 같은 동기화 설정을 넣으면 자동으로 같은 데이터가 보입니다. 동기화를 쓰지 않는 경우 JSON 백업/가져오기로 옮길 수 있습니다."
       ].join("\n");
     }
 
@@ -3988,7 +4114,7 @@
       return `
         <div class="card empty">
           ${message}<br/>
-          <span class="small">컴퓨터에서 보이던 데이터는 자동으로 휴대전화에 옮겨지지 않습니다.</span>
+          <span class="small">동기화 설정을 연결하면 컴퓨터와 휴대전화가 같은 데이터를 사용합니다.</span>
           <div class="empty-actions">
             <button class="secondary" id="emptyImportJson" type="button">JSON 가져오기</button>
             <button class="secondary" id="emptyShowAllReceipts" type="button">전체 영수증 보기</button>
@@ -4348,6 +4474,7 @@
       $("modalBackdrop").classList.remove("show");
       editingReceiptId = null;
       currentImageData = "";
+      currentOriginalImageData = "";
       currentReceiptTotalHint = null;
       currentReceiptTotalHintIgnored = false;
       currentExtractionLabel = "manual";
@@ -5130,20 +5257,31 @@
       }
 
       const previousReceipt = editingReceiptId ? findReceipt(editingReceiptId) : null;
+      const previousPreview = previousReceipt?.thumbnailSrc || previousReceipt?.imageSrc || "";
+      const hasFreshImage = !!currentOriginalImageData || (!!currentImageData && currentImageData !== previousPreview);
+      let compactThumbnail = "";
+      if (hasFreshImage && (currentOriginalImageData || currentImageData)) {
+        compactThumbnail = await compressImageForThumbnail(currentOriginalImageData || currentImageData);
+      }
+      const thumbnailForReceipt = compactThumbnail || (hasFreshImage ? currentImageData : previousPreview) || "";
+      const savedAt = nowIso();
       const receipt = {
         id: editingReceiptId || "receipt-" + Date.now(),
         store,
         date,
         total,
         payer,
-        imageSrc: currentImageData || previousReceipt?.imageSrc || "",
-        thumbnailSrc: currentImageData || previousReceipt?.thumbnailSrc || previousReceipt?.imageSrc || "",
+        // 원본 이미지는 Dropbox 같은 외부 저장소에 두고, 앱에는 작은 썸네일만 남깁니다.
+        imageSrc: "",
+        thumbnailSrc: thumbnailForReceipt,
         dropboxPath: previousReceipt?.dropboxPath || "",
         dropboxFileId: previousReceipt?.dropboxFileId || "",
-        imageStorage: previousReceipt?.imageStorage || (currentImageData ? "local-thumbnail" : "none"),
+        imageStorage: previousReceipt?.dropboxPath ? "dropbox+thumbnail" : (thumbnailForReceipt ? "local-thumbnail" : "none"),
         receiptTotalHint: currentReceiptTotalHintIgnored ? "" : (currentReceiptTotalHint || previousReceipt?.receiptTotalHint || ""),
         sourceConfirmed: true,
-        confirmedAt: new Date().toISOString(),
+        confirmedAt: savedAt,
+        createdAt: previousReceipt?.createdAt || savedAt,
+        updatedAt: savedAt,
         extractionMode: currentExtractionLabel || "manual",
         items
       };
@@ -5157,10 +5295,10 @@
         return;
       }
 
-      if (isDropboxConnected() && (currentOriginalImageData || currentImageData)) {
+      if (isDropboxConnected() && hasFreshImage && (currentOriginalImageData || currentImageData)) {
         try {
           const uploadImageData = await compressImageForStorage(currentOriginalImageData || currentImageData, 1200, 0.62);
-          const thumbnailImageData = currentImageData || await compressImageForThumbnail(currentOriginalImageData || "");
+          const thumbnailImageData = compactThumbnail || await compressImageForThumbnail(currentOriginalImageData || currentImageData || "");
           const uploaded = await uploadReceiptImageToDropbox(receipt, uploadImageData);
           if (uploaded) {
             receipt.dropboxPath = uploaded.path;
@@ -5174,7 +5312,7 @@
           console.error(error);
           const keepSaving = confirm("Dropbox 이미지 업로드에 실패했습니다.\n\n" + (error.message || error) + "\n\n확인을 누르면 품목 데이터와 앱 썸네일만 저장됩니다.\n취소를 누르면 저장하지 않습니다.");
           if (!keepSaving) return;
-          receipt.imageStorage = receipt.imageSrc ? "local-thumbnail" : "none";
+          receipt.imageStorage = receipt.thumbnailSrc ? "local-thumbnail" : "none";
         }
       }
 
@@ -8408,6 +8546,34 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       alert("Dropbox 연결이 해제되었습니다.");
     });
     $("testDropbox").addEventListener("click", testDropboxConnection);
+    $("saveCloudSyncSettings").addEventListener("click", () => {
+      const settings = readCloudSyncSettingsForm({ keepSavedSecrets: true });
+      saveCloudSyncSettingsObject(settings);
+      alert(isCloudSyncConnected(settings)
+        ? "동기화 설정이 저장되었습니다.\n\n휴대전화와 데스크탑에 같은 설정을 넣으면 같은 영수증 데이터가 보입니다."
+        : "동기화 설정을 비웠습니다. 로컬 저장은 계속 사용할 수 있습니다.");
+    });
+    $("testCloudSync").addEventListener("click", testCloudSyncConnection);
+    $("runCloudSyncNow").addEventListener("click", () => {
+      if (!isCloudSyncConnected()) {
+        alert("먼저 Supabase URL, anon key, 동기화 비밀번호를 저장해주세요.");
+        return;
+      }
+      performCloudSync({ silent: false });
+    });
+    $("disconnectCloudSync").addEventListener("click", () => {
+      if (!confirm("동기화 연결을 해제할까요?\n\n현재 기기의 로컬 영수증 데이터는 그대로 남습니다.")) return;
+      localStorage.removeItem(CLOUD_SYNC_KEY);
+      $("cloudSupabaseUrlInput").value = "";
+      $("cloudSupabaseKeyInput").value = "";
+      $("cloudSyncSpaceInput").value = "";
+      cloudSyncSpaceIdCache = "";
+      cloudSyncSpaceKeyCache = "";
+      clearInterval(cloudSyncInterval);
+      clearTimeout(cloudSyncTimer);
+      updateCloudSyncStatus();
+      alert("동기화 연결이 해제되었습니다. 이 기기의 로컬 데이터는 유지됩니다.");
+    });
     $("saveAiSettings").addEventListener("click", () => {
       const settings = readAiSettingsForm({ keepSavedToken: true });
       saveAiSettingsObject(settings);
@@ -8425,12 +8591,16 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       event.target.value = "";
     });
     $("exportCsvBackup").addEventListener("click", exportCsvBackup);
+    $("exportExcelBackup").addEventListener("click", exportExcelBackup);
     $("cleanupLocalImages").addEventListener("click", cleanupLocalReceiptImages);
     $("requestPersistentStorage").addEventListener("click", requestPersistentStorageMode);
     updateDropboxStatus();
     updateAiStatus();
+    updateCloudSyncStatus();
+    setupCloudSyncRuntime();
     setupPwaInstall();
     setupSwipeBack();
+    window.addEventListener("focus", () => scheduleCloudSync(500));
 
     $("resetData").addEventListener("click", () => {
       if (confirm("데모 데이터를 처음 상태로 되돌릴까요?")) {
@@ -8516,11 +8686,330 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       setTimeout(() => URL.revokeObjectURL(url), 3000);
     }
 
+    function normalizeSupabaseUrl(url = "") {
+      return String(url || "").trim().replace(/\/+$/g, "");
+    }
+
+    function loadCloudSyncSettings() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(CLOUD_SYNC_KEY)) || {};
+        return {
+          supabaseUrl: normalizeSupabaseUrl(saved.supabaseUrl || ""),
+          anonKey: saved.anonKey || "",
+          syncSpaceKey: saved.syncSpaceKey || "",
+          autoSync: saved.autoSync !== false,
+          lastSyncAt: saved.lastSyncAt || ""
+        };
+      } catch {
+        return { supabaseUrl: "", anonKey: "", syncSpaceKey: "", autoSync: true, lastSyncAt: "" };
+      }
+    }
+
+    function saveCloudSyncSettingsObject(settings = {}) {
+      localStorage.setItem(CLOUD_SYNC_KEY, JSON.stringify({
+        supabaseUrl: normalizeSupabaseUrl(settings.supabaseUrl || ""),
+        anonKey: settings.anonKey || "",
+        syncSpaceKey: settings.syncSpaceKey || "",
+        autoSync: settings.autoSync !== false,
+        lastSyncAt: settings.lastSyncAt || loadCloudSyncSettings().lastSyncAt || ""
+      }));
+      cloudSyncSpaceIdCache = "";
+      cloudSyncSpaceKeyCache = "";
+      updateCloudSyncStatus();
+      setupCloudSyncRuntime();
+    }
+
+    function readCloudSyncSettingsForm(options = {}) {
+      const previous = loadCloudSyncSettings();
+      const typedAnonKey = $("cloudSupabaseKeyInput")?.value.trim() || "";
+      const typedSpaceKey = $("cloudSyncSpaceInput")?.value.trim() || "";
+      return {
+        supabaseUrl: normalizeSupabaseUrl($("cloudSupabaseUrlInput")?.value || previous.supabaseUrl || ""),
+        anonKey: typedAnonKey || (options.keepSavedSecrets ? previous.anonKey : ""),
+        syncSpaceKey: typedSpaceKey || (options.keepSavedSecrets ? previous.syncSpaceKey : ""),
+        autoSync: $("cloudAutoSyncInput")?.checked !== false,
+        lastSyncAt: previous.lastSyncAt || ""
+      };
+    }
+
+    function isCloudSyncConnected(settings = loadCloudSyncSettings()) {
+      return !!(settings.supabaseUrl && settings.anonKey && settings.syncSpaceKey);
+    }
+
+    function updateCloudSyncStatus(message = "") {
+      const settings = loadCloudSyncSettings();
+      const connected = isCloudSyncConnected(settings);
+      const status = $("cloudSyncStatus");
+      if (status) {
+        status.textContent = cloudSyncRunning ? "동기화 중" : connected ? "연결됨" : "연결 안 됨";
+        status.classList.toggle("connected", connected && !cloudSyncRunning);
+      }
+      const text = $("cloudSyncStatusText");
+      if (text) {
+        const last = settings.lastSyncAt ? `마지막 동기화: ${formatDateTime(settings.lastSyncAt)}` : "아직 동기화한 기록이 없습니다.";
+        text.textContent = message || (connected
+          ? `${last} 모바일과 데스크탑에 같은 설정을 넣으면 저장/삭제 내용이 자동으로 맞춰집니다.`
+          : "아직 연결되지 않았습니다. 같은 Supabase 설정과 동기화 비밀번호를 모바일과 데스크탑에 똑같이 넣으면 같은 데이터가 보입니다.");
+      }
+    }
+
+    async function hashSyncSpaceKey(syncSpaceKey = "") {
+      const key = String(syncSpaceKey || "").trim();
+      if (!key) return "";
+      if (cloudSyncSpaceKeyCache === key && cloudSyncSpaceIdCache) return cloudSyncSpaceIdCache;
+      const data = new TextEncoder().encode(`receipt-db:${key}`);
+      const digest = await crypto.subtle.digest("SHA-256", data);
+      const hash = [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, "0")).join("");
+      cloudSyncSpaceKeyCache = key;
+      cloudSyncSpaceIdCache = hash.slice(0, 32);
+      return cloudSyncSpaceIdCache;
+    }
+
+    function cloudSyncHeaders(settings) {
+      return {
+        "apikey": settings.anonKey,
+        "Authorization": `Bearer ${settings.anonKey}`,
+        "Content-Type": "application/json"
+      };
+    }
+
+    function cloudSyncEndpoint(settings, query = "") {
+      return `${normalizeSupabaseUrl(settings.supabaseUrl)}/rest/v1/receipt_records${query}`;
+    }
+
+    function compactReceiptForCloudSync(receipt = {}) {
+      const normalized = normalizeReceiptForApp(receipt);
+      const thumbnailSrc = isUploadedDataImage(normalized.thumbnailSrc) && dataUrlSize(normalized.thumbnailSrc) > 160 * 1024
+        ? ""
+        : (normalized.thumbnailSrc || "");
+      return {
+        id: normalized.id,
+        store: normalized.store || "",
+        date: normalized.date || "",
+        total: Number(normalized.total || 0),
+        payer: getReceiptPayer(normalized),
+        thumbnailSrc,
+        dropboxPath: normalized.dropboxPath || "",
+        dropboxFileId: normalized.dropboxFileId || "",
+        imageStorage: normalized.dropboxPath ? "dropbox+thumbnail" : (thumbnailSrc ? "local-thumbnail" : "none"),
+        receiptTotalHint: normalized.receiptTotalHint || "",
+        sourceConfirmed: normalized.sourceConfirmed !== false,
+        confirmedAt: normalized.confirmedAt || "",
+        extractionMode: normalized.extractionMode || "manual",
+        createdAt: normalized.createdAt || normalized.confirmedAt || nowIso(),
+        updatedAt: normalized.updatedAt || normalized.confirmedAt || nowIso(),
+        items: normalizeReceiptItemsForStorage(normalized.items || [])
+      };
+    }
+
+    async function fetchCloudSyncRows(settings, spaceId) {
+      const query = `?space_id=eq.${encodeURIComponent(spaceId)}&select=id,space_id,data,updated_at,deleted_at&limit=10000`;
+      const response = await fetch(cloudSyncEndpoint(settings, query), {
+        method: "GET",
+        headers: cloudSyncHeaders(settings)
+      });
+      const text = await response.text();
+      let result = [];
+      try { result = text ? JSON.parse(text) : []; } catch { result = { message: text }; }
+      if (!response.ok) throw new Error(result?.message || result?.hint || text || "동기화 데이터를 읽지 못했습니다.");
+      return Array.isArray(result) ? result : [];
+    }
+
+    function buildCloudSyncRows(data, settings, spaceId) {
+      const rows = [];
+      const receipts = data.receipts || [];
+      const liveIds = new Set(receipts.map(receipt => receipt.id));
+      receipts.forEach(receipt => {
+        const compact = compactReceiptForCloudSync(receipt);
+        const updatedAt = compact.updatedAt || nowIso();
+        rows.push({
+          id: `${spaceId}:${compact.id}`,
+          space_id: spaceId,
+          data: compact,
+          updated_at: updatedAt,
+          deleted_at: null
+        });
+      });
+
+      Object.entries(loadDeletedReceiptSyncs()).forEach(([id, deletedAt]) => {
+        if (!id || liveIds.has(id)) return;
+        rows.push({
+          id: `${spaceId}:${id}`,
+          space_id: spaceId,
+          data: { id, deleted: true },
+          updated_at: deletedAt || nowIso(),
+          deleted_at: deletedAt || nowIso()
+        });
+      });
+      return rows;
+    }
+
+    async function upsertCloudSyncRows(settings, rows = []) {
+      if (!rows.length) return;
+      const batchSize = 200;
+      for (let i = 0; i < rows.length; i += batchSize) {
+        const batch = rows.slice(i, i + batchSize);
+        const response = await fetch(cloudSyncEndpoint(settings, "?on_conflict=id"), {
+          method: "POST",
+          headers: {
+            ...cloudSyncHeaders(settings),
+            "Prefer": "resolution=merge-duplicates,return=minimal"
+          },
+          body: JSON.stringify(batch)
+        });
+        const text = await response.text();
+        if (!response.ok) {
+          let result = {};
+          try { result = JSON.parse(text); } catch {}
+          throw new Error(result?.message || result?.hint || text || "동기화 데이터를 저장하지 못했습니다.");
+        }
+      }
+    }
+
+    function mergeCloudRowsIntoLocal(rows = [], spaceId = "") {
+      if (!rows.length) return false;
+      const data = loadData();
+      const localReceipts = data.receipts || [];
+      const byId = new Map(localReceipts.map(receipt => [receipt.id, receipt]));
+      const deleted = loadDeletedReceiptSyncs();
+      let changed = false;
+
+      rows.forEach(row => {
+        const rowId = String(row.id || "");
+        const receiptId = row.data?.id || rowId.replace(`${spaceId}:`, "");
+        if (!receiptId) return;
+
+        const remoteDeletedAt = row.deleted_at || "";
+        const remoteUpdatedAt = row.updated_at || row.data?.updatedAt || "";
+        const remoteUpdated = receiptTimestampValue(remoteUpdatedAt);
+        const local = byId.get(receiptId);
+        const localUpdated = receiptTimestampValue(local?.updatedAt || local?.confirmedAt || local?.createdAt);
+        const localDeletedUpdated = receiptTimestampValue(deleted[receiptId]);
+
+        if (remoteDeletedAt) {
+          const remoteDeleted = receiptTimestampValue(remoteDeletedAt);
+          if (remoteDeleted >= Math.max(localUpdated, localDeletedUpdated)) {
+            if (byId.delete(receiptId)) changed = true;
+            deleted[receiptId] = remoteDeletedAt;
+          }
+          return;
+        }
+
+        if (!row.data || row.data.deleted) return;
+        if (localDeletedUpdated && localDeletedUpdated >= remoteUpdated) return;
+        if (!local || remoteUpdated > localUpdated) {
+          const normalized = normalizeImportedReceipt({
+            ...row.data,
+            id: receiptId,
+            updatedAt: row.data.updatedAt || remoteUpdatedAt,
+            createdAt: row.data.createdAt || row.data.confirmedAt || remoteUpdatedAt
+          });
+          byId.set(receiptId, normalized);
+          delete deleted[receiptId];
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        const receipts = [...byId.values()].sort((a, b) => {
+          const byUpdated = receiptTimestampValue(b.updatedAt) - receiptTimestampValue(a.updatedAt);
+          if (byUpdated) return byUpdated;
+          return String(b.date || "").localeCompare(String(a.date || ""));
+        });
+        saveData({ ...data, receipts });
+      }
+      saveDeletedReceiptSyncs(deleted);
+      pruneDeletedReceiptSyncs();
+      return changed;
+    }
+
+    function cloudSyncSetupMessage(error) {
+      const message = String(error?.message || error || "");
+      if (/relation .*receipt_records.* does not exist|Could not find the table|schema cache/i.test(message)) {
+        return [
+          "Supabase에 receipt_records 테이블이 아직 없습니다.",
+          "",
+          "SQL Editor에서 SUPABASE_SYNC_SETUP.sql 내용을 실행하거나 아래 테이블을 만든 뒤 다시 테스트해주세요.",
+          "create table receipt_records (id text primary key, space_id text not null, data jsonb not null default '{}'::jsonb, updated_at timestamptz not null, deleted_at timestamptz);",
+          "create index receipt_records_space_id_idx on receipt_records(space_id);"
+        ].join("\n");
+      }
+      return message;
+    }
+
+    async function performCloudSync(options = {}) {
+      const settings = loadCloudSyncSettings();
+      if (!isCloudSyncConnected(settings)) return false;
+      if (cloudSyncRunning) return false;
+
+      cloudSyncRunning = true;
+      updateCloudSyncStatus("동기화 중입니다. 다른 기기에서 저장한 내용과 현재 기기의 내용을 비교하고 있습니다.");
+      try {
+        const spaceId = await hashSyncSpaceKey(settings.syncSpaceKey);
+        const remoteRows = await fetchCloudSyncRows(settings, spaceId);
+        const changed = mergeCloudRowsIntoLocal(remoteRows, spaceId);
+        const rows = buildCloudSyncRows(loadData(), settings, spaceId);
+        await upsertCloudSyncRows(settings, rows);
+
+        const saved = loadCloudSyncSettings();
+        saveCloudSyncSettingsObject({ ...saved, lastSyncAt: nowIso() });
+        if (changed) renderAll();
+        updateStorageStats();
+        if (!options.silent) alert("동기화가 완료되었습니다.");
+        return true;
+      } catch (error) {
+        console.error(error);
+        const message = cloudSyncSetupMessage(error);
+        updateCloudSyncStatus("동기화 실패: " + message);
+        if (!options.silent) alert("동기화에 실패했습니다.\n\n" + message);
+        return false;
+      } finally {
+        cloudSyncRunning = false;
+        updateCloudSyncStatus();
+      }
+    }
+
+    function scheduleCloudSync(delay = 1200) {
+      const settings = loadCloudSyncSettings();
+      if (!isCloudSyncConnected(settings) || settings.autoSync === false) return;
+      clearTimeout(cloudSyncTimer);
+      cloudSyncTimer = setTimeout(() => performCloudSync({ silent: true }), delay);
+    }
+
+    function setupCloudSyncRuntime() {
+      clearInterval(cloudSyncInterval);
+      const settings = loadCloudSyncSettings();
+      if (!isCloudSyncConnected(settings) || settings.autoSync === false) return;
+      cloudSyncInterval = setInterval(() => performCloudSync({ silent: true }), 20000);
+      scheduleCloudSync(1800);
+    }
+
+    async function testCloudSyncConnection() {
+      const settings = readCloudSyncSettingsForm({ keepSavedSecrets: true });
+      if (!isCloudSyncConnected(settings)) {
+        alert("Supabase URL, anon key, 동기화 비밀번호를 모두 입력해주세요.");
+        return;
+      }
+
+      try {
+        updateCloudSyncStatus("동기화 연결을 테스트하고 있습니다.");
+        const spaceId = await hashSyncSpaceKey(settings.syncSpaceKey);
+        await fetchCloudSyncRows(settings, spaceId);
+        saveCloudSyncSettingsObject(settings);
+        alert("동기화 연결이 확인되었습니다.\n\n같은 설정을 휴대전화와 데스크탑에 넣으면 같은 영수증 데이터가 보입니다.");
+      } catch (error) {
+        console.error(error);
+        alert("동기화 연결 테스트에 실패했습니다.\n\n" + cloudSyncSetupMessage(error));
+      } finally {
+        updateCloudSyncStatus();
+      }
+    }
+
     function exportJsonBackup() {
       const data = loadData();
       const backup = {
         app: "영수증DB",
-        version: "v2.03 PWA",
+        version: APP_VERSION,
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
@@ -8532,7 +9021,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const data = loadData();
       return {
         app: "영수증DB",
-        version: "v2.03 PWA",
+        version: APP_VERSION,
         exportedAt: new Date().toISOString(),
         receipts: data.receipts || []
       };
@@ -8590,6 +9079,8 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         dropboxFileId: receipt.dropboxFileId || "",
         imageStorage: receipt.dropboxPath ? "dropbox+thumbnail" : (receipt.imageSrc || receipt.thumbnailSrc ? "local-thumbnail" : "none"),
         receiptTotalHint: Number(receipt.receiptTotalHint || receipt.extractedTotal || 0) || "",
+        createdAt: receipt.createdAt || receipt.confirmedAt || receipt.updatedAt || nowIso(),
+        updatedAt: receipt.updatedAt || receipt.confirmedAt || receipt.createdAt || nowIso(),
         items
       });
       return restoreRememberedPayer(restoreRememberedReceiptEdit(normalizedReceipt), loadPayerMemory());
@@ -8668,7 +9159,8 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
           }
         });
 
-        saveData({ ...current, receipts: [...byId.values()] });
+        saveData({ ...current, receipts: [...byId.values()].map(receipt => normalizeReceiptTimestamps(receipt, { preserveUpdatedAt: !!receipt.updatedAt })) });
+        scheduleCloudSync();
         if (isDropboxConnected()) {
           try {
             await uploadJsonBackupToDropbox({ silent: true });
@@ -8714,6 +9206,69 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const csv = rows.map(row => row.map(csvCell).join(",")).join("\n");
       const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
       downloadTextFile(`영수증DB_items_${date}.csv`, "\ufeff" + csv, "text/csv;charset=utf-8");
+    }
+
+    function excelCell(value) {
+      return `<td>${escapeHtml(String(value ?? ""))}</td>`;
+    }
+
+    function exportExcelBackup() {
+      const data = loadData();
+      const receipts = data.receipts || [];
+      const receiptRows = receipts.map(receipt => [
+        receipt.id,
+        receipt.date,
+        receipt.store,
+        getReceiptPayer(receipt),
+        receipt.total,
+        (receipt.items || []).length,
+        receipt.imageStorage || "",
+        receipt.dropboxPath || "",
+        receipt.createdAt || "",
+        receipt.updatedAt || ""
+      ]);
+      const itemRows = receipts.flatMap(receipt => (receipt.items || []).map(item => [
+        receipt.id,
+        receipt.date,
+        receipt.store,
+        getReceiptPayer(receipt),
+        receipt.total,
+        item.name,
+        item.qty,
+        item.unitPrice,
+        item.amount,
+        item.aliases || "",
+        receipt.dropboxPath || ""
+      ]));
+
+      const table = (title, headers, rows) => `
+        <h2>${escapeHtml(title)}</h2>
+        <table border="1">
+          <thead><tr>${headers.map(excelCell).join("")}</tr></thead>
+          <tbody>${rows.map(row => `<tr>${row.map(excelCell).join("")}</tr>`).join("")}</tbody>
+        </table>
+      `;
+
+      const html = `<!doctype html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif; }
+              table { border-collapse: collapse; margin-bottom: 28px; }
+              th, td { padding: 6px 8px; mso-number-format:"\\@"; }
+              h2 { margin: 18px 0 8px; }
+            </style>
+          </head>
+          <body>
+            <h1>영수증DB 전체 내보내기</h1>
+            <p>내보낸 시각: ${escapeHtml(formatDateTime(nowIso()))}</p>
+            ${table("영수증 목록", ["영수증ID","일자","매장명","결제자","총액","품목수","이미지보관","Dropbox경로","생성일","수정일"], receiptRows)}
+            ${table("품목 전체", ["영수증ID","일자","매장명","결제자","영수증총액","품목명","수량","단가","계","검색별칭","Dropbox경로"], itemRows)}
+          </body>
+        </html>`;
+      const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+      downloadTextFile(`영수증DB_전체_${date}.xls`, "\ufeff" + html, "application/vnd.ms-excel;charset=utf-8");
     }
 
     function cleanupLocalReceiptImages() {
@@ -8850,13 +9405,19 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
     function openSettingsModal() {
       const settings = loadDropboxSettings();
       const aiSettings = loadAiSettings();
+      const cloudSettings = loadCloudSyncSettings();
       $("dropboxTokenInput").value = settings.accessToken || "";
       $("dropboxFolderInput").value = settings.folder || "/영수증DB";
       $("aiEndpointInput").value = aiSettings.endpoint || "";
       $("aiClientTokenInput").value = aiSettings.clientToken || "";
       $("aiAutoAnalyzeInput").checked = aiSettings.autoAnalyze !== false;
+      $("cloudSupabaseUrlInput").value = cloudSettings.supabaseUrl || "";
+      $("cloudSupabaseKeyInput").value = cloudSettings.anonKey || "";
+      $("cloudSyncSpaceInput").value = cloudSettings.syncSpaceKey || "";
+      $("cloudAutoSyncInput").checked = cloudSettings.autoSync !== false;
       updateDropboxStatus();
       updateAiStatus();
+      updateCloudSyncStatus();
       updateStorageStats();
       $("settingsBackdrop").classList.add("show");
     }
