@@ -1,9 +1,10 @@
+
 <!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.07 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.09 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -492,6 +493,7 @@
       line-height: 1.12;
       font-weight: 840;
       font-variant-numeric: tabular-nums;
+      text-align: right;
     }
 
     .summary-card .summary-sub {
@@ -530,6 +532,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      text-align: right;
     }
 
     .discount-note {
@@ -684,6 +687,11 @@
       font-size: 19px;
       font-weight: 800;
       font-variant-numeric: tabular-nums;
+    }
+
+    .receipt-detail-stats .info .value,
+    .desktop-receipt-stats .info .value {
+      text-align: right;
     }
 
     .data-table {
@@ -844,6 +852,50 @@
       gap: 14px;
     }
 
+    .desktop-search-panel {
+      display: grid;
+      gap: 14px;
+    }
+
+    .desktop-search-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .desktop-search-title {
+      margin: 2px 0 0;
+      font-size: 25px;
+      line-height: 1.14;
+      font-weight: 820;
+      word-break: keep-all;
+    }
+
+    .desktop-search-close {
+      width: 38px;
+      min-width: 38px;
+      height: 38px;
+      min-height: 38px;
+      padding: 0;
+      border-radius: 999px;
+      font-size: 18px;
+    }
+
+    .desktop-search-table {
+      max-height: 430px;
+      overflow: auto;
+      margin-top: 0;
+    }
+
+    .desktop-search-table tr[data-side-receipt-id] {
+      cursor: pointer;
+    }
+
+    .desktop-search-table tr[data-side-receipt-id]:hover td {
+      background: #fbfbfd;
+    }
+
     .desktop-receipt-head {
       display: grid;
       grid-template-columns: 1fr auto;
@@ -912,6 +964,24 @@
     .desktop-receipt-table .data-table td {
       padding-left: 6px;
       padding-right: 6px;
+    }
+
+    .receipt-items-table {
+      --receipt-item-edge: 14px;
+    }
+
+    .receipt-items-table .data-table th:first-child,
+    .receipt-items-table .data-table td:first-child {
+      padding-left: var(--receipt-item-edge);
+    }
+
+    .receipt-items-table .data-table th:last-child,
+    .receipt-items-table .data-table td:last-child {
+      padding-right: var(--receipt-item-edge);
+    }
+
+    .desktop-receipt-table.receipt-items-table {
+      --receipt-item-edge: 14px;
     }
 
     .modal-backdrop, .image-backdrop {
@@ -1027,6 +1097,27 @@
       outline: 0;
       font-weight: 620;
       min-width: 0;
+    }
+
+    .field textarea {
+      min-height: 78px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      padding: 12px 13px;
+      outline: 0;
+      font: inherit;
+      font-weight: 620;
+      line-height: 1.45;
+      resize: vertical;
+    }
+
+    .memo-field {
+      margin: 2px 0 14px;
+    }
+
+    .memo-box {
+      margin-top: 12px;
     }
 
     .field-grid .field label {
@@ -2099,6 +2190,8 @@
     }
   </style>
   <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <meta name="theme-color" content="#111113" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="영수증DB" />
@@ -2122,7 +2215,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.07 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.09 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -2180,7 +2273,7 @@
             <div id="receiptImageArea"></div>
             <div id="receiptDropboxArea"></div>
 
-            <div class="info-grid">
+            <div class="info-grid receipt-detail-stats">
               <div class="info">
                 <div class="label">총 결제금액</div>
                 <div class="value" id="receiptTotal"></div>
@@ -2191,12 +2284,17 @@
               </div>
             </div>
 
+            <div class="dropbox-path-box memo-box hidden" id="receiptMemoBox">
+              <div class="path-title">메모</div>
+              <div class="path-text" id="receiptMemoText"></div>
+            </div>
+
             <div class="section">
               <div class="section-head" style="align-items:center;">
                 <div class="section-title">저장된 품목</div>
                 <button class="tiny-action" id="editReceiptBtn">수정</button>
               </div>
-              <div class="card table-wrap">
+              <div class="card table-wrap receipt-items-table">
                 <table class="data-table">
                   <thead>
                     <tr>
@@ -2271,7 +2369,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.07 PWA</div>
+          <div class="eyebrow">Prototype v2.09 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -2307,6 +2405,19 @@
         </div>
       </div>
 
+      <div class="panel desktop-search-panel hidden" id="sideSearchPanel">
+        <div class="desktop-search-head">
+          <div>
+            <div class="eyebrow">검색 요약</div>
+            <h2 class="desktop-search-title" id="sideSearchTitle"></h2>
+            <div class="muted small" id="sideSearchMeta" style="margin-top:7px;"></div>
+          </div>
+          <button class="secondary desktop-search-close" id="sideSearchClose" type="button" aria-label="검색 요약 닫기">×</button>
+        </div>
+        <div id="sideSearchSummary"></div>
+        <div id="sideSearchResults"></div>
+      </div>
+
       <div class="panel desktop-receipt-panel hidden" id="sideReceiptPanel">
         <div class="desktop-receipt-head">
           <div>
@@ -2338,9 +2449,14 @@
           <div class="path-text" id="sideReceiptStorage"></div>
         </div>
 
+        <div class="dropbox-path-box memo-box hidden" id="sideReceiptMemoBox">
+          <div class="path-title">메모</div>
+          <div class="path-text" id="sideReceiptMemoText"></div>
+        </div>
+
         <div>
           <div class="section-title">저장된 품목</div>
-          <div class="card table-wrap desktop-receipt-table">
+          <div class="card table-wrap desktop-receipt-table receipt-items-table">
             <table class="data-table">
               <thead>
                 <tr>
@@ -2433,6 +2549,11 @@
           <input id="totalInput" inputmode="numeric" placeholder="품목 합계 자동 계산" readonly aria-readonly="true" title="품목별 계 금액을 자동 계산합니다." />
         </div>
 
+      </div>
+
+      <div class="field memo-field">
+        <label>메모</label>
+        <textarea id="memoInput" placeholder="예: 환불 예정, 같이 간 사람, 따로 기억할 내용"></textarea>
       </div>
 
       <div class="card table-wrap">
@@ -2632,7 +2753,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.07 PWA";
+    const APP_VERSION = "v2.09 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
@@ -3326,6 +3447,7 @@
         thumbnailSrc: receipt.thumbnailSrc || receipt.imageSrc || "",
         imageStorage: receipt.dropboxPath ? "dropbox+thumbnail" : (receipt.imageSrc || receipt.thumbnailSrc ? "local-thumbnail" : (receipt.imageStorage || "none")),
         receiptTotalHint: Number(receipt.receiptTotalHint || receipt.extractedTotal || 0) || "",
+        memo: getReceiptMemo(receipt),
         items: normalizeReceiptItemsForStorage(receipt.items || [])
       });
     }
@@ -3352,6 +3474,7 @@
         dropboxFileId: receipt.dropboxFileId || "",
         imageStorage: receipt.imageStorage || "none",
         receiptTotalHint: Number(receipt.receiptTotalHint || receipt.extractedTotal || 0) || "",
+        memo: getReceiptMemo(receipt),
         items: normalizeReceiptItemsForStorage(receipt.items || [])
       };
     }
@@ -3984,6 +4107,7 @@
 
     function clearDesktopReceiptPanel(options = {}) {
       $("sideReceiptPanel")?.classList.add("hidden");
+      $("sideSearchPanel")?.classList.add("hidden");
       $("sideIntroPanels")?.classList.remove("hidden");
       if (!options.keepCurrent) currentReceiptId = null;
       markSelectedReceiptCard("");
@@ -3993,6 +4117,7 @@
       if (!receipt || !$("sideReceiptPanel")) return;
 
       $("sideIntroPanels")?.classList.add("hidden");
+      $("sideSearchPanel")?.classList.add("hidden");
       $("sideReceiptPanel").classList.remove("hidden");
       $("sideReceiptTitle").textContent = receipt.store || "영수증";
       $("sideReceiptMeta").textContent = `${formatDate(receipt.date)} · ${(receipt.items || []).length}개 품목${getReceiptPayer(receipt) ? " · 결제자 " + getReceiptPayer(receipt) : ""}`;
@@ -4001,6 +4126,9 @@
       $("sideReceiptStorage").textContent = receipt.dropboxPath
         ? `Dropbox 원본 저장됨: ${receipt.dropboxPath}`
         : (receipt.thumbnailSrc || receipt.imageSrc ? "앱에 작은 썸네일로 보관 중입니다." : "저장된 이미지가 없습니다. 데이터는 보관되어 있습니다.");
+      const memo = getReceiptMemo(receipt);
+      $("sideReceiptMemoBox")?.classList.toggle("hidden", !memo);
+      if ($("sideReceiptMemoText")) $("sideReceiptMemoText").innerHTML = renderMemoHtml(memo);
 
       const imageArea = $("sideReceiptImageArea");
       const previewSrc = receipt.thumbnailSrc || receipt.imageSrc || "";
@@ -4064,6 +4192,103 @@
 
       markSelectedReceiptCard(receipt.id);
       document.querySelector(".side")?.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function renderDesktopSearchPanel({ title = "", meta = "", summaryHtml = "", resultsHtml = "" } = {}) {
+      if (!isDesktopReceiptPanelMode() || !$("sideSearchPanel")) return;
+      $("sideIntroPanels")?.classList.add("hidden");
+      $("sideReceiptPanel")?.classList.add("hidden");
+      $("sideSearchPanel").classList.remove("hidden");
+      $("sideSearchTitle").textContent = title || "검색 결과";
+      $("sideSearchMeta").textContent = meta || "";
+      $("sideSearchSummary").innerHTML = summaryHtml || "";
+      $("sideSearchResults").innerHTML = resultsHtml || "";
+      bindDesktopSearchPanelRows();
+      markSelectedReceiptCard("");
+      document.querySelector(".side")?.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function renderDesktopReceiptSearchRows(receipts = [], title = "검색된 영수증") {
+      if (!receipts.length) return `<div class="card empty">검색 결과가 없습니다.</div>`;
+      const rows = receipts.map(receipt => {
+        const payer = getReceiptPayer(receipt);
+        return `
+          <tr data-side-receipt-id="${escapeHtml(receipt.id)}">
+            <td>${formatDate(receipt.date)}</td>
+            <td style="white-space:pre-line;word-break:keep-all;">${escapeHtml(receipt.store || "영수증")}${payer ? `<br/><span class="muted tiny">결제자 ${escapeHtml(payer)}</span>` : ""}</td>
+            <td class="right">${(receipt.items || []).length.toLocaleString("ko-KR")}개</td>
+            <td class="right"><strong>${formatWon(receipt.total)}</strong></td>
+          </tr>
+        `;
+      }).join("");
+
+      return `
+        <div>
+          <div class="section-title">${escapeHtml(title)}</div>
+          <div class="card table-wrap desktop-search-table receipt-items-table">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>날짜</th>
+                  <th>영수증</th>
+                  <th class="right">품목</th>
+                  <th class="right">총액</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDesktopItemSearchRows(items = []) {
+      if (!items.length) return `<div class="card empty">검색 결과가 없습니다.</div>`;
+      const visibleItems = items.slice(0, 30);
+      const rows = visibleItems.map(item => `
+        <tr data-side-receipt-id="${escapeHtml(item.receiptId)}">
+          <td>${formatDate(item.date)}</td>
+          <td>${escapeHtml(item.store || "")}</td>
+          <td style="white-space:pre-line;word-break:keep-all;">${escapeHtml(item.name)}${renderDiscountNote(item)}</td>
+          <td class="right">${Number(item.qty || 0).toLocaleString("ko-KR")}</td>
+          <td class="right">${formatWon(item.unitPrice)}</td>
+          <td class="right"><strong>${formatWon(item.amount)}</strong></td>
+        </tr>
+      `).join("");
+      const more = items.length > visibleItems.length
+        ? `<div class="muted small" style="margin-top:8px;">먼저 ${visibleItems.length}개만 표시합니다. 전체는 왼쪽 결과에서 영수증을 열어 확인해주세요.</div>`
+        : "";
+
+      return `
+        <div>
+          <div class="section-title">구매 이력</div>
+          <div class="card table-wrap desktop-search-table receipt-items-table">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>날짜</th>
+                  <th>매장</th>
+                  <th>품목</th>
+                  <th class="right">수량</th>
+                  <th class="right">실단가</th>
+                  <th class="right">실결제</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+          ${more}
+        </div>
+      `;
+    }
+
+    function bindDesktopSearchPanelRows() {
+      $("sideSearchPanel")?.querySelectorAll("[data-side-receipt-id]").forEach(row => {
+        row.addEventListener("click", () => {
+          const id = row.dataset.sideReceiptId;
+          if (id) showReceipt(id);
+        });
+      });
     }
 
     function getPayerQuery(query) {
@@ -4433,6 +4658,7 @@
         resultsSection.classList.add("hidden");
         recentSection.classList.remove("hidden");
         receiptSection.classList.remove("hidden");
+        clearDesktopReceiptPanel();
         renderReceipts(false, { limit: 5 });
         return;
       }
@@ -4454,6 +4680,12 @@
           appendReceiptResultCard(resultList, receipt, { badge: "영수증", allowEdit: true });
         });
 
+        renderDesktopSearchPanel({
+          title: storeName,
+          meta: `${storeReceipts.length.toLocaleString("ko-KR")}건 영수증`,
+          summaryHtml: renderStoreSummaryCard(storeName, storeReceipts),
+          resultsHtml: renderDesktopReceiptSearchRows(storeReceipts, "검색된 영수증")
+        });
         addRecentQuery(query);
         return;
       }
@@ -4468,6 +4700,12 @@
           appendReceiptResultCard(resultList, receipt, { badge: "영수증", showPayer: true, allowEdit: true });
         });
 
+        renderDesktopSearchPanel({
+          title: `${payerName} 결제`,
+          meta: `${payerReceipts.length.toLocaleString("ko-KR")}건 영수증`,
+          summaryHtml: renderPayerSummaryCard(payerName, payerReceipts),
+          resultsHtml: renderDesktopReceiptSearchRows(payerReceipts, "결제 내역")
+        });
         addRecentQuery(query);
         return;
       }
@@ -4486,6 +4724,11 @@
           renderReceipts(true, { showAll: true });
         });
         $("emptySearchDebug")?.addEventListener("click", () => showSearchDebug(query));
+        renderDesktopSearchPanel({
+          title: query,
+          meta: "검색 결과 없음",
+          resultsHtml: renderNoSearchResults(query)
+        });
         return;
       }
 
@@ -4495,6 +4738,12 @@
       resultList.innerHTML = renderItemSummaryCard(query, items);
       itemReceiptGroups.forEach(group => appendItemReceiptResultCard(resultList, group, query));
 
+      renderDesktopSearchPanel({
+        title: query,
+        meta: `${itemReceiptGroups.length.toLocaleString("ko-KR")}건 영수증 · ${items.length.toLocaleString("ko-KR")}개 품목`,
+        summaryHtml: renderItemSummaryCard(query, items),
+        resultsHtml: renderDesktopItemSearchRows(items)
+      });
       addRecentQuery(query);
     }
 
@@ -5706,6 +5955,14 @@
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;");
+    }
+
+    function getReceiptMemo(receipt = {}) {
+      return String(receipt.memo ?? receipt.note ?? "").trim();
+    }
+
+    function renderMemoHtml(value = "") {
+      return escapeHtml(value).replaceAll("\n", "<br/>");
     }
 
     function zoomImage(src) {
