@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.04 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.07 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -300,47 +300,80 @@
     }
 
     .receipt-card-delete-x {
-      width: 32px;
-      height: 32px;
-      min-height: 32px;
-      border: 0;
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      z-index: 3;
+      width: 30px;
+      height: 30px;
+      min-height: 30px;
+      border: 1px solid rgba(255,59,48,.16);
       border-radius: 999px;
-      background: #fff1f0;
+      background: rgba(255,241,240,.94);
       color: var(--red);
-      font-size: 22px;
+      font-size: 19px;
       line-height: 1;
       font-weight: 860;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 8px 20px rgba(255,59,48,.10);
       opacity: 0;
       pointer-events: none;
-      transition: opacity .14s ease, background .14s ease, transform .14s ease;
+      transform: translateY(-50%) scale(.96);
+      transition: opacity .14s ease, background .14s ease, transform .14s ease, box-shadow .14s ease;
     }
 
     .receipt-card:hover .receipt-card-delete-x,
     .receipt-card:focus-within .receipt-card-delete-x {
       opacity: 1;
       pointer-events: auto;
+      transform: translateY(-50%) scale(1);
     }
 
     .receipt-card-delete-x:hover {
       background: #ffe4e2;
-      transform: scale(1.04);
+      box-shadow: 0 10px 24px rgba(255,59,48,.16);
+      transform: translateY(-50%) scale(1.04);
     }
 
-    .receipt-card-actions {
-      display: flex;
+    .receipt-card-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
       align-items: center;
-      justify-content: flex-end;
-      gap: 10px;
-      flex-shrink: 0;
+    }
+
+    .receipt-card-main {
+      min-width: 0;
+    }
+
+    .receipt-card-amount {
+      min-width: 106px;
+      display: grid;
+      justify-items: end;
+      align-items: center;
+      transition: padding-right .14s ease;
+    }
+
+    .receipt-card:hover .receipt-card-amount,
+    .receipt-card:focus-within .receipt-card-amount {
+      padding-right: 34px;
+    }
+
+    .receipt-card.selected .receipt-card-surface {
+      box-shadow: inset 0 0 0 2px rgba(0,122,255,.22);
     }
 
     @media (hover: none), (pointer: coarse) {
       .receipt-card-delete-x {
         display: none;
+      }
+      .receipt-card-amount,
+      .receipt-card:hover .receipt-card-amount,
+      .receipt-card:focus-within .receipt-card-amount {
+        padding-right: 0;
       }
     }
 
@@ -711,6 +744,39 @@
       background: #f1f1f5;
     }
 
+    .app-history-nav {
+      position: sticky;
+      top: 56px;
+      z-index: 7;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px 0;
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.72) 78%, rgba(255,255,255,0));
+      backdrop-filter: blur(18px);
+    }
+
+    .history-btn {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 999px;
+      background: #f1f1f5;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 22px;
+      font-weight: 850;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .history-btn:disabled {
+      cursor: default;
+      opacity: .32;
+    }
+
     .side {
       min-height: calc(100vh - 56px);
       max-height: 920px;
@@ -771,6 +837,81 @@
       color: var(--muted);
       font-size: 13px;
       line-height: 1.45;
+    }
+
+    .desktop-receipt-panel {
+      display: grid;
+      gap: 14px;
+    }
+
+    .desktop-receipt-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .desktop-receipt-title {
+      margin: 2px 0 0;
+      font-size: 25px;
+      line-height: 1.14;
+      font-weight: 820;
+      word-break: keep-all;
+    }
+
+    .desktop-receipt-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .desktop-receipt-actions .secondary {
+      min-height: 38px;
+      border-radius: 14px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+    .desktop-receipt-close {
+      width: 38px;
+      min-width: 38px;
+      height: 38px;
+      min-height: 38px;
+      padding: 0;
+      border-radius: 999px;
+    }
+
+    .desktop-receipt-image {
+      min-height: 210px;
+      max-height: 360px;
+      margin-top: 0;
+    }
+
+    .desktop-receipt-image .receipt-image {
+      max-height: 360px;
+    }
+
+    .desktop-receipt-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .desktop-receipt-table {
+      max-height: 340px;
+      overflow: auto;
+      margin-top: 0;
+    }
+
+    .desktop-receipt-table .data-table {
+      font-size: 12px;
+    }
+
+    .desktop-receipt-table .data-table th,
+    .desktop-receipt-table .data-table td {
+      padding-left: 6px;
+      padding-right: 6px;
     }
 
     .modal-backdrop, .image-backdrop {
@@ -1972,12 +2113,16 @@
         <button class="tab" id="tabReceipts">영수증</button>
         <button class="tab" id="tabSettings">설정</button>
       </nav>
+      <div class="app-history-nav" aria-label="앱 화면 이동">
+        <button class="history-btn" id="appBackBtn" type="button" aria-label="이전 화면">‹</button>
+        <button class="history-btn" id="appForwardBtn" type="button" aria-label="다음 화면">›</button>
+      </div>
       <div class="screen">
         <div id="homeView">
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.04 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.07 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -2124,40 +2269,91 @@
     </main>
 
     <aside class="side">
-      <div class="panel">
-        <div class="eyebrow">Prototype v2.04 PWA</div>
-        <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
-        <p>
-          품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
-          결제자 이름을 검색하면 누가 언제 어디서 얼마를 결제했는지 요약합니다.
-        </p>
+      <div id="sideIntroPanels">
+        <div class="panel">
+          <div class="eyebrow">Prototype v2.07 PWA</div>
+          <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
+          <p>
+            품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
+            결제자 이름을 검색하면 누가 언제 어디서 얼마를 결제했는지 요약합니다.
+          </p>
 
-        <div class="feature-list">
-          <div class="feature">
-            <div class="icon">▧</div>
-            <div><b>영수증 보기</b><span>저장된 영수증 이미지와 품목표를 한 화면에서 확인합니다.</span></div>
+          <div class="feature-list">
+            <div class="feature">
+              <div class="icon">▧</div>
+              <div><b>영수증 보기</b><span>데스크탑에서는 왼쪽 목록을 유지한 채 오른쪽에서 상세를 바로 확인합니다.</span></div>
+            </div>
+            <div class="feature">
+              <div class="icon">✎</div>
+              <div><b>원본 확인</b><span>AI 분석값이나 직접 입력값을 원본과 대조한 뒤 저장합니다.</span></div>
+            </div>
+            <div class="feature">
+              <div class="icon">⌕</div>
+              <div><b>가격 요약</b><span>품목별 최저가, 최근가, 평균 단가와 구매 이력을 같이 보여줍니다.</span></div>
+            </div>
+            <div class="feature">
+              <div class="icon">◉</div>
+              <div><b>결제자 검색</b><span>이름을 검색하면 총 결제액, 결제 횟수, 최근 결제 내역을 먼저 보여줍니다.</span></div>
+            </div>
           </div>
-          <div class="feature">
-            <div class="icon">✎</div>
-            <div><b>원본 확인</b><span>AI 분석값이나 직접 입력값을 원본과 대조한 뒤 저장합니다.</span></div>
-          </div>
-          <div class="feature">
-            <div class="icon">⌕</div>
-            <div><b>가격 요약</b><span>품목별 최저가, 최근가, 평균 단가와 구매 이력을 같이 보여줍니다.</span></div>
-          </div>
-          <div class="feature">
-            <div class="icon">◉</div>
-            <div><b>결제자 검색</b><span>이름을 검색하면 총 결제액, 결제 횟수, 최근 결제 내역을 먼저 보여줍니다.</span></div>
-          </div>
+        </div>
+
+        <div class="panel">
+          <h2>무료 동기화 방향</h2>
+          <p>
+            Supabase 무료 티어는 DB 동기화에 가장 잘 맞고, Dropbox는 이미 쓰는 저장소라 백업과 원본 보관에 좋습니다.
+            Dropbox만으로도 JSON 파일 동기화는 가능하지만 동시에 수정하면 충돌 처리가 필요합니다.
+          </p>
         </div>
       </div>
 
-      <div class="panel">
-        <h2>실제 앱으로 확장할 때</h2>
-        <p>
-          기본은 로컬 저장이지만, 설정에서 Supabase 동기화를 연결하면 모바일과 데스크탑이 같은 데이터를 봅니다.
-          다음 단계에서는 로그인과 클라우드 이미지 저장을 더 단단하게 붙이면 실제 서비스 형태로 확장할 수 있습니다.
-        </p>
+      <div class="panel desktop-receipt-panel hidden" id="sideReceiptPanel">
+        <div class="desktop-receipt-head">
+          <div>
+            <div class="eyebrow">선택한 영수증</div>
+            <h2 class="desktop-receipt-title" id="sideReceiptTitle"></h2>
+            <div class="muted small" id="sideReceiptMeta" style="margin-top:7px;"></div>
+          </div>
+          <div class="desktop-receipt-actions">
+            <button class="secondary" id="sideReceiptEdit" type="button">수정</button>
+            <button class="secondary desktop-receipt-close" id="sideReceiptClose" type="button" aria-label="상세 닫기">×</button>
+          </div>
+        </div>
+
+        <div id="sideReceiptImageArea"></div>
+
+        <div class="desktop-receipt-stats">
+          <div class="info">
+            <div class="label">총 결제금액</div>
+            <div class="value" id="sideReceiptTotal"></div>
+          </div>
+          <div class="info">
+            <div class="label">품목 수</div>
+            <div class="value" id="sideReceiptItemCount"></div>
+          </div>
+        </div>
+
+        <div class="dropbox-path-box">
+          <div class="path-title">보관 상태</div>
+          <div class="path-text" id="sideReceiptStorage"></div>
+        </div>
+
+        <div>
+          <div class="section-title">저장된 품목</div>
+          <div class="card table-wrap desktop-receipt-table">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>품목</th>
+                  <th class="right">수량</th>
+                  <th class="right">단가</th>
+                  <th class="right">계</th>
+                </tr>
+              </thead>
+              <tbody id="sideReceiptItemsBody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </aside>
   </div>
@@ -2436,7 +2632,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.04 PWA";
+    const APP_VERSION = "v2.07 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
@@ -2800,6 +2996,10 @@
     let cloudSyncSpaceIdCache = "";
     let cloudSyncSpaceKeyCache = "";
     let cloudSyncInterval = null;
+    const APP_HISTORY_LIMIT = 40;
+    let appHistory = [];
+    let appHistoryIndex = -1;
+    let isApplyingAppHistory = false;
 
     const $ = (id) => document.getElementById(id);
 
@@ -3772,6 +3972,100 @@
       }
     }
 
+    function isDesktopReceiptPanelMode() {
+      return window.matchMedia?.("(min-width: 901px)")?.matches && !!$("sideReceiptPanel");
+    }
+
+    function markSelectedReceiptCard(id = "") {
+      document.querySelectorAll(".receipt-card").forEach(card => {
+        card.classList.toggle("selected", !!id && card.dataset.receiptId === id);
+      });
+    }
+
+    function clearDesktopReceiptPanel(options = {}) {
+      $("sideReceiptPanel")?.classList.add("hidden");
+      $("sideIntroPanels")?.classList.remove("hidden");
+      if (!options.keepCurrent) currentReceiptId = null;
+      markSelectedReceiptCard("");
+    }
+
+    function renderDesktopReceiptPanel(receipt) {
+      if (!receipt || !$("sideReceiptPanel")) return;
+
+      $("sideIntroPanels")?.classList.add("hidden");
+      $("sideReceiptPanel").classList.remove("hidden");
+      $("sideReceiptTitle").textContent = receipt.store || "영수증";
+      $("sideReceiptMeta").textContent = `${formatDate(receipt.date)} · ${(receipt.items || []).length}개 품목${getReceiptPayer(receipt) ? " · 결제자 " + getReceiptPayer(receipt) : ""}`;
+      $("sideReceiptTotal").textContent = formatWon(receipt.total);
+      $("sideReceiptItemCount").textContent = `${(receipt.items || []).length}개`;
+      $("sideReceiptStorage").textContent = receipt.dropboxPath
+        ? `Dropbox 원본 저장됨: ${receipt.dropboxPath}`
+        : (receipt.thumbnailSrc || receipt.imageSrc ? "앱에 작은 썸네일로 보관 중입니다." : "저장된 이미지가 없습니다. 데이터는 보관되어 있습니다.");
+
+      const imageArea = $("sideReceiptImageArea");
+      const previewSrc = receipt.thumbnailSrc || receipt.imageSrc || "";
+      if (previewSrc) {
+        imageArea.innerHTML = `<div class="receipt-image-wrap desktop-receipt-image"></div>`;
+        const img = document.createElement("img");
+        img.className = "receipt-image";
+        img.alt = "선택한 영수증 이미지";
+        img.src = previewSrc;
+        img.addEventListener("click", async () => {
+          if (receipt.dropboxPath) {
+            try {
+              const link = await getDropboxTemporaryLink(receipt.dropboxPath);
+              zoomImage(link);
+              return;
+            } catch (error) {
+              console.warn("Dropbox 원본을 열 수 없어 썸네일을 표시합니다.", error);
+            }
+          }
+          zoomImage(previewSrc);
+        });
+        imageArea.querySelector(".receipt-image-wrap").appendChild(img);
+      } else if (receipt.dropboxPath) {
+        imageArea.innerHTML = `
+          <div class="receipt-image-wrap desktop-receipt-image">
+            <div class="no-image">
+              Dropbox 원본만 보관 중<br/>
+              <button class="dropbox-link" id="sideOpenDropboxImage" type="button">원본 이미지 열기</button>
+            </div>
+          </div>
+        `;
+        $("sideOpenDropboxImage")?.addEventListener("click", async () => {
+          try {
+            const link = await getDropboxTemporaryLink(receipt.dropboxPath);
+            zoomImage(link);
+          } catch (error) {
+            alert("Dropbox 이미지를 열 수 없습니다. 설정에서 Dropbox 연결을 확인해주세요.\n\n" + (error.message || error));
+          }
+        });
+      } else {
+        imageArea.innerHTML = `
+          <div class="receipt-image-wrap desktop-receipt-image">
+            <div class="no-image">저장된 영수증 이미지가 없습니다.</div>
+          </div>
+        `;
+      }
+
+      const body = $("sideReceiptItemsBody");
+      body.innerHTML = "";
+      (receipt.items || []).forEach(item => {
+        const metrics = withItemMetrics(item);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td style="white-space:pre-line;word-break:keep-all;">${escapeHtml(item.name)}</td>
+          <td class="right">${Number(metrics.qty || 0).toLocaleString("ko-KR")}</td>
+          <td class="right">${formatWon(metrics.unitPrice)}</td>
+          <td class="right"><strong>${formatWon(metrics.amount)}</strong></td>
+        `;
+        body.appendChild(tr);
+      });
+
+      markSelectedReceiptCard(receipt.id);
+      document.querySelector(".side")?.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
     function getPayerQuery(query) {
       let value = normalize(query);
       // "신유철", "신유철 결제", "신유철 결제자", "결제자 신유철" 모두 같은 결제자 검색으로 처리합니다.
@@ -3924,7 +4218,7 @@
         if (!ok) return;
 
         removeReceipt(receiptId);
-        if (currentReceiptId === receiptId) currentReceiptId = null;
+        if (currentReceiptId === receiptId) clearDesktopReceiptPanel();
         renderAll();
       }
 
@@ -4034,24 +4328,25 @@
 
       visibleReceipts.forEach(receipt => {
         const div = document.createElement("div");
-        div.className = "card simple-card receipt-card";
+        div.className = `card simple-card receipt-card${currentReceiptId === receipt.id ? " selected" : ""}`;
+        div.dataset.receiptId = receipt.id;
         div.style.marginBottom = "10px";
         div.innerHTML = `
           <div class="receipt-card-swipe-action">
             <button class="receipt-delete-btn" type="button" aria-label="${escapeHtml(receipt.store)} 영수증 삭제">삭제</button>
           </div>
           <div class="receipt-card-surface">
-            <div class="row-between">
-              <div>
+            <div class="receipt-card-layout">
+              <div class="receipt-card-main">
                 <div class="store">${escapeHtml(receipt.store)}</div>
                 <div class="muted small" style="margin-top:4px;">${formatDate(receipt.date)} · ${receipt.items.length}개 품목${getReceiptPayer(receipt) ? " · 결제자 " + escapeHtml(getReceiptPayer(receipt)) : ""}</div>
                 <div class="muted tiny" style="margin-top:5px;">${receipt.dropboxPath ? "Dropbox 원본 저장됨" : (receipt.thumbnailSrc || receipt.imageSrc ? "앱 썸네일 저장됨" : "이미지 없음")}</div>
               </div>
-              <div class="receipt-card-actions">
+              <div class="receipt-card-amount">
                 <div class="price">${formatWon(receipt.total)}</div>
-                <button class="receipt-card-delete-x" type="button" aria-label="영수증 삭제">×</button>
               </div>
             </div>
+            <button class="receipt-card-delete-x" type="button" aria-label="영수증 삭제">×</button>
           </div>
         `;
         attachReceiptCardEvents(div, receipt.id);
@@ -4067,10 +4362,11 @@
         more.textContent = `전체 영수증 ${sorted.length}개 보기`;
         more.addEventListener("click", () => {
           setActiveTab("tabReceipts");
-          showHome();
+          showHome({ record: false });
           $("searchInput").value = "";
           renderSearch();
           renderReceipts(true, { showAll: true });
+          pushAppHistory({ view: "home", tab: "tabReceipts", query: "", showAllReceipts: true });
         });
         list.appendChild(more);
       }
@@ -4202,10 +4498,16 @@
       addRecentQuery(query);
     }
 
-    function showReceipt(id) {
+    function showReceipt(id, options = {}) {
       currentReceiptId = id;
       const receipt = findReceipt(id);
       if (!receipt) return;
+
+      if (isDesktopReceiptPanelMode() && !options.forcePhone) {
+        renderDesktopReceiptPanel(receipt);
+        pushAppHistory({ view: "receipt", id });
+        return;
+      }
 
       hideAllViews();
       $("receiptView").classList.remove("hidden");
@@ -4324,6 +4626,7 @@
         `;
         body.appendChild(tr);
       });
+      pushAppHistory({ view: "receipt", id });
     }
 
     function showItemDetail(query) {
@@ -4359,6 +4662,7 @@
         tr.addEventListener("click", () => showReceipt(item.receiptId));
         body.appendChild(tr);
       });
+      pushAppHistory({ view: "item", query });
     }
 
     function hideAllViews() {
@@ -4368,20 +4672,7 @@
     }
 
     function goBackOneStep() {
-      if ($("modalBackdrop").classList.contains("show")) {
-        requestCloseModal();
-        return true;
-      }
-      if ($("settingsBackdrop").classList.contains("show")) {
-        closeSettingsModal();
-        return true;
-      }
-      if (!$("receiptView").classList.contains("hidden") || !$("itemDetailView").classList.contains("hidden")) {
-        showHome();
-        setActiveTab("tabSearch");
-        return true;
-      }
-      return false;
+      return appGoBack();
     }
 
     function setupSwipeBack() {
@@ -4393,7 +4684,7 @@
       let startY = 0;
       let startTarget = null;
 
-      const isInteractiveTarget = (target) => !!target?.closest?.("input, textarea, select, button, a, .table-wrap, .modal, .image-backdrop");
+      const isInteractiveTarget = (target) => !!target?.closest?.("input, textarea, select, button, a, .table-wrap, .modal, .image-backdrop, .receipt-card");
 
       phone.addEventListener("touchstart", (event) => {
         if (!event.touches || event.touches.length !== 1) return;
@@ -4416,9 +4707,15 @@
         const dx = endX - startX;
         const dy = endY - startY;
 
-        // 사용자가 요청한 왼쪽 스와이프: 오른쪽에서 왼쪽으로 밀면 전 단계로 이동합니다.
-        if (dx < -72 && Math.abs(dy) < 58) {
-          goBackOneStep();
+        const phoneRect = phone.getBoundingClientRect();
+        const isFlatSwipe = Math.abs(dy) < 58;
+        const fromLeftEdge = startX - phoneRect.left < 42;
+        const fromRightEdge = phoneRect.right - startX < 42;
+
+        if (dx > 78 && isFlatSwipe && fromLeftEdge) {
+          appGoBack();
+        } else if (dx < -78 && isFlatSwipe && fromRightEdge) {
+          appGoForward();
         }
 
         startX = 0;
@@ -4428,19 +4725,22 @@
     }
 
 
-    function showHome() {
+    function showHome(options = {}) {
       hideAllViews();
       $("homeView").classList.remove("hidden");
       renderSearch();
+      if (options.record !== false) pushAppHistory();
     }
 
     function showInitialHome() {
+      clearDesktopReceiptPanel();
       setActiveTab("tabSearch");
       $("searchInput").value = "";
       hideAllViews();
       $("homeView").classList.remove("hidden");
       renderSearch();
       renderReceipts(false, { limit: 5 });
+      pushAppHistory({ view: "home", tab: "tabSearch", query: "", showAllReceipts: false });
       $("homeView").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
@@ -5418,10 +5718,172 @@
       $(id).classList.add("active");
     }
 
+    function getVisibleAppLocation() {
+      if (!$("receiptView").classList.contains("hidden") && currentReceiptId) {
+        return { view: "receipt", id: currentReceiptId };
+      }
+      if (!$("itemDetailView").classList.contains("hidden")) {
+        return { view: "item", query: $("detailName").textContent.trim() || lastQuery || "" };
+      }
+
+      const activeTab = document.querySelector(".tab.active")?.id || "tabSearch";
+      const safeTab = activeTab === "tabSettings" ? "tabSearch" : activeTab;
+      const receiptTitle = $("receiptSectionTitle")?.textContent || "";
+      return {
+        view: "home",
+        tab: safeTab,
+        query: $("searchInput")?.value?.trim() || "",
+        showAllReceipts: safeTab === "tabReceipts" || receiptTitle.includes("전체")
+      };
+    }
+
+    function appLocationKey(location = {}) {
+      return JSON.stringify({
+        view: location.view || "home",
+        id: location.id || "",
+        query: location.query || "",
+        tab: location.tab || "",
+        showAllReceipts: !!location.showAllReceipts
+      });
+    }
+
+    function updateAppHistoryControls() {
+      const backButton = $("appBackBtn");
+      const forwardButton = $("appForwardBtn");
+      if (!backButton || !forwardButton) return;
+      backButton.disabled = appHistoryIndex <= 0;
+      forwardButton.disabled = appHistoryIndex < 0 || appHistoryIndex >= appHistory.length - 1;
+    }
+
+    function pushAppHistory(location = getVisibleAppLocation()) {
+      if (isApplyingAppHistory || !location) {
+        updateAppHistoryControls();
+        return;
+      }
+
+      const current = appHistory[appHistoryIndex];
+      if (current && appLocationKey(current) === appLocationKey(location)) {
+        updateAppHistoryControls();
+        return;
+      }
+
+      appHistory = appHistory.slice(0, appHistoryIndex + 1);
+      appHistory.push(location);
+      if (appHistory.length > APP_HISTORY_LIMIT) appHistory.shift();
+      appHistoryIndex = appHistory.length - 1;
+      updateAppHistoryControls();
+    }
+
+    function replaceAppHistory(location = getVisibleAppLocation()) {
+      if (!location) return;
+      if (appHistoryIndex < 0) {
+        appHistory = [location];
+        appHistoryIndex = 0;
+      } else {
+        appHistory[appHistoryIndex] = location;
+      }
+      updateAppHistoryControls();
+    }
+
+    function applyAppLocation(location) {
+      if (!location) return;
+      isApplyingAppHistory = true;
+      try {
+        if (location.view !== "settings" && $("settingsBackdrop")?.classList.contains("show")) {
+          closeSettingsModal();
+        }
+
+        if (location.view === "receipt") {
+          if (isDesktopReceiptPanelMode()) {
+            setActiveTab("tabReceipts");
+            $("searchInput").value = "";
+            showHome({ record: false });
+            renderReceipts(false, { limit: 5 });
+            showReceipt(location.id);
+          } else {
+            showReceipt(location.id, { forcePhone: true });
+          }
+          return;
+        }
+
+        if (location.view === "item") {
+          showItemDetail(location.query || "");
+          return;
+        }
+
+        if (location.view === "settings") {
+          setActiveTab("tabSettings");
+          openSettingsModal();
+          return;
+        }
+
+        clearDesktopReceiptPanel();
+        setActiveTab(location.tab || "tabSearch");
+        $("searchInput").value = location.query || "";
+        hideAllViews();
+        $("homeView").classList.remove("hidden");
+        renderSearch();
+        renderReceipts(false, location.showAllReceipts ? { showAll: true } : { limit: 5 });
+      } finally {
+        isApplyingAppHistory = false;
+        updateAppHistoryControls();
+      }
+    }
+
+    function appGoBack() {
+      if ($("modalBackdrop").classList.contains("show")) {
+        requestCloseModal();
+        return true;
+      }
+
+      if ($("settingsBackdrop").classList.contains("show")) {
+        closeSettingsModal();
+        if (appHistory[appHistoryIndex]?.view === "settings" && appHistoryIndex > 0) {
+          appHistoryIndex -= 1;
+          applyAppLocation(appHistory[appHistoryIndex]);
+        } else {
+          updateAppHistoryControls();
+        }
+        return true;
+      }
+
+      if (appHistoryIndex > 0) {
+        appHistoryIndex -= 1;
+        applyAppLocation(appHistory[appHistoryIndex]);
+        return true;
+      }
+
+      if (!$("receiptView").classList.contains("hidden") || !$("itemDetailView").classList.contains("hidden")) {
+        setActiveTab("tabSearch");
+        showHome({ record: false });
+        replaceAppHistory();
+        return true;
+      }
+
+      return false;
+    }
+
+    function appGoForward() {
+      if ($("modalBackdrop").classList.contains("show") || $("settingsBackdrop").classList.contains("show")) {
+        return false;
+      }
+      if (appHistoryIndex < appHistory.length - 1) {
+        appHistoryIndex += 1;
+        applyAppLocation(appHistory[appHistoryIndex]);
+        return true;
+      }
+      return false;
+    }
+
     function renderAll() {
       renderChips();
       renderReceipts();
       renderSearch();
+      if (!$("sideReceiptPanel")?.classList.contains("hidden")) {
+        const receipt = findReceipt(currentReceiptId);
+        if (receipt) renderDesktopReceiptPanel(receipt);
+        else clearDesktopReceiptPanel();
+      }
       if ($("settingsBackdrop")?.classList.contains("show")) updateStorageStats();
     }
 
@@ -8500,8 +8962,15 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const receipt = findReceipt(currentReceiptId);
       if (receipt) openModal("edit", receipt);
     });
+    $("sideReceiptEdit")?.addEventListener("click", () => {
+      const receipt = findReceipt(currentReceiptId);
+      if (receipt) openModal("edit", receipt);
+    });
+    $("sideReceiptClose")?.addEventListener("click", () => clearDesktopReceiptPanel());
 
     $("homeTitleButton").addEventListener("click", showInitialHome);
+    $("appBackBtn").addEventListener("click", appGoBack);
+    $("appForwardBtn").addEventListener("click", appGoForward);
     $("backFromReceipt").addEventListener("click", () => goBackOneStep() || showHome());
     $("backFromItem").addEventListener("click", () => goBackOneStep() || showHome());
 
@@ -8512,15 +8981,17 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
 
     $("tabReceipts").addEventListener("click", () => {
       setActiveTab("tabReceipts");
-      showHome();
+      showHome({ record: false });
       $("searchInput").value = "";
       renderSearch();
       renderReceipts(true, { showAll: true });
+      pushAppHistory({ view: "home", tab: "tabReceipts", query: "", showAllReceipts: true });
     });
 
     $("tabSettings").addEventListener("click", () => {
       setActiveTab("tabSettings");
       openSettingsModal();
+      pushAppHistory({ view: "settings" });
     });
 
     $("closeSettingsModal").addEventListener("click", closeSettingsModal);
@@ -9940,6 +10411,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
     });
 
     renderAll();
+    replaceAppHistory({ view: "home", tab: "tabSearch", query: $("searchInput").value.trim(), showAllReceipts: false });
     updatePayerChipState();
     enableFormSelectAllShortcuts();
     setTimeout(fitAllMoneyInputs, 0);
