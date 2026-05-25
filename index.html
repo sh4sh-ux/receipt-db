@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.22 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.24 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f3f4f6;
@@ -457,6 +457,62 @@
 
     .receipt-card.swipe-open:hover {
       transform: none;
+    }
+
+    .receipt-card-action-strip {
+      display: none;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      margin: 10px -14px -12px;
+      padding: 0 12px;
+      border-top: 1px solid var(--line);
+      background: #fbfcfe;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 740;
+    }
+
+    .receipt-card-action-status {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .receipt-card-action-strip button {
+      min-height: 28px;
+      border: 0;
+      border-radius: 999px;
+      padding: 0 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 820;
+    }
+
+    .receipt-card-strip-edit {
+      background: #eef0f5;
+      color: #3f434d;
+    }
+
+    .receipt-card-strip-delete {
+      background: #fff1f0;
+      color: var(--red);
+    }
+
+    .receipt-card.selected .receipt-card-action-strip {
+      display: grid;
+    }
+
+    .receipt-card.delete-confirm .receipt-card-action-status {
+      color: var(--red);
+      font-weight: 820;
+    }
+
+    .receipt-card.delete-confirm .receipt-card-strip-delete {
+      background: var(--red);
+      color: #fff;
     }
 
     .chips {
@@ -1255,9 +1311,13 @@
     }
 
     #storeInput,
-    #dateInput,
-    #payerInput {
+    #dateInput {
       text-align: left;
+    }
+
+    #payerInput,
+    #payerInput::placeholder {
+      text-align: right;
     }
 
     #totalInput {
@@ -2575,6 +2635,14 @@
       box-shadow: inset 3px 0 0 var(--blue);
     }
 
+    #receiptList .receipt-card-delete-x {
+      display: none;
+    }
+
+    #receiptList .receipt-card.selected .receipt-card-action-strip {
+      background: #fff;
+    }
+
     .chip {
       border-radius: 10px;
       background: #fbfcfe;
@@ -2790,6 +2858,440 @@
         padding: 18px;
       }
     }
+
+    /* v2.24: Dutch Pay 레퍼런스의 조용한 SF UI 톤을 Receipt DB 구조에 맞춰 적용합니다. */
+    :root {
+      --bg: #f7f7f8;
+      --surface: #fff;
+      --card: #fff;
+      --text: #111;
+      --muted: #666;
+      --subtle: #b0b0b8;
+      --line: #ebebed;
+      --line-2: #d4d4d8;
+      --blue: #0071e3;
+      --red: #e53e3e;
+      --green: #1dad53;
+      --radius: 16px;
+      --shadow: 0 1px 3px rgba(0,0,0,.04), 0 8px 32px rgba(0,0,0,.06);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    .app-shell {
+      max-width: 1100px;
+      grid-template-columns: 380px minmax(0, 1fr);
+      gap: 0;
+      padding: 0;
+      align-items: start;
+    }
+
+    @media (min-width: 901px) {
+      .app-shell {
+        width: calc(100% - 64px);
+        max-width: 1100px;
+        padding: 0;
+        grid-template-columns: 380px minmax(0, 1fr);
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        min-height: 660px;
+        margin: 48px auto 80px;
+      }
+
+      .phone,
+      .side {
+        min-height: 660px;
+        max-height: none;
+        border-radius: 0;
+        box-shadow: none;
+        border: 0;
+      }
+
+      .phone {
+        border-right: 1px solid var(--line);
+      }
+
+      .side {
+        background: var(--card);
+      }
+    }
+
+    .phone {
+      background: #fafafa;
+      border-color: var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .screen {
+      padding: 28px 32px 18px;
+      background: #fafafa;
+    }
+
+    .top-bar {
+      gap: 2px;
+      padding: calc(28px + env(safe-area-inset-top)) 32px 0;
+      background: #fafafa;
+      border-bottom: 0;
+      position: static;
+    }
+
+    .tab {
+      min-height: 32px;
+      border: 0;
+      border-radius: 8px;
+      color: #666;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 0;
+    }
+
+    .tab.active {
+      background: #fff;
+      color: #111;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+      font-weight: 600;
+    }
+
+    .app-history-nav {
+      position: static;
+      padding: 12px 32px 0;
+      background: #fafafa;
+      border-bottom: 0;
+    }
+
+    .history-btn {
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      color: #666;
+      box-shadow: none;
+      font-size: 18px;
+    }
+
+    .hero-title {
+      margin: 0 0 18px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .eyebrow,
+    .section-title,
+    .desktop-receipt-meta,
+    .desktop-search-meta {
+      color: var(--subtle);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .4px;
+    }
+
+    .home-title-text {
+      font-size: 24px;
+      line-height: 1.15;
+      font-weight: 700;
+      letter-spacing: -.5px;
+    }
+
+    .plus-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      font-size: 24px;
+      background: #111;
+      color: #fff;
+    }
+
+    .search-wrap {
+      margin-bottom: 16px;
+    }
+
+    .search {
+      height: 40px;
+      border-color: var(--line-2);
+      border-radius: 9px;
+      box-shadow: none;
+      background: #fff;
+      padding: 0 12px;
+    }
+
+    .search input {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .section {
+      margin-top: 18px;
+    }
+
+    .section-head {
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .tiny-action {
+      color: #0071e3;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .chip {
+      border-color: var(--line);
+      background: #fff;
+      border-radius: 20px;
+      padding: 5px 10px;
+      color: #666;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    #receiptList {
+      border-color: var(--line);
+      border-radius: 16px;
+    }
+
+    #receiptList .receipt-card.card {
+      border-bottom-color: var(--line);
+    }
+
+    #receiptList .receipt-card-surface {
+      padding: 10px 32px;
+    }
+
+    #receiptList .receipt-card-layout {
+      gap: 10px;
+    }
+
+    #receiptList .store {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #receiptList .muted.small,
+    #receiptList .muted.tiny {
+      color: var(--subtle);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    #receiptList .receipt-card-amount {
+      min-width: 88px;
+    }
+
+    #receiptList .price {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    #receiptList .receipt-card.selected .receipt-card-surface {
+      background: #f8f8fa;
+      box-shadow: inset 3px 0 0 var(--blue);
+    }
+
+    .receipt-card-action-strip {
+      min-height: 34px;
+      margin: 8px -32px -10px;
+      padding: 0 32px;
+      background: #fff;
+      font-size: 11px;
+    }
+
+    .receipt-card-action-strip button {
+      min-height: 26px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 0 9px;
+    }
+
+    .receipt-card-strip-edit {
+      background: #f3f3f5;
+      color: #555;
+    }
+
+    .receipt-card-strip-delete {
+      background: #fff0f0;
+      color: var(--red);
+    }
+
+    .side .panel {
+      padding: 28px 32px 20px;
+      border-bottom: 1px solid var(--line);
+      color: #666;
+    }
+
+    .side .panel h2,
+    .desktop-receipt-title,
+    .desktop-search-title {
+      font-size: 22px;
+      line-height: 1.18;
+      font-weight: 700;
+      letter-spacing: -.4px;
+    }
+
+    .side .panel p,
+    .dropbox-path-box .path-text,
+    .desktop-receipt-table .data-table,
+    .desktop-search-table .data-table {
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .info,
+    .dropbox-path-box,
+    .validation-card,
+    .settings-card,
+    .receipt-image-wrap {
+      border-color: var(--line);
+      border-radius: 10px;
+      box-shadow: none;
+      background: #f8f8fa;
+    }
+
+    .info .label,
+    .dropbox-path-box .path-title,
+    .data-table th {
+      color: #666;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .3px;
+    }
+
+    .info .value,
+    .desktop-receipt-stats .info .value {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .desktop-receipt-actions .secondary,
+    .desktop-search-close,
+    .close {
+      border-radius: 9px;
+      background: #f3f3f5;
+      color: #111;
+      box-shadow: none;
+    }
+
+    .primary,
+    .secondary,
+    .danger {
+      border-radius: 9px;
+      font-weight: 600;
+      min-height: 40px;
+    }
+
+    .modal {
+      width: min(760px, calc(100vw - 32px));
+      border-radius: 16px;
+      border-color: var(--line);
+      box-shadow: 0 24px 80px rgba(0,0,0,.18);
+    }
+
+    .field input,
+    .field textarea,
+    .edit-table input,
+    .settings-input {
+      border-color: var(--line-2);
+      border-radius: 9px;
+      background: #f7f7f8;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    label,
+    .field-grid .field label {
+      color: #666;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .3px;
+    }
+
+    .edit-table th {
+      color: #666;
+      background: #f8f8fa;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .edit-table td {
+      border-bottom-color: var(--line);
+    }
+
+    .total-confirm-inline,
+    .source-confirm-inline {
+      border-radius: 10px;
+    }
+
+    @media (min-width: 901px) {
+      #sideReceiptPanel.desktop-receipt-panel {
+        gap: 16px;
+      }
+
+      #sideReceiptPanel .desktop-receipt-table {
+        height: min(430px, calc(100vh - 330px));
+      }
+
+      #sideReceiptPanel .desktop-receipt-table .data-table th,
+      #sideReceiptPanel .desktop-receipt-table .data-table td {
+        padding: 9px 12px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .app-shell {
+        padding: 14px;
+        background: var(--bg);
+      }
+
+      .screen {
+        padding: 20px;
+      }
+
+      .top-bar {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .app-history-nav {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      #receiptList .receipt-card-surface {
+        padding: 11px 16px;
+      }
+
+      .receipt-card-action-strip {
+        margin-left: -16px;
+        margin-right: -16px;
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .app-shell {
+        padding: 0;
+      }
+
+      .phone {
+        border-radius: 0;
+        border: 0;
+        box-shadow: none;
+      }
+    }
   </style>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/app-icon-192-v2-14.png" />
@@ -2817,7 +3319,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.22 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.24 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -2971,7 +3473,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.22 PWA</div>
+          <div class="eyebrow">Prototype v2.24 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -3387,7 +3889,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.22 PWA";
+    const APP_VERSION = "v2.24 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
@@ -5056,7 +5558,7 @@
     function setReceiptDeleteConfirm(card, active) {
       if (!card) return;
       card.classList.toggle("delete-confirm", active);
-      card.querySelectorAll(".receipt-delete-btn, .receipt-card-delete-x").forEach(button => {
+      card.querySelectorAll(".receipt-delete-btn, .receipt-card-delete-x, .receipt-card-strip-delete").forEach(button => {
         button.textContent = active ? "확인" : "삭제";
         button.setAttribute("aria-label", active ? "영수증 삭제 확인" : "영수증 삭제");
       });
@@ -5087,6 +5589,10 @@
           if (surface) surface.style.transform = "";
         }
       });
+    }
+
+    function isCompactReceiptActionMode() {
+      return window.matchMedia?.("(max-width: 900px)")?.matches;
     }
 
     function attachReceiptCardEvents(card, receiptId) {
@@ -5193,6 +5699,28 @@
       });
 
       card.addEventListener("click", (event) => {
+        const editButton = event.target.closest(".receipt-card-strip-edit");
+        if (editButton) {
+          event.preventDefault();
+          event.stopPropagation();
+          hideReceiptDeleteButtons(card);
+          const receipt = findReceipt(receiptId);
+          if (receipt) {
+            currentReceiptId = receiptId;
+            openModal("edit", receipt);
+          }
+          return;
+        }
+
+        const stripDeleteButton = event.target.closest(".receipt-card-strip-delete");
+        if (stripDeleteButton) {
+          event.preventDefault();
+          event.stopPropagation();
+          hideReceiptDeleteButtons(card);
+          confirmAndDelete();
+          return;
+        }
+
         const deleteButton = event.target.closest(".receipt-delete-btn");
         if (deleteButton) {
           event.stopPropagation();
@@ -5220,6 +5748,15 @@
           event.preventDefault();
           event.stopPropagation();
           closeSwipe();
+          return;
+        }
+
+        if (isCompactReceiptActionMode() && !card.classList.contains("selected")) {
+          event.preventDefault();
+          event.stopPropagation();
+          hideReceiptDeleteButtons(card);
+          currentReceiptId = receiptId;
+          markSelectedReceiptCard(receiptId);
           return;
         }
 
@@ -5255,6 +5792,16 @@
       renderAll();
     }
 
+    function receiptCardStorageText(receipt = {}) {
+      if (receipt.dropboxPath) return "Dropbox 원본";
+      if (receipt.thumbnailSrc || receipt.imageSrc) return "앱 썸네일";
+      return "이미지 없음";
+    }
+
+    function receiptCardReviewText(receipt = {}) {
+      return receipt.sourceConfirmed === false ? "검수 필요" : "검수 완료";
+    }
+
     function renderReceipts(scroll = false, options = {}) {
       const data = loadData();
       const list = $("receiptList");
@@ -5281,6 +5828,8 @@
         const div = document.createElement("div");
         div.className = `card simple-card receipt-card${currentReceiptId === receipt.id ? " selected" : ""}`;
         div.dataset.receiptId = receipt.id;
+        const storageText = receiptCardStorageText(receipt);
+        const reviewText = receiptCardReviewText(receipt);
         div.innerHTML = `
           <div class="receipt-card-swipe-action">
             <button class="receipt-delete-btn" type="button" aria-label="${escapeHtml(receipt.store)} 영수증 삭제">삭제</button>
@@ -5290,11 +5839,16 @@
               <div class="receipt-card-main">
                 <div class="store">${escapeHtml(receipt.store)}</div>
                 <div class="muted small" style="margin-top:4px;">${formatDate(receipt.date)} · ${receipt.items.length}개 품목${getReceiptPayer(receipt) ? " · 결제자 " + escapeHtml(getReceiptPayer(receipt)) : ""}</div>
-                <div class="muted tiny" style="margin-top:5px;">${receipt.dropboxPath ? "Dropbox 원본 저장됨" : (receipt.thumbnailSrc || receipt.imageSrc ? "앱 썸네일 저장됨" : "이미지 없음")}</div>
+                <div class="muted tiny" style="margin-top:5px;">${escapeHtml(storageText)}${storageText === "이미지 없음" ? "" : " 저장됨"}</div>
               </div>
               <div class="receipt-card-amount">
                 <div class="price">${formatWon(receipt.total)}</div>
               </div>
+            </div>
+            <div class="receipt-card-action-strip">
+              <span class="receipt-card-action-status">${escapeHtml(reviewText)} · ${escapeHtml(storageText)}</span>
+              <button class="receipt-card-strip-edit" type="button">수정</button>
+              <button class="receipt-card-strip-delete" type="button" aria-label="영수증 삭제">삭제</button>
             </div>
             <button class="receipt-card-delete-x" type="button" aria-label="영수증 삭제">삭제</button>
           </div>
