@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.14 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.16 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f3f4f6;
@@ -273,7 +273,7 @@
     }
 
     .receipt-card.swipe-open .receipt-card-surface {
-      transform: translateX(-96px);
+      transform: translateX(-108px);
     }
 
     .receipt-card-swipe-action {
@@ -282,8 +282,10 @@
       top: 0;
       right: 0;
       bottom: 0;
-      width: 96px;
-      background: var(--red);
+      width: 108px;
+      padding: 8px;
+      background: #fff1f0;
+      border-left: 1px solid rgba(255,59,48,.16);
       display: flex;
       align-items: stretch;
       justify-content: stretch;
@@ -292,49 +294,70 @@
     .receipt-delete-btn {
       width: 100%;
       border: 0;
+      border-radius: 12px;
       background: var(--red);
       color: #fff;
+      font-size: 13px;
       font-weight: 860;
       cursor: pointer;
     }
 
     .receipt-card-delete-x {
       position: absolute;
-      top: 50%;
-      right: 12px;
+      top: 10px;
+      right: 10px;
       z-index: 3;
-      width: 30px;
-      height: 30px;
-      min-height: 30px;
-      border: 1px solid rgba(255,59,48,.16);
+      width: auto;
+      height: 28px;
+      min-height: 28px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
       border-radius: 999px;
-      background: rgba(255,241,240,.94);
-      color: var(--red);
-      font-size: 19px;
+      background: rgba(255,255,255,.96);
+      color: #676b75;
+      font-size: 12px;
       line-height: 1;
-      font-weight: 860;
+      font-weight: 820;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 8px 20px rgba(255,59,48,.10);
+      box-shadow: 0 8px 18px rgba(17,24,39,.08);
       opacity: 0;
       pointer-events: none;
-      transform: translateY(-50%) scale(.96);
-      transition: opacity .14s ease, background .14s ease, transform .14s ease, box-shadow .14s ease;
+      transform: translateY(-2px);
+      transition: opacity .14s ease, background .14s ease, transform .14s ease, box-shadow .14s ease, border-color .14s ease, color .14s ease;
     }
 
     .receipt-card:hover .receipt-card-delete-x,
-    .receipt-card:focus-within .receipt-card-delete-x {
+    .receipt-card:focus-within .receipt-card-delete-x,
+    .receipt-card.delete-confirm .receipt-card-delete-x {
       opacity: 1;
       pointer-events: auto;
-      transform: translateY(-50%) scale(1);
+      transform: translateY(0);
     }
 
     .receipt-card-delete-x:hover {
-      background: #ffe4e2;
-      box-shadow: 0 10px 24px rgba(255,59,48,.16);
-      transform: translateY(-50%) scale(1.04);
+      border-color: rgba(255,59,48,.22);
+      background: #fff7f6;
+      color: var(--red);
+      box-shadow: 0 10px 20px rgba(255,59,48,.10);
+      transform: translateY(0);
+    }
+
+    .receipt-card.delete-confirm .receipt-card-surface {
+      background: #fffafa;
+      box-shadow: inset 0 0 0 1px rgba(255,59,48,.22);
+    }
+
+    .receipt-card.delete-confirm .receipt-card-delete-x {
+      border-color: rgba(255,59,48,.30);
+      background: #fff1f0;
+      color: var(--red);
+    }
+
+    .receipt-card.delete-confirm .receipt-delete-btn {
+      background: #111113;
     }
 
     .receipt-card-layout {
@@ -366,9 +389,6 @@
     }
 
     @media (hover: none), (pointer: coarse) {
-      .receipt-card-delete-x {
-        display: none;
-      }
       .receipt-card-amount,
       .receipt-card:hover .receipt-card-amount,
       .receipt-card:focus-within .receipt-card-amount {
@@ -2185,6 +2205,285 @@
 
     .hidden { display: none !important; }
 
+    /* v2.16: 목록/상세를 더 분명한 장부형 화면으로 정리합니다. */
+    .top-bar {
+      background: #111113;
+      border-bottom: 0;
+      padding: calc(10px + env(safe-area-inset-top)) 10px 10px;
+    }
+
+    .tab {
+      min-height: 38px;
+      color: #c9ccd4;
+      border-radius: 10px;
+    }
+
+    .tab.active {
+      background: #fff;
+      border-color: transparent;
+      color: #111113;
+    }
+
+    .app-history-nav {
+      top: 58px;
+      padding: 8px 14px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .history-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 18px;
+      box-shadow: 0 1px 2px rgba(17,24,39,.04);
+    }
+
+    .hero-title {
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .home-title-text {
+      font-size: 28px;
+    }
+
+    .plus-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+    }
+
+    .search-wrap {
+      position: static;
+      margin-bottom: 14px;
+    }
+
+    .search {
+      height: 44px;
+      border-radius: 12px;
+      box-shadow: none;
+    }
+
+    .section {
+      margin-top: 16px;
+    }
+
+    #receiptList,
+    .results {
+      display: grid;
+      gap: 8px;
+    }
+
+    .receipt-card.card {
+      border-color: #dde2ea;
+      border-radius: 12px;
+      box-shadow: none;
+    }
+
+    .receipt-card-surface {
+      padding: 12px 14px;
+    }
+
+    .receipt-card-layout {
+      gap: 10px;
+    }
+
+    .store {
+      font-size: 15px;
+    }
+
+    .price {
+      font-size: 19px;
+    }
+
+    .receipt-card.selected .receipt-card-surface {
+      background: #f8fbff;
+      box-shadow: inset 4px 0 0 var(--blue), inset 0 0 0 1px rgba(0,122,255,.14);
+    }
+
+    .chip {
+      border-radius: 10px;
+      background: #fbfcfe;
+    }
+
+    .data-table th {
+      background: #f7f8fb;
+      color: #5f6570;
+      font-size: 12px;
+    }
+
+    .data-table td {
+      font-size: 13px;
+    }
+
+    @media (min-width: 901px) {
+      body {
+        background: #eef1f5;
+      }
+
+      .app-shell {
+        max-width: 1360px;
+        padding: 14px;
+        grid-template-columns: 430px minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .phone,
+      .side {
+        min-height: calc(100vh - 28px);
+        max-height: calc(100vh - 28px);
+      }
+
+      .phone {
+        border-color: #d9dee7;
+        border-radius: 18px;
+        box-shadow: 0 8px 24px rgba(17,24,39,.06);
+      }
+
+      .screen {
+        padding: 16px;
+        background: #fbfcfe;
+      }
+
+      .side {
+        border: 1px solid #d9dee7;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 8px 24px rgba(17,24,39,.06);
+      }
+
+      .side .panel {
+        margin: 0;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        border-radius: 0;
+        box-shadow: none;
+        padding: 22px 24px;
+      }
+
+      .side .panel:last-child {
+        border-bottom: 0;
+      }
+
+      .desktop-receipt-title,
+      .desktop-search-title {
+        font-size: 28px;
+        line-height: 1.08;
+      }
+
+      .desktop-receipt-image {
+        max-height: 300px;
+        border-radius: 12px;
+      }
+
+      .desktop-receipt-image .receipt-image {
+        max-height: 300px;
+      }
+
+      .desktop-receipt-table {
+        max-height: 410px;
+        border-radius: 12px;
+      }
+
+      .info {
+        background: #fafbff;
+      }
+
+      #sideReceiptPanel.desktop-receipt-panel {
+        display: grid;
+        grid-template-columns: minmax(280px, .82fr) minmax(0, 1.55fr);
+        grid-template-areas:
+          "head head"
+          "image stats"
+          "image items"
+          "storage items"
+          "memo items";
+        gap: 14px 16px;
+        align-content: start;
+      }
+
+      #sideReceiptPanel.hidden {
+        display: none !important;
+      }
+
+      #sideReceiptPanel .desktop-receipt-head {
+        grid-area: head;
+      }
+
+      #sideReceiptImageArea {
+        grid-area: image;
+        min-height: 420px;
+      }
+
+      #sideReceiptImageArea .receipt-image-wrap {
+        height: 100%;
+        min-height: 420px;
+        max-height: none;
+        margin-top: 0;
+        background: #f4f5f8;
+      }
+
+      #sideReceiptImageArea .receipt-image {
+        max-height: 420px;
+      }
+
+      #sideReceiptPanel .desktop-receipt-stats {
+        grid-area: stats;
+        align-self: start;
+      }
+
+      #sideReceiptStorageCard {
+        grid-area: storage;
+        margin-top: 0;
+      }
+
+      #sideReceiptMemoBox {
+        grid-area: memo;
+        margin-top: 0;
+      }
+
+      .desktop-receipt-items-block {
+        grid-area: items;
+        min-height: 0;
+      }
+
+      .desktop-receipt-items-block .section-title {
+        margin-bottom: 8px;
+      }
+
+      #sideReceiptPanel .desktop-receipt-table {
+        height: min(430px, calc(100vh - 340px));
+        max-height: none;
+        margin-top: 0;
+      }
+
+      #sideReceiptPanel .desktop-receipt-table .data-table {
+        font-size: 13px;
+      }
+
+      #sideReceiptPanel .desktop-receipt-table .data-table th,
+      #sideReceiptPanel .desktop-receipt-table .data-table td {
+        padding: 11px 14px;
+      }
+
+      #sideReceiptPanel .desktop-receipt-actions .secondary {
+        width: 42px;
+        min-width: 42px;
+        height: 42px;
+        min-height: 42px;
+        padding: 0;
+        border-radius: 12px;
+        font-size: 18px;
+      }
+    }
+
     @media (max-width: 900px) {
       .app-shell {
         grid-template-columns: 1fr;
@@ -2251,7 +2550,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.14 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.16 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -2405,7 +2704,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.14 PWA</div>
+          <div class="eyebrow">Prototype v2.16 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -2462,7 +2761,7 @@
             <div class="muted small" id="sideReceiptMeta" style="margin-top:7px;"></div>
           </div>
           <div class="desktop-receipt-actions">
-            <button class="secondary" id="sideReceiptEdit" type="button">수정</button>
+            <button class="secondary" id="sideReceiptEdit" type="button" aria-label="영수증 수정" title="수정">✎</button>
             <button class="secondary desktop-receipt-close" id="sideReceiptClose" type="button" aria-label="상세 닫기">×</button>
           </div>
         </div>
@@ -2480,7 +2779,7 @@
           </div>
         </div>
 
-        <div class="dropbox-path-box">
+        <div class="dropbox-path-box" id="sideReceiptStorageCard">
           <div class="path-title">보관 상태</div>
           <div class="path-text" id="sideReceiptStorage"></div>
         </div>
@@ -2490,7 +2789,7 @@
           <div class="path-text" id="sideReceiptMemoText"></div>
         </div>
 
-        <div>
+        <div class="desktop-receipt-items-block">
           <div class="section-title">저장된 품목</div>
           <div class="card table-wrap desktop-receipt-table receipt-items-table">
             <table class="data-table">
@@ -2804,7 +3103,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.14 PWA";
+    const APP_VERSION = "v2.16 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
@@ -4463,7 +4762,34 @@
       if (clearButton) clearButton.hidden = !hasValue;
     }
 
+    let receiptDeleteConfirmTimer = null;
+
+    function setReceiptDeleteConfirm(card, active) {
+      if (!card) return;
+      card.classList.toggle("delete-confirm", active);
+      card.querySelectorAll(".receipt-delete-btn, .receipt-card-delete-x").forEach(button => {
+        button.textContent = active ? "확인" : "삭제";
+        button.setAttribute("aria-label", active ? "영수증 삭제 확인" : "영수증 삭제");
+      });
+    }
+
+    function resetReceiptDeleteConfirmations(exceptCard = null) {
+      document.querySelectorAll(".receipt-card.delete-confirm").forEach(card => {
+        if (card !== exceptCard) setReceiptDeleteConfirm(card, false);
+      });
+    }
+
+    function armReceiptDeleteConfirmation(card) {
+      window.clearTimeout(receiptDeleteConfirmTimer);
+      resetReceiptDeleteConfirmations(card);
+      setReceiptDeleteConfirm(card, true);
+      receiptDeleteConfirmTimer = window.setTimeout(() => {
+        setReceiptDeleteConfirm(card, false);
+      }, 3200);
+    }
+
     function hideReceiptDeleteButtons(exceptCard = null) {
+      resetReceiptDeleteConfirmations(exceptCard);
       document.querySelectorAll(".receipt-card.swipe-open").forEach(card => {
         if (card !== exceptCard) {
           card.classList.remove("swipe-open");
@@ -4474,7 +4800,7 @@
     }
 
     function attachReceiptCardEvents(card, receiptId) {
-      const swipeWidth = 96;
+      const swipeWidth = 108;
       const surface = card.querySelector(".receipt-card-surface");
       let startX = 0;
       let startY = 0;
@@ -4506,9 +4832,12 @@
         const receipt = findReceipt(receiptId);
         if (!receipt) return;
 
-        const ok = confirm(`${receipt.store} / ${formatDate(receipt.date)} 영수증을 삭제할까요?`);
-        if (!ok) return;
+        if (!card.classList.contains("delete-confirm")) {
+          armReceiptDeleteConfirmation(card);
+          return;
+        }
 
+        window.clearTimeout(receiptDeleteConfirmTimer);
         removeReceipt(receiptId);
         if (currentReceiptId === receiptId) clearDesktopReceiptPanel();
         renderAll();
@@ -4572,7 +4901,7 @@
         if (desktopDeleteButton) {
           event.preventDefault();
           event.stopPropagation();
-          hideReceiptDeleteButtons();
+          hideReceiptDeleteButtons(card);
           confirmAndDelete();
           return;
         }
@@ -4638,7 +4967,7 @@
                 <div class="price">${formatWon(receipt.total)}</div>
               </div>
             </div>
-            <button class="receipt-card-delete-x" type="button" aria-label="영수증 삭제">×</button>
+            <button class="receipt-card-delete-x" type="button" aria-label="영수증 삭제">삭제</button>
           </div>
         `;
         attachReceiptCardEvents(div, receipt.id);
