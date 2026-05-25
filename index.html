@@ -4,31 +4,31 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.11 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.14 PWA — 영수증 가격 검색</title>
   <style>
     :root {
-      --bg: #f5f5f7;
-      --surface: rgba(255,255,255,.84);
+      --bg: #f3f4f6;
+      --surface: #fff;
       --card: #fff;
       --text: #111113;
-      --muted: #73737a;
-      --line: #e8e8ed;
-      --line-2: #d9d9df;
+      --muted: #6c6f78;
+      --line: #e2e4ea;
+      --line-2: #d3d7e0;
       --blue: #007aff;
       --red: #ff3b30;
       --green: #34c759;
-      --shadow: 0 18px 60px rgba(0,0,0,.08);
-      --radius: 24px;
+      --shadow: 0 14px 42px rgba(17,24,39,.07);
+      --radius: 16px;
     }
 
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
-      background: radial-gradient(circle at top left, #fff 0%, var(--bg) 45%, #ededf2 100%);
+      background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
-      letter-spacing: -0.025em;
+      letter-spacing: 0;
     }
 
     button, input {
@@ -36,25 +36,24 @@
     }
 
     .app-shell {
-      max-width: 1120px;
+      max-width: 1180px;
       min-height: 100vh;
       margin: 0 auto;
-      padding: 28px;
+      padding: 20px;
       display: grid;
-      grid-template-columns: 410px 1fr;
-      gap: 24px;
+      grid-template-columns: 390px minmax(0, 1fr);
+      gap: 18px;
     }
 
     .phone {
-      min-height: calc(100vh - 56px);
+      min-height: calc(100vh - 40px);
       max-height: 920px;
-      background: rgba(255,255,255,.74);
-      border: 1px solid rgba(255,255,255,.8);
-      border-radius: 42px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 28px;
       box-shadow: var(--shadow);
       overflow: hidden;
       position: relative;
-      backdrop-filter: blur(22px);
       display: flex;
       flex-direction: column;
     }
@@ -67,7 +66,7 @@
     .screen {
       flex: 1;
       overflow: auto;
-      padding: 22px 20px 18px;
+      padding: 20px 18px 18px;
     }
 
     .screen::-webkit-scrollbar, .side::-webkit-scrollbar {
@@ -77,21 +76,21 @@
 
     h1 {
       margin: 0;
-      font-size: 34px;
+      font-size: 30px;
       line-height: 1.05;
       font-weight: 780;
     }
 
     h2 {
       margin: 0;
-      font-size: 22px;
+      font-size: 20px;
       line-height: 1.22;
       font-weight: 760;
     }
 
     h3 {
       margin: 0;
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 740;
     }
 
@@ -111,7 +110,7 @@
 
     .hero-title {
       align-items: flex-end;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .home-title-button {
@@ -129,7 +128,7 @@
 
     .home-title-text {
       display: block;
-      font-size: 34px;
+      font-size: 30px;
       line-height: 1.05;
       font-weight: 780;
     }
@@ -141,8 +140,8 @@
     }
 
     .plus-btn {
-      width: 42px;
-      height: 42px;
+      width: 40px;
+      height: 40px;
       border: 0;
       border-radius: 50%;
       background: #111113;
@@ -167,7 +166,7 @@
 
     .search-wrap {
       position: sticky;
-      top: -58px;
+      top: -52px;
       z-index: 4;
       padding-top: 1px;
       margin-bottom: 18px;
@@ -177,13 +176,12 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      height: 44px;
+      height: 46px;
       padding: 0 16px;
-      background: rgba(255,255,255,.94);
+      background: #fff;
       border: 1px solid var(--line);
-      border-radius: 18px;
-      box-shadow: 0 8px 26px rgba(0,0,0,.05);
-      backdrop-filter: blur(18px);
+      border-radius: 14px;
+      box-shadow: 0 1px 2px rgba(17,24,39,.04);
     }
 
     .search svg { color: #8e8e93; flex: 0 0 auto; }
@@ -221,7 +219,7 @@
     }
 
     .section {
-      margin: 22px 0 0;
+      margin: 18px 0 0;
     }
 
     .section-title {
@@ -231,7 +229,7 @@
     }
 
     #receiptList {
-      margin-top: 18px;
+      margin-top: 12px;
     }
 
 
@@ -241,14 +239,14 @@
 
     .card {
       background: var(--card);
-      border: 1px solid rgba(0,0,0,.045);
+      border: 1px solid var(--line);
       border-radius: var(--radius);
-      box-shadow: 0 10px 36px rgba(0,0,0,.052);
+      box-shadow: 0 1px 2px rgba(17,24,39,.035);
       overflow: hidden;
     }
 
     .simple-card {
-      padding: 16px;
+      padding: 14px;
       cursor: pointer;
       transition: transform .16s ease, box-shadow .16s ease;
     }
@@ -261,14 +259,14 @@
     }
 
     .receipt-card.swipe-open {
-      box-shadow: 0 16px 46px rgba(255,59,48,.10);
+      box-shadow: 0 12px 30px rgba(255,59,48,.08);
       border-color: rgba(255,59,48,.18);
     }
 
     .receipt-card-surface {
       position: relative;
       z-index: 2;
-      padding: 16px;
+      padding: 14px;
       background: var(--card);
       transition: transform .18s ease;
       will-change: transform;
@@ -342,7 +340,7 @@
     .receipt-card-layout {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 14px;
+      gap: 12px;
       align-items: center;
     }
 
@@ -351,7 +349,7 @@
     }
 
     .receipt-card-amount {
-      min-width: 106px;
+      min-width: 96px;
       display: grid;
       justify-items: end;
       align-items: center;
@@ -364,7 +362,7 @@
     }
 
     .receipt-card.selected .receipt-card-surface {
-      box-shadow: inset 0 0 0 2px rgba(0,122,255,.22);
+      box-shadow: inset 4px 0 0 var(--blue), inset 0 0 0 1px rgba(0,122,255,.14);
     }
 
     @media (hover: none), (pointer: coarse) {
@@ -380,7 +378,7 @@
 
     .simple-card:hover {
       transform: translateY(-1px);
-      box-shadow: 0 14px 38px rgba(0,0,0,.07);
+      box-shadow: 0 8px 22px rgba(17,24,39,.06);
     }
 
     .receipt-card.swipe-open:hover {
@@ -402,22 +400,22 @@
 
     .chip {
       border: 1px solid var(--line);
-      background: rgba(255,255,255,.82);
+      background: #fff;
       color: #222226;
       padding: 9px 12px;
-      border-radius: 99px;
+      border-radius: 12px;
       cursor: pointer;
       font-size: 14px;
       font-weight: 650;
     }
 
     .store {
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 760;
     }
 
     .price {
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 800;
       white-space: nowrap;
       font-variant-numeric: tabular-nums;
@@ -428,7 +426,7 @@
       align-items: center;
       height: 26px;
       padding: 0 9px;
-      border-radius: 99px;
+      border-radius: 999px;
       background: #f1f1f5;
       color: #5b5b62;
       font-size: 12px;
@@ -513,7 +511,7 @@
     .stat-cell {
       min-width: 0;
       border: 1px solid var(--line);
-      border-radius: 16px;
+      border-radius: 14px;
       background: #fbfbfd;
       padding: 11px;
     }
@@ -639,7 +637,7 @@
     .receipt-image-wrap {
       background: #f2f2f6;
       border: 1px solid var(--line);
-      border-radius: 22px;
+      border-radius: 16px;
       overflow: hidden;
       margin-top: 14px;
       max-height: 360px;
@@ -672,8 +670,9 @@
     .info {
       background: #fff;
       border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 14px;
+      border-radius: 14px;
+      padding: 12px;
+      background: #fcfcfd;
     }
 
     .info .label {
@@ -704,13 +703,13 @@
       text-align: left;
       color: var(--muted);
       font-size: 11px;
-      padding: 10px 8px;
+      padding: 9px 8px;
       border-bottom: 1px solid var(--line-2);
       white-space: nowrap;
     }
 
     .data-table td {
-      padding: 11px 8px;
+      padding: 10px 8px;
       border-bottom: 1px solid var(--line);
       vertical-align: middle;
     }
@@ -729,18 +728,17 @@
       z-index: 8;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
+      gap: 8px;
       padding: calc(12px + env(safe-area-inset-top)) 14px 10px;
-      background: rgba(255,255,255,.88);
-      border-bottom: 1px solid rgba(0,0,0,.06);
-      backdrop-filter: blur(20px);
+      background: #fff;
+      border-bottom: 1px solid var(--line);
     }
 
     .tab {
-      border: 0;
+      border: 1px solid transparent;
       background: transparent;
       color: var(--muted);
-      border-radius: 14px;
+      border-radius: 12px;
       padding: 10px 6px;
       cursor: pointer;
       font-size: 12px;
@@ -749,7 +747,8 @@
 
     .tab.active {
       color: var(--text);
-      background: #f1f1f5;
+      background: #f1f2f6;
+      border-color: #eceef4;
     }
 
     .app-history-nav {
@@ -759,9 +758,9 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 18px 0;
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.72) 78%, rgba(255,255,255,0));
-      backdrop-filter: blur(18px);
+      padding: 8px 18px 6px;
+      background: #fff;
+      border-bottom: 1px solid rgba(226,228,234,.72);
     }
 
     .history-btn {
@@ -769,7 +768,7 @@
       height: 34px;
       border: 0;
       border-radius: 999px;
-      background: #f1f1f5;
+      background: #f3f4f8;
       color: var(--text);
       cursor: pointer;
       font-size: 22px;
@@ -786,20 +785,19 @@
     }
 
     .side {
-      min-height: calc(100vh - 56px);
+      min-height: calc(100vh - 40px);
       max-height: 920px;
       overflow: auto;
-      padding: 8px 4px;
+      padding: 0;
     }
 
     .panel {
-      background: rgba(255,255,255,.74);
-      border: 1px solid rgba(255,255,255,.72);
-      border-radius: 34px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 20px;
       box-shadow: var(--shadow);
-      padding: 26px;
-      backdrop-filter: blur(20px);
-      margin-bottom: 18px;
+      padding: 22px;
+      margin-bottom: 14px;
     }
 
     .panel p {
@@ -821,15 +819,15 @@
       gap: 12px;
       align-items: start;
       padding: 14px;
-      background: rgba(255,255,255,.74);
+      background: #fbfcfe;
       border: 1px solid var(--line);
-      border-radius: 20px;
+      border-radius: 14px;
     }
 
     .icon {
       width: 38px;
       height: 38px;
-      border-radius: 13px;
+      border-radius: 12px;
       background: #f1f1f5;
       display: grid;
       place-items: center;
@@ -936,12 +934,12 @@
 
     .desktop-receipt-image {
       min-height: 210px;
-      max-height: 360px;
+      max-height: 330px;
       margin-top: 0;
     }
 
     .desktop-receipt-image .receipt-image {
-      max-height: 360px;
+      max-height: 330px;
     }
 
     .desktop-receipt-stats {
@@ -988,7 +986,7 @@
       position: fixed;
       inset: 0;
       z-index: 20;
-      background: rgba(0,0,0,.28);
+      background: rgba(17,24,39,.28);
       display: none;
       place-items: center;
       padding: 22px;
@@ -1044,11 +1042,11 @@
       width: min(760px, 100%);
       max-height: min(840px, 92vh);
       overflow: auto;
-      background: rgba(255,255,255,.96);
-      border: 1px solid rgba(255,255,255,.85);
-      border-radius: 30px;
-      box-shadow: 0 30px 100px rgba(0,0,0,.22);
-      padding: 22px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 24px 80px rgba(17,24,39,.20);
+      padding: 20px;
     }
 
     .modal-head {
@@ -1063,7 +1061,7 @@
       border: 0;
       width: 36px;
       height: 36px;
-      border-radius: 50%;
+      border-radius: 14px;
       background: #f1f1f5;
       cursor: pointer;
       font-size: 18px;
@@ -1149,7 +1147,7 @@
     #payerInput {
       font-size: 14px;
       font-weight: 680;
-      letter-spacing: -0.02em;
+      letter-spacing: 0;
     }
 
     #storeInput,
@@ -1168,7 +1166,7 @@
     .upload-box {
       border: 1.5px dashed #cfcfd6;
       background: #fbfbfd;
-      border-radius: 22px;
+      border-radius: 16px;
       padding: 18px;
       display: grid;
       gap: 12px;
@@ -1188,7 +1186,7 @@
       display: none;
       margin-top: 12px;
       padding: 12px 14px;
-      border-radius: 16px;
+      border-radius: 14px;
       background: #f5f5f7;
       color: var(--muted);
       font-size: 13px;
@@ -1219,7 +1217,7 @@
       min-height: 130px;
       margin-top: 10px;
       border: 1px solid var(--line);
-      border-radius: 16px;
+      border-radius: 14px;
       padding: 12px;
       background: #fff;
       resize: vertical;
@@ -1245,7 +1243,7 @@
       margin-top: 12px;
       padding: 14px;
       border: 1px solid var(--line);
-      border-radius: 18px;
+      border-radius: 14px;
       background: #fbfbfd;
       display: grid;
       gap: 8px;
@@ -1262,6 +1260,41 @@
       font-size: 12px;
       line-height: 1.5;
       font-weight: 650;
+    }
+
+    .ai-review-steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .ai-review-step {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .ai-review-step b,
+    .ai-review-step span {
+      display: block;
+    }
+
+    .ai-review-step b {
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 860;
+      margin-bottom: 5px;
+    }
+
+    .ai-review-step span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+      font-weight: 650;
+      word-break: keep-all;
     }
 
     .preview {
@@ -1343,7 +1376,7 @@
       margin-left: auto;
       display: block;
       font-variant-numeric: tabular-nums;
-      letter-spacing: -0.03em;
+      letter-spacing: 0;
       padding-left: 34px;
       padding-right: 10px;
     }
@@ -1573,7 +1606,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      letter-spacing: -0.08em;
+      letter-spacing: 0;
       touch-action: none;
       user-select: none;
       -webkit-user-select: none;
@@ -1743,7 +1776,7 @@
       max-width: 100%;
       font-size: 14px;
       font-weight: 680;
-      letter-spacing: -0.02em;
+      letter-spacing: 0;
       text-align: right;
       line-height: 44px;
     }
@@ -1757,7 +1790,7 @@
       font-size: 11px;
       font-weight: 620;
       color: #a4a6b0;
-      letter-spacing: -0.01em;
+      letter-spacing: 0;
       white-space: nowrap;
       transform: translateY(1px);
       opacity: 0;
@@ -1795,7 +1828,7 @@
     .primary, .secondary, .danger {
       min-height: 46px;
       border: 0;
-      border-radius: 16px;
+      border-radius: 14px;
       padding: 0 16px;
       cursor: pointer;
       font-weight: 780;
@@ -1807,7 +1840,7 @@
 
     .notice {
       padding: 12px 14px;
-      border-radius: 16px;
+      border-radius: 14px;
       background: #f5f5f7;
       color: var(--muted);
       line-height: 1.45;
@@ -1819,7 +1852,7 @@
       margin-top: 12px;
       padding: 14px 16px;
       border: 1px solid var(--line);
-      border-radius: 18px;
+      border-radius: 14px;
       background: #fbfbfd;
     }
 
@@ -1876,8 +1909,9 @@
       padding: 16px 18px;
       width: 100%;
       border: 0;
-      border-radius: 26px;
-      background: #fff8ed;
+      border: 1px solid rgba(255,149,0,.25);
+      border-radius: 16px;
+      background: #fff9ef;
       display: grid;
       grid-template-columns: max-content 1fr auto auto;
       align-items: center;
@@ -1885,6 +1919,7 @@
     }
 
     .source-confirm-inline.ok {
+      border-color: rgba(52,199,89,.25);
       background: #f3fcf6;
     }
 
@@ -2033,7 +2068,7 @@
     .settings-input.secret {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 12px;
-      letter-spacing: -0.01em;
+      letter-spacing: 0;
     }
 
     .storage-stats {
@@ -2173,6 +2208,7 @@
       }
       .side { display: none; }
       .field-grid { grid-template-columns: 1fr; }
+      .ai-review-steps { grid-template-columns: 1fr; }
       .mini-table {
         grid-template-columns: 1fr 42px 74px 74px;
         font-size: 12px;
@@ -2190,8 +2226,8 @@
     }
   </style>
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/app-icon-192-v2-14.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-v2-14.png" />
   <meta name="theme-color" content="#111113" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="영수증DB" />
@@ -2215,7 +2251,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.11 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.14 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -2369,7 +2405,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.11 PWA</div>
+          <div class="eyebrow">Prototype v2.14 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -2504,6 +2540,21 @@
           <button class="secondary" id="analyzeReceiptAi">AI로 사진 분석</button>
           <button class="secondary" id="toggleRawOcr">입력창 접기</button>
           <button class="secondary" id="applyRawOcr">AI 분석값으로 초안 만들기</button>
+        </div>
+      </div>
+
+      <div class="ai-review-steps" aria-label="AI 분석값 검수 흐름">
+        <div class="ai-review-step">
+          <b>1. AI 초안</b>
+          <span>사진 분석 또는 JSON 붙여넣기</span>
+        </div>
+        <div class="ai-review-step">
+          <b>2. 원본 대조</b>
+          <span>상호, 일자, 품목, 금액 확인</span>
+        </div>
+        <div class="ai-review-step">
+          <b>3. 확정 저장</b>
+          <span>검증 통과 후 영구 보관</span>
         </div>
       </div>
 
@@ -2753,7 +2804,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.11 PWA";
+    const APP_VERSION = "v2.14 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
@@ -2782,7 +2833,7 @@
         { name: "피그 실리 1.3KG", qty: 1, unitPrice: 11490, amount: 11490, aliases: "식품" },
         { name: "하바티 슬라이스", qty: 1, unitPrice: 16490, amount: 16490, aliases: "치즈 슬라이스 하바티" },
         { name: "KS BACON REGULAR", qty: 1, unitPrice: 29990, amount: 29990, aliases: "베이컨 bacon" },
-        { name: "트라팔 크래커", qty: 1, unitPrice: 11990, amount: 11990, aliases: "과자 크래커" }
+        { name: "트러플 크래커", qty: 1, unitPrice: 11990, amount: 11990, aliases: "트러플 과자 크래커" }
       ]
     };
 
@@ -3093,7 +3144,7 @@
         imageSrc: "",
         items: [
           { name: "SUNKIST 레몬", qty: 1, unitPrice: 12990, amount: 12990, aliases: "레몬 과일 선키스트" },
-          { name: "트라팔 크래커", qty: 1, unitPrice: 11990, amount: 11990, aliases: "과자 크래커" }
+          { name: "트러플 크래커", qty: 1, unitPrice: 11990, amount: 11990, aliases: "트러플 과자 크래커" }
         ]
       }
     ];
@@ -3421,20 +3472,35 @@
       })).filter(item => item.name);
     }
 
+    function normalizeKnownItemTypo(item = {}) {
+      const name = String(item.name || "").replace(/트라팔\s*크래커/g, "트러플 크래커").trim();
+      let aliases = String(item.aliases || "").replace(/트라팔/g, "트러플").trim();
+      if (/트러플\s*크래커/.test(name) && !/트러플/.test(aliases)) {
+        aliases = `${aliases} 트러플`.trim();
+      }
+      return {
+        ...item,
+        name,
+        aliases
+      };
+    }
+
     function applyKnownReceiptCorrections(receipt = {}) {
       const isCostcoDemo =
         receipt.id === "receipt-costco-20260508" ||
         (normalize(receipt.store || "") === normalize("코스트코 하남점") && receipt.date === "2026-05-08");
 
-      if (!isCostcoDemo) return receipt;
-
       return {
         ...receipt,
-        items: (receipt.items || []).map(item => ({
-          ...item,
-          name: String(item.name || "").replace(/샤프로/g, "삿포로"),
-          aliases: String(item.aliases || "").replace(/샤프로/g, "삿포로")
-        }))
+        items: (receipt.items || []).map(item => {
+          const fixed = normalizeKnownItemTypo(item);
+          if (!isCostcoDemo) return fixed;
+          return {
+            ...fixed,
+            name: String(fixed.name || "").replace(/샤프로/g, "삿포로"),
+            aliases: String(fixed.aliases || "").replace(/샤프로/g, "삿포로")
+          };
+        })
       };
     }
 
@@ -8984,6 +9050,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       if (/lemon|레몬|sunkist|선키스트/.test(lower)) aliases.push("레몬 과일 선키스트");
       if (/cheese|치즈|하바티/.test(lower)) aliases.push("치즈");
       if (/bacon|베이컨/.test(lower)) aliases.push("베이컨 bacon");
+      if (/truffle|트러플/.test(lower)) aliases.push("트러플 과자 크래커");
       if (/cracker|크래커/.test(lower)) aliases.push("과자 크래커");
       if (/맥주|terra|테라|삿포로|샤프로/.test(lower)) aliases.push("맥주");
       if (/롤케익|롤케이크|케익|케이크/.test(lower)) aliases.push("케이크 롤케익 디저트");
