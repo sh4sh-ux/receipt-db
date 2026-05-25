@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.26 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.27 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f3f4f6;
@@ -1946,8 +1946,9 @@
     }
 
     .payer-chip.has-value input {
-      flex: 0 1 auto;
-      width: auto;
+      flex: 1 1 0;
+      width: 0;
+      min-width: 0;
       text-align: right;
     }
 
@@ -3641,6 +3642,13 @@
       text-overflow: ellipsis;
     }
 
+    /* v2.27: 한글 결제자 이름이 ch 단위 축소 때문에 끝 글자가 잘리지 않도록 입력 영역을 고정합니다. */
+    .payer-chip.has-value input {
+      flex: 1 1 0;
+      width: 0 !important;
+      min-width: 0;
+    }
+
     @media (min-width: 901px) {
       #sideReceiptPanel.desktop-receipt-panel {
         gap: 16px;
@@ -3726,7 +3734,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.26 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.27 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -3880,7 +3888,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.26 PWA</div>
+          <div class="eyebrow">Prototype v2.27 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -4296,7 +4304,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.26 PWA";
+    const APP_VERSION = "v2.27 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
@@ -6743,7 +6751,12 @@
       if (!chip || !input) return;
       const value = input.value.trim();
       chip.classList.toggle("has-value", !!value);
-      input.style.width = value ? `${Math.max(4, Math.min(14, value.length + 1))}ch` : "";
+      input.style.width = "";
+      if (value) {
+        requestAnimationFrame(() => {
+          input.scrollLeft = input.scrollWidth;
+        });
+      }
     }
 
     function currentFormSnapshot() {
