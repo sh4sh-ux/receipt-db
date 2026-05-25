@@ -1,10 +1,11 @@
-const CACHE_NAME = "receipt-db-v2-07-pwa";
+const CACHE_NAME = "receipt-db-v2-11-pwa";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./icons/icon-192.svg",
-  "./icons/icon-512.svg"
+  "./icons/apple-touch-icon.png",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {

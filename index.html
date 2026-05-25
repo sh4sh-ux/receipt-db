@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.09 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.11 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f5f5f7;
@@ -2191,7 +2191,7 @@
   </style>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png" />
   <meta name="theme-color" content="#111113" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="영수증DB" />
@@ -2215,7 +2215,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.09 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.11 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -2369,7 +2369,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.09 PWA</div>
+          <div class="eyebrow">Prototype v2.11 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -2498,17 +2498,17 @@
 
         <div class="ai-draft-guide">
           <div class="ai-draft-title">AI 분석 초안</div>
-        <div class="ai-draft-copy">GPT에게 영수증 사진을 JSON으로 분석해달라고 한 뒤 결과를 붙여넣으면 입력칸으로 옮깁니다. 서버가 없을 때도 이 방식으로 사용할 수 있습니다.</div>
+        <div class="ai-draft-copy">AI가 분석한 JSON이나 표를 붙여넣거나, 연결된 AI 서버로 초안을 만듭니다. 앱 안 OCR은 실행하지 않습니다.</div>
         <textarea class="raw-ocr show" id="rawOcrText" placeholder="{&#10;  &quot;store&quot;: &quot;이마트 부천점&quot;,&#10;  &quot;date&quot;: &quot;2025-03-19&quot;,&#10;  &quot;total&quot;: 59000,&#10;  &quot;items&quot;: [&#10;    { &quot;name&quot;: &quot;아가방 10,000&quot;, &quot;qty&quot;: 5, &quot;unitPrice&quot;: 10000, &quot;amount&quot;: 50000 }&#10;  ]&#10;}"></textarea>
         <div class="ocr-actions show" id="ocrActions">
-          <button class="secondary" id="analyzeReceiptAi">AI 자동 분석</button>
+          <button class="secondary" id="analyzeReceiptAi">AI로 사진 분석</button>
           <button class="secondary" id="toggleRawOcr">입력창 접기</button>
-          <button class="secondary" id="applyRawOcr">분석값으로 초안 만들기</button>
+          <button class="secondary" id="applyRawOcr">AI 분석값으로 초안 만들기</button>
         </div>
       </div>
 
       <div class="notice">
-        OCR 자동 입력은 사용하지 않습니다. 원본 영수증과 입력값을 직접 대조하고, 금액 검증을 통과한 뒤 저장합니다.
+        앱 안 OCR은 사용하지 않습니다. AI 초안이나 직접 입력값을 원본 영수증과 대조하고, 금액 검증을 통과한 뒤 저장합니다.
       </div>
 
       <div class="validation-card" id="validationCard">
@@ -2656,8 +2656,8 @@
           <label class="source-confirm-check" style="margin-top:10px;">
             <input id="aiAutoAnalyzeInput" type="checkbox" />
             <span>
-              <b>사진 선택 시 자동 분석</b>
-              <small>서버가 연결되어 있을 때만 실행됩니다.</small>
+              <b>사진 선택 시 AI 자동 분석</b>
+              <small>기본은 꺼져 있습니다. 켜면 서버가 연결되어 있을 때만 실행됩니다.</small>
             </span>
           </label>
           <div class="backup-actions">
@@ -2753,7 +2753,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.09 PWA";
+    const APP_VERSION = "v2.11 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
@@ -3549,6 +3549,7 @@
         dropboxFileId: remembered.dropboxFileId || receipt.dropboxFileId || "",
         imageStorage: receipt.dropboxPath ? receipt.imageStorage : (remembered.imageStorage || receipt.imageStorage || "none"),
         receiptTotalHint: remembered.receiptTotalHint || receipt.receiptTotalHint || "",
+        memo: ("memo" in remembered || "note" in remembered) ? getReceiptMemo(remembered) : getReceiptMemo(receipt),
         items: remembered.items?.length ? normalizeReceiptItemsForStorage(remembered.items) : (receipt.items || [])
       });
     }
@@ -4766,6 +4767,9 @@
       $("receiptMeta").textContent = `${formatDate(receipt.date)} · ${receipt.items.length}개 품목${getReceiptPayer(receipt) ? " · 결제자 " + getReceiptPayer(receipt) : ""}`;
       $("receiptTotal").textContent = formatWon(receipt.total);
       $("receiptItemCount").textContent = `${receipt.items.length}개`;
+      const memo = getReceiptMemo(receipt);
+      $("receiptMemoBox")?.classList.toggle("hidden", !memo);
+      if ($("receiptMemoText")) $("receiptMemoText").innerHTML = renderMemoHtml(memo);
 
       const dropboxArea = $("receiptDropboxArea");
       if (receipt.dropboxPath) {
@@ -5062,6 +5066,7 @@
         date: $("dateInput").value,
         total: $("totalInput").value,
         payer: $("payerInput").value.trim(),
+        memo: $("memoInput").value.trim(),
         imageSrc: currentImageData || "",
         sourceConfirmed: $("sourceConfirmCheck")?.checked || false,
         rows
@@ -5099,6 +5104,7 @@
       $("dateInput").value = receipt.date || "";
       $("totalInput").value = formatInputNumber(receipt.total) || "";
       $("payerInput").value = receipt.payer || "";
+      $("memoInput").value = getReceiptMemo(receipt);
       updatePayerChipState();
       currentReceiptTotalHint = Number(receipt.receiptTotalHint || receipt.extractedTotal || 0) || null;
       currentReceiptTotalHintIgnored = false;
@@ -5132,6 +5138,7 @@
       $("dateInput").value = "";
       $("totalInput").value = "";
       $("payerInput").value = "";
+      $("memoInput").value = "";
       updatePayerChipState();
       currentReceiptTotalHint = null;
       currentReceiptTotalHintIgnored = false;
@@ -5369,6 +5376,7 @@
         $("dateInput"),
         $("totalInput"),
         $("payerInput"),
+        $("memoInput"),
         $("dropboxTokenInput"),
         $("dropboxFolderInput"),
         $("searchInput"),
@@ -5791,6 +5799,7 @@
       }
       const total = validation.calculatedTotal;
       const payer = $("payerInput").value.trim();
+      const memo = $("memoInput").value.trim();
       const items = readItemsFromForm();
 
       if (!store || !date || !items.length) {
@@ -5820,6 +5829,7 @@
         date,
         total,
         payer,
+        memo,
         // 원본 이미지는 Dropbox 같은 외부 저장소에 두고, 앱에는 작은 썸네일만 남깁니다.
         imageSrc: "",
         thumbnailSrc: thumbnailForReceipt,
@@ -6646,12 +6656,13 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       if (/^[{\[]/.test(raw)) {
         try {
           const parsed = JSON.parse(raw);
-          const receipt = Array.isArray(parsed) ? parsed[0] : parsed;
+          const root = Array.isArray(parsed) ? (parsed[0] || {}) : (parsed || {});
+          const receipt = root.receipt || root.data || root;
           const items = normalizeReceiptItemsForStorage(receipt.items || receipt.products || []);
           if (receipt && (receipt.store || receipt.date || receipt.total || items.length)) {
             return {
               store: receipt.store || receipt.shop || receipt.merchant || "",
-              date: receipt.date || "",
+              date: normalizeDateText(receipt.date || receipt.purchasedAt || ""),
               total: Number(receipt.total || receipt.amount || itemSum(items) || 0),
               items,
               rawText: raw
@@ -9914,7 +9925,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
 
     function exportCsvBackup() {
       const data = loadData();
-      const rows = [["영수증ID","일자","매장명","결제자","영수증총액","품목명","수량","단가","계","Dropbox경로"]];
+      const rows = [["영수증ID","일자","매장명","결제자","메모","영수증총액","품목명","수량","단가","계","Dropbox경로"]];
       (data.receipts || []).forEach(receipt => {
         (receipt.items || []).forEach(item => {
           rows.push([
@@ -9922,6 +9933,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
             receipt.date,
             receipt.store,
             receipt.payer || "",
+            getReceiptMemo(receipt),
             receipt.total,
             item.name,
             item.qty,
@@ -9948,6 +9960,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         receipt.date,
         receipt.store,
         getReceiptPayer(receipt),
+        getReceiptMemo(receipt),
         receipt.total,
         (receipt.items || []).length,
         receipt.imageStorage || "",
@@ -9960,6 +9973,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         receipt.date,
         receipt.store,
         getReceiptPayer(receipt),
+        getReceiptMemo(receipt),
         receipt.total,
         item.name,
         item.qty,
@@ -9991,8 +10005,8 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
           <body>
             <h1>영수증DB 전체 내보내기</h1>
             <p>내보낸 시각: ${escapeHtml(formatDateTime(nowIso()))}</p>
-            ${table("영수증 목록", ["영수증ID","일자","매장명","결제자","총액","품목수","이미지보관","Dropbox경로","생성일","수정일"], receiptRows)}
-            ${table("품목 전체", ["영수증ID","일자","매장명","결제자","영수증총액","품목명","수량","단가","계","검색별칭","Dropbox경로"], itemRows)}
+            ${table("영수증 목록", ["영수증ID","일자","매장명","결제자","메모","총액","품목수","이미지보관","Dropbox경로","생성일","수정일"], receiptRows)}
+            ${table("품목 전체", ["영수증ID","일자","매장명","결제자","메모","영수증총액","품목명","수량","단가","계","검색별칭","Dropbox경로"], itemRows)}
           </body>
         </html>`;
       const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
@@ -10084,10 +10098,10 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         return {
           endpoint: saved.endpoint || "",
           clientToken: saved.clientToken || "",
-          autoAnalyze: saved.autoAnalyze !== false
+          autoAnalyze: saved.autoAnalyze === true
         };
       } catch {
-        return { endpoint: "", clientToken: "", autoAnalyze: true };
+        return { endpoint: "", clientToken: "", autoAnalyze: false };
       }
     }
 
@@ -10095,7 +10109,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       localStorage.setItem(AI_SETTINGS_KEY, JSON.stringify({
         endpoint: normalizeAiEndpoint(settings.endpoint || ""),
         clientToken: settings.clientToken || "",
-        autoAnalyze: settings.autoAnalyze !== false
+        autoAnalyze: settings.autoAnalyze === true
       }));
       updateAiStatus();
     }
@@ -10110,7 +10124,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       return {
         endpoint: normalizeAiEndpoint($("aiEndpointInput").value || previous.endpoint || ""),
         clientToken: typedToken || (options.keepSavedToken ? previous.clientToken : ""),
-        autoAnalyze: $("aiAutoAnalyzeInput")?.checked !== false
+        autoAnalyze: $("aiAutoAnalyzeInput")?.checked === true
       };
     }
 
@@ -10138,7 +10152,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       $("dropboxFolderInput").value = settings.folder || "/영수증DB";
       $("aiEndpointInput").value = aiSettings.endpoint || "";
       $("aiClientTokenInput").value = aiSettings.clientToken || "";
-      $("aiAutoAnalyzeInput").checked = aiSettings.autoAnalyze !== false;
+      $("aiAutoAnalyzeInput").checked = aiSettings.autoAnalyze === true;
       $("cloudSupabaseUrlInput").value = cloudSettings.supabaseUrl || "";
       $("cloudSupabaseKeyInput").value = cloudSettings.anonKey || "";
       $("cloudSyncSpaceInput").value = cloudSettings.syncSpaceKey || "";
@@ -10455,7 +10469,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         saveAiSettingsObject(settings);
         $("aiEndpointInput").value = settings.endpoint || "";
         $("aiClientTokenInput").value = settings.clientToken || "";
-        alert("AI 자동 분석 서버 연결 성공!\n\n사진을 선택하면 자동으로 초안을 만들 수 있습니다.");
+        alert("AI 자동 분석 서버 연결 성공!\n\n영수증 추가 화면에서 'AI로 사진 분석'을 눌러 초안을 만들 수 있습니다. 사진 선택 시 자동 분석은 설정에서 켠 경우에만 실행됩니다.");
       } catch (error) {
         alert("AI 자동 분석 서버 연결에 실패했습니다.\n\n" + (error.message || error));
       }
@@ -10620,18 +10634,10 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         $("preview").style.display = "block";
         currentExtractionLabel = "ai-assisted-manual";
         markDraftNeedsSourceReview();
-        const analyzedDraft = getDirectAnalyzedReceiptFallback(currentImageFileName, "");
-        if (analyzedDraft) {
-          applyParsedReceipt({
-            ...analyzedDraft,
-            rawText: currentImageFileName
-          });
-          currentExtractionLabel = "codex-image-draft";
-          updateOcrStatus(`AI 분석 초안 완료: ${analyzedDraft.items.length}개 품목을 입력했습니다. 원본과 대조 후 저장해주세요.`, 100, true);
-        } else if (loadAiSettings().autoAnalyze !== false && isAiAnalysisConnected()) {
+        if (loadAiSettings().autoAnalyze === true && isAiAnalysisConnected()) {
           await analyzeCurrentReceiptWithAi({ silent: true, silentMissing: true });
         } else {
-          updateOcrStatus("사진을 불러왔습니다. AI 자동 분석 서버를 연결하거나 분석값을 붙여넣어주세요.", 100, true);
+          updateOcrStatus("사진을 불러왔습니다. 앱 안 OCR은 실행하지 않습니다. AI 분석값을 붙여넣거나 'AI로 사진 분석'을 눌러 초안을 만드세요.", 100, true);
         }
         $("rawOcrText").classList.add("show");
         showOcrActions(true);
@@ -10650,7 +10656,11 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         alert("붙여넣은 분석값이 없습니다.");
         return;
       }
-      const parsed = safeParseReceiptText(text, { fileName: currentImageFileName || "" });
+      const parsed = parseStructuredReceiptDraft(text);
+      if (!parsed) {
+        alert("AI 분석값을 읽지 못했습니다.\n\nJSON 또는 `품목 | 수량 | 단가 | 금액` 표 형식으로 붙여넣어주세요.");
+        return;
+      }
       applyParsedReceipt(parsed);
       currentExtractionLabel = "ai-paste-draft";
       updateOcrStatus(`붙여넣은 값으로 초안을 만들었습니다. ${parsed.items.length}개 상품 품목을 금액 검증과 함께 확인해주세요.`, 100, true);
