@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.16 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.18 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f3f4f6;
@@ -469,7 +469,8 @@
 
     .results {
       display: grid;
-      gap: 10px;
+      gap: 14px;
+      margin-top: 12px;
     }
 
     .result-card {
@@ -1790,7 +1791,7 @@
       margin: 0;
       min-height: auto;
       height: 100%;
-      width: auto;
+      width: 100%;
       min-width: 0;
       flex: 1 1 auto;
       max-width: 100%;
@@ -1801,15 +1802,21 @@
       line-height: 44px;
     }
 
+    .payer-chip.has-value input {
+      flex: 0 1 auto;
+      width: auto;
+      text-align: right;
+    }
+
     .payer-chip input:focus {
       box-shadow: none;
       outline: none;
     }
 
-    .payer-chip .payer-suffix {
+    .payer-chip .payer-prefix {
       font-size: 11px;
-      font-weight: 620;
-      color: #a4a6b0;
+      font-weight: 780;
+      color: #6c6f78;
       letter-spacing: 0;
       white-space: nowrap;
       transform: translateY(1px);
@@ -1818,7 +1825,7 @@
       pointer-events: none;
     }
 
-    .payer-chip.has-value .payer-suffix {
+    .payer-chip.has-value .payer-prefix {
       opacity: 1;
     }
 
@@ -2275,10 +2282,15 @@
       margin-top: 16px;
     }
 
-    #receiptList,
-    .results {
+    #receiptList {
       display: grid;
       gap: 8px;
+    }
+
+    .results {
+      display: grid;
+      gap: 14px;
+      margin-top: 12px;
     }
 
     .receipt-card.card {
@@ -2529,7 +2541,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-v2-14.png" />
   <meta name="theme-color" content="#111113" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="영수증DB" />
+  <meta name="apple-mobile-web-app-title" content="Receipt DB" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 </head>
 
@@ -2550,7 +2562,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.16 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.18 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -2704,7 +2716,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.16 PWA</div>
+          <div class="eyebrow">Prototype v2.18 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -2879,8 +2891,8 @@
         <div class="payer-inline-field">
           <label>결제자</label>
           <div class="payer-chip" id="payerChip">
+            <span class="payer-prefix" aria-hidden="true">결제자</span>
             <input id="payerInput" placeholder="예 : 홍길동" autocomplete="off" />
-            <span class="payer-suffix" aria-hidden="true">결제</span>
           </div>
         </div>
       </div>
@@ -3103,7 +3115,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.16 PWA";
+    const APP_VERSION = "v2.18 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
@@ -5446,7 +5458,9 @@
       const chip = $("payerChip");
       const input = $("payerInput");
       if (!chip || !input) return;
-      chip.classList.toggle("has-value", !!input.value.trim());
+      const value = input.value.trim();
+      chip.classList.toggle("has-value", !!value);
+      input.style.width = value ? `${Math.max(4, Math.min(14, value.length + 1))}ch` : "";
     }
 
     function currentFormSnapshot() {

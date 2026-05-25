@@ -1,6 +1,6 @@
 {
-  "name": "영수증DB",
-  "short_name": "영수증DB",
+  "name": "Receipt DB",
+  "short_name": "Receipt DB",
   "description": "영수증 이미지, 품목, 금액, 결제자를 저장하고 검색하는 개인 영수증 데이터베이스",
   "start_url": "./index.html",
   "scope": "./",
