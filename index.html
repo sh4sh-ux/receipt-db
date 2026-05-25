@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.24 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.26 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f3f4f6;
@@ -3234,6 +3234,413 @@
       border-radius: 10px;
     }
 
+    /* v2.25: 입력/수정 모달은 더치페이 레퍼런스처럼 작고 빠르게 훑는 폼 밀도로 낮춥니다. */
+    .modal {
+      max-height: min(760px, 92vh);
+      padding: 16px;
+    }
+
+    .modal-head {
+      margin-bottom: 12px;
+    }
+
+    .modal-head h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: -.3px;
+    }
+
+    .close {
+      width: 34px;
+      min-width: 34px;
+      height: 34px;
+      min-height: 34px;
+      font-size: 16px;
+    }
+
+    .upload-box,
+    .ai-draft-guide,
+    .notice,
+    .validation-card {
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .upload-box {
+      gap: 8px;
+    }
+
+    .upload-box input {
+      padding: 9px;
+      border-radius: 9px;
+      font-size: 12px;
+    }
+
+    .ai-draft-guide {
+      margin-top: 10px;
+      gap: 6px;
+    }
+
+    .ai-draft-title,
+    .validation-head {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .ai-draft-copy,
+    .notice,
+    .validation-list {
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 500;
+    }
+
+    .ai-review-steps {
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .ai-review-step {
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .raw-ocr {
+      min-height: 96px;
+      margin-top: 8px;
+      border-radius: 9px;
+      padding: 10px;
+      font-size: 11px;
+    }
+
+    .ocr-actions,
+    .validation-actions {
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .ocr-actions .secondary,
+    .validation-actions .secondary {
+      min-height: 34px;
+      height: 34px;
+      padding: 0 10px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .validation-card {
+      margin-top: 10px;
+    }
+
+    .validation-list {
+      margin-top: 6px;
+    }
+
+    #validationBadge {
+      height: 24px;
+      padding: 0 8px;
+      font-size: 11px;
+    }
+
+    .demo-payer-row {
+      gap: 10px;
+      margin-top: 12px;
+      align-items: flex-end;
+    }
+
+    .demo-payer-row .secondary {
+      height: 40px;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 9px;
+      font-size: 13px;
+    }
+
+    .payer-inline-field {
+      gap: 5px;
+    }
+
+    .payer-inline-field label {
+      padding-right: 10px;
+    }
+
+    .payer-chip {
+      height: 40px;
+      min-height: 40px;
+      padding: 0 12px;
+      border-width: 1px;
+      border-radius: 9px;
+      background: #f7f7f8;
+    }
+
+    .payer-chip input {
+      font-size: 13px;
+      line-height: 40px;
+    }
+
+    .payer-chip .payer-prefix {
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .field-grid {
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .field {
+      gap: 5px;
+    }
+
+    .field-grid .field label {
+      padding-left: 10px;
+    }
+
+    .field input,
+    .edit-table input {
+      height: 40px;
+      min-height: 40px;
+      padding: 0 10px;
+    }
+
+    .field textarea {
+      min-height: 70px;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .memo-field {
+      margin: 0 0 12px;
+    }
+
+    .card.table-wrap {
+      margin-top: 10px;
+      border-radius: 10px;
+      box-shadow: none;
+    }
+
+    .edit-table {
+      font-size: 12px;
+    }
+
+    .edit-table th {
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    .edit-table td {
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+
+    .edit-table .item-name-input,
+    .edit-table .item-qty-input,
+    .edit-table .item-unit-input,
+    .edit-table .item-amount-input,
+    .edit-table textarea {
+      height: 36px;
+      min-height: 36px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 36px;
+    }
+
+    .edit-table textarea {
+      padding: 7px 10px;
+      line-height: 20px;
+    }
+
+    .edit-table .item-name-input {
+      min-width: 220px;
+      padding: 0 10px;
+    }
+
+    .edit-table .item-qty-input {
+      width: 58px;
+    }
+
+    .edit-table .money-input-wrap,
+    .edit-table .item-unit-input,
+    .edit-table .item-amount-input {
+      width: 108px;
+    }
+
+    .edit-table th.th-name {
+      padding-left: 26px;
+    }
+
+    .edit-table th.th-money {
+      padding-right: 26px;
+    }
+
+    .edit-table td.td-name {
+      padding-left: 14px;
+      padding-right: 12px;
+    }
+
+    .edit-table td.td-qty {
+      padding-right: 14px;
+    }
+
+    .edit-table td.td-money {
+      padding-right: 12px;
+    }
+
+    .minus-toggle {
+      left: 5px;
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
+      font-size: 15px;
+    }
+
+    .row-controls {
+      min-width: 72px;
+      gap: 5px;
+    }
+
+    .remove,
+    .drag-handle {
+      width: 30px;
+      min-width: 30px;
+      height: 30px;
+      min-height: 30px;
+      padding: 0;
+      border-radius: 9px;
+    }
+
+    .drag-handle {
+      font-size: 15px;
+    }
+
+    .total-confirm-inline,
+    .source-confirm-inline {
+      min-height: 48px;
+      margin-top: 10px;
+      padding: 9px 10px;
+      gap: 8px;
+    }
+
+    .total-confirm-title,
+    .source-confirm-title {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .total-confirm-desc,
+    .source-confirm-desc {
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .total-confirm-amount {
+      min-width: 94px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .total-confirm-check,
+    .source-confirm-box {
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+    }
+
+    .total-confirm-check input,
+    .source-confirm-box input {
+      width: 16px;
+      height: 16px;
+      min-height: 16px;
+      border-radius: 4px;
+    }
+
+    .source-confirm-inline .pill {
+      height: 22px;
+      padding: 0 8px;
+      font-size: 10px;
+    }
+
+    .action-row.bottom-actions {
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .bottom-actions-right {
+      gap: 8px;
+    }
+
+    .bottom-actions .primary,
+    .bottom-actions .secondary,
+    .bottom-actions .danger {
+      height: 40px;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 9px;
+      font-size: 13px;
+    }
+
+    .bottom-actions .primary {
+      min-width: 150px;
+    }
+
+    /* v2.26: 목록 금액은 항상 같은 오른쪽 축에 두고, 선택 영역은 검수 상태까지 한 덩어리로 보이게 합니다. */
+    #receiptList .receipt-card-amount,
+    #receiptList .receipt-card:hover .receipt-card-amount,
+    #receiptList .receipt-card:focus-within .receipt-card-amount {
+      padding-right: 0;
+    }
+
+    #receiptList .receipt-card.selected .receipt-card-action-strip {
+      background: transparent;
+    }
+
+    .receipt-card-action-status {
+      display: inline-flex;
+      min-width: 0;
+      align-items: center;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    .receipt-card-review-badge,
+    .receipt-card-storage-note {
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    .receipt-card-review-badge {
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .receipt-card-review-badge.is-reviewed {
+      background: #eaf3ff;
+      color: var(--blue);
+    }
+
+    .receipt-card-review-badge.needs-review {
+      background: #fff7e8;
+      color: #b06000;
+    }
+
+    .receipt-card-storage-note {
+      color: #666;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     @media (min-width: 901px) {
       #sideReceiptPanel.desktop-receipt-panel {
         gap: 16px;
@@ -3319,7 +3726,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.24 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.26 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -3473,7 +3880,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.24 PWA</div>
+          <div class="eyebrow">Prototype v2.26 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -3889,7 +4296,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.24 PWA";
+    const APP_VERSION = "v2.26 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
@@ -5830,6 +6237,7 @@
         div.dataset.receiptId = receipt.id;
         const storageText = receiptCardStorageText(receipt);
         const reviewText = receiptCardReviewText(receipt);
+        const reviewClass = receipt.sourceConfirmed === false ? "needs-review" : "is-reviewed";
         div.innerHTML = `
           <div class="receipt-card-swipe-action">
             <button class="receipt-delete-btn" type="button" aria-label="${escapeHtml(receipt.store)} 영수증 삭제">삭제</button>
@@ -5846,7 +6254,10 @@
               </div>
             </div>
             <div class="receipt-card-action-strip">
-              <span class="receipt-card-action-status">${escapeHtml(reviewText)} · ${escapeHtml(storageText)}</span>
+              <span class="receipt-card-action-status">
+                <span class="receipt-card-review-badge ${reviewClass}">${escapeHtml(reviewText)}</span>
+                <span class="receipt-card-storage-note">${escapeHtml(storageText)}${storageText === "이미지 없음" ? "" : " 저장됨"}</span>
+              </span>
               <button class="receipt-card-strip-edit" type="button">수정</button>
               <button class="receipt-card-strip-delete" type="button" aria-label="영수증 삭제">삭제</button>
             </div>
