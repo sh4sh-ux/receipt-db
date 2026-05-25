@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.21 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.22 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f3f4f6;
@@ -2439,29 +2439,32 @@
 
     .hidden { display: none !important; }
 
-    /* v2.16: 목록/상세를 더 분명한 장부형 화면으로 정리합니다. */
+    /* v2.22: 왼쪽 패널을 Compact Pro 목록형으로 정리합니다. */
     .top-bar {
-      background: #111113;
-      border-bottom: 0;
-      padding: calc(10px + env(safe-area-inset-top)) 10px 10px;
+      background: #fbfcfe;
+      border-bottom: 1px solid var(--line);
+      gap: 0;
+      padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
     }
 
     .tab {
       min-height: 38px;
-      color: #c9ccd4;
+      color: #6f737d;
       border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
     }
 
     .tab.active {
-      background: #fff;
+      background: #111113;
       border-color: transparent;
-      color: #111113;
+      color: #fff;
     }
 
     .app-history-nav {
       top: 58px;
       padding: 8px 14px;
-      background: #f8fafc;
+      background: #fbfcfe;
       border-bottom: 1px solid var(--line);
     }
 
@@ -2478,14 +2481,19 @@
     .hero-title {
       align-items: center;
       margin-bottom: 12px;
-      padding: 14px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: #fff;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .home-title-button .eyebrow {
+      font-size: 12px;
+      margin-bottom: 3px;
     }
 
     .home-title-text {
-      font-size: 28px;
+      font-size: 27px;
     }
 
     .plus-btn {
@@ -2511,7 +2519,15 @@
 
     #receiptList {
       display: grid;
-      gap: 8px;
+      gap: 0;
+      border: 1px solid #dde2ea;
+      border-radius: 16px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    #receiptList .receipt-card {
+      margin-bottom: 0 !important;
     }
 
     .results {
@@ -2520,31 +2536,43 @@
       margin-top: 12px;
     }
 
+    #receiptList .receipt-card.card {
+      border: 0;
+      border-bottom: 1px solid #e4e7ed;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    #receiptList .receipt-card:last-child {
+      border-bottom: 0;
+    }
+
     .receipt-card.card {
       border-color: #dde2ea;
       border-radius: 12px;
       box-shadow: none;
     }
 
-    .receipt-card-surface {
+    #receiptList .receipt-card-surface {
       padding: 12px 14px;
     }
 
-    .receipt-card-layout {
+    #receiptList .receipt-card-layout {
       gap: 10px;
     }
 
-    .store {
-      font-size: 15px;
+    #receiptList .store {
+      font-size: 16px;
     }
 
-    .price {
-      font-size: 19px;
+    #receiptList .price {
+      font-size: 17px;
+      font-weight: 760;
     }
 
-    .receipt-card.selected .receipt-card-surface {
+    #receiptList .receipt-card.selected .receipt-card-surface {
       background: #f8fbff;
-      box-shadow: inset 4px 0 0 var(--blue), inset 0 0 0 1px rgba(0,122,255,.14);
+      box-shadow: inset 3px 0 0 var(--blue);
     }
 
     .chip {
@@ -2789,7 +2817,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.21 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.22 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -2943,7 +2971,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.21 PWA</div>
+          <div class="eyebrow">Prototype v2.22 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -3359,7 +3387,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.21 PWA";
+    const APP_VERSION = "v2.22 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
@@ -5253,7 +5281,6 @@
         const div = document.createElement("div");
         div.className = `card simple-card receipt-card${currentReceiptId === receipt.id ? " selected" : ""}`;
         div.dataset.receiptId = receipt.id;
-        div.style.marginBottom = "10px";
         div.innerHTML = `
           <div class="receipt-card-swipe-action">
             <button class="receipt-delete-btn" type="button" aria-label="${escapeHtml(receipt.store)} 영수증 삭제">삭제</button>
