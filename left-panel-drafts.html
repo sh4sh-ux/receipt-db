@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Receipt DB 왼쪽 패널 디자인 시안 5종</title>
+  <style>
+    :root {
+      --ink: #101114;
+      --muted: #6d7079;
+      --subtle: #9a9da6;
+      --line: #e3e6ec;
+      --soft: #f5f6f8;
+      --blue: #1967ff;
+      --red: #ff453a;
+      --green: #0e8f55;
+      --panel: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #f2f4f7;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+      letter-spacing: 0;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    .page {
+      width: min(1480px, calc(100vw - 36px));
+      margin: 0 auto;
+      padding: 34px 0 48px;
+    }
+
+    .page-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 22px;
+      margin-bottom: 24px;
+    }
+
+    .page-head h1 {
+      font-size: 34px;
+      line-height: 1.12;
+      font-weight: 860;
+    }
+
+    .lead {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.55;
+      font-weight: 620;
+    }
+
+    .summary-pill {
+      flex: 0 0 auto;
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 14px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .draft-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(318px, 1fr));
+      gap: 22px;
+      align-items: start;
+    }
+
+    .draft {
+      display: grid;
+      gap: 14px;
+    }
+
+    .draft-meta {
+      min-height: 112px;
+      padding: 18px 18px 0;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .draft-meta h2 {
+      margin-top: 5px;
+      font-size: 24px;
+      line-height: 1.15;
+      font-weight: 880;
+    }
+
+    .draft-meta p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.48;
+      font-weight: 620;
+    }
+
+    .phone {
+      min-height: 720px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--panel);
+      overflow: hidden;
+      box-shadow: 0 18px 48px rgba(19, 27, 43, .08);
+    }
+
+    .phone-inner {
+      height: 100%;
+      min-height: 720px;
+      padding: 20px;
+    }
+
+    .top-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      padding: 4px;
+      border-radius: 16px;
+      background: #eef0f5;
+    }
+
+    .top-tabs span {
+      min-height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      color: #71747d;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .top-tabs .active {
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 6px 16px rgba(17, 24, 39, .07);
+    }
+
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .title {
+      margin-top: 3px;
+      font-size: 33px;
+      line-height: 1.02;
+      font-weight: 880;
+      word-break: keep-all;
+    }
+
+    .add {
+      width: 52px;
+      height: 52px;
+      min-width: 52px;
+      border: 0;
+      border-radius: 16px;
+      background: #111113;
+      color: #fff;
+      font-size: 34px;
+      font-weight: 420;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+    }
+
+    .search {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 54px;
+      margin-top: 22px;
+      padding: 0 15px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 17px;
+      font-weight: 780;
+      box-shadow: 0 2px 8px rgba(17, 24, 39, .035);
+    }
+
+    .search-icon {
+      width: 21px;
+      height: 21px;
+      border: 3px solid #8c9099;
+      border-radius: 50%;
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .search-icon::after {
+      content: "";
+      position: absolute;
+      width: 8px;
+      height: 3px;
+      right: -7px;
+      bottom: -4px;
+      border-radius: 99px;
+      background: #8c9099;
+      transform: rotate(45deg);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .count {
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      background: #eef0f5;
+      padding: 0 10px;
+      color: #5f626b;
+      font-size: 12px;
+      font-weight: 820;
+    }
+
+    .list {
+      display: grid;
+      gap: 11px;
+      margin-top: 12px;
+    }
+
+    .receipt {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      padding: 15px;
+    }
+
+    .receipt.selected {
+      border-color: rgba(25, 103, 255, .38);
+      box-shadow: inset 4px 0 0 var(--blue), 0 8px 18px rgba(25, 103, 255, .08);
+    }
+
+    .receipt-line {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .store {
+      min-width: 0;
+      font-size: 18px;
+      line-height: 1.25;
+      font-weight: 860;
+      word-break: keep-all;
+    }
+
+    .money {
+      font-size: 21px;
+      line-height: 1;
+      font-weight: 890;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .meta {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 660;
+    }
+
+    .micro {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      min-height: 25px;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 9px;
+      color: #5f626b;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .muted-line {
+      color: var(--subtle);
+    }
+
+    .option-a .phone-inner {
+      background: linear-gradient(#ffffff, #fbfcfe);
+    }
+
+    .option-a .top-tabs {
+      background: #eceef4;
+    }
+
+    .option-b .phone {
+      background: #fbfbfc;
+      border-radius: 18px;
+      box-shadow: 0 14px 36px rgba(17, 24, 39, .055);
+    }
+
+    .option-b .phone-inner {
+      padding: 16px;
+    }
+
+    .option-b .top-tabs {
+      border-radius: 11px;
+      background: transparent;
+      border-bottom: 1px solid var(--line);
+      padding: 0 0 10px;
+      gap: 0;
+    }
+
+    .option-b .top-tabs span {
+      min-height: 34px;
+      border-radius: 10px;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .option-b .top-tabs .active {
+      background: #111113;
+      color: #fff;
+    }
+
+    .option-b .hero {
+      margin-top: 18px;
+      align-items: end;
+    }
+
+    .option-b .title {
+      font-size: 28px;
+    }
+
+    .option-b .add {
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+      border-radius: 12px;
+      font-size: 28px;
+    }
+
+    .option-b .search {
+      min-height: 46px;
+      margin-top: 18px;
+      border-radius: 12px;
+      box-shadow: none;
+      font-size: 15px;
+    }
+
+    .option-b .list {
+      gap: 0;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .option-b .receipt {
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      border-radius: 0;
+      padding: 13px 14px;
+    }
+
+    .option-b .receipt:last-child {
+      border-bottom: 0;
+    }
+
+    .option-b .receipt.selected {
+      background: #f7faff;
+      box-shadow: inset 3px 0 0 var(--blue);
+    }
+
+    .option-b .store {
+      font-size: 16px;
+    }
+
+    .option-b .money {
+      font-size: 18px;
+    }
+
+    .option-c .phone-inner {
+      background: #f8f9fb;
+    }
+
+    .option-c .hero-card {
+      margin-top: 18px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: #fff;
+      box-shadow: 0 12px 28px rgba(17, 24, 39, .045);
+    }
+
+    .option-c .hero {
+      margin-top: 0;
+    }
+
+    .option-c .search {
+      margin-top: 16px;
+      background: #f8f9fb;
+      box-shadow: none;
+    }
+
+    .option-c .receipt {
+      border-radius: 20px;
+      box-shadow: 0 12px 26px rgba(17, 24, 39, .045);
+    }
+
+    .option-c .receipt-line {
+      align-items: start;
+    }
+
+    .option-c .receipt::before {
+      content: "";
+      display: block;
+      width: 46px;
+      height: 5px;
+      border-radius: 999px;
+      background: #eef0f4;
+      margin-bottom: 12px;
+    }
+
+    .option-d .phone {
+      background: #101114;
+      border-color: #23252b;
+    }
+
+    .option-d .phone-inner {
+      background: #101114;
+      color: #f8f8fa;
+    }
+
+    .option-d .top-tabs {
+      background: #1d1f25;
+    }
+
+    .option-d .top-tabs span {
+      color: #a2a5ae;
+    }
+
+    .option-d .top-tabs .active {
+      background: #f8f8fa;
+      color: #111113;
+      box-shadow: none;
+    }
+
+    .option-d .eyebrow,
+    .option-d .section-head,
+    .option-d .meta,
+    .option-d .muted-line {
+      color: #a9adb7;
+    }
+
+    .option-d .add {
+      background: #f8f8fa;
+      color: #111113;
+    }
+
+    .option-d .search {
+      border-color: #2c2f37;
+      background: #181a20;
+      color: #d7d9df;
+      box-shadow: none;
+    }
+
+    .option-d .receipt {
+      border-color: #292c34;
+      background: #17191f;
+    }
+
+    .option-d .receipt.selected {
+      border-color: rgba(87, 154, 255, .52);
+      box-shadow: inset 4px 0 0 #579aff;
+    }
+
+    .option-d .chip,
+    .option-d .count {
+      border-color: #2d3039;
+      background: #20232a;
+      color: #c9ccd5;
+    }
+
+    .option-d .search-icon {
+      border-color: #a9adb7;
+    }
+
+    .option-d .search-icon::after {
+      background: #a9adb7;
+    }
+
+    .option-e .phone-inner {
+      background: #ffffff;
+      padding: 0;
+    }
+
+    .option-e .top-zone {
+      padding: 20px 20px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfe;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .option-e .top-tabs {
+      background: transparent;
+      border: 1px solid var(--line);
+    }
+
+    .option-e .hero {
+      margin-top: 20px;
+    }
+
+    .option-e .search {
+      min-height: 52px;
+      margin-top: 18px;
+      border-radius: 999px;
+      box-shadow: none;
+    }
+
+    .option-e .content {
+      padding: 0 20px 20px;
+    }
+
+    .option-e .receipt {
+      padding: 0;
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .option-e .receipt-main {
+      padding: 15px;
+    }
+
+    .option-e .receipt-action {
+      min-height: 38px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 0 15px;
+      border-top: 1px solid var(--line);
+      background: #fbfcfe;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .option-e .delete-dot {
+      width: 25px;
+      height: 25px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #fff0ef;
+      color: var(--red);
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        width: min(100vw - 24px, 420px);
+        padding-top: 24px;
+      }
+
+      .page-head {
+        display: block;
+      }
+
+      .summary-pill {
+        margin-top: 14px;
+      }
+
+      .draft-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="page-head">
+      <div>
+        <h1>Receipt DB 왼쪽 패널 시안 5종</h1>
+        <p class="lead">반복 검색, 영수증 확인, 빠른 수정 동선을 기준으로 다섯 가지 밀도와 분위기를 비교했습니다.</p>
+      </div>
+      <div class="summary-pill">추천 후보: A, B, E</div>
+    </header>
+
+    <section class="draft-grid" aria-label="왼쪽 패널 디자인 시안">
+      <article class="draft option-a">
+        <div class="draft-meta">
+          <div class="label">Option A</div>
+          <h2>Quiet Ledger</h2>
+          <p>현재 구조를 가장 적게 바꾸면서 카드, 검색, 선택 상태를 더 정리한 기본안입니다.</p>
+        </div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="top-tabs"><span>검색</span><span class="active">영수증</span><span>설정</span></div>
+            <div class="hero">
+              <div><div class="eyebrow">Receipt DB · v2.20</div><div class="title">영수증DB</div></div>
+              <button class="add" aria-label="추가">+</button>
+            </div>
+            <div class="search"><span class="search-icon"></span><span>무엇을 찾고 있나요?</span></div>
+            <div class="section-head"><span>최근 영수증</span><span class="count">5개</span></div>
+            <div class="list">
+              <div class="receipt selected"><div class="receipt-line"><div><div class="store">코스트코 하남점</div><div class="meta">2026.05.08 · 12개 품목</div></div><div class="money">163,390원</div></div><div class="micro"><span class="chip">앱 썸네일</span><span class="chip">검수 완료</span></div></div>
+              <div class="receipt"><div class="receipt-line"><div><div class="store">와사</div><div class="meta">2026.04.28 · 2개 품목 · 신유철</div></div><div class="money">32,000원</div></div></div>
+              <div class="receipt"><div class="receipt-line"><div><div class="store">금돈옥 청담점</div><div class="meta">2026.04.24 · 2개 품목</div></div><div class="money">126,000원</div></div></div>
+              <div class="receipt"><div class="receipt-line"><div><div class="store">목구멍 신논현점</div><div class="meta">2026.04.23 · 6개 품목</div></div><div class="money">177,000원</div></div></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="draft option-b">
+        <div class="draft-meta">
+          <div class="label">Option B</div>
+          <h2>Compact Pro</h2>
+          <p>영수증이 많아질수록 유리한 밀도 높은 목록형입니다. 데스크탑 왼쪽 패널에 특히 잘 맞습니다.</p>
+        </div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="top-tabs"><span>검색</span><span class="active">영수증</span><span>설정</span></div>
+            <div class="hero">
+              <div><div class="eyebrow">Receipt DB</div><div class="title">영수증DB</div></div>
+              <button class="add" aria-label="추가">+</button>
+            </div>
+            <div class="search"><span class="search-icon"></span><span>상호, 품목, 결제자 검색</span></div>
+            <div class="section-head"><span>최근 영수증</span><span class="count">30개</span></div>
+            <div class="list">
+              <div class="receipt selected"><div class="receipt-line"><div><div class="store">코스트코 하남점</div><div class="meta">05.08 · 12개 품목</div></div><div class="money">163,390원</div></div></div>
+              <div class="receipt"><div class="receipt-line"><div><div class="store">와사</div><div class="meta">04.28 · 신유철 결제</div></div><div class="money">32,000원</div></div></div>
+              <div class="receipt"><div class="receipt-line"><div><div class="store">금돈옥 청담점</div><div class="meta">04.24 · 2개 품목</div></div><div class="money">126,000원</div></div></div>
+              <div class="receipt"><div class="receipt-line"><div><div class="store">목구멍 신논현점</div><div class="meta">04.23 · 6개 품목</div></div><div class="money">177,000원</div></div></div>
+              <div class="receipt"><div class="receipt-line"><div><div class="store">이마트</div><div class="meta">04.12 · 이미지 없음</div></div><div class="money">68,250원</div></div></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="draft option-c">
+        <div class="draft-meta">
+          <div class="label">Option C</div>
+          <h2>Receipt Stack</h2>
+          <p>영수증 원본을 보관한다는 느낌을 살린 카드형입니다. 화면은 예쁘지만 목록 밀도는 낮습니다.</p>
+        </div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="top-tabs"><span>검색</span><span class="active">영수증</span><span>설정</span></div>
+            <div class="hero-card">
+              <div class="hero">
+                <div><div class="eyebrow">Archive</div><div class="title">Receipt DB</div></div>
+                <button class="add" aria-label="추가">+</button>
+              </div>
+              <div class="search"><span class="search-icon"></span><span>영수증 찾기</span></div>
+            </div>
+            <div class="section-head"><span>보관함</span><span class="count">30개</span></div>
+            <div class="list">
+              <div class="receipt selected"><div class="receipt-line"><div><div class="store">코스트코 하남점</div><div class="meta">2026.05.08 · 12개 품목</div></div><div class="money">163,390원</div></div><div class="micro"><span class="chip">원본 있음</span><span class="chip">합계 확인</span></div></div>
+              <div class="receipt"><div class="receipt-line"><div><div class="store">와사</div><div class="meta">2026.04.28 · 결제자 신유철</div></div><div class="money">32,000원</div></div></div>
+              <div class="receipt"><div class="receipt-line"><div><div class="store">금돈옥 청담점</div><div class="meta">2026.04.24 · 2개 품목</div></div><div class="money">126,000원</div></div></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="draft option-d">
+        <div class="draft-meta">
+          <div class="label">Option D</div>
+          <h2>Dark Operator</h2>
+          <p>대비가 강하고 집중감이 있는 어두운 운영형입니다. 장시간 사용 시 호불호가 갈릴 수 있습니다.</p>
+        </div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="top-tabs"><span>검색</span><span class="active">영수증</span><span>설정</span></div>
+            <div class="hero">
+              <div><div class="eyebrow">Receipt DB</div><div class="title">영수증DB</div></div>
+              <button class="add" aria-label="추가">+</button>
+            </div>
+            <div class="search"><span class="search-icon"></span><span>무엇을 찾고 있나요?</span></div>
+            <div class="section-head"><span>최근 영수증</span><span class="count">5개</span></div>
+            <div class="list">
+              <div class="receipt selected"><div class="receipt-line"><div><div class="store">코스트코 하남점</div><div class="meta">2026.05.08 · 12개 품목</div></div><div class="money">163,390원</div></div></div>
+              <div class="receipt"><div class="receipt-line"><div><div class="store">와사</div><div class="meta">2026.04.28 · 결제자 신유철</div></div><div class="money">32,000원</div></div></div>
+              <div class="receipt"><div class="receipt-line"><div><div class="store">금돈옥 청담점</div><div class="meta">2026.04.24 · 2개 품목</div></div><div class="money">126,000원</div></div></div>
+              <div class="receipt"><div class="receipt-line"><div><div class="store">목구멍 신논현점</div><div class="meta">2026.04.23 · 6개 품목</div></div><div class="money">177,000원</div></div></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="draft option-e">
+        <div class="draft-meta">
+          <div class="label">Option E</div>
+          <h2>Action Drawer</h2>
+          <p>삭제나 검수 상태를 카드 하단에 노출해 모바일 조작감을 높인 안입니다. 수정 동선 개선에 좋습니다.</p>
+        </div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="top-zone">
+              <div class="top-tabs"><span>검색</span><span class="active">영수증</span><span>설정</span></div>
+              <div class="hero">
+                <div><div class="eyebrow">Receipt DB · 빠른 검수</div><div class="title">영수증DB</div></div>
+                <button class="add" aria-label="추가">+</button>
+              </div>
+              <div class="search"><span class="search-icon"></span><span>상호, 품목, 결제자</span></div>
+            </div>
+            <div class="content">
+              <div class="section-head"><span>최근 영수증</span><span class="count">5개</span></div>
+              <div class="list">
+                <div class="receipt selected">
+                  <div class="receipt-main"><div class="receipt-line"><div><div class="store">코스트코 하남점</div><div class="meta">2026.05.08 · 12개 품목</div></div><div class="money">163,390원</div></div></div>
+                  <div class="receipt-action"><span>검수 완료 · 앱 썸네일</span><span class="delete-dot">-</span></div>
+                </div>
+                <div class="receipt">
+                  <div class="receipt-main"><div class="receipt-line"><div><div class="store">와사</div><div class="meta">2026.04.28 · 신유철 결제</div></div><div class="money">32,000원</div></div></div>
+                  <div class="receipt-action"><span>원본 있음</span><span class="delete-dot">-</span></div>
+                </div>
+                <div class="receipt">
+                  <div class="receipt-main"><div class="receipt-line"><div><div class="store">금돈옥 청담점</div><div class="meta">2026.04.24 · 2개 품목</div></div><div class="money">126,000원</div></div></div>
+                  <div class="receipt-action"><span>원본 있음</span><span class="delete-dot">-</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

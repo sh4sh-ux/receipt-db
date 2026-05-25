@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.20 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.21 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f3f4f6;
@@ -254,6 +254,8 @@
     .receipt-card {
       position: relative;
       user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
       padding: 0;
       touch-action: pan-y;
     }
@@ -268,7 +270,7 @@
       z-index: 2;
       padding: 14px;
       background: var(--card);
-      transition: transform .18s ease;
+      transition: transform .18s ease, padding-right .18s ease, background .18s ease, box-shadow .18s ease;
       will-change: transform;
     }
 
@@ -358,6 +360,58 @@
 
     .receipt-card.delete-confirm .receipt-delete-btn {
       background: #111113;
+    }
+
+    @media (hover: none), (pointer: coarse), (max-width: 900px) {
+      .receipt-card {
+        overflow: hidden;
+      }
+
+      .receipt-card.swipe-open {
+        border-color: rgba(255,59,48,.20);
+        box-shadow: 0 8px 18px rgba(255,59,48,.06);
+      }
+
+      .receipt-card.swipe-open .receipt-card-surface {
+        transform: none !important;
+        padding-right: 88px;
+        background: #fffafa;
+        box-shadow: inset 0 0 0 1px rgba(255,59,48,.18);
+      }
+
+      .receipt-card-swipe-action {
+        z-index: 4;
+        top: 50%;
+        right: 12px;
+        bottom: auto;
+        width: auto;
+        min-width: 62px;
+        height: 38px;
+        padding: 0;
+        border-left: 0;
+        background: transparent;
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(8px, -50%);
+        transition: opacity .16s ease, transform .16s ease;
+      }
+
+      .receipt-card.swipe-open .receipt-card-swipe-action {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(0, -50%);
+      }
+
+      .receipt-delete-btn {
+        min-width: 62px;
+        min-height: 38px;
+        border-radius: 12px;
+        box-shadow: 0 10px 20px rgba(255,59,48,.18);
+      }
+
+      .receipt-card-delete-x {
+        display: none;
+      }
     }
 
     .receipt-card-layout {
@@ -2735,7 +2789,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.20 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.21 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -2889,7 +2943,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.20 PWA</div>
+          <div class="eyebrow">Prototype v2.21 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -3305,7 +3359,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.20 PWA";
+    const APP_VERSION = "v2.21 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
@@ -4969,6 +5023,7 @@
 
     let receiptDeleteConfirmTimer = null;
     let sideReceiptDeleteConfirmTimer = null;
+    let receiptSwipeCloseTimer = null;
 
     function setReceiptDeleteConfirm(card, active) {
       if (!card) return;
@@ -4995,6 +5050,7 @@
     }
 
     function hideReceiptDeleteButtons(exceptCard = null) {
+      window.clearTimeout(receiptSwipeCloseTimer);
       resetReceiptDeleteConfirmations(exceptCard);
       document.querySelectorAll(".receipt-card.swipe-open").forEach(card => {
         if (card !== exceptCard) {
@@ -5008,6 +5064,7 @@
     function attachReceiptCardEvents(card, receiptId) {
       const swipeWidth = 108;
       const surface = card.querySelector(".receipt-card-surface");
+      const stableSwipeQuery = window.matchMedia?.("(hover: none), (pointer: coarse), (max-width: 900px)");
       let startX = 0;
       let startY = 0;
       let wasOpen = false;
@@ -5020,16 +5077,28 @@
       }
 
       function setSwipe(value) {
+        if (stableSwipeQuery?.matches) return;
         if (surface) surface.style.transform = `translateX(${value}px)`;
       }
 
       function openSwipe() {
         hideReceiptDeleteButtons(card);
         card.classList.add("swipe-open");
-        setSwipe(-swipeWidth);
+        if (stableSwipeQuery?.matches) {
+          if (surface) surface.style.transform = "";
+        } else {
+          setSwipe(-swipeWidth);
+        }
+        window.clearTimeout(receiptSwipeCloseTimer);
+        receiptSwipeCloseTimer = window.setTimeout(() => {
+          if (card.classList.contains("swipe-open") && !card.classList.contains("delete-confirm")) {
+            closeSwipe();
+          }
+        }, 2600);
       }
 
       function closeSwipe() {
+        window.clearTimeout(receiptSwipeCloseTimer);
         card.classList.remove("swipe-open");
         if (surface) surface.style.transform = "";
       }
@@ -5064,7 +5133,7 @@
 
         const moveX = event.clientX - startX;
         const moveY = event.clientY - startY;
-        if (!dragging && Math.abs(moveX) > 10 && Math.abs(moveX) > Math.abs(moveY) + 4) {
+        if (!dragging && Math.abs(moveX) > 16 && Math.abs(moveX) > Math.abs(moveY) + 8) {
           dragging = true;
           hideReceiptDeleteButtons(card);
         }
@@ -5082,7 +5151,7 @@
         if (!dragging) return;
         const base = wasOpen ? -swipeWidth : 0;
         const finalX = clampSwipe(base + event.clientX - startX);
-        if (finalX < -42) openSwipe();
+        if (finalX < -62) openSwipe();
         else closeSwipe();
         swiped = true;
         dragging = false;
@@ -11351,6 +11420,12 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       if (!event.target.closest(".receipt-card")) {
         hideReceiptDeleteButtons();
       }
+    });
+
+    document.addEventListener("scroll", () => hideReceiptDeleteButtons(), true);
+    window.addEventListener("resize", () => hideReceiptDeleteButtons());
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) hideReceiptDeleteButtons();
     });
 
     $("imageBackdrop").addEventListener("click", () => {
