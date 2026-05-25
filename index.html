@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.18 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.19 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f3f4f6;
@@ -1950,6 +1950,76 @@
       background: #f3fcf6;
     }
 
+    .total-confirm-inline {
+      margin-top: 14px;
+      min-height: 86px;
+      padding: 16px 18px;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fbfcfe;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .total-confirm-inline.ok {
+      border-color: rgba(52,199,89,.25);
+      background: #f3fcf6;
+    }
+
+    .total-confirm-copy {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+    }
+
+    .total-confirm-title {
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 860;
+    }
+
+    .total-confirm-desc {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .total-confirm-amount {
+      min-width: 150px;
+      text-align: right;
+      font-size: 24px;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .total-confirm-check {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .total-confirm-check input {
+      width: 32px;
+      height: 32px;
+      min-height: 32px;
+      margin: 0;
+      accent-color: #111113;
+      cursor: pointer;
+    }
+
+    .total-confirm-check input:disabled {
+      cursor: not-allowed;
+      opacity: .42;
+    }
+
     .source-confirm-title {
       color: var(--text);
       font-size: 15px;
@@ -2033,6 +2103,20 @@
       .source-confirm-inline {
         grid-template-columns: 1fr auto;
         width: 100%;
+      }
+
+      .total-confirm-inline {
+        grid-template-columns: 1fr auto;
+        gap: 10px 12px;
+      }
+
+      .total-confirm-copy {
+        grid-column: 1 / -1;
+      }
+
+      .total-confirm-amount {
+        min-width: 0;
+        text-align: left;
       }
 
       .source-confirm-title,
@@ -2562,7 +2646,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.18 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.19 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -2716,7 +2800,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.18 PWA</div>
+          <div class="eyebrow">Prototype v2.19 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -2933,6 +3017,17 @@
         </table>
       </div>
 
+      <div class="total-confirm-inline" id="totalConfirmCard">
+        <div class="total-confirm-copy">
+          <b class="total-confirm-title">내역 합계 확인</b>
+          <span class="total-confirm-desc" id="totalConfirmDesc">품목 계 금액의 합계를 확인하면 저장할 수 있습니다.</span>
+        </div>
+        <div class="total-confirm-amount" id="totalConfirmAmount">0원</div>
+        <label class="total-confirm-check" for="totalConfirmCheck" aria-label="내역 합계 확인">
+          <input id="totalConfirmCheck" type="checkbox" />
+        </label>
+      </div>
+
       <div class="source-confirm-inline" id="sourceConfirmCard">
         <b class="source-confirm-title">원본 확인</b>
         <span class="source-confirm-desc">상호, 일자, 품목, 수량, 단가, 총액 확인</span>
@@ -3115,7 +3210,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.18 PWA";
+    const APP_VERSION = "v2.19 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
@@ -5438,6 +5533,7 @@
       currentReceiptTotalHint = null;
       currentReceiptTotalHintIgnored = false;
       currentExtractionLabel = "manual";
+      setTotalConfirmChecked(false);
       setSourceConfirmChecked(false);
       formBaseline = "";
       pendingClose = false;
@@ -5477,6 +5573,7 @@
         payer: $("payerInput").value.trim(),
         memo: $("memoInput").value.trim(),
         imageSrc: currentImageData || "",
+        totalConfirmed: $("totalConfirmCheck")?.checked || false,
         sourceConfirmed: $("sourceConfirmCheck")?.checked || false,
         rows
       });
@@ -5494,6 +5591,35 @@
       if (saveButton) saveButton.textContent = checked ? "저장하기" : "확인 후 저장";
     }
 
+    function updateTotalConfirmState(validation = null) {
+      const checkbox = $("totalConfirmCheck");
+      const card = $("totalConfirmCard");
+      const amount = $("totalConfirmAmount");
+      const desc = $("totalConfirmDesc");
+      if (!checkbox || !card || !amount || !desc) return;
+
+      const result = validation || collectReceiptMathValidation();
+      const hasError = result.issues.length > 0;
+      const hasRows = result.filledRows > 0;
+      const canConfirm = hasRows && !hasError;
+      if (!canConfirm) checkbox.checked = false;
+      checkbox.disabled = !canConfirm;
+
+      card.classList.toggle("ok", checkbox.checked && canConfirm);
+      amount.textContent = hasRows ? formatWon(result.calculatedTotal) : "0원";
+      desc.textContent = hasError
+        ? "금액 오류를 먼저 수정해야 합계를 확인할 수 있습니다."
+        : hasRows
+          ? `총 ${result.filledRows.toLocaleString("ko-KR")}개 품목의 계 금액 합계입니다.`
+          : "품목을 입력하면 합계가 계산됩니다.";
+    }
+
+    function setTotalConfirmChecked(checked = false) {
+      const checkbox = $("totalConfirmCheck");
+      if (checkbox) checkbox.checked = !!checked;
+      updateTotalConfirmState();
+    }
+
     function setSourceConfirmChecked(checked = false) {
       const checkbox = $("sourceConfirmCheck");
       if (checkbox) checkbox.checked = !!checked;
@@ -5501,10 +5627,12 @@
     }
 
     function markDraftNeedsSourceReview() {
+      setTotalConfirmChecked(false);
       setSourceConfirmChecked(false);
     }
 
     function resetSourceConfirmAfterManualEdit() {
+      setTotalConfirmChecked(false);
       if ($("sourceConfirmCheck")?.checked) setSourceConfirmChecked(false);
     }
 
@@ -5540,6 +5668,7 @@
       table.innerHTML = "";
       receipt.items.forEach(item => table.appendChild(itemRow(item)));
       recalculateTotalFromItems();
+      setTotalConfirmChecked(receipt.sourceConfirmed !== false);
     }
 
     function clearForm() {
@@ -5552,6 +5681,7 @@
       currentReceiptTotalHint = null;
       currentReceiptTotalHintIgnored = false;
       currentExtractionLabel = "manual";
+      setTotalConfirmChecked(false);
       setSourceConfirmChecked(false);
       $("itemTable").innerHTML = "";
       $("preview").style.display = "none";
@@ -5701,6 +5831,7 @@
 
       const canUseCalculated = validation.issues.some(issue => issue.includes("품목 합계") && issue.includes("추출 총액"));
       $("useCalculatedTotal")?.classList.toggle("hidden", !canUseCalculated);
+      updateTotalConfirmState(validation);
       return validation;
     }
 
@@ -6213,6 +6344,13 @@
 
       if (!store || !date || !items.length) {
         alert("매장명, 일자, 품목을 입력해주세요.");
+        return;
+      }
+
+      if (!$("totalConfirmCheck")?.checked) {
+        updateTotalConfirmState(validation);
+        $("totalConfirmCard")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        alert("저장 전 내역 합계 확인이 필요합니다.\n\n품목별 계 금액의 합계를 확인한 뒤 '내역 합계 확인'을 체크해주세요.");
         return;
       }
 
@@ -9592,6 +9730,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       if (!ok) return;
       currentReceiptTotalHintIgnored = true;
       currentReceiptTotalHint = null;
+      setTotalConfirmChecked(true);
       setSourceConfirmChecked(true);
       updateReceiptValidation();
     });
@@ -9619,6 +9758,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
     });
 
     $("payerInput").addEventListener("input", updatePayerChipState);
+    $("totalConfirmCheck").addEventListener("change", () => updateTotalConfirmState());
     $("sourceConfirmCheck").addEventListener("change", updateSourceConfirmState);
 
     $("loadDemo").addEventListener("click", () => {
