@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.34 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.35 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f3f4f6;
@@ -4115,6 +4115,119 @@
         box-shadow: none;
       }
     }
+
+    /* v2.35: 긴 영수증 수정 시 확인/저장 영역은 고정하고 품목표는 내부 스크롤로 처리합니다. */
+    #modalBackdrop > .modal {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      width: min(860px, calc(100vw - 32px));
+      max-height: min(820px, calc(100dvh - 32px));
+    }
+
+    #modalBackdrop .modal-head {
+      flex: 0 0 auto;
+    }
+
+    .modal-scroll-area {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+      padding-right: 4px;
+      margin-right: -4px;
+      overscroll-behavior: contain;
+    }
+
+    .modal-sticky-footer {
+      flex: 0 0 auto;
+      margin: 10px -16px -16px;
+      padding: 10px 16px 16px;
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,.97);
+      box-shadow: 0 -14px 24px rgba(255,255,255,.92);
+    }
+
+    .modal-sticky-footer .total-confirm-inline {
+      margin-top: 0;
+    }
+
+    .modal-sticky-footer .source-confirm-inline {
+      margin-top: 8px;
+    }
+
+    .modal-item-table {
+      max-height: min(350px, 38dvh);
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+
+    .modal-item-table .edit-table th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .review-status-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .review-status-row .receipt-card-review-badge {
+      flex: 0 0 auto;
+    }
+
+    @media (max-width: 720px) {
+      .modal-backdrop {
+        padding: 10px;
+      }
+
+      #modalBackdrop > .modal {
+        width: 100%;
+        max-height: calc(100dvh - 20px);
+        padding: 14px;
+      }
+
+      .modal-scroll-area {
+        padding-right: 0;
+        margin-right: 0;
+      }
+
+      .modal-sticky-footer {
+        margin: 10px -14px -14px;
+        padding: 10px 14px 14px;
+      }
+
+      .modal-item-table {
+        max-height: min(320px, 37dvh);
+      }
+    }
+
+    #modalBackdrop.editing-receipt .ai-draft-guide,
+    #modalBackdrop.editing-receipt .ai-review-steps,
+    #modalBackdrop.editing-receipt .notice {
+      display: none;
+    }
+
+    #modalBackdrop.editing-receipt .upload-box {
+      padding: 10px 12px;
+      gap: 8px;
+      text-align: left;
+    }
+
+    #modalBackdrop.editing-receipt .upload-box span {
+      display: none;
+    }
+
+    #modalBackdrop.editing-receipt .upload-box input {
+      padding: 7px;
+      font-size: 11px;
+    }
+
+    #modalBackdrop.editing-receipt .preview {
+      max-height: 120px;
+    }
   </style>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/app-icon-192-v2-14.png" />
@@ -4142,7 +4255,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.34 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.35 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -4296,7 +4409,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.34 PWA</div>
+          <div class="eyebrow">Prototype v2.35 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -4376,6 +4489,11 @@
           <div class="path-text" id="sideReceiptStorage"></div>
         </div>
 
+        <div class="dropbox-path-box" id="sideReceiptReviewCard">
+          <div class="path-title">검수 상태</div>
+          <div class="path-text" id="sideReceiptReview"></div>
+        </div>
+
         <div class="dropbox-path-box memo-box hidden" id="sideReceiptMemoBox">
           <div class="path-title">메모</div>
           <div class="path-text" id="sideReceiptMemoText"></div>
@@ -4417,6 +4535,7 @@
         <button class="close" id="closeModal" aria-label="닫기">×</button>
       </div>
 
+      <div class="modal-scroll-area" id="modalScrollArea">
       <div class="upload-box">
         <strong>영수증 이미지</strong>
         <span>사진은 원본 확인용으로 보관합니다. 분석값은 아래에 붙여넣거나 직접 입력합니다.</span>
@@ -4504,7 +4623,7 @@
         <textarea id="memoInput" placeholder="예: 환불 예정, 같이 간 사람, 따로 기억할 내용"></textarea>
       </div>
 
-      <div class="card table-wrap">
+      <div class="card table-wrap modal-item-table" id="modalItemTable">
         <table class="edit-table">
           <thead>
             <tr>
@@ -4518,7 +4637,9 @@
           <tbody id="itemTable"></tbody>
         </table>
       </div>
+      </div>
 
+      <div class="modal-sticky-footer">
       <div class="total-confirm-inline" id="totalConfirmCard">
         <div class="total-confirm-copy">
           <div class="total-confirm-headline">
@@ -4549,6 +4670,7 @@
           <button class="secondary" id="clearForm">비우기</button>
           <button class="primary" id="saveReceipt">저장하기</button>
         </div>
+      </div>
       </div>
     </div>
   </div>
@@ -4714,7 +4836,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.34 PWA";
+    const APP_VERSION = "v2.35 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
@@ -6105,6 +6227,15 @@
       $("sideReceiptStorage").textContent = receipt.dropboxPath
         ? `Dropbox 원본 저장됨: ${receipt.dropboxPath}`
         : (receipt.thumbnailSrc || receipt.imageSrc ? "앱에 작은 썸네일로 보관 중입니다." : "저장된 이미지가 없습니다. 데이터는 보관되어 있습니다.");
+      const reviewSummary = getReceiptReviewSummary(receipt);
+      if ($("sideReceiptReview")) {
+        $("sideReceiptReview").innerHTML = `
+          <span class="review-status-row">
+            <span class="receipt-card-review-badge ${reviewSummary.badgeClass}">${escapeHtml(reviewSummary.label)}</span>
+            <span>${escapeHtml(reviewSummary.detail)}</span>
+          </span>
+        `;
+      }
       const memo = getReceiptMemo(receipt);
       $("sideReceiptMemoBox")?.classList.toggle("hidden", !memo);
       if ($("sideReceiptMemoText")) $("sideReceiptMemoText").innerHTML = renderMemoHtml(memo);
@@ -6627,6 +6758,56 @@
       return receipt.sourceConfirmed === false ? "검수 필요" : "검수 완료";
     }
 
+    function isIncludedOptionReceiptItem(name, items = []) {
+      const itemName = String(name || "");
+      if (!/열무국수/.test(itemName)) return false;
+      return items.some(item => /직원세트|베이컨김치전|조개탕/.test(String(item.name || "")));
+    }
+
+    function getReceiptReviewSummary(receipt = {}) {
+      const items = receipt.items || [];
+      let calculatedTotal = 0;
+      let filledRows = 0;
+      let amountIssues = 0;
+
+      items.forEach(item => {
+        const name = String(item.name || "").trim();
+        if (!name) return;
+        const metrics = withItemMetrics(item);
+        const qty = Number(metrics.qty || 0);
+        const unitPrice = Number(metrics.unitPrice || 0);
+        const amount = Number(metrics.amount || 0);
+        filledRows += 1;
+
+        if (Number.isFinite(qty) && Number.isFinite(unitPrice) && Math.abs(Math.round(qty * unitPrice) - amount) > 1) {
+          amountIssues += 1;
+        }
+
+        if (!isSeparateSupportDiscount(name) && !isIncludedOptionReceiptItem(name, items)) {
+          calculatedTotal += amount;
+        }
+      });
+
+      const sourceOk = receipt.sourceConfirmed !== false;
+      const totalMatches = filledRows > 0 && Math.abs(calculatedTotal - Number(receipt.total || 0)) <= 1;
+      const isComplete = sourceOk && totalMatches && amountIssues === 0;
+      const label = !sourceOk ? "검수 필요" : isComplete ? "검수 완료" : "합계 확인 필요";
+      const detail = !sourceOk
+        ? "원본 확인이 아직 완료되지 않았습니다."
+        : amountIssues
+          ? `${amountIssues.toLocaleString("ko-KR")}개 품목의 수량×단가를 다시 확인해주세요.`
+          : totalMatches
+            ? `원본 확인됨 · 품목 합계 ${formatWon(calculatedTotal)} 일치`
+            : `저장 총액 ${formatWon(receipt.total)} / 품목 합계 ${formatWon(calculatedTotal)}`;
+
+      return {
+        label,
+        detail,
+        badgeClass: isComplete ? "is-reviewed" : "needs-review",
+        isComplete
+      };
+    }
+
     function renderReceipts(scroll = false, options = {}) {
       const data = loadData();
       const list = $("receiptList");
@@ -7089,12 +7270,22 @@
     function openModal(mode = "add", receipt = null) {
       editingReceiptId = receipt?.id || null;
       $("modalBackdrop").classList.add("show");
+      $("modalBackdrop").classList.toggle("editing-receipt", mode === "edit");
       $("modalMode").textContent = mode === "edit" ? "Edit Receipt" : "Add Receipt";
       $("modalTitle").textContent = mode === "edit" ? "영수증 수정" : "영수증 추가";
       $("deleteReceipt").classList.toggle("hidden", mode !== "edit");
 
       if (receipt) setForm(receipt);
       else clearForm();
+      requestAnimationFrame(() => {
+        const scrollArea = $("modalScrollArea");
+        if (!scrollArea) return;
+        if (mode === "edit" && $("modalItemTable")) {
+          scrollArea.scrollTo({ top: Math.max(0, $("modalItemTable").offsetTop - 12), behavior: "auto" });
+          return;
+        }
+        scrollArea.scrollTo({ top: 0, behavior: "auto" });
+      });
       setFormBaselineSoon();
     }
 
@@ -7114,6 +7305,7 @@
     function forceCloseModal() {
       $("exitConfirm").classList.remove("show");
       $("modalBackdrop").classList.remove("show");
+      $("modalBackdrop").classList.remove("editing-receipt");
       editingReceiptId = null;
       currentImageData = "";
       currentOriginalImageData = "";
