@@ -115,8 +115,21 @@ svg{display:block;flex-shrink:0;}
 .guide-copy{border:1px solid var(--blue);background:var(--card);color:var(--blue-txt);border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:5px;margin-top:8px;}
 .guide-copy:hover{background:var(--blue);color:#fff;}
 
-.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
-@media(max-width:900px){.input-grid{grid-template-columns:1fr;}}
+/* 새 레이아웃 — 위→아래 흐름. 미리보기가 전체 폭 사용 */
+.input-stack{display:flex;flex-direction:column;gap:20px;}
+.input-row.top{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;}
+.input-row.preview{}
+.input-row.options{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.input-row.actions{display:flex;gap:8px;}
+.input-row.actions .primary-btn,.input-row.actions .ghost-btn{margin-top:0;}
+.input-row.actions .primary-btn{flex:2;}
+.input-row.actions .ghost-btn{flex:1;}
+@media(max-width:900px){
+  .input-row.top,.input-row.options{grid-template-columns:1fr;}
+  .input-row.actions{flex-direction:column;}
+}
+/* 위 영역의 textarea는 살짝 낮게 — 사진 zone과 균형 */
+.input-row.top .field-ta{min-height:180px;}
 
 .field-g{margin-bottom:16px;}
 .field-lbl{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
@@ -153,19 +166,30 @@ svg{display:block;flex-shrink:0;}
 .prev-date{color:var(--label2);font-size:13px;}
 .prev-total{text-align:right;font-weight:700;font-size:17px;font-variant-numeric:tabular-nums;}
 .prev-store:focus,.prev-date:focus,.prev-total:focus{background:var(--fill2);border-radius:5px;}
-.prev-total-wrap{display:flex;align-items:baseline;gap:3px;flex:1;justify-content:flex-end;}
-.prev-total-wrap::after{content:'원';color:var(--label3);font-size:12px;font-weight:500;flex-shrink:0;}
+.prev-total-cell{display:flex;align-items:center;gap:3px;flex:1;justify-content:flex-end;min-width:0;}
+.prev-total-cell .prev-total{flex:1 1 auto;max-width:140px;}
+.prev-total-cell::after{content:'원';color:var(--label3);font-size:12px;font-weight:500;flex-shrink:0;}
+
+.prev-total-hint{padding:2px 14px 8px;font-size:11px;color:var(--label3);display:flex;justify-content:flex-end;align-items:center;gap:6px;background:var(--card);}
+.prev-total-hint.diff{color:var(--amber);font-weight:500;}
+.prev-total-hint b{font-weight:600;font-variant-numeric:tabular-nums;}
+.prev-total-reset{border:1px solid var(--sep2);background:var(--card);border-radius:5px;padding:1px 7px;font-size:11px;color:var(--label2);cursor:pointer;font-family:inherit;line-height:1.3;}
+.prev-total-reset:hover{background:var(--fill);color:var(--label);border-color:var(--label3);}
 
 .prev-items{padding:10px 14px 4px;}
 .prev-items-hd{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--label2);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px;}
 .prev-items-count{color:var(--label3);font-weight:500;text-transform:none;letter-spacing:0;margin-left:4px;}
 .prev-add-item{border:1px dashed var(--sep2);background:transparent;color:var(--blue-txt);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:500;font-family:inherit;text-transform:none;letter-spacing:0;}
 .prev-add-item:hover{border-color:var(--blue);background:var(--blue-bg);border-style:solid;}
-.prev-item-row{display:grid;grid-template-columns:1fr 46px 78px 88px 22px;gap:5px;margin-bottom:5px;align-items:center;}
-.prev-item-name,.prev-item-qty,.prev-item-price,.prev-item-amt{border:1px solid var(--sep2);background:var(--card);border-radius:5px;padding:6px 8px;font-size:13px;outline:none;font-family:inherit;color:var(--label);min-width:0;font-variant-numeric:tabular-nums;}
+.prev-items-head-row,.prev-item-row{display:grid;grid-template-columns:minmax(0,1fr) 64px 100px 110px 26px;gap:6px;align-items:center;}
+.prev-items-head-row{padding:0 2px 4px;font-size:10.5px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.3px;}
+.prev-items-head-row span:nth-child(2),.prev-items-head-row span:nth-child(3),.prev-items-head-row span:nth-child(4){text-align:right;}
+.prev-item-row{margin-bottom:5px;}
+.prev-item-name,.prev-item-qty,.prev-item-price,.prev-item-amt{border:1px solid var(--sep2);background:var(--card);border-radius:5px;padding:7px 9px;font-size:13.5px;outline:none;font-family:inherit;color:var(--label);min-width:0;font-variant-numeric:tabular-nums;line-height:1.3;}
 .prev-item-qty,.prev-item-price,.prev-item-amt{text-align:right;}
-.prev-item-amt.neg{color:var(--red);}
-.prev-item-name:focus,.prev-item-qty:focus,.prev-item-price:focus,.prev-item-amt:focus{border-color:var(--blue);}
+.prev-item-amt.readonly{background:var(--fill2);color:var(--label);cursor:default;display:flex;align-items:center;justify-content:flex-end;font-weight:500;}
+.prev-item-amt.readonly.neg{color:var(--red);}
+.prev-item-name:focus,.prev-item-qty:focus,.prev-item-price:focus{border-color:var(--blue);}
 .prev-item-name::placeholder{color:var(--label3);}
 .prev-item-del{border:none;background:transparent;color:var(--label3);font-size:18px;line-height:1;padding:0;cursor:pointer;font-family:inherit;}
 .prev-item-del:hover{color:var(--red);}
@@ -177,8 +201,8 @@ svg{display:block;flex-shrink:0;}
 .prev-foot-val.mismatch{color:var(--red);}
 
 @media(max-width:780px){
-  .prev-item-row{grid-template-columns:1fr 40px 68px 78px 20px;gap:4px;}
-  .prev-item-name,.prev-item-qty,.prev-item-price,.prev-item-amt{font-size:12.5px;padding:5px 6px;}
+  .prev-items-head-row,.prev-item-row{grid-template-columns:minmax(0,1fr) 48px 82px 92px 24px;gap:4px;}
+  .prev-item-name,.prev-item-qty,.prev-item-price,.prev-item-amt{font-size:13px;padding:6px 7px;}
 }
 
 .alert{border-radius:var(--rm);padding:12px 14px;margin-top:10px;display:flex;gap:10px;font-size:13px;line-height:1.5;}
@@ -349,7 +373,7 @@ svg{display:block;flex-shrink:0;}
       <div class="side-top">
         <div class="app-eye-row">
           <span class="app-eye">Receipt DB</span>
-          <span class="app-version" id="appVersion" title="앱 버전">v1.03</span>
+          <span class="app-version" id="appVersion" title="앱 버전">v1.05</span>
         </div>
         <div class="app-title">영수증 보관함</div>
         <div class="tab-row">
@@ -439,8 +463,10 @@ svg{display:block;flex-shrink:0;}
             </div>
           </div>
 
-          <div class="input-grid">
-            <div>
+          <div class="input-stack">
+
+            <!-- ① 붙여넣기 + 사진 (위, 좌우) -->
+            <div class="input-row top">
               <div class="field-g">
                 <label class="field-lbl">붙여넣기 <span class="field-lbl-hint">GPT 응답 그대로</span></label>
                 <textarea id="pasteTa" class="field-ta" placeholder="매장명: 하나로마트 청담점
@@ -464,48 +490,57 @@ svg{display:block;flex-shrink:0;}
               </div>
             </div>
 
-            <div>
-              <div class="field-g">
-                <label class="field-lbl">미리보기</label>
+            <!-- ② 미리보기 (가운데, 전체 폭) -->
+            <div class="input-row preview">
+              <div class="field-g" style="margin-bottom:0;">
+                <label class="field-lbl">미리보기 <span class="field-lbl-hint">직접 수정 가능 · 금액은 자동 계산</span></label>
                 <div id="previewArea">
                   <div class="empty-state" style="padding:32px 16px;background:var(--fill2);border-radius:var(--rm);border:1px dashed var(--sep2);">
-                    텍스트를 붙여넣으면 자동으로 파싱되어 표시됩니다.
+                    텍스트를 붙여넣으면 자동으로 파싱되어 표시됩니다.<br/><span style="font-size:11px;">붙여넣기 후 미리보기에서 직접 수정 가능해요.</span>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div class="row-2">
-                <div class="field-g">
-                  <label class="field-lbl">결제수단</label>
-                  <select id="payMethod" class="field-sel">
-                    <option value="card">카드</option>
-                    <option value="cash">현금</option>
-                    <option value="transfer">계좌이체</option>
-                    <option value="other">기타</option>
-                  </select>
+            <!-- ③ 옵션 (아래, 좌우 그리드) -->
+            <div class="input-row options">
+              <div>
+                <div class="row-2">
+                  <div class="field-g">
+                    <label class="field-lbl">결제수단</label>
+                    <select id="payMethod" class="field-sel">
+                      <option value="card">카드</option>
+                      <option value="cash">현금</option>
+                      <option value="transfer">계좌이체</option>
+                      <option value="other">기타</option>
+                    </select>
+                  </div>
+                  <div class="field-g">
+                    <label class="field-lbl">결제 상세 <span class="field-lbl-hint">선택</span></label>
+                    <input id="payDetail" class="field-inp" type="text" placeholder="예: 현대카드"/>
+                  </div>
                 </div>
                 <div class="field-g">
-                  <label class="field-lbl">결제 상세 <span class="field-lbl-hint">선택</span></label>
-                  <input id="payDetail" class="field-inp" type="text" placeholder="예: 현대카드"/>
+                  <label class="field-lbl">카테고리 <span class="field-lbl-hint" id="catAutoHint">자동 분류돼요</span></label>
+                  <input id="catInp" class="field-inp" type="text" placeholder="예: 마트, 외식, 카페..." list="catList"/>
+                  <datalist id="catList"></datalist>
                 </div>
               </div>
 
-              <div class="field-g">
-                <label class="field-lbl">카테고리 <span class="field-lbl-hint" id="catAutoHint">자동 분류돼요</span></label>
-                <input id="catInp" class="field-inp" type="text" placeholder="예: 마트, 외식, 카페..." list="catList"/>
-                <datalist id="catList"></datalist>
+              <div>
+                <div class="field-g">
+                  <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분, 선택</span></label>
+                  <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
+                </div>
+                <div class="field-g">
+                  <label class="field-lbl">메모 <span class="field-lbl-hint">선택</span></label>
+                  <textarea id="noteInp" class="field-ta" style="min-height:80px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="기억할 내용이 있다면..."></textarea>
+                </div>
               </div>
+            </div>
 
-              <div class="field-g">
-                <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분, 선택</span></label>
-                <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
-              </div>
-
-              <div class="field-g">
-                <label class="field-lbl">메모 <span class="field-lbl-hint">선택</span></label>
-                <textarea id="noteInp" class="field-ta" style="min-height:60px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="기억할 내용이 있다면..."></textarea>
-              </div>
-
+            <!-- ④ 저장/초기화 -->
+            <div class="input-row actions">
               <button class="primary-btn" id="saveBtn" disabled>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 저장
@@ -576,7 +611,7 @@ svg{display:block;flex-shrink:0;}
             <p>앱이 업데이트될 때마다 좌측 상단 버전 번호가 올라갑니다.</p>
             <div class="setting-btn-row">
               <span style="font-size:12px;color:var(--label2);align-self:center;">
-                Receipt DB · <b id="appVersionStat">v1.03</b> · IndexedDB v2 · 백업 포맷 v2
+                Receipt DB · <b id="appVersionStat">v1.05</b> · IndexedDB v2 · 백업 포맷 v2
               </span>
             </div>
           </div>
@@ -605,7 +640,12 @@ svg{display:block;flex-shrink:0;}
 // v1.02 — 시간 필드 UI 제거 + 카테고리 자동 분류 9개 + 사용자 학습 사전 + 버전 표시
 // v1.03 — 미리보기를 편집 가능한 폼으로 (매장명·일자·총액·품목 직접 수정 + 추가/삭제)
 //         + 품목 없는 영수증(노래방·주유·병원)도 저장 가능 (warning만)
-const APP_VERSION='v1.03';
+// v1.04 — 합계 자동화: 수량×단가 = 금액, 모든 금액 합 = 총액. GPT 응답 총액 무시.
+//         실제 영수증과 다를 땐 총액 input 직접 수정 (수동 모드), ↺로 자동 복귀
+// v1.05 — 레이아웃 재구성 (위→아래 흐름, 미리보기 전체 폭). 품목명 input 폭 확대.
+//         금액 셀 readonly (수량×단가 자동), Tab 흐름 자연스럽게. 일자 클릭 시 달력 즉시.
+//         단가·금액·총액 모두 천단위 쉼표 (text+inputmode="numeric").
+const APP_VERSION='v1.05';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -924,10 +964,14 @@ function validateParsed(p){
   if(!namedItems.length){
     warns.push('품목 정보가 없어요. 노래방·주유·병원처럼 품목이 없는 영수증은 그대로 저장 가능, 필요하면 아래에서 직접 추가하세요.');
   }
-  // 합계 검증 — 이름 있는 품목만
-  if(namedItems.length&&p.total){
+  // 합계 검증 — 사용자가 총액을 수동으로 손댔을 때만 차이 안내
+  // (자동 모드면 항상 일치하니까 알림 불필요)
+  if(p._totalManual && namedItems.length){
     const sum=namedItems.reduce((s,i)=>s+(i.amount||0),0);
-    if(sum!==p.total)warns.push(`품목 합계 ${fmtMoney(sum)}원이 총액 ${fmtMoney(p.total)}원과 달라요 (차이 ${fmtMoney(Math.abs(sum-p.total))}원)`);
+    if(sum!==p.total){
+      const diff=Math.abs(sum-p.total);
+      warns.push(`수동 입력 총액 ${fmtMoney(p.total)}원이 품목 합계 ${fmtMoney(sum)}원과 ${fmtMoney(diff)}원 달라요. 봉사료·할인·세금 등 영수증 사정으로 다르면 그대로 저장하세요.`);
+    }
   }
   return {ok:errs.length===0,errors:errs,warnings:warns};
 }
@@ -1170,6 +1214,14 @@ function updatePreview(){
     return;
   }
   const p=parseReceiptText(v);
+  if(p){
+    // GPT가 읽어온 총액은 참고용으로만 보존, 미리보기는 항상 자동 합계로 시작
+    p._gptTotal=p.total;
+    p._totalManual=false;
+    // 모든 품목 amount를 (가능하면) 수량×단가로 재계산 — GPT 표기 오류 보정
+    for(const it of p.items||[])_recalcAmount(it);
+    p.total=(p.items||[]).reduce((s,i)=>s+(i.amount||0),0);
+  }
   _currentParsed=p;
   // 가게명 인식되면 카테고리 자동 채움 (입력란이 비어있거나 이전에 자동 채웠을 때만)
   if(p&&p.store){
@@ -1197,13 +1249,14 @@ function renderPreviewForm(){
   const matchOk=sum===p.total||namedItems.length===0;
 
   const itemsHtml=(p.items||[]).length
-    ? (p.items.map((it,idx)=>{
+    ? (`<div class="prev-items-head-row"><span>품목명</span><span>수량</span><span>단가</span><span>금액</span><span></span></div>` +
+       p.items.map((it,idx)=>{
         const negCls=(it.amount||0)<0?' neg':'';
         return `<div class="prev-item-row" data-idx="${idx}">
-          <input class="prev-item-name" data-f="name" placeholder="품목명" value="${escapeHtml(it.name||'')}"/>
-          <input class="prev-item-qty" data-f="quantity" type="number" min="0" step="1" value="${it.quantity||1}"/>
-          <input class="prev-item-price" data-f="unitPrice" type="number" step="1" value="${it.unitPrice||0}"/>
-          <input class="prev-item-amt${negCls}" data-f="amount" type="number" step="1" value="${it.amount||0}"/>
+          <input class="prev-item-name" data-f="name" placeholder="품목명" value="${escapeHtml(it.name||'')}" autocomplete="off"/>
+          <input class="prev-item-qty" data-f="quantity" type="number" min="0" step="1" value="${it.quantity||1}" inputmode="numeric"/>
+          <input class="prev-item-price" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/>
+          <div class="prev-item-amt readonly${negCls}" data-amt="${idx}">${_fmtN(it.amount||0)}</div>
           <button type="button" class="prev-item-del" data-del="${idx}" title="이 품목 삭제" aria-label="삭제">×</button>
         </div>`;
       }).join(''))
@@ -1221,6 +1274,17 @@ function renderPreviewForm(){
     alertsHtml=`<div class="alert ok"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><div>정상이에요. 필요한 부분 수정 후 사진 첨부하고 저장하세요.</div></div>`;
   }
 
+  const autoTotal=_autoTotal();
+  const totalDiff=p.total!==autoTotal;
+  const totalHintHtml=p._totalManual
+    ? `<div class="prev-total-hint${totalDiff?' diff':''}">
+        ${totalDiff
+          ? `수동 입력 · 자동 합계 <b>${fmtMoney(autoTotal)}원</b>과 다름`
+          : `수동 입력 · 자동 합계와 일치`}
+        <button type="button" class="prev-total-reset" title="자동 합계로 되돌리기">↺ 자동</button>
+      </div>`
+    : `<div class="prev-total-hint">자동 합계 · 품목 금액의 합</div>`;
+
   previewArea.innerHTML=`
     <div class="preview-form">
       <div class="prev-row">
@@ -1228,8 +1292,9 @@ function renderPreviewForm(){
       </div>
       <div class="prev-row split">
         <input class="prev-date" type="date" value="${p.date||''}"/>
-        <span class="prev-total-wrap"><input class="prev-total" type="number" step="1" placeholder="0" value="${p.total||0}"/></span>
+        <span class="prev-total-cell"><input class="prev-total" type="text" inputmode="numeric" placeholder="0" value="${_fmtN(p.total||0)}"/></span>
       </div>
+      ${totalHintHtml}
       <div class="prev-items">
         <div class="prev-items-hd">
           <span>품목 ${namedItems.length>0?`<span class="prev-items-count">· ${namedItems.length}개</span>`:''}</span>
@@ -1286,17 +1351,46 @@ function bindPreviewFormEvents(){
       renderPreviewForm();
     });
   }
-  // ── 일자 ──
+  // ── 일자 — 클릭/포커스 시 달력 즉시 열기 ──
   const dateInp=previewArea.querySelector('.prev-date');
   if(dateInp){
+    const openPicker=()=>{
+      if(typeof dateInp.showPicker==='function'){
+        try{dateInp.showPicker();}catch(_){/* iOS 등 일부에서 안 됨 */}
+      }
+    };
+    dateInp.addEventListener('click',openPicker);
+    dateInp.addEventListener('focus',openPicker);
     dateInp.addEventListener('change',()=>{p.date=dateInp.value;renderPreviewForm();});
   }
-  // ── 총액 ──
+  // ── 총액 ── (사용자가 직접 손대면 수동 모드로 전환, 쉼표 표시)
   const totalInp=previewArea.querySelector('.prev-total');
   if(totalInp){
-    const commit=()=>{p.total=parseInt(totalInp.value,10)||0;_refreshPreviewSummary();};
+    const commit=()=>{
+      p._totalManual=true;
+      p.total=_parseN(totalInp.value);
+      _refreshPreviewSummary();
+    };
     totalInp.addEventListener('input',commit);
-    totalInp.addEventListener('blur',()=>{commit();renderPreviewForm();});
+    totalInp.addEventListener('focus',()=>{
+      // 포커스 시 쉼표 제거해서 편집 편하게
+      totalInp.value=String(p.total||0);
+      totalInp.select();
+    });
+    totalInp.addEventListener('blur',()=>{
+      commit();
+      totalInp.value=_fmtN(p.total);
+      renderPreviewForm();
+    });
+  }
+  // ── 자동 복귀 버튼 ↺ ──
+  const resetBtn=previewArea.querySelector('.prev-total-reset');
+  if(resetBtn){
+    resetBtn.addEventListener('click',()=>{
+      p._totalManual=false;
+      _recalcTotalIfAuto();
+      renderPreviewForm();
+    });
   }
 
   // ── 품목 행 ──
@@ -1304,20 +1398,59 @@ function bindPreviewFormEvents(){
     const idx=parseInt(row.dataset.idx,10);
     const it=p.items[idx];if(!it)return;
 
+    // 품목 input들 (name, quantity, unitPrice) — amount는 div라 제외됨
     row.querySelectorAll('input').forEach(inp=>{
       const f=inp.dataset.f;
       let composing=false;
+
+      // 값 추출: name은 그대로, quantity는 정수, unitPrice는 천단위 쉼표 텍스트라 _parseN
+      const readVal=()=>{
+        if(f==='name')return inp.value;
+        if(f==='unitPrice')return _parseN(inp.value);
+        return parseFloat(inp.value)||0;
+      };
+      const assign=()=>_assignItemField(it,f,readVal());
+
+      // 입력 후처리 — 수량/단가면 amount 자동 갱신, 총액 자동 모드면 총액도 갱신
+      const afterChange=()=>{
+        if(f==='quantity'||f==='unitPrice'){
+          _recalcAmount(it);
+          const amtEl=row.querySelector('.prev-item-amt');
+          if(amtEl){
+            amtEl.textContent=_fmtN(it.amount||0);
+            amtEl.classList.toggle('neg',(it.amount||0)<0);
+          }
+        }
+        _recalcTotalIfAuto();
+        if(!p._totalManual){
+          const tInp=previewArea.querySelector('.prev-total');
+          if(tInp&&document.activeElement!==tInp)tInp.value=_fmtN(p.total);
+        }
+        _refreshPreviewSummary();
+      };
+
       inp.addEventListener('compositionstart',()=>{composing=true;});
-      inp.addEventListener('compositionend',()=>{composing=false;_assignItemField(it,f,inp.value);_refreshPreviewSummary();});
+      inp.addEventListener('compositionend',()=>{composing=false;assign();afterChange();});
+
       if(f==='name'){
-        inp.addEventListener('input',()=>{if(!composing)_assignItemField(it,f,inp.value);});
-        inp.addEventListener('blur',()=>{_assignItemField(it,f,inp.value);renderPreviewForm();});
-      }else{
-        inp.addEventListener('input',()=>{_assignItemField(it,f,inp.value);_refreshPreviewSummary();
-          // 음수 색상 즉시 반영
-          if(f==='amount'){inp.classList.toggle('neg',(it.amount||0)<0);}
+        inp.addEventListener('input',()=>{if(!composing)assign();});
+        inp.addEventListener('blur',()=>{assign();renderPreviewForm();});
+      }else if(f==='quantity'){
+        inp.addEventListener('input',()=>{assign();afterChange();});
+        inp.addEventListener('focus',()=>inp.select());
+        inp.addEventListener('blur',()=>{assign();renderPreviewForm();});
+      }else if(f==='unitPrice'){
+        // 포커스 시 쉼표 제거, blur 시 쉼표 추가
+        inp.addEventListener('focus',()=>{
+          inp.value=String(it.unitPrice||0);
+          inp.select();
         });
-        inp.addEventListener('blur',()=>{_assignItemField(it,f,inp.value);renderPreviewForm();});
+        inp.addEventListener('input',()=>{assign();afterChange();});
+        inp.addEventListener('blur',()=>{
+          assign();
+          inp.value=_fmtN(it.unitPrice||0);
+          renderPreviewForm();
+        });
       }
     });
 
@@ -1325,6 +1458,7 @@ function bindPreviewFormEvents(){
     if(delBtn){
       delBtn.addEventListener('click',()=>{
         p.items.splice(idx,1);
+        _recalcTotalIfAuto();
         renderPreviewForm();
       });
     }
@@ -1353,6 +1487,40 @@ function _assignItemField(it,f,val){
     const n=parseFloat(val);
     it[f]=isNaN(n)?0:Math.round(n);
   }
+}
+
+// 천단위 쉼표 포매팅 + 파싱 (text input용)
+function _fmtN(n){
+  if(n==null||isNaN(n))return '0';
+  return Math.round(Number(n)).toLocaleString('ko-KR');
+}
+function _parseN(s){
+  const cleaned=String(s==null?'':s).replace(/[^0-9-]/g,'');
+  if(!cleaned||cleaned==='-')return 0;
+  const n=parseInt(cleaned,10);
+  return isNaN(n)?0:n;
+}
+
+// 수량과 단가가 둘 다 nonzero일 때만 금액 = 수량×단가 자동 갱신.
+// 둘 중 하나라도 0이면 사용자가 amount만 직접 입력한 의도로 보고 그대로 둠.
+function _recalcAmount(it){
+  if(!it)return;
+  if((it.quantity||0)!==0 && (it.unitPrice||0)!==0){
+    it.amount=Math.round(it.quantity*it.unitPrice);
+  }
+}
+
+// 사용자가 총액을 손대지 않았으면(자동 모드) 총액 = Σ(amount).
+function _recalcTotalIfAuto(){
+  const p=_currentParsed;
+  if(!p||p._totalManual)return;
+  p.total=(p.items||[]).reduce((s,i)=>s+(i.amount||0),0);
+}
+
+function _autoTotal(){
+  const p=_currentParsed;
+  if(!p)return 0;
+  return (p.items||[]).reduce((s,i)=>s+(i.amount||0),0);
 }
 
 // ── PHOTO ──
