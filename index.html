@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.30 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.32 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f3f4f6;
@@ -3855,6 +3855,102 @@
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
     }
 
+    /* v2.31: 모바일에서는 데스크탑 2열 그리드를 완전히 끄고 앱을 화면 중앙에 둡니다. */
+    @media (max-width: 900px) {
+      body {
+        overflow-x: hidden;
+      }
+
+      .app-shell {
+        width: 100%;
+        max-width: min(480px, 100%);
+        min-height: 100dvh;
+        margin: 0 auto;
+        padding: 14px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        justify-content: center;
+        justify-items: stretch;
+      }
+
+      .phone {
+        width: 100%;
+        max-width: 480px;
+        min-width: 0;
+        justify-self: center;
+      }
+
+      .side {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .app-shell {
+        max-width: 100%;
+        padding: 0;
+      }
+
+      .phone {
+        max-width: none;
+      }
+    }
+
+    /* v2.32: 데스크탑 오른쪽 상세 패널을 넓혀 품목표를 한눈에 읽게 합니다. */
+    @media (min-width: 901px) {
+      .app-shell {
+        width: min(calc(100% - 64px), 1360px);
+        max-width: 1360px;
+        grid-template-columns: 380px minmax(0, 1fr);
+      }
+
+      #sideReceiptPanel.desktop-receipt-panel {
+        grid-template-columns: minmax(280px, .72fr) minmax(520px, 1.45fr);
+        gap: 14px 20px;
+      }
+
+      #sideReceiptPanel .desktop-receipt-table {
+        height: min(520px, calc(100vh - 300px));
+      }
+
+      #sideReceiptPanel .desktop-receipt-table .data-table {
+        table-layout: fixed;
+      }
+
+      #sideReceiptPanel .desktop-receipt-table .data-table th:nth-child(1),
+      #sideReceiptPanel .desktop-receipt-table .data-table td:nth-child(1) {
+        width: 48%;
+      }
+
+      #sideReceiptPanel .desktop-receipt-table .data-table th:nth-child(2),
+      #sideReceiptPanel .desktop-receipt-table .data-table td:nth-child(2) {
+        width: 12%;
+      }
+
+      #sideReceiptPanel .desktop-receipt-table .data-table th:nth-child(3),
+      #sideReceiptPanel .desktop-receipt-table .data-table td:nth-child(3),
+      #sideReceiptPanel .desktop-receipt-table .data-table th:nth-child(4),
+      #sideReceiptPanel .desktop-receipt-table .data-table td:nth-child(4) {
+        width: 20%;
+      }
+
+      #sideReceiptPanel .desktop-receipt-table .data-table th.right,
+      #sideReceiptPanel .desktop-receipt-table .data-table td.right {
+        white-space: nowrap;
+        word-break: keep-all;
+      }
+
+      #sideReceiptPanel .desktop-receipt-table .data-table td {
+        line-height: 1.45;
+      }
+    }
+
+    @media (min-width: 901px) and (max-width: 1240px) {
+      #sideReceiptPanel.desktop-receipt-panel {
+        grid-template-columns: minmax(240px, .8fr) minmax(420px, 1.35fr);
+      }
+    }
+
     @media (min-width: 901px) {
       #sideReceiptPanel.desktop-receipt-panel {
         gap: 16px;
@@ -3940,7 +4036,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.30 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.32 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -4094,7 +4190,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.30 PWA</div>
+          <div class="eyebrow">Prototype v2.32 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -4510,7 +4606,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.30 PWA";
+    const APP_VERSION = "v2.32 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
