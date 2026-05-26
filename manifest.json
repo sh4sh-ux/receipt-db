@@ -1,6 +1,6 @@
 {
-  "name": "Receipt DB",
-  "short_name": "Receipt DB",
+  "name": "영수증DB",
+  "short_name": "영수증DB",
   "description": "영수증 이미지, 품목, 금액, 결제자를 저장하고 검색하는 개인 영수증 데이터베이스",
   "start_url": "./index.html",
   "scope": "./",
@@ -9,19 +9,13 @@
   "theme_color": "#111113",
   "icons": [
     {
-      "src": "icons/apple-touch-icon-v2-14.png",
-      "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/app-icon-192-v2-14.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/app-icon-512-v2-14.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
