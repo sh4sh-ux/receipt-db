@@ -12,7 +12,21 @@
 
 ## 현재 파일
 - `index.html` — 앱 전체 (HTML/CSS/JS 통합)
+- `README.md` — GitHub repo 첫 페이지용 한글 설명
 - `CLAUDE.md` — 이 파일
+
+## 버전 관리
+- 단일 상수 `APP_VERSION` (JS 상단)이 진실의 원천. DOM 두 군데(좌측 상단 칩, 설정 탭 앱 정보 카드)에 init 시 주입
+- 형식: `v메이저.패치2자리` (예: `v1.02`, `v1.10`, `v1.11` ... `v1.99` 후 `v2.00`)
+- 변경 시 매번 `APP_VERSION` + 상단 changelog 코멘트 + CLAUDE.md changelog 한 줄씩 갱신
+- JSON 백업 파일에도 `appVersion` 필드로 포함 — 어떤 버전에서 만든 백업인지 추적
+- IndexedDB 스키마 버전(`DB_VER=2`)과 JSON 백업 포맷 버전(`version:2`)은 앱 버전과 **독립적**.
+  세 가지 모두 다른 의미라 헷갈리지 말 것.
+
+### Changelog
+- `v1.00` — Phase 1 MVP: 영수증 추가/목록/상세/검색/JSON 백업
+- `v1.01` — Phase 1.5 가계부 화면: 월 네비, 요약 카드 3장, 카테고리 막대, 일별 sparkline, 전월 대비
+- `v1.02` — 시간 필드 UI 제거, 카테고리 자동 분류(기본 9개 + 사용자 학습 사전), 좌측 상단 버전 칩
 
 ## 데이터 모델
 ```js
