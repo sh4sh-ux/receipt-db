@@ -48,7 +48,10 @@ svg{display:block;flex-shrink:0;}
 /* ── LEFT SIDEBAR ── */
 .side{border-right:1px solid var(--sep);background:var(--left-bg);display:flex;flex-direction:column;min-height:700px;}
 .side-top{padding:26px var(--pad-x) 18px;}
-.app-eye{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;}
+.app-eye-row{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
+.app-eye{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.5px;text-transform:uppercase;}
+.app-version{font-size:10px;font-weight:600;color:var(--label3);background:var(--fill);border:1px solid var(--sep);border-radius:4px;padding:1px 5px;letter-spacing:.2px;font-variant-numeric:tabular-nums;line-height:1.4;cursor:default;}
+.app-version:hover{background:var(--fill2);color:var(--label2);}
 .app-title{font-size:22px;font-weight:700;letter-spacing:-.4px;line-height:1.15;margin-bottom:14px;}
 .tab-row{display:flex;gap:2px;background:var(--fill);border-radius:10px;padding:3px;}
 .tab{flex:1;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--label2);padding:7px 0;border-radius:8px;cursor:pointer;transition:all .15s;}
@@ -318,7 +321,10 @@ svg{display:block;flex-shrink:0;}
     <!-- ── LEFT SIDEBAR ── -->
     <aside class="side">
       <div class="side-top">
-        <div class="app-eye">Receipt DB</div>
+        <div class="app-eye-row">
+          <span class="app-eye">Receipt DB</span>
+          <span class="app-version" id="appVersion" title="앱 버전">v1.02</span>
+        </div>
         <div class="app-title">영수증 보관함</div>
         <div class="tab-row">
           <button class="tab on" data-tab="list">내역</button>
@@ -539,6 +545,16 @@ svg{display:block;flex-shrink:0;}
             </div>
           </div>
 
+          <div class="setting-card">
+            <h3>앱 정보</h3>
+            <p>앱이 업데이트될 때마다 좌측 상단 버전 번호가 올라갑니다.</p>
+            <div class="setting-btn-row">
+              <span style="font-size:12px;color:var(--label2);align-self:center;">
+                Receipt DB · <b id="appVersionStat">v1.02</b> · IndexedDB v2 · 백업 포맷 v2
+              </span>
+            </div>
+          </div>
+
         </div>
       </section>
     </main>
@@ -553,6 +569,15 @@ svg{display:block;flex-shrink:0;}
 
 <script>
 'use strict';
+
+// ════════════════════════════════════════════════════════════════
+// APP VERSION
+// ════════════════════════════════════════════════════════════════
+// 변경 시마다 패치 번호 +1 (v1.10 다음은 v1.11). 두 자리 형식 유지.
+// v1.00 — MVP (영수증 추가/목록/상세/검색/JSON 백업)
+// v1.01 — 가계부 화면 (월 네비, 요약 카드, 카테고리 막대, sparkline)
+// v1.02 — 시간 필드 UI 제거 + 카테고리 자동 분류 9개 + 사용자 학습 사전 + 버전 표시
+const APP_VERSION='v1.02';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1699,11 +1724,12 @@ document.getElementById('exportBtn').addEventListener('click',async()=>{
     }
     const payload={
       app:'receipt-db',
-      version:2,
+      appVersion:APP_VERSION,
+      version:2,            // 백업 포맷 버전 (앱 버전과 다름)
       exportedAt:nowISO(),
       receipts:recs,
       images:imgsOut,
-      storeCatMap,  // 카테고리 학습 사전
+      storeCatMap,          // 카테고리 학습 사전
     };
     const json=JSON.stringify(payload,null,2);
     const blob=new Blob([json],{type:'application/json'});
@@ -1775,6 +1801,9 @@ document.getElementById('resetBtn').addEventListener('click',async()=>{
 // INIT
 // ════════════════════════════════════════════════════════════════
 (async function init(){
+  // 버전 표시 — DOM 두 곳에 모두 주입 (HTML 정적 텍스트가 stale해도 JS가 진실의 원천)
+  const av=document.getElementById('appVersion');if(av)av.textContent=APP_VERSION;
+  const avs=document.getElementById('appVersionStat');if(avs)avs.textContent=APP_VERSION;
   try{
     await openDB();
     await loadStoreCatMap();
