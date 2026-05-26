@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.33 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.34 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f3f4f6;
@@ -461,7 +461,7 @@
 
     .receipt-card-action-strip {
       display: none;
-      grid-template-columns: minmax(0, 1fr) auto auto;
+      grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
       gap: 8px;
       min-height: 38px;
@@ -2103,7 +2103,7 @@
       border-radius: 14px;
       background: #fbfcfe;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto auto;
+      grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
       gap: 10px;
     }
@@ -2117,6 +2117,14 @@
       min-width: 0;
       display: grid;
       gap: 2px;
+    }
+
+    .total-confirm-headline {
+      min-width: 0;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
     }
 
     .total-confirm-title {
@@ -2133,7 +2141,7 @@
     }
 
     .total-confirm-amount {
-      min-width: 104px;
+      min-width: max-content;
       text-align: right;
       font-size: 17px;
       font-weight: 900;
@@ -4010,6 +4018,45 @@
       }
     }
 
+    /* v2.34: 모바일 합계 확인 카드에서 제목과 금액을 같은 줄로 읽히게 합니다. */
+    @media (max-width: 720px) {
+      .total-confirm-inline {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+      }
+
+      .total-confirm-copy {
+        grid-column: 1;
+        grid-row: 1;
+        min-width: 0;
+      }
+
+      .total-confirm-headline {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .total-confirm-headline .total-confirm-amount {
+        grid-column: auto;
+        grid-row: auto;
+        justify-self: auto;
+        align-self: auto;
+        min-width: max-content;
+        padding-right: 0;
+        text-align: right;
+      }
+
+      .total-confirm-check {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
+        justify-self: end;
+      }
+    }
+
     @media (min-width: 901px) {
       #sideReceiptPanel.desktop-receipt-panel {
         gap: 16px;
@@ -4095,7 +4142,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.33 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.34 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -4249,7 +4296,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.33 PWA</div>
+          <div class="eyebrow">Prototype v2.34 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -4474,10 +4521,12 @@
 
       <div class="total-confirm-inline" id="totalConfirmCard">
         <div class="total-confirm-copy">
-          <b class="total-confirm-title">내역 합계 확인</b>
+          <div class="total-confirm-headline">
+            <b class="total-confirm-title">내역 합계 확인</b>
+            <div class="total-confirm-amount" id="totalConfirmAmount">0원</div>
+          </div>
           <span class="total-confirm-desc" id="totalConfirmDesc">품목 계 금액의 합계를 확인하면 저장할 수 있습니다.</span>
         </div>
-        <div class="total-confirm-amount" id="totalConfirmAmount">0원</div>
         <label class="total-confirm-check" for="totalConfirmCheck" aria-label="내역 합계 확인">
           <input id="totalConfirmCheck" type="checkbox" />
         </label>
@@ -4665,7 +4714,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.33 PWA";
+    const APP_VERSION = "v2.34 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
