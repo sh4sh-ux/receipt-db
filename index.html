@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.32 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.33 PWA — 영수증 가격 검색</title>
   <style>
     :root {
       --bg: #f3f4f6;
@@ -3951,6 +3951,65 @@
       }
     }
 
+    /* v2.33: 모바일 수정 모달의 합계 금액과 하단 액션 버튼 정렬을 통일합니다. */
+    @media (max-width: 720px) {
+      .total-confirm-amount {
+        grid-column: 1;
+        grid-row: 2;
+        justify-self: stretch;
+        text-align: right;
+        padding-right: 2px;
+      }
+
+      .total-confirm-check {
+        grid-column: 2;
+        grid-row: 2;
+        justify-self: end;
+      }
+
+      .action-row.bottom-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 8px;
+        width: 100%;
+        align-items: stretch;
+      }
+
+      .bottom-actions .push-right {
+        display: none;
+      }
+
+      .bottom-actions-right {
+        display: contents;
+      }
+
+      #addRow,
+      #saveReceipt {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+
+      #deleteReceipt {
+        grid-column: 1;
+        width: 100%;
+      }
+
+      #clearForm {
+        grid-column: 2;
+        width: 100%;
+      }
+
+      #deleteReceipt.hidden + #clearForm {
+        grid-column: 1 / -1;
+      }
+
+      .bottom-actions .primary,
+      .bottom-actions .secondary,
+      .bottom-actions .danger {
+        min-width: 0;
+      }
+    }
+
     @media (min-width: 901px) {
       #sideReceiptPanel.desktop-receipt-panel {
         gap: 16px;
@@ -4036,7 +4095,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.32 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.33 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -4190,7 +4249,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.32 PWA</div>
+          <div class="eyebrow">Prototype v2.33 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -4606,7 +4665,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.32 PWA";
+    const APP_VERSION = "v2.33 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
