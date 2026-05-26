@@ -1,7 +1,0 @@
-{
-  "functions": {
-    "api/analyze-receipt.js": {
-      "maxDuration": 60
-    }
-  }
-}
