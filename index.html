@@ -1,42 +1,34 @@
+
 <!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>영수증DB v2.29 PWA — 영수증 가격 검색</title>
+  <title>영수증DB v2.30 PWA — 영수증 가격 검색</title>
   <style>
     :root {
-      --bg: #f5f5f7;
-      --surface: rgba(255,255,255,.84);
+      --bg: #f3f4f6;
+      --surface: #fff;
       --card: #fff;
       --text: #111113;
-      --muted: #73737a;
-      --line: #e8e8ed;
-      --line-2: #d9d9df;
+      --muted: #6c6f78;
+      --line: #e2e4ea;
+      --line-2: #d3d7e0;
       --blue: #007aff;
       --red: #ff3b30;
       --green: #34c759;
-      --shadow: 0 18px 60px rgba(0,0,0,.08);
-      --radius: 24px;
+      --shadow: 0 14px 42px rgba(17,24,39,.07);
+      --radius: 16px;
     }
 
     * { box-sizing: border-box; }
-    html {
-      width: 100%;
-      max-width: 100%;
-      overflow-x: hidden;
-    }
     body {
       margin: 0;
-      width: 100%;
-      max-width: 100%;
       min-height: 100vh;
-      overflow-x: hidden;
-      background: radial-gradient(circle at top left, #fff 0%, var(--bg) 45%, #ededf2 100%);
+      background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
-      letter-spacing: -0.025em;
-      -webkit-text-size-adjust: 100%;
+      letter-spacing: 0;
     }
 
     button, input {
@@ -44,28 +36,24 @@
     }
 
     .app-shell {
-      width: 100%;
-      max-width: 1120px;
+      max-width: 1180px;
       min-height: 100vh;
       margin: 0 auto;
-      padding: 28px;
+      padding: 20px;
       display: grid;
-      grid-template-columns: 410px 1fr;
-      gap: 24px;
+      grid-template-columns: 390px minmax(0, 1fr);
+      gap: 18px;
     }
 
     .phone {
-      width: 100%;
-      min-width: 0;
-      min-height: calc(100vh - 56px);
+      min-height: calc(100vh - 40px);
       max-height: 920px;
-      background: rgba(255,255,255,.74);
-      border: 1px solid rgba(255,255,255,.8);
-      border-radius: 42px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 28px;
       box-shadow: var(--shadow);
       overflow: hidden;
       position: relative;
-      backdrop-filter: blur(22px);
       display: flex;
       flex-direction: column;
     }
@@ -76,12 +64,9 @@
     }
 
     .screen {
-      width: 100%;
-      min-width: 0;
-      max-width: 100%;
       flex: 1;
       overflow: auto;
-      padding: 22px 20px 18px;
+      padding: 20px 18px 18px;
     }
 
     .screen::-webkit-scrollbar, .side::-webkit-scrollbar {
@@ -91,21 +76,21 @@
 
     h1 {
       margin: 0;
-      font-size: 34px;
+      font-size: 30px;
       line-height: 1.05;
       font-weight: 780;
     }
 
     h2 {
       margin: 0;
-      font-size: 22px;
+      font-size: 20px;
       line-height: 1.22;
       font-weight: 760;
     }
 
     h3 {
       margin: 0;
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 740;
     }
 
@@ -125,7 +110,7 @@
 
     .hero-title {
       align-items: flex-end;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .home-title-button {
@@ -143,7 +128,7 @@
 
     .home-title-text {
       display: block;
-      font-size: 34px;
+      font-size: 30px;
       line-height: 1.05;
       font-weight: 780;
     }
@@ -155,8 +140,8 @@
     }
 
     .plus-btn {
-      width: 42px;
-      height: 42px;
+      width: 40px;
+      height: 40px;
       border: 0;
       border-radius: 50%;
       background: #111113;
@@ -181,7 +166,7 @@
 
     .search-wrap {
       position: sticky;
-      top: -58px;
+      top: -52px;
       z-index: 4;
       padding-top: 1px;
       margin-bottom: 18px;
@@ -191,13 +176,12 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      height: 44px;
+      height: 46px;
       padding: 0 16px;
-      background: rgba(255,255,255,.94);
+      background: #fff;
       border: 1px solid var(--line);
-      border-radius: 18px;
-      box-shadow: 0 8px 26px rgba(0,0,0,.05);
-      backdrop-filter: blur(18px);
+      border-radius: 14px;
+      box-shadow: 0 1px 2px rgba(17,24,39,.04);
     }
 
     .search svg { color: #8e8e93; flex: 0 0 auto; }
@@ -235,7 +219,7 @@
     }
 
     .section {
-      margin: 22px 0 0;
+      margin: 18px 0 0;
     }
 
     .section-title {
@@ -245,7 +229,7 @@
     }
 
     #receiptList {
-      margin-top: 18px;
+      margin-top: 12px;
     }
 
 
@@ -255,14 +239,14 @@
 
     .card {
       background: var(--card);
-      border: 1px solid rgba(0,0,0,.045);
+      border: 1px solid var(--line);
       border-radius: var(--radius);
-      box-shadow: 0 10px 36px rgba(0,0,0,.052);
+      box-shadow: 0 1px 2px rgba(17,24,39,.035);
       overflow: hidden;
     }
 
     .simple-card {
-      padding: 16px;
+      padding: 14px;
       cursor: pointer;
       transition: transform .16s ease, box-shadow .16s ease;
     }
@@ -270,26 +254,28 @@
     .receipt-card {
       position: relative;
       user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
       padding: 0;
       touch-action: pan-y;
     }
 
     .receipt-card.swipe-open {
-      box-shadow: 0 16px 46px rgba(255,59,48,.10);
+      box-shadow: 0 12px 30px rgba(255,59,48,.08);
       border-color: rgba(255,59,48,.18);
     }
 
     .receipt-card-surface {
       position: relative;
       z-index: 2;
-      padding: 16px;
+      padding: 14px;
       background: var(--card);
-      transition: transform .18s ease;
+      transition: transform .18s ease, padding-right .18s ease, background .18s ease, box-shadow .18s ease;
       will-change: transform;
     }
 
     .receipt-card.swipe-open .receipt-card-surface {
-      transform: translateX(-96px);
+      transform: translateX(-108px);
     }
 
     .receipt-card-swipe-action {
@@ -298,8 +284,10 @@
       top: 0;
       right: 0;
       bottom: 0;
-      width: 96px;
-      background: var(--red);
+      width: 108px;
+      padding: 8px;
+      background: #fff1f0;
+      border-left: 1px solid rgba(255,59,48,.16);
       display: flex;
       align-items: stretch;
       justify-content: stretch;
@@ -308,55 +296,128 @@
     .receipt-delete-btn {
       width: 100%;
       border: 0;
+      border-radius: 12px;
       background: var(--red);
       color: #fff;
+      font-size: 13px;
       font-weight: 860;
       cursor: pointer;
     }
 
     .receipt-card-delete-x {
       position: absolute;
-      top: 50%;
-      right: 12px;
+      top: 10px;
+      right: 10px;
       z-index: 3;
-      width: 30px;
-      height: 30px;
-      min-height: 30px;
-      border: 1px solid rgba(255,59,48,.16);
+      width: auto;
+      height: 28px;
+      min-height: 28px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
       border-radius: 999px;
-      background: rgba(255,241,240,.94);
-      color: var(--red);
-      font-size: 19px;
+      background: rgba(255,255,255,.96);
+      color: #676b75;
+      font-size: 12px;
       line-height: 1;
-      font-weight: 860;
+      font-weight: 820;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 8px 20px rgba(255,59,48,.10);
+      box-shadow: 0 8px 18px rgba(17,24,39,.08);
       opacity: 0;
       pointer-events: none;
-      transform: translateY(-50%) scale(.96);
-      transition: opacity .14s ease, background .14s ease, transform .14s ease, box-shadow .14s ease;
+      transform: translateY(-2px);
+      transition: opacity .14s ease, background .14s ease, transform .14s ease, box-shadow .14s ease, border-color .14s ease, color .14s ease;
     }
 
     .receipt-card:hover .receipt-card-delete-x,
-    .receipt-card:focus-within .receipt-card-delete-x {
+    .receipt-card:focus-within .receipt-card-delete-x,
+    .receipt-card.delete-confirm .receipt-card-delete-x {
       opacity: 1;
       pointer-events: auto;
-      transform: translateY(-50%) scale(1);
+      transform: translateY(0);
     }
 
     .receipt-card-delete-x:hover {
-      background: #ffe4e2;
-      box-shadow: 0 10px 24px rgba(255,59,48,.16);
-      transform: translateY(-50%) scale(1.04);
+      border-color: rgba(255,59,48,.22);
+      background: #fff7f6;
+      color: var(--red);
+      box-shadow: 0 10px 20px rgba(255,59,48,.10);
+      transform: translateY(0);
+    }
+
+    .receipt-card.delete-confirm .receipt-card-surface {
+      background: #fffafa;
+      box-shadow: inset 0 0 0 1px rgba(255,59,48,.22);
+    }
+
+    .receipt-card.delete-confirm .receipt-card-delete-x {
+      border-color: rgba(255,59,48,.30);
+      background: #fff1f0;
+      color: var(--red);
+    }
+
+    .receipt-card.delete-confirm .receipt-delete-btn {
+      background: #111113;
+    }
+
+    @media (hover: none), (pointer: coarse), (max-width: 900px) {
+      .receipt-card {
+        overflow: hidden;
+      }
+
+      .receipt-card.swipe-open {
+        border-color: rgba(255,59,48,.20);
+        box-shadow: 0 8px 18px rgba(255,59,48,.06);
+      }
+
+      .receipt-card.swipe-open .receipt-card-surface {
+        transform: none !important;
+        padding-right: 88px;
+        background: #fffafa;
+        box-shadow: inset 0 0 0 1px rgba(255,59,48,.18);
+      }
+
+      .receipt-card-swipe-action {
+        z-index: 4;
+        top: 50%;
+        right: 12px;
+        bottom: auto;
+        width: auto;
+        min-width: 62px;
+        height: 38px;
+        padding: 0;
+        border-left: 0;
+        background: transparent;
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(8px, -50%);
+        transition: opacity .16s ease, transform .16s ease;
+      }
+
+      .receipt-card.swipe-open .receipt-card-swipe-action {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(0, -50%);
+      }
+
+      .receipt-delete-btn {
+        min-width: 62px;
+        min-height: 38px;
+        border-radius: 12px;
+        box-shadow: 0 10px 20px rgba(255,59,48,.18);
+      }
+
+      .receipt-card-delete-x {
+        display: none;
+      }
     }
 
     .receipt-card-layout {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 14px;
+      gap: 12px;
       align-items: center;
     }
 
@@ -365,7 +426,7 @@
     }
 
     .receipt-card-amount {
-      min-width: 106px;
+      min-width: 96px;
       display: grid;
       justify-items: end;
       align-items: center;
@@ -378,13 +439,10 @@
     }
 
     .receipt-card.selected .receipt-card-surface {
-      box-shadow: inset 0 0 0 2px rgba(0,122,255,.22);
+      box-shadow: inset 4px 0 0 var(--blue), inset 0 0 0 1px rgba(0,122,255,.14);
     }
 
     @media (hover: none), (pointer: coarse) {
-      .receipt-card-delete-x {
-        display: none;
-      }
       .receipt-card-amount,
       .receipt-card:hover .receipt-card-amount,
       .receipt-card:focus-within .receipt-card-amount {
@@ -394,11 +452,67 @@
 
     .simple-card:hover {
       transform: translateY(-1px);
-      box-shadow: 0 14px 38px rgba(0,0,0,.07);
+      box-shadow: 0 8px 22px rgba(17,24,39,.06);
     }
 
     .receipt-card.swipe-open:hover {
       transform: none;
+    }
+
+    .receipt-card-action-strip {
+      display: none;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      margin: 10px -14px -12px;
+      padding: 0 12px;
+      border-top: 1px solid var(--line);
+      background: #fbfcfe;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 740;
+    }
+
+    .receipt-card-action-status {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .receipt-card-action-strip button {
+      min-height: 28px;
+      border: 0;
+      border-radius: 999px;
+      padding: 0 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 820;
+    }
+
+    .receipt-card-strip-edit {
+      background: #eef0f5;
+      color: #3f434d;
+    }
+
+    .receipt-card-strip-delete {
+      background: #fff1f0;
+      color: var(--red);
+    }
+
+    .receipt-card.selected .receipt-card-action-strip {
+      display: grid;
+    }
+
+    .receipt-card.delete-confirm .receipt-card-action-status {
+      color: var(--red);
+      font-weight: 820;
+    }
+
+    .receipt-card.delete-confirm .receipt-card-strip-delete {
+      background: var(--red);
+      color: #fff;
     }
 
     .chips {
@@ -416,22 +530,22 @@
 
     .chip {
       border: 1px solid var(--line);
-      background: rgba(255,255,255,.82);
+      background: #fff;
       color: #222226;
       padding: 9px 12px;
-      border-radius: 99px;
+      border-radius: 12px;
       cursor: pointer;
       font-size: 14px;
       font-weight: 650;
     }
 
     .store {
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 760;
     }
 
     .price {
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 800;
       white-space: nowrap;
       font-variant-numeric: tabular-nums;
@@ -442,7 +556,7 @@
       align-items: center;
       height: 26px;
       padding: 0 9px;
-      border-radius: 99px;
+      border-radius: 999px;
       background: #f1f1f5;
       color: #5b5b62;
       font-size: 12px;
@@ -465,7 +579,8 @@
 
     .results {
       display: grid;
-      gap: 10px;
+      gap: 14px;
+      margin-top: 12px;
     }
 
     .result-card {
@@ -527,7 +642,7 @@
     .stat-cell {
       min-width: 0;
       border: 1px solid var(--line);
-      border-radius: 16px;
+      border-radius: 14px;
       background: #fbfbfd;
       padding: 11px;
     }
@@ -653,7 +768,7 @@
     .receipt-image-wrap {
       background: #f2f2f6;
       border: 1px solid var(--line);
-      border-radius: 22px;
+      border-radius: 16px;
       overflow: hidden;
       margin-top: 14px;
       max-height: 360px;
@@ -686,8 +801,9 @@
     .info {
       background: #fff;
       border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 14px;
+      border-radius: 14px;
+      padding: 12px;
+      background: #fcfcfd;
     }
 
     .info .label {
@@ -718,13 +834,13 @@
       text-align: left;
       color: var(--muted);
       font-size: 11px;
-      padding: 10px 8px;
+      padding: 9px 8px;
       border-bottom: 1px solid var(--line-2);
       white-space: nowrap;
     }
 
     .data-table td {
-      padding: 11px 8px;
+      padding: 10px 8px;
       border-bottom: 1px solid var(--line);
       vertical-align: middle;
     }
@@ -743,18 +859,17 @@
       z-index: 8;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
+      gap: 8px;
       padding: calc(12px + env(safe-area-inset-top)) 14px 10px;
-      background: rgba(255,255,255,.88);
-      border-bottom: 1px solid rgba(0,0,0,.06);
-      backdrop-filter: blur(20px);
+      background: #fff;
+      border-bottom: 1px solid var(--line);
     }
 
     .tab {
-      border: 0;
+      border: 1px solid transparent;
       background: transparent;
       color: var(--muted);
-      border-radius: 14px;
+      border-radius: 12px;
       padding: 10px 6px;
       cursor: pointer;
       font-size: 12px;
@@ -763,7 +878,8 @@
 
     .tab.active {
       color: var(--text);
-      background: #f1f1f5;
+      background: #f1f2f6;
+      border-color: #eceef4;
     }
 
     .app-history-nav {
@@ -773,9 +889,9 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 18px 0;
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.72) 78%, rgba(255,255,255,0));
-      backdrop-filter: blur(18px);
+      padding: 8px 18px 6px;
+      background: #fff;
+      border-bottom: 1px solid rgba(226,228,234,.72);
     }
 
     .history-btn {
@@ -783,7 +899,7 @@
       height: 34px;
       border: 0;
       border-radius: 999px;
-      background: #f1f1f5;
+      background: #f3f4f8;
       color: var(--text);
       cursor: pointer;
       font-size: 22px;
@@ -800,20 +916,19 @@
     }
 
     .side {
-      min-height: calc(100vh - 56px);
+      min-height: calc(100vh - 40px);
       max-height: 920px;
       overflow: auto;
-      padding: 8px 4px;
+      padding: 0;
     }
 
     .panel {
-      background: rgba(255,255,255,.74);
-      border: 1px solid rgba(255,255,255,.72);
-      border-radius: 34px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 20px;
       box-shadow: var(--shadow);
-      padding: 26px;
-      backdrop-filter: blur(20px);
-      margin-bottom: 18px;
+      padding: 22px;
+      margin-bottom: 14px;
     }
 
     .panel p {
@@ -835,15 +950,15 @@
       gap: 12px;
       align-items: start;
       padding: 14px;
-      background: rgba(255,255,255,.74);
+      background: #fbfcfe;
       border: 1px solid var(--line);
-      border-radius: 20px;
+      border-radius: 14px;
     }
 
     .icon {
       width: 38px;
       height: 38px;
-      border-radius: 13px;
+      border-radius: 12px;
       background: #f1f1f5;
       display: grid;
       place-items: center;
@@ -939,6 +1054,35 @@
       font-size: 13px;
     }
 
+    .desktop-receipt-items-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .desktop-receipt-inline-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .desktop-receipt-inline-actions .secondary,
+    .desktop-receipt-inline-actions .danger {
+      min-height: 34px;
+      border-radius: 11px;
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 820;
+    }
+
+    .desktop-receipt-inline-actions .danger.confirming {
+      background: var(--red);
+      color: #fff;
+    }
+
     .desktop-receipt-close {
       width: 38px;
       min-width: 38px;
@@ -950,12 +1094,12 @@
 
     .desktop-receipt-image {
       min-height: 210px;
-      max-height: 360px;
+      max-height: 330px;
       margin-top: 0;
     }
 
     .desktop-receipt-image .receipt-image {
-      max-height: 360px;
+      max-height: 330px;
     }
 
     .desktop-receipt-stats {
@@ -1002,7 +1146,7 @@
       position: fixed;
       inset: 0;
       z-index: 20;
-      background: rgba(0,0,0,.28);
+      background: rgba(17,24,39,.28);
       display: none;
       place-items: center;
       padding: 22px;
@@ -1058,11 +1202,11 @@
       width: min(760px, 100%);
       max-height: min(840px, 92vh);
       overflow: auto;
-      background: rgba(255,255,255,.96);
-      border: 1px solid rgba(255,255,255,.85);
-      border-radius: 30px;
-      box-shadow: 0 30px 100px rgba(0,0,0,.22);
-      padding: 22px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 24px 80px rgba(17,24,39,.20);
+      padding: 20px;
     }
 
     .modal-head {
@@ -1077,7 +1221,7 @@
       border: 0;
       width: 36px;
       height: 36px;
-      border-radius: 50%;
+      border-radius: 14px;
       background: #f1f1f5;
       cursor: pointer;
       font-size: 18px;
@@ -1163,13 +1307,17 @@
     #payerInput {
       font-size: 14px;
       font-weight: 680;
-      letter-spacing: -0.02em;
+      letter-spacing: 0;
     }
 
     #storeInput,
-    #dateInput,
-    #payerInput {
+    #dateInput {
       text-align: left;
+    }
+
+    #payerInput,
+    #payerInput::placeholder {
+      text-align: right;
     }
 
     #totalInput {
@@ -1182,7 +1330,7 @@
     .upload-box {
       border: 1.5px dashed #cfcfd6;
       background: #fbfbfd;
-      border-radius: 22px;
+      border-radius: 16px;
       padding: 18px;
       display: grid;
       gap: 12px;
@@ -1202,7 +1350,7 @@
       display: none;
       margin-top: 12px;
       padding: 12px 14px;
-      border-radius: 16px;
+      border-radius: 14px;
       background: #f5f5f7;
       color: var(--muted);
       font-size: 13px;
@@ -1233,7 +1381,7 @@
       min-height: 130px;
       margin-top: 10px;
       border: 1px solid var(--line);
-      border-radius: 16px;
+      border-radius: 14px;
       padding: 12px;
       background: #fff;
       resize: vertical;
@@ -1259,7 +1407,7 @@
       margin-top: 12px;
       padding: 14px;
       border: 1px solid var(--line);
-      border-radius: 18px;
+      border-radius: 14px;
       background: #fbfbfd;
       display: grid;
       gap: 8px;
@@ -1276,6 +1424,41 @@
       font-size: 12px;
       line-height: 1.5;
       font-weight: 650;
+    }
+
+    .ai-review-steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .ai-review-step {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .ai-review-step b,
+    .ai-review-step span {
+      display: block;
+    }
+
+    .ai-review-step b {
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 860;
+      margin-bottom: 5px;
+    }
+
+    .ai-review-step span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+      font-weight: 650;
+      word-break: keep-all;
     }
 
     .preview {
@@ -1357,7 +1540,7 @@
       margin-left: auto;
       display: block;
       font-variant-numeric: tabular-nums;
-      letter-spacing: -0.03em;
+      letter-spacing: 0;
       padding-left: 34px;
       padding-right: 10px;
     }
@@ -1587,7 +1770,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      letter-spacing: -0.08em;
+      letter-spacing: 0;
       touch-action: none;
       user-select: none;
       -webkit-user-select: none;
@@ -1751,15 +1934,22 @@
       margin: 0;
       min-height: auto;
       height: 100%;
-      width: auto;
+      width: 100%;
       min-width: 0;
       flex: 1 1 auto;
       max-width: 100%;
       font-size: 14px;
       font-weight: 680;
-      letter-spacing: -0.02em;
+      letter-spacing: 0;
       text-align: right;
       line-height: 44px;
+    }
+
+    .payer-chip.has-value input {
+      flex: 1 1 0;
+      width: 0;
+      min-width: 0;
+      text-align: right;
     }
 
     .payer-chip input:focus {
@@ -1767,11 +1957,11 @@
       outline: none;
     }
 
-    .payer-chip .payer-suffix {
+    .payer-chip .payer-prefix {
       font-size: 11px;
-      font-weight: 620;
-      color: #a4a6b0;
-      letter-spacing: -0.01em;
+      font-weight: 780;
+      color: #6c6f78;
+      letter-spacing: 0;
       white-space: nowrap;
       transform: translateY(1px);
       opacity: 0;
@@ -1779,7 +1969,7 @@
       pointer-events: none;
     }
 
-    .payer-chip.has-value .payer-suffix {
+    .payer-chip.has-value .payer-prefix {
       opacity: 1;
     }
 
@@ -1809,7 +1999,7 @@
     .primary, .secondary, .danger {
       min-height: 46px;
       border: 0;
-      border-radius: 16px;
+      border-radius: 14px;
       padding: 0 16px;
       cursor: pointer;
       font-weight: 780;
@@ -1821,7 +2011,7 @@
 
     .notice {
       padding: 12px 14px;
-      border-radius: 16px;
+      border-radius: 14px;
       background: #f5f5f7;
       color: var(--muted);
       line-height: 1.45;
@@ -1833,7 +2023,7 @@
       margin-top: 12px;
       padding: 14px 16px;
       border: 1px solid var(--line);
-      border-radius: 18px;
+      border-radius: 14px;
       background: #fbfbfd;
     }
 
@@ -1885,53 +2075,185 @@
     }
 
     .source-confirm-inline {
-      margin-top: 16px;
-      min-height: 74px;
-      padding: 16px 18px;
+      margin-top: 10px;
+      min-height: 52px;
+      padding: 10px 12px;
       width: 100%;
       border: 0;
-      border-radius: 26px;
-      background: #fff8ed;
+      border: 1px solid rgba(255,149,0,.25);
+      border-radius: 14px;
+      background: #fff9ef;
       display: grid;
       grid-template-columns: max-content 1fr auto auto;
       align-items: center;
-      gap: 18px;
+      gap: 10px;
     }
 
     .source-confirm-inline.ok {
+      border-color: rgba(52,199,89,.25);
       background: #f3fcf6;
+    }
+
+    .total-confirm-inline {
+      margin-top: 12px;
+      min-height: 52px;
+      padding: 10px 12px;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fbfcfe;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .total-confirm-inline.ok {
+      border-color: rgba(52,199,89,.25);
+      background: #f3fcf6;
+    }
+
+    .total-confirm-copy {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .total-confirm-title {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 860;
+    }
+
+    .total-confirm-desc {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .total-confirm-amount {
+      min-width: 104px;
+      text-align: right;
+      font-size: 17px;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .total-confirm-check {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .total-confirm-check input {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      min-height: 18px;
+      margin: 0;
+      border: 1.5px solid #c7c9d1;
+      border-radius: 5px;
+      background: #fff;
+      cursor: pointer;
+      display: grid;
+      place-content: center;
+      transition: background .12s ease, border-color .12s ease;
+    }
+
+    .total-confirm-check input::after {
+      content: "";
+      width: 5px;
+      height: 9px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg) translate(-1px, -1px) scale(0);
+      transform-origin: center;
+      transition: transform .12s ease;
+    }
+
+    .total-confirm-check input:checked {
+      border-color: #111113;
+      background: #111113;
+    }
+
+    .total-confirm-check input:checked::after {
+      transform: rotate(45deg) translate(-1px, -1px) scale(1);
+    }
+
+    .total-confirm-check input:disabled {
+      cursor: not-allowed;
+      opacity: .42;
     }
 
     .source-confirm-title {
       color: var(--text);
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 860;
       white-space: nowrap;
     }
 
     .source-confirm-desc {
       color: var(--muted);
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 700;
-      line-height: 1.4;
+      line-height: 1.35;
     }
 
     .source-confirm-box {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
       display: grid;
       place-items: center;
       cursor: pointer;
     }
 
     .source-confirm-box input {
-      width: 32px;
-      height: 32px;
-      min-height: 32px;
+      appearance: none;
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      min-height: 18px;
       margin: 0;
-      accent-color: #111113;
+      border: 1.5px solid #c7c9d1;
+      border-radius: 5px;
+      background: #fff;
       cursor: pointer;
+      display: grid;
+      place-content: center;
+      transition: background .12s ease, border-color .12s ease;
+    }
+
+    .source-confirm-box input::after {
+      content: "";
+      width: 5px;
+      height: 9px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg) translate(-1px, -1px) scale(0);
+      transform-origin: center;
+      transition: transform .12s ease;
+    }
+
+    .source-confirm-box input:checked {
+      border-color: #111113;
+      background: #111113;
+    }
+
+    .source-confirm-box input:checked::after {
+      transform: rotate(45deg) translate(-1px, -1px) scale(1);
+    }
+
+    .source-confirm-inline .pill {
+      height: 23px;
+      padding: 0 8px;
+      font-size: 11px;
     }
 
     .source-confirm-check {
@@ -1985,6 +2307,20 @@
       .source-confirm-inline {
         grid-template-columns: 1fr auto;
         width: 100%;
+      }
+
+      .total-confirm-inline {
+        grid-template-columns: 1fr auto;
+        gap: 10px 12px;
+      }
+
+      .total-confirm-copy {
+        grid-column: 1 / -1;
+      }
+
+      .total-confirm-amount {
+        min-width: 0;
+        text-align: left;
       }
 
       .source-confirm-title,
@@ -2047,7 +2383,7 @@
     .settings-input.secret {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 12px;
-      letter-spacing: -0.01em;
+      letter-spacing: 0;
     }
 
     .storage-stats {
@@ -2164,27 +2500,337 @@
 
     .hidden { display: none !important; }
 
-    @media (max-width: 900px) {
-      .app-shell {
-        display: block;
-        max-width: none;
-        margin: 0;
-        padding: 0;
+    /* v2.22: 왼쪽 패널을 Compact Pro 목록형으로 정리합니다. */
+    .top-bar {
+      background: #fbfcfe;
+      border-bottom: 1px solid var(--line);
+      gap: 0;
+      padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
+    }
+
+    .tab {
+      min-height: 38px;
+      color: #6f737d;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .tab.active {
+      background: #111113;
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .app-history-nav {
+      top: 58px;
+      padding: 8px 14px;
+      background: #fbfcfe;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .history-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 18px;
+      box-shadow: 0 1px 2px rgba(17,24,39,.04);
+    }
+
+    .hero-title {
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .home-title-button .eyebrow {
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+
+    .home-title-text {
+      font-size: 27px;
+    }
+
+    .plus-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+    }
+
+    .search-wrap {
+      position: static;
+      margin-bottom: 14px;
+    }
+
+    .search {
+      height: 44px;
+      border-radius: 12px;
+      box-shadow: none;
+    }
+
+    .section {
+      margin-top: 16px;
+    }
+
+    #receiptList {
+      display: grid;
+      gap: 0;
+      border: 1px solid #dde2ea;
+      border-radius: 16px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    #receiptList .receipt-card {
+      margin-bottom: 0 !important;
+    }
+
+    .results {
+      display: grid;
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    #receiptList .receipt-card.card {
+      border: 0;
+      border-bottom: 1px solid #e4e7ed;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    #receiptList .receipt-card:last-child {
+      border-bottom: 0;
+    }
+
+    .receipt-card.card {
+      border-color: #dde2ea;
+      border-radius: 12px;
+      box-shadow: none;
+    }
+
+    #receiptList .receipt-card-surface {
+      padding: 12px 14px;
+    }
+
+    #receiptList .receipt-card-layout {
+      gap: 10px;
+    }
+
+    #receiptList .store {
+      font-size: 16px;
+    }
+
+    #receiptList .price {
+      font-size: 17px;
+      font-weight: 760;
+    }
+
+    #receiptList .receipt-card.selected .receipt-card-surface {
+      background: #f8fbff;
+      box-shadow: inset 3px 0 0 var(--blue);
+    }
+
+    #receiptList .receipt-card-delete-x {
+      display: none;
+    }
+
+    #receiptList .receipt-card.selected .receipt-card-action-strip {
+      background: #fff;
+    }
+
+    .chip {
+      border-radius: 10px;
+      background: #fbfcfe;
+    }
+
+    .data-table th {
+      background: #f7f8fb;
+      color: #5f6570;
+      font-size: 12px;
+    }
+
+    .data-table td {
+      font-size: 13px;
+    }
+
+    @media (min-width: 901px) {
+      body {
+        background: #eef1f5;
       }
+
+      .app-shell {
+        max-width: 1360px;
+        padding: 14px;
+        grid-template-columns: 430px minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .phone,
+      .side {
+        min-height: calc(100vh - 28px);
+        max-height: calc(100vh - 28px);
+      }
+
       .phone {
-        min-height: 100vh;
-        min-height: 100dvh;
-        max-height: none;
+        border-color: #d9dee7;
+        border-radius: 18px;
+        box-shadow: 0 8px 24px rgba(17,24,39,.06);
+      }
+
+      .screen {
+        padding: 16px;
+        background: #fbfcfe;
+      }
+
+      .side {
+        border: 1px solid #d9dee7;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 8px 24px rgba(17,24,39,.06);
+      }
+
+      .side .panel {
+        margin: 0;
         border: 0;
+        border-bottom: 1px solid var(--line);
         border-radius: 0;
         box-shadow: none;
+        padding: 22px 24px;
       }
-      .screen {
-        padding-left: max(20px, env(safe-area-inset-left));
-        padding-right: max(20px, env(safe-area-inset-right));
+
+      .side .panel:last-child {
+        border-bottom: 0;
+      }
+
+      .desktop-receipt-title,
+      .desktop-search-title {
+        font-size: 28px;
+        line-height: 1.08;
+      }
+
+      .desktop-receipt-image {
+        max-height: 300px;
+        border-radius: 12px;
+      }
+
+      .desktop-receipt-image .receipt-image {
+        max-height: 300px;
+      }
+
+      .desktop-receipt-table {
+        max-height: 410px;
+        border-radius: 12px;
+      }
+
+      .info {
+        background: #fafbff;
+      }
+
+      #sideReceiptPanel.desktop-receipt-panel {
+        display: grid;
+        grid-template-columns: minmax(280px, .82fr) minmax(0, 1.55fr);
+        grid-template-areas:
+          "head head"
+          "image stats"
+          "image items"
+          "storage items"
+          "memo items";
+        gap: 14px 16px;
+        align-content: start;
+      }
+
+      #sideReceiptPanel.hidden {
+        display: none !important;
+      }
+
+      #sideReceiptPanel .desktop-receipt-head {
+        grid-area: head;
+      }
+
+      #sideReceiptImageArea {
+        grid-area: image;
+        min-height: 420px;
+      }
+
+      #sideReceiptImageArea .receipt-image-wrap {
+        height: 100%;
+        min-height: 420px;
+        max-height: none;
+        margin-top: 0;
+        background: #f4f5f8;
+      }
+
+      #sideReceiptImageArea .receipt-image {
+        max-height: 420px;
+      }
+
+      #sideReceiptPanel .desktop-receipt-stats {
+        grid-area: stats;
+        align-self: start;
+      }
+
+      #sideReceiptStorageCard {
+        grid-area: storage;
+        margin-top: 0;
+      }
+
+      #sideReceiptMemoBox {
+        grid-area: memo;
+        margin-top: 0;
+      }
+
+      .desktop-receipt-items-block {
+        grid-area: items;
+        min-height: 0;
+      }
+
+      #sideReceiptPanel .desktop-receipt-table {
+        height: min(430px, calc(100vh - 340px));
+        max-height: none;
+        margin-top: 0;
+      }
+
+      #sideReceiptPanel .desktop-receipt-table .data-table {
+        font-size: 13px;
+      }
+
+      #sideReceiptPanel .desktop-receipt-table .data-table th,
+      #sideReceiptPanel .desktop-receipt-table .data-table td {
+        padding: 11px 14px;
+      }
+
+      #sideReceiptPanel .desktop-receipt-actions .secondary {
+        width: 42px;
+        min-width: 42px;
+        height: 42px;
+        min-height: 42px;
+        padding: 0;
+        border-radius: 12px;
+        font-size: 18px;
+      }
+
+      #sideReceiptPanel .desktop-receipt-inline-actions {
+        display: flex;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+        padding: 14px;
+      }
+      .phone {
+        min-height: calc(100vh - 28px);
       }
       .side {
-        display: none;
+        min-height: auto;
+        max-height: none;
       }
     }
 
@@ -2195,7 +2841,9 @@
         min-height: 100vh;
         max-height: none;
       }
+      .side { display: none; }
       .field-grid { grid-template-columns: 1fr; }
+      .ai-review-steps { grid-template-columns: 1fr; }
       .mini-table {
         grid-template-columns: 1fr 42px 74px 74px;
         font-size: 12px;
@@ -2211,13 +2859,1067 @@
         padding: 18px;
       }
     }
+
+    /* v2.24: Dutch Pay 레퍼런스의 조용한 SF UI 톤을 Receipt DB 구조에 맞춰 적용합니다. */
+    :root {
+      --bg: #f7f7f8;
+      --surface: #fff;
+      --card: #fff;
+      --text: #111;
+      --muted: #666;
+      --subtle: #b0b0b8;
+      --line: #ebebed;
+      --line-2: #d4d4d8;
+      --blue: #0071e3;
+      --red: #e53e3e;
+      --green: #1dad53;
+      --radius: 16px;
+      --shadow: 0 1px 3px rgba(0,0,0,.04), 0 8px 32px rgba(0,0,0,.06);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    .app-shell {
+      max-width: 1100px;
+      grid-template-columns: 380px minmax(0, 1fr);
+      gap: 0;
+      padding: 0;
+      align-items: start;
+    }
+
+    @media (min-width: 901px) {
+      .app-shell {
+        width: calc(100% - 64px);
+        max-width: 1100px;
+        padding: 0;
+        grid-template-columns: 380px minmax(0, 1fr);
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        min-height: 660px;
+        margin: 48px auto 80px;
+      }
+
+      .phone,
+      .side {
+        min-height: 660px;
+        max-height: none;
+        border-radius: 0;
+        box-shadow: none;
+        border: 0;
+      }
+
+      .phone {
+        border-right: 1px solid var(--line);
+      }
+
+      .side {
+        background: var(--card);
+      }
+    }
+
+    .phone {
+      background: #fafafa;
+      border-color: var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .screen {
+      padding: 28px 32px 18px;
+      background: #fafafa;
+    }
+
+    .top-bar {
+      gap: 2px;
+      padding: calc(28px + env(safe-area-inset-top)) 32px 0;
+      background: #fafafa;
+      border-bottom: 0;
+      position: static;
+    }
+
+    .tab {
+      min-height: 32px;
+      border: 0;
+      border-radius: 8px;
+      color: #666;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 0;
+    }
+
+    .tab.active {
+      background: #fff;
+      color: #111;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+      font-weight: 600;
+    }
+
+    .app-history-nav {
+      position: static;
+      padding: 12px 32px 0;
+      background: #fafafa;
+      border-bottom: 0;
+    }
+
+    .history-btn {
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      color: #666;
+      box-shadow: none;
+      font-size: 18px;
+    }
+
+    .hero-title {
+      margin: 0 0 18px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .eyebrow,
+    .section-title,
+    .desktop-receipt-meta,
+    .desktop-search-meta {
+      color: var(--subtle);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .4px;
+    }
+
+    .home-title-text {
+      font-size: 24px;
+      line-height: 1.15;
+      font-weight: 700;
+      letter-spacing: -.5px;
+    }
+
+    .plus-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      font-size: 24px;
+      background: #111;
+      color: #fff;
+    }
+
+    .search-wrap {
+      margin-bottom: 16px;
+    }
+
+    .search {
+      height: 40px;
+      border-color: var(--line-2);
+      border-radius: 9px;
+      box-shadow: none;
+      background: #fff;
+      padding: 0 12px;
+    }
+
+    .search input {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .section {
+      margin-top: 18px;
+    }
+
+    .section-head {
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .tiny-action {
+      color: #0071e3;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .chip {
+      border-color: var(--line);
+      background: #fff;
+      border-radius: 20px;
+      padding: 5px 10px;
+      color: #666;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    #receiptList {
+      border-color: var(--line);
+      border-radius: 16px;
+    }
+
+    #receiptList .receipt-card.card {
+      border-bottom-color: var(--line);
+    }
+
+    #receiptList .receipt-card-surface {
+      padding: 10px 32px;
+    }
+
+    #receiptList .receipt-card-layout {
+      gap: 10px;
+    }
+
+    #receiptList .store {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #receiptList .muted.small,
+    #receiptList .muted.tiny {
+      color: var(--subtle);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    #receiptList .receipt-card-amount {
+      min-width: 88px;
+    }
+
+    #receiptList .price {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    #receiptList .receipt-card.selected .receipt-card-surface {
+      background: #f8f8fa;
+      box-shadow: inset 3px 0 0 var(--blue);
+    }
+
+    .receipt-card-action-strip {
+      min-height: 34px;
+      margin: 8px -32px -10px;
+      padding: 0 32px;
+      background: #fff;
+      font-size: 11px;
+    }
+
+    .receipt-card-action-strip button {
+      min-height: 26px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 0 9px;
+    }
+
+    .receipt-card-strip-edit {
+      background: #f3f3f5;
+      color: #555;
+    }
+
+    .receipt-card-strip-delete {
+      background: #fff0f0;
+      color: var(--red);
+    }
+
+    .side .panel {
+      padding: 28px 32px 20px;
+      border-bottom: 1px solid var(--line);
+      color: #666;
+    }
+
+    .side .panel h2,
+    .desktop-receipt-title,
+    .desktop-search-title {
+      font-size: 22px;
+      line-height: 1.18;
+      font-weight: 700;
+      letter-spacing: -.4px;
+    }
+
+    .side .panel p,
+    .dropbox-path-box .path-text,
+    .desktop-receipt-table .data-table,
+    .desktop-search-table .data-table {
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .info,
+    .dropbox-path-box,
+    .validation-card,
+    .settings-card,
+    .receipt-image-wrap {
+      border-color: var(--line);
+      border-radius: 10px;
+      box-shadow: none;
+      background: #f8f8fa;
+    }
+
+    .info .label,
+    .dropbox-path-box .path-title,
+    .data-table th {
+      color: #666;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .3px;
+    }
+
+    .info .value,
+    .desktop-receipt-stats .info .value {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .desktop-receipt-actions .secondary,
+    .desktop-search-close,
+    .close {
+      border-radius: 9px;
+      background: #f3f3f5;
+      color: #111;
+      box-shadow: none;
+    }
+
+    .primary,
+    .secondary,
+    .danger {
+      border-radius: 9px;
+      font-weight: 600;
+      min-height: 40px;
+    }
+
+    .modal {
+      width: min(760px, calc(100vw - 32px));
+      border-radius: 16px;
+      border-color: var(--line);
+      box-shadow: 0 24px 80px rgba(0,0,0,.18);
+    }
+
+    .field input,
+    .field textarea,
+    .edit-table input,
+    .settings-input {
+      border-color: var(--line-2);
+      border-radius: 9px;
+      background: #f7f7f8;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    label,
+    .field-grid .field label {
+      color: #666;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .3px;
+    }
+
+    .edit-table th {
+      color: #666;
+      background: #f8f8fa;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .edit-table td {
+      border-bottom-color: var(--line);
+    }
+
+    .total-confirm-inline,
+    .source-confirm-inline {
+      border-radius: 10px;
+    }
+
+    /* v2.25: 입력/수정 모달은 더치페이 레퍼런스처럼 작고 빠르게 훑는 폼 밀도로 낮춥니다. */
+    .modal {
+      max-height: min(760px, 92vh);
+      padding: 16px;
+    }
+
+    .modal-head {
+      margin-bottom: 12px;
+    }
+
+    .modal-head h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: -.3px;
+    }
+
+    .close {
+      width: 34px;
+      min-width: 34px;
+      height: 34px;
+      min-height: 34px;
+      font-size: 16px;
+    }
+
+    .upload-box,
+    .ai-draft-guide,
+    .notice,
+    .validation-card {
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .upload-box {
+      gap: 8px;
+    }
+
+    .upload-box input {
+      padding: 9px;
+      border-radius: 9px;
+      font-size: 12px;
+    }
+
+    .ai-draft-guide {
+      margin-top: 10px;
+      gap: 6px;
+    }
+
+    .ai-draft-title,
+    .validation-head {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .ai-draft-copy,
+    .notice,
+    .validation-list {
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 500;
+    }
+
+    .ai-review-steps {
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .ai-review-step {
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .raw-ocr {
+      min-height: 96px;
+      margin-top: 8px;
+      border-radius: 9px;
+      padding: 10px;
+      font-size: 11px;
+    }
+
+    .ocr-actions,
+    .validation-actions {
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .ocr-actions .secondary,
+    .validation-actions .secondary {
+      min-height: 34px;
+      height: 34px;
+      padding: 0 10px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .validation-card {
+      margin-top: 10px;
+    }
+
+    .validation-list {
+      margin-top: 6px;
+    }
+
+    #validationBadge {
+      height: 24px;
+      padding: 0 8px;
+      font-size: 11px;
+    }
+
+    .demo-payer-row {
+      gap: 10px;
+      margin-top: 12px;
+      align-items: flex-end;
+    }
+
+    .demo-payer-row .secondary {
+      height: 40px;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 9px;
+      font-size: 13px;
+    }
+
+    .payer-inline-field {
+      gap: 5px;
+    }
+
+    .payer-inline-field label {
+      padding-right: 10px;
+    }
+
+    .payer-chip {
+      height: 40px;
+      min-height: 40px;
+      padding: 0 12px;
+      border-width: 1px;
+      border-radius: 9px;
+      background: #f7f7f8;
+    }
+
+    .payer-chip input {
+      font-size: 13px;
+      line-height: 40px;
+    }
+
+    .payer-chip .payer-prefix {
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .field-grid {
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .field {
+      gap: 5px;
+    }
+
+    .field-grid .field label {
+      padding-left: 10px;
+    }
+
+    .field input,
+    .edit-table input {
+      height: 40px;
+      min-height: 40px;
+      padding: 0 10px;
+    }
+
+    .field textarea {
+      min-height: 70px;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .memo-field {
+      margin: 0 0 12px;
+    }
+
+    .card.table-wrap {
+      margin-top: 10px;
+      border-radius: 10px;
+      box-shadow: none;
+    }
+
+    .edit-table {
+      font-size: 12px;
+    }
+
+    .edit-table th {
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    .edit-table td {
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+
+    .edit-table .item-name-input,
+    .edit-table .item-qty-input,
+    .edit-table .item-unit-input,
+    .edit-table .item-amount-input,
+    .edit-table textarea {
+      height: 36px;
+      min-height: 36px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 36px;
+    }
+
+    .edit-table textarea {
+      padding: 7px 10px;
+      line-height: 20px;
+    }
+
+    .edit-table .item-name-input {
+      min-width: 220px;
+      padding: 0 10px;
+    }
+
+    .edit-table .item-qty-input {
+      width: 58px;
+    }
+
+    .edit-table .money-input-wrap,
+    .edit-table .item-unit-input,
+    .edit-table .item-amount-input {
+      width: 108px;
+    }
+
+    .edit-table th.th-name {
+      padding-left: 26px;
+    }
+
+    .edit-table th.th-money {
+      padding-right: 26px;
+    }
+
+    .edit-table td.td-name {
+      padding-left: 14px;
+      padding-right: 12px;
+    }
+
+    .edit-table td.td-qty {
+      padding-right: 14px;
+    }
+
+    .edit-table td.td-money {
+      padding-right: 12px;
+    }
+
+    .minus-toggle {
+      left: 5px;
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
+      font-size: 15px;
+    }
+
+    .row-controls {
+      min-width: 72px;
+      gap: 5px;
+    }
+
+    .remove,
+    .drag-handle {
+      width: 30px;
+      min-width: 30px;
+      height: 30px;
+      min-height: 30px;
+      padding: 0;
+      border-radius: 9px;
+    }
+
+    .drag-handle {
+      font-size: 15px;
+    }
+
+    .total-confirm-inline,
+    .source-confirm-inline {
+      min-height: 48px;
+      margin-top: 10px;
+      padding: 9px 10px;
+      gap: 8px;
+    }
+
+    .total-confirm-title,
+    .source-confirm-title {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .total-confirm-desc,
+    .source-confirm-desc {
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .total-confirm-amount {
+      min-width: 94px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .total-confirm-check,
+    .source-confirm-box {
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+    }
+
+    .total-confirm-check input,
+    .source-confirm-box input {
+      width: 16px;
+      height: 16px;
+      min-height: 16px;
+      border-radius: 4px;
+    }
+
+    .source-confirm-inline .pill {
+      height: 22px;
+      padding: 0 8px;
+      font-size: 10px;
+    }
+
+    .action-row.bottom-actions {
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .bottom-actions-right {
+      gap: 8px;
+    }
+
+    .bottom-actions .primary,
+    .bottom-actions .secondary,
+    .bottom-actions .danger {
+      height: 40px;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 9px;
+      font-size: 13px;
+    }
+
+    .bottom-actions .primary {
+      min-width: 150px;
+    }
+
+    /* v2.26: 목록 금액은 항상 같은 오른쪽 축에 두고, 선택 영역은 검수 상태까지 한 덩어리로 보이게 합니다. */
+    #receiptList .receipt-card-amount,
+    #receiptList .receipt-card:hover .receipt-card-amount,
+    #receiptList .receipt-card:focus-within .receipt-card-amount {
+      padding-right: 0;
+    }
+
+    #receiptList .receipt-card.selected .receipt-card-action-strip {
+      background: transparent;
+    }
+
+    .receipt-card-action-status {
+      display: inline-flex;
+      min-width: 0;
+      align-items: center;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    .receipt-card-review-badge,
+    .receipt-card-storage-note {
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    .receipt-card-review-badge {
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .receipt-card-review-badge.is-reviewed {
+      background: #eaf3ff;
+      color: var(--blue);
+    }
+
+    .receipt-card-review-badge.needs-review {
+      background: #fff7e8;
+      color: #b06000;
+    }
+
+    .receipt-card-storage-note {
+      color: #666;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* v2.27: 한글 결제자 이름이 ch 단위 축소 때문에 끝 글자가 잘리지 않도록 입력 영역을 고정합니다. */
+    .payer-chip.has-value input {
+      flex: 1 1 0;
+      width: 0 !important;
+      min-width: 0;
+    }
+
+    /* v2.28: 검색 결과 화면을 목록형 톤으로 낮춰 요약과 결과 카드가 같은 밀도로 보이게 합니다. */
+    #resultsSection .section-head {
+      align-items: flex-end;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    #resultsSection .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .2px;
+    }
+
+    #resultTitle {
+      margin-top: 2px;
+      font-size: 20px;
+      line-height: 1.16;
+      font-weight: 700;
+      letter-spacing: -.25px;
+    }
+
+    #resultTitle .muted.small,
+    #resultTitle .payer-badge .suffix {
+      color: #8d9099;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    #resultCount {
+      height: 28px;
+      padding: 0 10px;
+      background: #f3f3f5;
+      color: #666;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .results {
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .summary-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 4px 10px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      box-shadow: none;
+    }
+
+    .summary-card .summary-title {
+      margin: 0;
+      color: #666;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0;
+      align-self: center;
+    }
+
+    .summary-card .summary-main {
+      grid-column: 2;
+      grid-row: 1;
+      align-self: center;
+      font-size: 18px;
+      line-height: 1.05;
+      font-weight: 740;
+      text-align: right;
+      letter-spacing: -.15px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .summary-card .summary-sub {
+      grid-column: 1 / -1;
+      margin-top: 2px;
+      color: #666;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .summary-card .stat-grid {
+      grid-column: 1 / -1;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .summary-card .stat-cell {
+      min-height: 42px;
+      padding: 7px 8px;
+      border-radius: 10px;
+      background: #f8f8fa;
+    }
+
+    .summary-card .stat-cell .label {
+      margin-bottom: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .summary-card .stat-cell .value {
+      color: #111;
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-card {
+      padding: 13px 14px;
+      border-radius: 12px;
+      box-shadow: none;
+    }
+
+    .result-card .row-between {
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .result-card .item-name {
+      margin-bottom: 4px;
+      font-size: 16px;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: -.15px;
+    }
+
+    .result-card .muted.small {
+      color: #666;
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 500;
+    }
+
+    .receipt-search-actions {
+      gap: 6px;
+      padding-top: 1px;
+    }
+
+    .receipt-search-actions .pill {
+      height: 24px;
+      padding: 0 8px;
+      color: #666;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .receipt-edit-action {
+      min-height: 24px;
+      height: 24px;
+      padding: 0 9px;
+      border-radius: 999px;
+      background: #111;
+      color: #fff !important;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 24px;
+    }
+
+    .receipt-result-summary {
+      gap: 10px;
+      align-items: end;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top-color: var(--line);
+    }
+
+    .receipt-result-summary .summary-text {
+      color: #666;
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 500;
+    }
+
+    .receipt-result-summary .summary-total {
+      display: inline-flex;
+      align-items: baseline;
+      justify-content: flex-end;
+      gap: 5px;
+      color: #111;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -.05px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    @media (max-width: 520px) {
+      .summary-card .stat-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .receipt-result-summary .summary-total::before {
+      content: "총액";
+      color: #8d9099;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .summary-card .summary-main,
+    .summary-card .stat-cell .value,
+    .receipt-result-summary .summary-total {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    @media (min-width: 901px) {
+      #sideReceiptPanel.desktop-receipt-panel {
+        gap: 16px;
+      }
+
+      #sideReceiptPanel .desktop-receipt-table {
+        height: min(430px, calc(100vh - 330px));
+      }
+
+      #sideReceiptPanel .desktop-receipt-table .data-table th,
+      #sideReceiptPanel .desktop-receipt-table .data-table td {
+        padding: 9px 12px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .app-shell {
+        padding: 14px;
+        background: var(--bg);
+      }
+
+      .screen {
+        padding: 20px;
+      }
+
+      .top-bar {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .app-history-nav {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      #receiptList .receipt-card-surface {
+        padding: 11px 16px;
+      }
+
+      .receipt-card-action-strip {
+        margin-left: -16px;
+        margin-right: -16px;
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .app-shell {
+        padding: 0;
+      }
+
+      .phone {
+        border-radius: 0;
+        border: 0;
+        box-shadow: none;
+      }
+    }
   </style>
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/app-icon-192-v2-14.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-v2-14.png" />
   <meta name="theme-color" content="#111113" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="영수증DB" />
+  <meta name="apple-mobile-web-app-title" content="Receipt DB" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 </head>
 
@@ -2238,7 +3940,7 @@
           <div class="hero-title">
             <div>
               <button class="home-title-button" id="homeTitleButton" type="button" aria-label="영수증DB 초기화면으로 이동">
-                <span class="eyebrow">Receipt DB · v2.29 PWA</span>
+                <span class="eyebrow">Receipt DB · v2.30 PWA</span>
                 <span class="home-title-text">영수증DB</span>
               </button>
             </div>
@@ -2392,7 +4094,7 @@
     <aside class="side">
       <div id="sideIntroPanels">
         <div class="panel">
-          <div class="eyebrow">Prototype v2.29 PWA</div>
+          <div class="eyebrow">Prototype v2.30 PWA</div>
           <h2>최저가와 결제자를<br/>바로 확인합니다.</h2>
           <p>
             품목을 검색하면 언제 어디서 가장 싸게 샀는지 보여주고,
@@ -2449,7 +4151,7 @@
             <div class="muted small" id="sideReceiptMeta" style="margin-top:7px;"></div>
           </div>
           <div class="desktop-receipt-actions">
-            <button class="secondary" id="sideReceiptEdit" type="button">수정</button>
+            <button class="secondary" id="sideReceiptEdit" type="button" aria-label="영수증 수정" title="수정">✎</button>
             <button class="secondary desktop-receipt-close" id="sideReceiptClose" type="button" aria-label="상세 닫기">×</button>
           </div>
         </div>
@@ -2467,7 +4169,7 @@
           </div>
         </div>
 
-        <div class="dropbox-path-box">
+        <div class="dropbox-path-box" id="sideReceiptStorageCard">
           <div class="path-title">보관 상태</div>
           <div class="path-text" id="sideReceiptStorage"></div>
         </div>
@@ -2477,8 +4179,14 @@
           <div class="path-text" id="sideReceiptMemoText"></div>
         </div>
 
-        <div>
-          <div class="section-title">저장된 품목</div>
+        <div class="desktop-receipt-items-block">
+          <div class="desktop-receipt-items-head">
+            <div class="section-title">저장된 품목</div>
+            <div class="desktop-receipt-inline-actions">
+              <button class="secondary" id="sideReceiptEditInline" type="button">수정</button>
+              <button class="danger" id="sideReceiptDeleteInline" type="button">삭제</button>
+            </div>
+          </div>
           <div class="card table-wrap desktop-receipt-table receipt-items-table">
             <table class="data-table">
               <thead>
@@ -2521,17 +4229,32 @@
 
         <div class="ai-draft-guide">
           <div class="ai-draft-title">AI 분석 초안</div>
-        <div class="ai-draft-copy">GPT에게 영수증 사진을 JSON으로 분석해달라고 한 뒤 결과를 붙여넣으면 입력칸으로 옮깁니다. 서버가 없을 때도 이 방식으로 사용할 수 있습니다.</div>
+        <div class="ai-draft-copy">AI가 분석한 JSON이나 표를 붙여넣거나, 연결된 AI 서버로 초안을 만듭니다. 앱 안 OCR은 실행하지 않습니다.</div>
         <textarea class="raw-ocr show" id="rawOcrText" placeholder="{&#10;  &quot;store&quot;: &quot;이마트 부천점&quot;,&#10;  &quot;date&quot;: &quot;2025-03-19&quot;,&#10;  &quot;total&quot;: 59000,&#10;  &quot;items&quot;: [&#10;    { &quot;name&quot;: &quot;아가방 10,000&quot;, &quot;qty&quot;: 5, &quot;unitPrice&quot;: 10000, &quot;amount&quot;: 50000 }&#10;  ]&#10;}"></textarea>
         <div class="ocr-actions show" id="ocrActions">
-          <button class="secondary" id="analyzeReceiptAi">AI 자동 분석</button>
+          <button class="secondary" id="analyzeReceiptAi">AI로 사진 분석</button>
           <button class="secondary" id="toggleRawOcr">입력창 접기</button>
-          <button class="secondary" id="applyRawOcr">분석값으로 초안 만들기</button>
+          <button class="secondary" id="applyRawOcr">AI 분석값으로 초안 만들기</button>
+        </div>
+      </div>
+
+      <div class="ai-review-steps" aria-label="AI 분석값 검수 흐름">
+        <div class="ai-review-step">
+          <b>1. AI 초안</b>
+          <span>사진 분석 또는 JSON 붙여넣기</span>
+        </div>
+        <div class="ai-review-step">
+          <b>2. 원본 대조</b>
+          <span>상호, 일자, 품목, 금액 확인</span>
+        </div>
+        <div class="ai-review-step">
+          <b>3. 확정 저장</b>
+          <span>검증 통과 후 영구 보관</span>
         </div>
       </div>
 
       <div class="notice">
-        OCR 자동 입력은 사용하지 않습니다. 원본 영수증과 입력값을 직접 대조하고, 금액 검증을 통과한 뒤 저장합니다.
+        앱 안 OCR은 사용하지 않습니다. AI 초안이나 직접 입력값을 원본 영수증과 대조하고, 금액 검증을 통과한 뒤 저장합니다.
       </div>
 
       <div class="validation-card" id="validationCard">
@@ -2552,8 +4275,8 @@
         <div class="payer-inline-field">
           <label>결제자</label>
           <div class="payer-chip" id="payerChip">
+            <span class="payer-prefix" aria-hidden="true">결제자</span>
             <input id="payerInput" placeholder="예 : 홍길동" autocomplete="off" />
-            <span class="payer-suffix" aria-hidden="true">결제</span>
           </div>
         </div>
       </div>
@@ -2592,6 +4315,17 @@
           </thead>
           <tbody id="itemTable"></tbody>
         </table>
+      </div>
+
+      <div class="total-confirm-inline" id="totalConfirmCard">
+        <div class="total-confirm-copy">
+          <b class="total-confirm-title">내역 합계 확인</b>
+          <span class="total-confirm-desc" id="totalConfirmDesc">품목 계 금액의 합계를 확인하면 저장할 수 있습니다.</span>
+        </div>
+        <div class="total-confirm-amount" id="totalConfirmAmount">0원</div>
+        <label class="total-confirm-check" for="totalConfirmCheck" aria-label="내역 합계 확인">
+          <input id="totalConfirmCheck" type="checkbox" />
+        </label>
       </div>
 
       <div class="source-confirm-inline" id="sourceConfirmCard">
@@ -2679,8 +4413,8 @@
           <label class="source-confirm-check" style="margin-top:10px;">
             <input id="aiAutoAnalyzeInput" type="checkbox" />
             <span>
-              <b>사진 선택 시 자동 분석</b>
-              <small>서버가 연결되어 있을 때만 실행됩니다.</small>
+              <b>사진 선택 시 AI 자동 분석</b>
+              <small>기본은 꺼져 있습니다. 켜면 서버가 연결되어 있을 때만 실행됩니다.</small>
             </span>
           </label>
           <div class="backup-actions">
@@ -2776,7 +4510,7 @@
   </div>
 
   <script>
-    const APP_VERSION = "v2.29 PWA";
+    const APP_VERSION = "v2.30 PWA";
     const STORAGE_KEY = "satdeon_price_app_v2";
     const RECENT_KEY = "satdeon_recent_queries_v2";
     const DROPBOX_KEY = "satdeon_dropbox_settings_v1";
@@ -2805,7 +4539,7 @@
         { name: "피그 실리 1.3KG", qty: 1, unitPrice: 11490, amount: 11490, aliases: "식품" },
         { name: "하바티 슬라이스", qty: 1, unitPrice: 16490, amount: 16490, aliases: "치즈 슬라이스 하바티" },
         { name: "KS BACON REGULAR", qty: 1, unitPrice: 29990, amount: 29990, aliases: "베이컨 bacon" },
-        { name: "트라팔 크래커", qty: 1, unitPrice: 11990, amount: 11990, aliases: "과자 크래커" }
+        { name: "트러플 크래커", qty: 1, unitPrice: 11990, amount: 11990, aliases: "트러플 과자 크래커" }
       ]
     };
 
@@ -3116,7 +4850,7 @@
         imageSrc: "",
         items: [
           { name: "SUNKIST 레몬", qty: 1, unitPrice: 12990, amount: 12990, aliases: "레몬 과일 선키스트" },
-          { name: "트라팔 크래커", qty: 1, unitPrice: 11990, amount: 11990, aliases: "과자 크래커" }
+          { name: "트러플 크래커", qty: 1, unitPrice: 11990, amount: 11990, aliases: "트러플 과자 크래커" }
         ]
       }
     ];
@@ -3444,20 +5178,35 @@
       })).filter(item => item.name);
     }
 
+    function normalizeKnownItemTypo(item = {}) {
+      const name = String(item.name || "").replace(/트라팔\s*크래커/g, "트러플 크래커").trim();
+      let aliases = String(item.aliases || "").replace(/트라팔/g, "트러플").trim();
+      if (/트러플\s*크래커/.test(name) && !/트러플/.test(aliases)) {
+        aliases = `${aliases} 트러플`.trim();
+      }
+      return {
+        ...item,
+        name,
+        aliases
+      };
+    }
+
     function applyKnownReceiptCorrections(receipt = {}) {
       const isCostcoDemo =
         receipt.id === "receipt-costco-20260508" ||
         (normalize(receipt.store || "") === normalize("코스트코 하남점") && receipt.date === "2026-05-08");
 
-      if (!isCostcoDemo) return receipt;
-
       return {
         ...receipt,
-        items: (receipt.items || []).map(item => ({
-          ...item,
-          name: String(item.name || "").replace(/샤프로/g, "삿포로"),
-          aliases: String(item.aliases || "").replace(/샤프로/g, "삿포로")
-        }))
+        items: (receipt.items || []).map(item => {
+          const fixed = normalizeKnownItemTypo(item);
+          if (!isCostcoDemo) return fixed;
+          return {
+            ...fixed,
+            name: String(fixed.name || "").replace(/샤프로/g, "삿포로"),
+            aliases: String(fixed.aliases || "").replace(/샤프로/g, "삿포로")
+          };
+        })
       };
     }
 
@@ -3572,6 +5321,7 @@
         dropboxFileId: remembered.dropboxFileId || receipt.dropboxFileId || "",
         imageStorage: receipt.dropboxPath ? receipt.imageStorage : (remembered.imageStorage || receipt.imageStorage || "none"),
         receiptTotalHint: remembered.receiptTotalHint || receipt.receiptTotalHint || "",
+        memo: ("memo" in remembered || "note" in remembered) ? getReceiptMemo(remembered) : getReceiptMemo(receipt),
         items: remembered.items?.length ? normalizeReceiptItemsForStorage(remembered.items) : (receipt.items || [])
       });
     }
@@ -4129,6 +5879,7 @@
     }
 
     function clearDesktopReceiptPanel(options = {}) {
+      resetSideReceiptDeleteConfirmation();
       $("sideReceiptPanel")?.classList.add("hidden");
       $("sideSearchPanel")?.classList.add("hidden");
       $("sideIntroPanels")?.classList.remove("hidden");
@@ -4138,6 +5889,7 @@
 
     function renderDesktopReceiptPanel(receipt) {
       if (!receipt || !$("sideReceiptPanel")) return;
+      resetSideReceiptDeleteConfirmation();
 
       $("sideIntroPanels")?.classList.add("hidden");
       $("sideSearchPanel")?.classList.add("hidden");
@@ -4219,6 +5971,7 @@
 
     function renderDesktopSearchPanel({ title = "", meta = "", summaryHtml = "", resultsHtml = "" } = {}) {
       if (!isDesktopReceiptPanelMode() || !$("sideSearchPanel")) return;
+      resetSideReceiptDeleteConfirmation();
       $("sideIntroPanels")?.classList.add("hidden");
       $("sideReceiptPanel")?.classList.add("hidden");
       $("sideSearchPanel").classList.remove("hidden");
@@ -4419,7 +6172,37 @@
       if (clearButton) clearButton.hidden = !hasValue;
     }
 
+    let receiptDeleteConfirmTimer = null;
+    let sideReceiptDeleteConfirmTimer = null;
+    let receiptSwipeCloseTimer = null;
+
+    function setReceiptDeleteConfirm(card, active) {
+      if (!card) return;
+      card.classList.toggle("delete-confirm", active);
+      card.querySelectorAll(".receipt-delete-btn, .receipt-card-delete-x, .receipt-card-strip-delete").forEach(button => {
+        button.textContent = active ? "확인" : "삭제";
+        button.setAttribute("aria-label", active ? "영수증 삭제 확인" : "영수증 삭제");
+      });
+    }
+
+    function resetReceiptDeleteConfirmations(exceptCard = null) {
+      document.querySelectorAll(".receipt-card.delete-confirm").forEach(card => {
+        if (card !== exceptCard) setReceiptDeleteConfirm(card, false);
+      });
+    }
+
+    function armReceiptDeleteConfirmation(card) {
+      window.clearTimeout(receiptDeleteConfirmTimer);
+      resetReceiptDeleteConfirmations(card);
+      setReceiptDeleteConfirm(card, true);
+      receiptDeleteConfirmTimer = window.setTimeout(() => {
+        setReceiptDeleteConfirm(card, false);
+      }, 3200);
+    }
+
     function hideReceiptDeleteButtons(exceptCard = null) {
+      window.clearTimeout(receiptSwipeCloseTimer);
+      resetReceiptDeleteConfirmations(exceptCard);
       document.querySelectorAll(".receipt-card.swipe-open").forEach(card => {
         if (card !== exceptCard) {
           card.classList.remove("swipe-open");
@@ -4429,9 +6212,14 @@
       });
     }
 
+    function isCompactReceiptActionMode() {
+      return window.matchMedia?.("(max-width: 900px)")?.matches;
+    }
+
     function attachReceiptCardEvents(card, receiptId) {
-      const swipeWidth = 96;
+      const swipeWidth = 108;
       const surface = card.querySelector(".receipt-card-surface");
+      const stableSwipeQuery = window.matchMedia?.("(hover: none), (pointer: coarse), (max-width: 900px)");
       let startX = 0;
       let startY = 0;
       let wasOpen = false;
@@ -4444,16 +6232,28 @@
       }
 
       function setSwipe(value) {
+        if (stableSwipeQuery?.matches) return;
         if (surface) surface.style.transform = `translateX(${value}px)`;
       }
 
       function openSwipe() {
         hideReceiptDeleteButtons(card);
         card.classList.add("swipe-open");
-        setSwipe(-swipeWidth);
+        if (stableSwipeQuery?.matches) {
+          if (surface) surface.style.transform = "";
+        } else {
+          setSwipe(-swipeWidth);
+        }
+        window.clearTimeout(receiptSwipeCloseTimer);
+        receiptSwipeCloseTimer = window.setTimeout(() => {
+          if (card.classList.contains("swipe-open") && !card.classList.contains("delete-confirm")) {
+            closeSwipe();
+          }
+        }, 2600);
       }
 
       function closeSwipe() {
+        window.clearTimeout(receiptSwipeCloseTimer);
         card.classList.remove("swipe-open");
         if (surface) surface.style.transform = "";
       }
@@ -4462,9 +6262,12 @@
         const receipt = findReceipt(receiptId);
         if (!receipt) return;
 
-        const ok = confirm(`${receipt.store} / ${formatDate(receipt.date)} 영수증을 삭제할까요?`);
-        if (!ok) return;
+        if (!card.classList.contains("delete-confirm")) {
+          armReceiptDeleteConfirmation(card);
+          return;
+        }
 
+        window.clearTimeout(receiptDeleteConfirmTimer);
         removeReceipt(receiptId);
         if (currentReceiptId === receiptId) clearDesktopReceiptPanel();
         renderAll();
@@ -4485,7 +6288,7 @@
 
         const moveX = event.clientX - startX;
         const moveY = event.clientY - startY;
-        if (!dragging && Math.abs(moveX) > 10 && Math.abs(moveX) > Math.abs(moveY) + 4) {
+        if (!dragging && Math.abs(moveX) > 16 && Math.abs(moveX) > Math.abs(moveY) + 8) {
           dragging = true;
           hideReceiptDeleteButtons(card);
         }
@@ -4503,7 +6306,7 @@
         if (!dragging) return;
         const base = wasOpen ? -swipeWidth : 0;
         const finalX = clampSwipe(base + event.clientX - startX);
-        if (finalX < -42) openSwipe();
+        if (finalX < -62) openSwipe();
         else closeSwipe();
         swiped = true;
         dragging = false;
@@ -4517,6 +6320,28 @@
       });
 
       card.addEventListener("click", (event) => {
+        const editButton = event.target.closest(".receipt-card-strip-edit");
+        if (editButton) {
+          event.preventDefault();
+          event.stopPropagation();
+          hideReceiptDeleteButtons(card);
+          const receipt = findReceipt(receiptId);
+          if (receipt) {
+            currentReceiptId = receiptId;
+            openModal("edit", receipt);
+          }
+          return;
+        }
+
+        const stripDeleteButton = event.target.closest(".receipt-card-strip-delete");
+        if (stripDeleteButton) {
+          event.preventDefault();
+          event.stopPropagation();
+          hideReceiptDeleteButtons(card);
+          confirmAndDelete();
+          return;
+        }
+
         const deleteButton = event.target.closest(".receipt-delete-btn");
         if (deleteButton) {
           event.stopPropagation();
@@ -4528,7 +6353,7 @@
         if (desktopDeleteButton) {
           event.preventDefault();
           event.stopPropagation();
-          hideReceiptDeleteButtons();
+          hideReceiptDeleteButtons(card);
           confirmAndDelete();
           return;
         }
@@ -4547,9 +6372,55 @@
           return;
         }
 
+        if (isCompactReceiptActionMode() && !card.classList.contains("selected")) {
+          event.preventDefault();
+          event.stopPropagation();
+          hideReceiptDeleteButtons(card);
+          currentReceiptId = receiptId;
+          markSelectedReceiptCard(receiptId);
+          return;
+        }
+
         hideReceiptDeleteButtons();
         showReceipt(receiptId);
       });
+    }
+
+    function resetSideReceiptDeleteConfirmation() {
+      window.clearTimeout(sideReceiptDeleteConfirmTimer);
+      const button = $("sideReceiptDeleteInline");
+      if (!button) return;
+      button.classList.remove("confirming");
+      button.textContent = "삭제";
+    }
+
+    function requestSideReceiptDelete() {
+      const receipt = findReceipt(currentReceiptId);
+      const button = $("sideReceiptDeleteInline");
+      if (!receipt || !button) return;
+
+      if (!button.classList.contains("confirming")) {
+        button.classList.add("confirming");
+        button.textContent = "삭제 확인";
+        window.clearTimeout(sideReceiptDeleteConfirmTimer);
+        sideReceiptDeleteConfirmTimer = window.setTimeout(resetSideReceiptDeleteConfirmation, 3200);
+        return;
+      }
+
+      window.clearTimeout(sideReceiptDeleteConfirmTimer);
+      removeReceipt(receipt.id);
+      clearDesktopReceiptPanel();
+      renderAll();
+    }
+
+    function receiptCardStorageText(receipt = {}) {
+      if (receipt.dropboxPath) return "Dropbox 원본";
+      if (receipt.thumbnailSrc || receipt.imageSrc) return "앱 썸네일";
+      return "이미지 없음";
+    }
+
+    function receiptCardReviewText(receipt = {}) {
+      return receipt.sourceConfirmed === false ? "검수 필요" : "검수 완료";
     }
 
     function renderReceipts(scroll = false, options = {}) {
@@ -4578,7 +6449,9 @@
         const div = document.createElement("div");
         div.className = `card simple-card receipt-card${currentReceiptId === receipt.id ? " selected" : ""}`;
         div.dataset.receiptId = receipt.id;
-        div.style.marginBottom = "10px";
+        const storageText = receiptCardStorageText(receipt);
+        const reviewText = receiptCardReviewText(receipt);
+        const reviewClass = receipt.sourceConfirmed === false ? "needs-review" : "is-reviewed";
         div.innerHTML = `
           <div class="receipt-card-swipe-action">
             <button class="receipt-delete-btn" type="button" aria-label="${escapeHtml(receipt.store)} 영수증 삭제">삭제</button>
@@ -4588,36 +6461,26 @@
               <div class="receipt-card-main">
                 <div class="store">${escapeHtml(receipt.store)}</div>
                 <div class="muted small" style="margin-top:4px;">${formatDate(receipt.date)} · ${receipt.items.length}개 품목${getReceiptPayer(receipt) ? " · 결제자 " + escapeHtml(getReceiptPayer(receipt)) : ""}</div>
-                <div class="muted tiny" style="margin-top:5px;">${receipt.dropboxPath ? "Dropbox 원본 저장됨" : (receipt.thumbnailSrc || receipt.imageSrc ? "앱 썸네일 저장됨" : "이미지 없음")}</div>
+                <div class="muted tiny" style="margin-top:5px;">${escapeHtml(storageText)}${storageText === "이미지 없음" ? "" : " 저장됨"}</div>
               </div>
               <div class="receipt-card-amount">
                 <div class="price">${formatWon(receipt.total)}</div>
               </div>
             </div>
-            <button class="receipt-card-delete-x" type="button" aria-label="영수증 삭제">×</button>
+            <div class="receipt-card-action-strip">
+              <span class="receipt-card-action-status">
+                <span class="receipt-card-review-badge ${reviewClass}">${escapeHtml(reviewText)}</span>
+                <span class="receipt-card-storage-note">${escapeHtml(storageText)}${storageText === "이미지 없음" ? "" : " 저장됨"}</span>
+              </span>
+              <button class="receipt-card-strip-edit" type="button">수정</button>
+              <button class="receipt-card-strip-delete" type="button" aria-label="영수증 삭제">삭제</button>
+            </div>
+            <button class="receipt-card-delete-x" type="button" aria-label="영수증 삭제">삭제</button>
           </div>
         `;
         attachReceiptCardEvents(div, receipt.id);
         list.appendChild(div);
       });
-
-      if (!showAll && sorted.length > limit) {
-        const more = document.createElement("button");
-        more.className = "secondary";
-        more.type = "button";
-        more.style.width = "100%";
-        more.style.marginTop = "4px";
-        more.textContent = `전체 영수증 ${sorted.length}개 보기`;
-        more.addEventListener("click", () => {
-          setActiveTab("tabReceipts");
-          showHome({ record: false });
-          $("searchInput").value = "";
-          renderSearch();
-          renderReceipts(true, { showAll: true });
-          pushAppHistory({ view: "home", tab: "tabReceipts", query: "", showAllReceipts: true });
-        });
-        list.appendChild(more);
-      }
 
       if (scroll) $("receiptSection").scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -4789,6 +6652,9 @@
       $("receiptMeta").textContent = `${formatDate(receipt.date)} · ${receipt.items.length}개 품목${getReceiptPayer(receipt) ? " · 결제자 " + getReceiptPayer(receipt) : ""}`;
       $("receiptTotal").textContent = formatWon(receipt.total);
       $("receiptItemCount").textContent = `${receipt.items.length}개`;
+      const memo = getReceiptMemo(receipt);
+      $("receiptMemoBox")?.classList.toggle("hidden", !memo);
+      if ($("receiptMemoText")) $("receiptMemoText").innerHTML = renderMemoHtml(memo);
 
       const dropboxArea = $("receiptDropboxArea");
       if (receipt.dropboxPath) {
@@ -5050,6 +6916,7 @@
       currentReceiptTotalHint = null;
       currentReceiptTotalHintIgnored = false;
       currentExtractionLabel = "manual";
+      setTotalConfirmChecked(false);
       setSourceConfirmChecked(false);
       formBaseline = "";
       pendingClose = false;
@@ -5070,7 +6937,14 @@
       const chip = $("payerChip");
       const input = $("payerInput");
       if (!chip || !input) return;
-      chip.classList.toggle("has-value", !!input.value.trim());
+      const value = input.value.trim();
+      chip.classList.toggle("has-value", !!value);
+      input.style.width = "";
+      if (value) {
+        requestAnimationFrame(() => {
+          input.scrollLeft = input.scrollWidth;
+        });
+      }
     }
 
     function currentFormSnapshot() {
@@ -5085,7 +6959,9 @@
         date: $("dateInput").value,
         total: $("totalInput").value,
         payer: $("payerInput").value.trim(),
+        memo: $("memoInput").value.trim(),
         imageSrc: currentImageData || "",
+        totalConfirmed: $("totalConfirmCheck")?.checked || false,
         sourceConfirmed: $("sourceConfirmCheck")?.checked || false,
         rows
       });
@@ -5103,6 +6979,35 @@
       if (saveButton) saveButton.textContent = checked ? "저장하기" : "확인 후 저장";
     }
 
+    function updateTotalConfirmState(validation = null) {
+      const checkbox = $("totalConfirmCheck");
+      const card = $("totalConfirmCard");
+      const amount = $("totalConfirmAmount");
+      const desc = $("totalConfirmDesc");
+      if (!checkbox || !card || !amount || !desc) return;
+
+      const result = validation || collectReceiptMathValidation();
+      const hasError = result.issues.length > 0;
+      const hasRows = result.filledRows > 0;
+      const canConfirm = hasRows && !hasError;
+      if (!canConfirm) checkbox.checked = false;
+      checkbox.disabled = !canConfirm;
+
+      card.classList.toggle("ok", checkbox.checked && canConfirm);
+      amount.textContent = hasRows ? formatWon(result.calculatedTotal) : "0원";
+      desc.textContent = hasError
+        ? "금액 오류를 먼저 수정해야 합계를 확인할 수 있습니다."
+        : hasRows
+          ? `총 ${result.filledRows.toLocaleString("ko-KR")}개 품목의 계 금액 합계입니다.`
+          : "품목을 입력하면 합계가 계산됩니다.";
+    }
+
+    function setTotalConfirmChecked(checked = false) {
+      const checkbox = $("totalConfirmCheck");
+      if (checkbox) checkbox.checked = !!checked;
+      updateTotalConfirmState();
+    }
+
     function setSourceConfirmChecked(checked = false) {
       const checkbox = $("sourceConfirmCheck");
       if (checkbox) checkbox.checked = !!checked;
@@ -5110,10 +7015,12 @@
     }
 
     function markDraftNeedsSourceReview() {
+      setTotalConfirmChecked(false);
       setSourceConfirmChecked(false);
     }
 
     function resetSourceConfirmAfterManualEdit() {
+      setTotalConfirmChecked(false);
       if ($("sourceConfirmCheck")?.checked) setSourceConfirmChecked(false);
     }
 
@@ -5122,6 +7029,7 @@
       $("dateInput").value = receipt.date || "";
       $("totalInput").value = formatInputNumber(receipt.total) || "";
       $("payerInput").value = receipt.payer || "";
+      $("memoInput").value = getReceiptMemo(receipt);
       updatePayerChipState();
       currentReceiptTotalHint = Number(receipt.receiptTotalHint || receipt.extractedTotal || 0) || null;
       currentReceiptTotalHintIgnored = false;
@@ -5148,6 +7056,7 @@
       table.innerHTML = "";
       receipt.items.forEach(item => table.appendChild(itemRow(item)));
       recalculateTotalFromItems();
+      setTotalConfirmChecked(receipt.sourceConfirmed !== false);
     }
 
     function clearForm() {
@@ -5155,10 +7064,12 @@
       $("dateInput").value = "";
       $("totalInput").value = "";
       $("payerInput").value = "";
+      $("memoInput").value = "";
       updatePayerChipState();
       currentReceiptTotalHint = null;
       currentReceiptTotalHintIgnored = false;
       currentExtractionLabel = "manual";
+      setTotalConfirmChecked(false);
       setSourceConfirmChecked(false);
       $("itemTable").innerHTML = "";
       $("preview").style.display = "none";
@@ -5308,6 +7219,7 @@
 
       const canUseCalculated = validation.issues.some(issue => issue.includes("품목 합계") && issue.includes("추출 총액"));
       $("useCalculatedTotal")?.classList.toggle("hidden", !canUseCalculated);
+      updateTotalConfirmState(validation);
       return validation;
     }
 
@@ -5392,6 +7304,7 @@
         $("dateInput"),
         $("totalInput"),
         $("payerInput"),
+        $("memoInput"),
         $("dropboxTokenInput"),
         $("dropboxFolderInput"),
         $("searchInput"),
@@ -5814,10 +7727,18 @@
       }
       const total = validation.calculatedTotal;
       const payer = $("payerInput").value.trim();
+      const memo = $("memoInput").value.trim();
       const items = readItemsFromForm();
 
       if (!store || !date || !items.length) {
         alert("매장명, 일자, 품목을 입력해주세요.");
+        return;
+      }
+
+      if (!$("totalConfirmCheck")?.checked) {
+        updateTotalConfirmState(validation);
+        $("totalConfirmCard")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        alert("저장 전 내역 합계 확인이 필요합니다.\n\n품목별 계 금액의 합계를 확인한 뒤 '내역 합계 확인'을 체크해주세요.");
         return;
       }
 
@@ -5843,6 +7764,7 @@
         date,
         total,
         payer,
+        memo,
         // 원본 이미지는 Dropbox 같은 외부 저장소에 두고, 앱에는 작은 썸네일만 남깁니다.
         imageSrc: "",
         thumbnailSrc: thumbnailForReceipt,
@@ -6669,12 +8591,13 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       if (/^[{\[]/.test(raw)) {
         try {
           const parsed = JSON.parse(raw);
-          const receipt = Array.isArray(parsed) ? parsed[0] : parsed;
+          const root = Array.isArray(parsed) ? (parsed[0] || {}) : (parsed || {});
+          const receipt = root.receipt || root.data || root;
           const items = normalizeReceiptItemsForStorage(receipt.items || receipt.products || []);
           if (receipt && (receipt.store || receipt.date || receipt.total || items.length)) {
             return {
               store: receipt.store || receipt.shop || receipt.merchant || "",
-              date: receipt.date || "",
+              date: normalizeDateText(receipt.date || receipt.purchasedAt || ""),
               total: Number(receipt.total || receipt.amount || itemSum(items) || 0),
               items,
               rawText: raw
@@ -8996,6 +10919,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       if (/lemon|레몬|sunkist|선키스트/.test(lower)) aliases.push("레몬 과일 선키스트");
       if (/cheese|치즈|하바티/.test(lower)) aliases.push("치즈");
       if (/bacon|베이컨/.test(lower)) aliases.push("베이컨 bacon");
+      if (/truffle|트러플/.test(lower)) aliases.push("트러플 과자 크래커");
       if (/cracker|크래커/.test(lower)) aliases.push("과자 크래커");
       if (/맥주|terra|테라|삿포로|샤프로/.test(lower)) aliases.push("맥주");
       if (/롤케익|롤케이크|케익|케이크/.test(lower)) aliases.push("케이크 롤케익 디저트");
@@ -9194,6 +11118,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       if (!ok) return;
       currentReceiptTotalHintIgnored = true;
       currentReceiptTotalHint = null;
+      setTotalConfirmChecked(true);
       setSourceConfirmChecked(true);
       updateReceiptValidation();
     });
@@ -9221,6 +11146,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
     });
 
     $("payerInput").addEventListener("input", updatePayerChipState);
+    $("totalConfirmCheck").addEventListener("change", () => updateTotalConfirmState());
     $("sourceConfirmCheck").addEventListener("change", updateSourceConfirmState);
 
     $("loadDemo").addEventListener("click", () => {
@@ -9246,6 +11172,11 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       const receipt = findReceipt(currentReceiptId);
       if (receipt) openModal("edit", receipt);
     });
+    $("sideReceiptEditInline")?.addEventListener("click", () => {
+      const receipt = findReceipt(currentReceiptId);
+      if (receipt) openModal("edit", receipt);
+    });
+    $("sideReceiptDeleteInline")?.addEventListener("click", requestSideReceiptDelete);
     $("sideReceiptClose")?.addEventListener("click", () => clearDesktopReceiptPanel());
 
     $("homeTitleButton").addEventListener("click", showInitialHome);
@@ -9937,7 +11868,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
 
     function exportCsvBackup() {
       const data = loadData();
-      const rows = [["영수증ID","일자","매장명","결제자","영수증총액","품목명","수량","단가","계","Dropbox경로"]];
+      const rows = [["영수증ID","일자","매장명","결제자","메모","영수증총액","품목명","수량","단가","계","Dropbox경로"]];
       (data.receipts || []).forEach(receipt => {
         (receipt.items || []).forEach(item => {
           rows.push([
@@ -9945,6 +11876,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
             receipt.date,
             receipt.store,
             receipt.payer || "",
+            getReceiptMemo(receipt),
             receipt.total,
             item.name,
             item.qty,
@@ -9971,6 +11903,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         receipt.date,
         receipt.store,
         getReceiptPayer(receipt),
+        getReceiptMemo(receipt),
         receipt.total,
         (receipt.items || []).length,
         receipt.imageStorage || "",
@@ -9983,6 +11916,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         receipt.date,
         receipt.store,
         getReceiptPayer(receipt),
+        getReceiptMemo(receipt),
         receipt.total,
         item.name,
         item.qty,
@@ -10014,8 +11948,8 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
           <body>
             <h1>영수증DB 전체 내보내기</h1>
             <p>내보낸 시각: ${escapeHtml(formatDateTime(nowIso()))}</p>
-            ${table("영수증 목록", ["영수증ID","일자","매장명","결제자","총액","품목수","이미지보관","Dropbox경로","생성일","수정일"], receiptRows)}
-            ${table("품목 전체", ["영수증ID","일자","매장명","결제자","영수증총액","품목명","수량","단가","계","검색별칭","Dropbox경로"], itemRows)}
+            ${table("영수증 목록", ["영수증ID","일자","매장명","결제자","메모","총액","품목수","이미지보관","Dropbox경로","생성일","수정일"], receiptRows)}
+            ${table("품목 전체", ["영수증ID","일자","매장명","결제자","메모","영수증총액","품목명","수량","단가","계","검색별칭","Dropbox경로"], itemRows)}
           </body>
         </html>`;
       const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
@@ -10107,10 +12041,10 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         return {
           endpoint: saved.endpoint || "",
           clientToken: saved.clientToken || "",
-          autoAnalyze: saved.autoAnalyze !== false
+          autoAnalyze: saved.autoAnalyze === true
         };
       } catch {
-        return { endpoint: "", clientToken: "", autoAnalyze: true };
+        return { endpoint: "", clientToken: "", autoAnalyze: false };
       }
     }
 
@@ -10118,7 +12052,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       localStorage.setItem(AI_SETTINGS_KEY, JSON.stringify({
         endpoint: normalizeAiEndpoint(settings.endpoint || ""),
         clientToken: settings.clientToken || "",
-        autoAnalyze: settings.autoAnalyze !== false
+        autoAnalyze: settings.autoAnalyze === true
       }));
       updateAiStatus();
     }
@@ -10133,7 +12067,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       return {
         endpoint: normalizeAiEndpoint($("aiEndpointInput").value || previous.endpoint || ""),
         clientToken: typedToken || (options.keepSavedToken ? previous.clientToken : ""),
-        autoAnalyze: $("aiAutoAnalyzeInput")?.checked !== false
+        autoAnalyze: $("aiAutoAnalyzeInput")?.checked === true
       };
     }
 
@@ -10161,7 +12095,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       $("dropboxFolderInput").value = settings.folder || "/영수증DB";
       $("aiEndpointInput").value = aiSettings.endpoint || "";
       $("aiClientTokenInput").value = aiSettings.clientToken || "";
-      $("aiAutoAnalyzeInput").checked = aiSettings.autoAnalyze !== false;
+      $("aiAutoAnalyzeInput").checked = aiSettings.autoAnalyze === true;
       $("cloudSupabaseUrlInput").value = cloudSettings.supabaseUrl || "";
       $("cloudSupabaseKeyInput").value = cloudSettings.anonKey || "";
       $("cloudSyncSpaceInput").value = cloudSettings.syncSpaceKey || "";
@@ -10478,7 +12412,7 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         saveAiSettingsObject(settings);
         $("aiEndpointInput").value = settings.endpoint || "";
         $("aiClientTokenInput").value = settings.clientToken || "";
-        alert("AI 자동 분석 서버 연결 성공!\n\n사진을 선택하면 자동으로 초안을 만들 수 있습니다.");
+        alert("AI 자동 분석 서버 연결 성공!\n\n영수증 추가 화면에서 'AI로 사진 분석'을 눌러 초안을 만들 수 있습니다. 사진 선택 시 자동 분석은 설정에서 켠 경우에만 실행됩니다.");
       } catch (error) {
         alert("AI 자동 분석 서버 연결에 실패했습니다.\n\n" + (error.message || error));
       }
@@ -10643,18 +12577,10 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         $("preview").style.display = "block";
         currentExtractionLabel = "ai-assisted-manual";
         markDraftNeedsSourceReview();
-        const analyzedDraft = getDirectAnalyzedReceiptFallback(currentImageFileName, "");
-        if (analyzedDraft) {
-          applyParsedReceipt({
-            ...analyzedDraft,
-            rawText: currentImageFileName
-          });
-          currentExtractionLabel = "codex-image-draft";
-          updateOcrStatus(`AI 분석 초안 완료: ${analyzedDraft.items.length}개 품목을 입력했습니다. 원본과 대조 후 저장해주세요.`, 100, true);
-        } else if (loadAiSettings().autoAnalyze !== false && isAiAnalysisConnected()) {
+        if (loadAiSettings().autoAnalyze === true && isAiAnalysisConnected()) {
           await analyzeCurrentReceiptWithAi({ silent: true, silentMissing: true });
         } else {
-          updateOcrStatus("사진을 불러왔습니다. AI 자동 분석 서버를 연결하거나 분석값을 붙여넣어주세요.", 100, true);
+          updateOcrStatus("사진을 불러왔습니다. 앱 안 OCR은 실행하지 않습니다. AI 분석값을 붙여넣거나 'AI로 사진 분석'을 눌러 초안을 만드세요.", 100, true);
         }
         $("rawOcrText").classList.add("show");
         showOcrActions(true);
@@ -10673,7 +12599,11 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
         alert("붙여넣은 분석값이 없습니다.");
         return;
       }
-      const parsed = safeParseReceiptText(text, { fileName: currentImageFileName || "" });
+      const parsed = parseStructuredReceiptDraft(text);
+      if (!parsed) {
+        alert("AI 분석값을 읽지 못했습니다.\n\nJSON 또는 `품목 | 수량 | 단가 | 금액` 표 형식으로 붙여넣어주세요.");
+        return;
+      }
       applyParsedReceipt(parsed);
       currentExtractionLabel = "ai-paste-draft";
       updateOcrStatus(`붙여넣은 값으로 초안을 만들었습니다. ${parsed.items.length}개 상품 품목을 금액 검증과 함께 확인해주세요.`, 100, true);
@@ -10683,6 +12613,12 @@ if ((has(/스타벅스|starbucks|강남구청문점|강남구청점|강남구청
       if (!event.target.closest(".receipt-card")) {
         hideReceiptDeleteButtons();
       }
+    });
+
+    document.addEventListener("scroll", () => hideReceiptDeleteButtons(), true);
+    window.addEventListener("resize", () => hideReceiptDeleteButtons());
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) hideReceiptDeleteButtons();
     });
 
     $("imageBackdrop").addEventListener("click", () => {
