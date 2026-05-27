@@ -306,7 +306,11 @@ svg{display:block;flex-shrink:0;}
 .month-nav-btn:hover{background:var(--fill);color:var(--label);}
 .month-nav-btn:disabled{opacity:.3;cursor:not-allowed;}
 .month-nav-center{flex:1;text-align:center;min-width:0;}
-.month-nav-label{font-size:14px;font-weight:700;color:var(--label);letter-spacing:-.2px;}
+.month-nav-label{font-size:14px;font-weight:700;color:var(--label);letter-spacing:-.2px;cursor:pointer;border-radius:6px;padding:2px 6px;transition:background .12s;}
+.month-nav-label:hover{background:var(--fill);}
+.month-nav-label.has-sel{color:var(--blue-txt);}
+.back-to-summary{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:var(--label3);background:transparent;border:none;padding:0;cursor:pointer;margin-bottom:4px;border-radius:4px;line-height:1.4;}
+.back-to-summary:hover{color:var(--blue-txt);}
 .month-nav-today{font-size:11px;color:var(--blue-txt);background:transparent;border:none;padding:2px 4px 0;font-weight:500;margin-top:1px;}
 .month-nav-today:hover{text-decoration:underline;}
 .month-nav-today.hidden{visibility:hidden;}
@@ -776,7 +780,9 @@ svg{display:block;flex-shrink:0;}
 // v1.13 — 검색 결과 오른쪽 패널: 품목 검색 시 최저/평균/최고가 카드 + 구매 이력 테이블.
 //         영수증 검색 시 매장명·카테고리·결제자·총액 목록 테이블. 행 클릭 → 상세 이동.
 //         한영 검색어 대역: "베이컨"→bacon, "치즈"→cheese 등 30개 식품 자동 매칭.
-const APP_VERSION='v1.13';
+// v1.14 — 가계부 복귀 UX: 상세 화면 상단 "← N월 가계부" 버튼 + 월 레이블 클릭 → 요약 복귀.
+//         영수증 선택 중 월 레이블 파란색 강조 + 툴팁으로 클릭 힌트.
+const APP_VERSION='v1.14';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1250,9 +1256,13 @@ function _cardHtml(r){
 }
 
 function renderSide(){
-  // 월 네비 라벨 갱신
+  // 월 네비 라벨 갱신 — 영수증 선택 중이면 파란색 힌트 표시
   const monthLabelEl=document.getElementById('monthLabel');
-  if(monthLabelEl)monthLabelEl.textContent=ymLabel(viewMonth);
+  if(monthLabelEl){
+    monthLabelEl.textContent=ymLabel(viewMonth);
+    monthLabelEl.title=selectedId?'클릭하면 가계부 요약으로 돌아가요':'';
+    monthLabelEl.classList.toggle('has-sel',!!selectedId);
+  }
   const monthTodayEl=document.getElementById('monthToday');
   if(monthTodayEl)monthTodayEl.classList.toggle('hidden',viewMonth===_currentYM());
 
@@ -1344,6 +1354,10 @@ function changeMonth(offset){
 document.getElementById('monthPrev').addEventListener('click',()=>changeMonth(-1));
 document.getElementById('monthNext').addEventListener('click',()=>changeMonth(1));
 document.getElementById('monthToday').addEventListener('click',()=>changeMonth(0));
+// 월 레이블 클릭 → 영수증 선택 해제, 가계부 요약으로 복귀
+document.getElementById('monthLabel').addEventListener('click',()=>{
+  if(selectedId){selectedId=null;renderSide();renderDetail();}
+});
 
 // ════════════════════════════════════════════════════════════════
 // SEARCH (with IME guard)
@@ -2103,7 +2117,13 @@ async function renderDetail(){
   }
   const r=receipts.find(x=>x.id===selectedId);
   if(!r){selectedId=null;return renderDetail();}
-  eye.textContent='영수증';
+  eye.innerHTML=`<button class="back-to-summary" id="backToSummaryBtn">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    ${ymLabel(viewMonth)} 가계부
+  </button>`;
+  document.getElementById('backToSummaryBtn').addEventListener('click',()=>{
+    selectedId=null;renderSide();renderDetail();
+  });
   title.textContent=r.store||'(매장명 없음)';
   sub.textContent=`${fmtDateKor(r.date)} · ${fmtMoney(r.total)}원`;
   actions.style.display='flex';
