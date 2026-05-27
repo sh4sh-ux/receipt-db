@@ -278,6 +278,17 @@ svg{display:block;flex-shrink:0;}
 .srch-total{text-align:right;font-size:13px;color:var(--label2);padding:10px 8px 0;}
 @media(max-width:780px){.srch-stats{gap:8px;}.srch-stat{padding:10px 8px;}.srch-stat-val{font-size:15px;}}
 
+/* ── PAYER SUMMARY ── */
+.payer-hero{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.payer-stat{background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:16px 18px;}
+.payer-stat.total{background:var(--blue-bg);border-color:var(--blue);}
+.payer-stat-lbl{font-size:10.5px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:7px;}
+.payer-stat.total .payer-stat-lbl{color:var(--blue-txt);}
+.payer-stat-val{font-size:22px;font-weight:700;letter-spacing:-.4px;font-variant-numeric:tabular-nums;line-height:1.15;}
+.payer-stat.total .payer-stat-val{color:var(--blue-txt);}
+.payer-stat-sub{margin-top:5px;font-size:11px;color:var(--label3);}
+@media(max-width:600px){.payer-hero{gap:8px;}.payer-stat-val{font-size:18px;}}
+
 .section-hd{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin:18px 0 8px;display:flex;justify-content:space-between;align-items:center;}
 .section-hd .ghost-mini{border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;text-transform:none;letter-spacing:0;}
 .section-hd .ghost-mini:hover{background:var(--fill);color:var(--label);}
@@ -782,7 +793,11 @@ svg{display:block;flex-shrink:0;}
 //         한영 검색어 대역: "베이컨"→bacon, "치즈"→cheese 등 30개 식품 자동 매칭.
 // v1.14 — 가계부 복귀 UX: 상세 화면 상단 "← N월 가계부" 버튼 + 월 레이블 클릭 → 요약 복귀.
 //         영수증 선택 중 월 레이블 파란색 강조 + 툴팁으로 클릭 힌트.
-const APP_VERSION='v1.14';
+// v1.15 — 결제자 검색 시 전용 요약 패널: 결제 건수+합계 히어로 카드, 카테고리 분포 막대,
+//         영수증 목록 테이블. "결제자 홍길동" 입력 → 해당 결제자 통계 한눈에.
+// v1.16 — 품목명 기반 카테고리 보조 추정: 가게명으로 못 잡을 때 품목 키워드 투표로 fallback.
+//         CAT_ITEM_RULES (술집·카페·교통·병원·문화·외식·마트) + 최소 2점 이상 시 채택.
+const APP_VERSION='v1.16';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -891,6 +906,17 @@ const CAT_RULES=[
   {cat:'문화', kws:['CGV','메가박스','롯데시네마','영화관','교보문고','영풍문고','예스24','알라딘','서점','전시','공연','콘서트','뮤지컬','연극','박물관','미술관']},
 ];
 
+// 품목명 기반 카테고리 키워드 (가게명 매칭 실패 시 보조 추정)
+const CAT_ITEM_RULES=[
+  {cat:'술집',   score:3, kws:['소주','맥주','테라','진로','참이슬','처음처럼','카스','클라우드','켈리','새로','필라이트','하이트','오비','청하','막걸리','와인','위스키','사케','사워','칵테일','하이볼','안주','생맥주']},
+  {cat:'카페',   score:2, kws:['아메리카노','라떼','카푸치노','에스프레소','마키아토','플랫화이트','콜드브루','아이스티','허브티','케이크','스콘','쿠키','크로아상','머핀','샌드위치']},
+  {cat:'교통',   score:3, kws:['휘발유','경유','등유','LPG','주유','리터','ℓ','충전(kWh)','충전량','고속도로','통행료','하이패스','주차']},
+  {cat:'병원·약국', score:3, kws:['처방','조제','약품','정제','캡슐','시럽','연고','진료','처치','검사료','주사']},
+  {cat:'문화',   score:3, kws:['입장권','관람권','티켓','좌석','스크린','공연','관람','대여','렌탈']},
+  {cat:'외식',   score:1, kws:['삼겹살','갈비','볶음밥','비빔밥','냉면','국밥','라면','찌개','전골','도시락','정식','세트메뉴','덮밥','우동','파스타','피자','버거','치킨','초밥','회','샤브','뷔페']},
+  {cat:'마트',   score:1, kws:['우유','계란','두부','쌀','설탕','소금','식용유','라면','과자','음료수','생수','화장지','세제','샴푸']},
+];
+
 // 사용자 학습 사전 — 가게명 → 카테고리
 let storeCatMap={};  // { "하나로마트 청담점": "마트", ... }
 
@@ -904,22 +930,45 @@ async function saveStoreCatMap(){
   try{await dbPut('settings',{key:'storeCatMap',value:storeCatMap});}catch(e){}
 }
 
-function autocategorize(storeName){
-  if(!storeName)return '';
-  const s=storeName.trim();
-  if(!s)return '';
+function autocategorize(storeName, items=[]){
+  const s=(storeName||'').trim();
   // 1. 사용자 사전 — 정확 일치 우선
-  if(storeCatMap[s])return storeCatMap[s];
-  // 2. 사용자 사전 — 부분 일치 (가게명이 더 자세히 들어와도 짧은 키워드로 잡힘)
-  const sLower=s.toLowerCase();
-  for(const[key,cat]of Object.entries(storeCatMap)){
-    if(!key)continue;
-    if(s.includes(key)||key.includes(s)||sLower.includes(key.toLowerCase()))return cat;
+  if(s&&storeCatMap[s])return storeCatMap[s];
+  // 2. 사용자 사전 — 부분 일치
+  if(s){
+    const sLower=s.toLowerCase();
+    for(const[key,cat]of Object.entries(storeCatMap)){
+      if(!key)continue;
+      if(s.includes(key)||key.includes(s)||sLower.includes(key.toLowerCase()))return cat;
+    }
   }
-  // 3. 규칙 사전
-  for(const rule of CAT_RULES){
-    for(const kw of rule.kws){
-      if(s.includes(kw)||sLower.includes(kw.toLowerCase()))return rule.cat;
+  // 3. 가게명 규칙 사전
+  if(s){
+    const sLower=s.toLowerCase();
+    for(const rule of CAT_RULES){
+      for(const kw of rule.kws){
+        if(s.includes(kw)||sLower.includes(kw.toLowerCase()))return rule.cat;
+      }
+    }
+  }
+  // 4. 품목명 보조 추정 (가게명 매칭 실패 시) — 품목별 카테고리 투표
+  if(items&&items.length){
+    const votes={};
+    for(const it of items){
+      const name=(it.name||'').toLowerCase();
+      if(!name)continue;
+      for(const rule of CAT_ITEM_RULES){
+        for(const kw of rule.kws){
+          if(name.includes(kw.toLowerCase())){
+            votes[rule.cat]=(votes[rule.cat]||0)+rule.score;
+            break; // 한 품목에서 같은 카테고리 중복 점수 방지
+          }
+        }
+      }
+    }
+    if(Object.keys(votes).length){
+      const best=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
+      if(best[1]>=2) return best[0]; // 최소 2점 이상이어야 채택
     }
   }
   return '';
@@ -1365,8 +1414,8 @@ document.getElementById('monthLabel').addEventListener('click',()=>{
 const searchInp=document.getElementById('searchInp');
 let _searchComposing=false;
 searchInp.addEventListener('compositionstart',()=>{_searchComposing=true;});
-searchInp.addEventListener('compositionend',()=>{_searchComposing=false;searchQuery=searchInp.value;renderSide();});
-searchInp.addEventListener('input',()=>{if(!_searchComposing){searchQuery=searchInp.value;renderSide();}});
+searchInp.addEventListener('compositionend',()=>{_searchComposing=false;searchQuery=searchInp.value;renderSide();renderDetail();});
+searchInp.addEventListener('input',()=>{if(!_searchComposing){searchQuery=searchInp.value;renderSide();renderDetail();}});
 
 // ════════════════════════════════════════════════════════════════
 // INPUT VIEW — paste + photo + preview + save
@@ -1380,6 +1429,7 @@ const photoInp=document.getElementById('photoInp');
 let _currentParsed=null;
 let _pasteComposing=false;
 let _catAutoFilled=false;  // 카테고리가 자동 채워진 상태인지
+let _catAutoSource='store'; // 'store' | 'items' — 어디서 자동 분류됐는지
 pasteTa.addEventListener('compositionstart',()=>{_pasteComposing=true;});
 pasteTa.addEventListener('compositionend',()=>{_pasteComposing=false;updatePreview();});
 pasteTa.addEventListener('input',()=>{if(!_pasteComposing)updatePreview();});
@@ -1389,14 +1439,16 @@ pasteTa.addEventListener('paste',()=>{setTimeout(updatePreview,30);});
 const catInpEl=document.getElementById('catInp');
 let _catComposing=false;
 catInpEl.addEventListener('compositionstart',()=>{_catComposing=true;});
-catInpEl.addEventListener('compositionend',()=>{_catComposing=false;_catAutoFilled=false;_updateCatHint();});
-catInpEl.addEventListener('input',()=>{if(!_catComposing){_catAutoFilled=false;_updateCatHint();}});
+catInpEl.addEventListener('compositionend',()=>{_catComposing=false;_catAutoFilled=false;_catAutoSource='store';_updateCatHint();});
+catInpEl.addEventListener('input',()=>{if(!_catComposing){_catAutoFilled=false;_catAutoSource='store';_updateCatHint();}});
 
 function _updateCatHint(){
   const hint=document.getElementById('catAutoHint');
   if(!hint)return;
   if(_catAutoFilled){
-    hint.textContent='→ 가게명에서 자동 분류됨 (수정 가능)';
+    hint.textContent=_catAutoSource==='items'
+      ? '→ 품목명에서 자동 분류됨 (수정 가능)'
+      : '→ 가게명에서 자동 분류됨 (수정 가능)';
     hint.style.color='var(--green-txt)';
   }else{
     hint.textContent='자동 분류돼요';
@@ -1423,11 +1475,13 @@ function updatePreview(){
   }
   _currentParsed=p;
   // 가게명 인식되면 카테고리 자동 채움 (입력란이 비어있거나 이전에 자동 채웠을 때만)
-  if(p&&p.store){
-    const auto=autocategorize(p.store);
+  if(p&&p.store||((p?.items||[]).length)){
+    const autoStore=autocategorize(p.store);
+    const auto=autoStore||autocategorize(p.store, p.items||[]);
     if(auto && (catInpEl.value.trim()===''||_catAutoFilled)){
       catInpEl.value=auto;
       _catAutoFilled=true;
+      _catAutoSource=autoStore?'store':'items';
       _updateCatHint();
     }
   }
@@ -1543,8 +1597,9 @@ function bindPreviewFormEvents(){
       p.store=storeInp.value.trim();
       // 매장명 바뀌면 카테고리 자동 재추정 (자동 채움 상태일 때만 덮어쓰기)
       if(_catAutoFilled||catInpEl.value.trim()===''){
-        const auto=autocategorize(p.store);
-        if(auto){catInpEl.value=auto;_catAutoFilled=true;_updateCatHint();}
+        const autoStore=autocategorize(p.store);
+        const auto=autoStore||autocategorize(p.store, p.items||[]);
+        if(auto){catInpEl.value=auto;_catAutoFilled=true;_catAutoSource=autoStore?'store':'items';_updateCatHint();}
       }
       // 검증 갱신 — 다시 그리지 않고 alert 영역만 갱신하려면 더 복잡해지니 일단 전체 다시
       renderPreviewForm();
@@ -1979,6 +2034,83 @@ function renderSearchSummaryHtml(q, filtered){
   return statsHtml+bodyHtml;
 }
 
+// ── 결제자 요약 패널 ──
+function renderPayerSummaryHtml(payerName, filtered){
+  if(!filtered.length){
+    return `<div class="budget-empty-state">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div style="font-weight:600;margin-bottom:4px;">'${escapeHtml(payerName)}' 결제 내역이 없어요</div>
+      <div style="font-size:12px;color:var(--label3);">결제자 이름을 확인해보세요</div>
+    </div>`;
+  }
+
+  const sorted=[...filtered].sort((a,b)=>b.date.localeCompare(a.date));
+  const total=sorted.reduce((s,r)=>s+(r.total||0),0);
+  const avg=filtered.length>0?Math.round(total/filtered.length):0;
+
+  // 히어로 카드
+  const heroHtml=`<div class="payer-hero">
+    <div class="payer-stat">
+      <div class="payer-stat-lbl">결제 건수</div>
+      <div class="payer-stat-val">${filtered.length}<span style="font-size:14px;font-weight:500;color:var(--label3);margin-left:3px;">건</span></div>
+      <div class="payer-stat-sub">건당 평균 ${fmtMoney(avg)}원</div>
+    </div>
+    <div class="payer-stat total">
+      <div class="payer-stat-lbl">합계 금액</div>
+      <div class="payer-stat-val">${fmtMoney(total)}<span style="font-size:14px;font-weight:500;margin-left:3px;">원</span></div>
+      <div class="payer-stat-sub">${sorted[0]?fmtDateKor(sorted[sorted.length-1].date)+' ~ '+fmtDateKor(sorted[0].date):''}</div>
+    </div>
+  </div>`;
+
+  // 카테고리 분포
+  const catMap={};
+  for(const r of filtered){
+    const k=r.category||'미분류';
+    if(r.total>0) catMap[k]=(catMap[k]||0)+(r.total||0);
+  }
+  const catEntries=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  const catTotal=catEntries.reduce((s,[,v])=>s+v,0);
+  let catHtml='';
+  if(catEntries.length>0){
+    catHtml=`<div class="budget-section">
+      <div class="budget-section-hd">카테고리별 <span class="hd-sub">${catEntries.length}개</span></div>
+      <div class="cat-bars">
+        ${catEntries.map(([cat,amt],i)=>{
+          const pct=catTotal>0?amt/catTotal*100:0;
+          const w=pct.toFixed(1);
+          const isUncat=cat==='미분류';
+          return `<div class="cat-bar-row${isUncat?' uncat':''}" data-rank="${Math.min(i,4)}">
+            <div class="cat-bar-top">
+              <span class="cat-bar-name">${escapeHtml(cat)}<span class="cat-pct">${pct.toFixed(0)}%</span></span>
+              <span class="cat-bar-amt">${fmtMoney(amt)}원</span>
+            </div>
+            <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%"></div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  // 영수증 목록
+  const listHtml=`<div class="budget-section">
+    <div class="budget-section-hd">영수증 목록 <span class="hd-sub">${filtered.length}건</span></div>
+    <table class="srch-table">
+      <thead><tr><th>일자</th><th>매장명</th><th>카테고리</th><th>총액</th></tr></thead>
+      <tbody>${sorted.map(r=>`
+        <tr class="srch-row" data-id="${r.id}">
+          <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
+          <td>${escapeHtml(r.store||'')}</td>
+          <td>${escapeHtml(r.category||'—')}</td>
+          <td>${fmtMoney(r.total||0)}원</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    ${filtered.length>1?`<div class="srch-total">합계 <b>${fmtMoney(total)}원</b></div>`:''}
+  </div>`;
+
+  return heroHtml+catHtml+listHtml;
+}
+
 function renderMonthSummaryHtml(ym){
   const sum=monthSummary(ym);
   const prev=monthSummary(ymOffset(ym,-1));
@@ -2095,12 +2227,23 @@ async function renderDetail(){
   if(!selectedId){
     actions.style.display='none';
     if(searchQuery){
-      // ── 검색 결과 요약 패널 ──
       const filtered=getFiltered();
-      eye.textContent='검색';
-      title.textContent=`'${searchQuery}' 검색 결과`;
-      sub.textContent=filtered.length>0?`${filtered.length}개 영수증 · 클릭하면 상세 보기`:'결과 없음';
-      body.innerHTML=renderSearchSummaryHtml(searchQuery.trim().toLowerCase(),filtered);
+      const q=searchQuery.trim();
+      // ── 결제자 검색인지 판별 ──
+      const isPayerSearch=q.startsWith('결제자 ')&&q.length>4;
+      if(isPayerSearch){
+        const payerName=q.slice(4).trim();
+        eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;
+        title.textContent=`${payerName} 결제 내역`;
+        sub.textContent=filtered.length>0?`${filtered.length}건 · 클릭하면 상세 보기`:'결과 없음';
+        body.innerHTML=renderPayerSummaryHtml(payerName,filtered);
+      }else{
+        // ── 일반 검색 결과 요약 패널 ──
+        eye.textContent='검색';
+        title.textContent=`'${q}' 검색 결과`;
+        sub.textContent=filtered.length>0?`${filtered.length}개 영수증 · 클릭하면 상세 보기`:'결과 없음';
+        body.innerHTML=renderSearchSummaryHtml(q.toLowerCase(),filtered);
+      }
       body.querySelectorAll('.srch-row[data-id]').forEach(tr=>{
         tr.addEventListener('click',()=>selectReceipt(tr.dataset.id));
       });
