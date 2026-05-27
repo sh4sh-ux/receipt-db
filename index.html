@@ -150,6 +150,8 @@ svg{display:block;flex-shrink:0;}
 .photo-zone{border:1.5px dashed var(--sep2);border-radius:var(--rm);padding:18px;text-align:center;color:var(--label3);background:var(--fill2);cursor:pointer;transition:all .15s;position:relative;}
 .photo-zone:hover{border-color:var(--blue);color:var(--blue-txt);background:var(--blue-bg);}
 .photo-zone.has{padding:0;border-style:solid;background:var(--card);}
+.photo-zone.drag,.detail-photo.drag{border-color:var(--blue)!important;background:var(--blue-bg)!important;outline:2px dashed var(--blue);outline-offset:-3px;}
+.detail-photo.drag img{opacity:.4;}
 .photo-zone svg{margin:0 auto 6px;}
 .photo-zone-text{font-size:13px;}
 .photo-zone-hint{font-size:11px;color:var(--label3);margin-top:3px;}
@@ -183,7 +185,7 @@ svg{display:block;flex-shrink:0;}
 .prev-add-item:hover{border-color:var(--blue);background:var(--blue-bg);border-style:solid;}
 .prev-items-head-row,.prev-item-row{display:grid;grid-template-columns:minmax(0,1fr) 64px 100px 110px 26px;gap:6px;align-items:center;}
 .prev-items-head-row{padding:0 2px 4px;font-size:10.5px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.3px;}
-.prev-items-head-row span:nth-child(2),.prev-items-head-row span:nth-child(3),.prev-items-head-row span:nth-child(4){text-align:right;}
+.prev-items-head-row span:nth-child(2),.prev-items-head-row span:nth-child(3),.prev-items-head-row span:nth-child(4){text-align:right;padding-right:9px;}
 .prev-item-row{margin-bottom:5px;}
 .prev-item-name,.prev-item-qty,.prev-item-price,.prev-item-amt{border:1px solid var(--sep2);background:var(--card);border-radius:5px;padding:7px 9px;font-size:13.5px;outline:none;font-family:inherit;color:var(--label);min-width:0;font-variant-numeric:tabular-nums;line-height:1.3;}
 .prev-item-qty,.prev-item-price,.prev-item-amt{text-align:right;}
@@ -203,6 +205,7 @@ svg{display:block;flex-shrink:0;}
 @media(max-width:780px){
   .prev-items-head-row,.prev-item-row{grid-template-columns:minmax(0,1fr) 48px 82px 92px 24px;gap:4px;}
   .prev-item-name,.prev-item-qty,.prev-item-price,.prev-item-amt{font-size:13px;padding:6px 7px;}
+  .prev-items-head-row span:nth-child(2),.prev-items-head-row span:nth-child(3),.prev-items-head-row span:nth-child(4){padding-right:7px;}
 }
 
 .alert{border-radius:var(--rm);padding:12px 14px;margin-top:10px;display:flex;gap:10px;font-size:13px;line-height:1.5;}
@@ -227,6 +230,17 @@ svg{display:block;flex-shrink:0;}
 
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
 @media(max-width:900px){.detail-grid{grid-template-columns:1fr;}}
+
+/* ── 상세 화면 재구성 레이아웃 ── */
+.detail-two-col{display:grid;grid-template-columns:1fr 1.15fr;gap:20px;margin:14px 0 18px;align-items:start;}
+.detail-kv-stack{display:flex;flex-direction:column;gap:8px;}
+/* 두 컬럼 안에서 photo의 bottom margin 제거 */
+.detail-two-col .detail-photo{margin-bottom:0;}
+/* photo empty 상태 — 컬럼 안에서 패딩 축소 */
+.detail-two-col .detail-photo-empty{padding:28px 16px;}
+@media(max-width:780px){
+  .detail-two-col{grid-template-columns:1fr;}
+}
 
 .kv{padding:10px 12px;background:var(--fill2);border-radius:var(--rm);border:1px solid var(--sep);}
 .kv-lbl{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;}
@@ -350,7 +364,7 @@ svg{display:block;flex-shrink:0;}
   .side-top{padding:max(18px,calc(env(safe-area-inset-top,0px) + 12px)) 18px 14px;}
   .side-search,.side-list,.side-foot{padding-left:18px;padding-right:18px;}
   .side-search{padding-bottom:10px;}
-  .side-list{max-height:none;}
+  .side-list{max-height:42vh;overflow-y:auto;}
   .main-top{padding:18px 18px 14px;}
   .main-body{padding:18px 18px 60px;}
   :root{--pad-x:18px;}
@@ -361,6 +375,22 @@ svg{display:block;flex-shrink:0;}
 /* ── HIDDEN VIEWS ── */
 .view{display:none;}
 .view.on{display:block;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:190;}
+.modal-card{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;background:var(--card);border-radius:var(--r);padding:26px 28px;width:min(520px,calc(100vw - 32px));max-height:calc(100vh - 80px);overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.22);}
+.modal-head{font-size:16px;font-weight:700;margin-bottom:4px;}
+.modal-sub{font-size:12.5px;color:var(--label2);margin-bottom:16px;line-height:1.55;}
+.modal-foot{margin-top:16px;display:flex;justify-content:flex-end;gap:8px;}
+.bkp-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--sep);border-radius:var(--rm);margin-bottom:8px;}
+.bkp-item-info{flex:1;min-width:0;}
+.bkp-item-name{font-size:12.5px;font-weight:500;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bkp-item-meta{font-size:11px;color:var(--label3);margin-top:2px;}
+.bkp-restore-btn{border:1px solid var(--blue);background:transparent;color:var(--blue-txt);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;flex-shrink:0;cursor:pointer;}
+.bkp-restore-btn:hover{background:var(--blue);color:#fff;}
+.dbx-guide{background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:12px 14px;margin-bottom:12px;font-size:12px;color:var(--label2);line-height:1.8;}
+.dbx-guide b{color:var(--label);}
+.dbx-guide code{background:var(--fill);border:1px solid var(--sep);border-radius:3px;padding:1px 4px;font-size:11px;font-family:ui-monospace,'SF Mono','Menlo',monospace;}
 </style>
 </head>
 <body>
@@ -373,12 +403,12 @@ svg{display:block;flex-shrink:0;}
       <div class="side-top">
         <div class="app-eye-row">
           <span class="app-eye">Receipt DB</span>
-          <span class="app-version" id="appVersion" title="앱 버전">v1.05</span>
+          <span class="app-version" id="appVersion" title="앱 버전">v1.08</span>
         </div>
         <div class="app-title">영수증 보관함</div>
         <div class="tab-row">
-          <button class="tab on" data-tab="list">내역</button>
           <button class="tab" data-tab="input">추가</button>
+          <button class="tab on" data-tab="list">내역</button>
           <button class="tab" data-tab="settings">설정</button>
         </div>
       </div>
@@ -395,7 +425,7 @@ svg{display:block;flex-shrink:0;}
       <div class="side-search">
         <div class="search-wrap">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="searchInp" type="text" placeholder="가게·품목·날짜 검색"/>
+          <input id="searchInp" type="text" placeholder="가게·품목·날짜·'결제자 홍길동'"/>
         </div>
       </div>
 
@@ -446,21 +476,11 @@ svg{display:block;flex-shrink:0;}
           </div>
         </div>
         <div class="main-body">
-          <div class="guide">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <div class="guide-body">
-              <b>사용 방법</b>
-              <ol class="guide-steps">
-                <li>아래 <b>프롬프트 복사</b> 버튼을 누르세요.</li>
-                <li>ChatGPT 등에 영수증 사진과 함께 붙여넣고 응답을 받으세요.</li>
-                <li>응답을 그대로 복사해 아래 <b>붙여넣기 영역</b>에 붙이세요.</li>
-                <li>미리보기를 확인하고 사진을 첨부한 뒤 저장하세요.</li>
-              </ol>
-              <button class="guide-copy" id="promptCopyBtn">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                프롬프트 복사
-              </button>
-            </div>
+          <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+            <button class="guide-copy" id="promptCopyBtn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              프롬프트 복사
+            </button>
           </div>
 
           <div class="input-stack">
@@ -520,10 +540,16 @@ svg{display:block;flex-shrink:0;}
                     <input id="payDetail" class="field-inp" type="text" placeholder="예: 현대카드"/>
                   </div>
                 </div>
-                <div class="field-g">
-                  <label class="field-lbl">카테고리 <span class="field-lbl-hint" id="catAutoHint">자동 분류돼요</span></label>
-                  <input id="catInp" class="field-inp" type="text" placeholder="예: 마트, 외식, 카페..." list="catList"/>
-                  <datalist id="catList"></datalist>
+                <div class="row-2">
+                  <div class="field-g">
+                    <label class="field-lbl">결제자 <span class="field-lbl-hint">선택</span></label>
+                    <input id="payerInp" class="field-inp" type="text" placeholder="예: 홍길동, 나, 회사"/>
+                  </div>
+                  <div class="field-g">
+                    <label class="field-lbl">카테고리 <span class="field-lbl-hint" id="catAutoHint">자동 분류돼요</span></label>
+                    <input id="catInp" class="field-inp" type="text" placeholder="예: 마트, 외식, 카페..." list="catList"/>
+                    <datalist id="catList"></datalist>
+                  </div>
                 </div>
               </div>
 
@@ -561,6 +587,63 @@ svg{display:block;flex-shrink:0;}
           </div>
         </div>
         <div class="main-body">
+
+          <!-- ─── Dropbox 자동 백업 ─── -->
+          <div class="setting-card">
+            <h3>☁ Dropbox 자동 백업</h3>
+            <p>Dropbox App을 연결하면 영수증 데이터를 클라우드에 안전하게 백업할 수 있어요.</p>
+
+            <!-- 미연결 상태 -->
+            <div id="dbxNotConnected">
+              <div class="dbx-guide">
+                <b>Dropbox 앱 설정 방법 (1회만)</b><br>
+                1. <a href="https://www.dropbox.com/developers/apps/create" target="_blank" rel="noopener" style="color:var(--blue-txt);">Dropbox 개발자 콘솔</a>에서 새 앱 생성<br>
+                &nbsp;&nbsp;→ Choose an API: <b>Scoped access</b> · 접근 유형: <b>App folder</b><br>
+                2. 앱 생성 후 <b>Permissions</b> 탭에서 체크:<br>
+                &nbsp;&nbsp;<code>files.content.write</code> · <code>files.content.read</code> · <code>account_info.read</code> → Submit<br>
+                3. <b>Settings</b> 탭 → Redirect URIs에 아래 주소 추가:<br>
+                &nbsp;&nbsp;<code id="dbxRedirectUriHint" style="word-break:break-all;">—</code><br>
+                4. Settings 탭의 <b>App key</b>를 아래에 붙여넣기
+              </div>
+              <div style="margin-bottom:10px;">
+                <div class="field-lbl">App Key <span class="field-lbl-hint">Dropbox 앱 Settings 탭에서 복사</span></div>
+                <input id="dbxAppKey" class="field-inp" type="text" placeholder="예: abc123xyz456789"/>
+              </div>
+              <div class="setting-btn-row">
+                <button id="dbxConnectBtn" class="primary">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  Dropbox 연결하기
+                </button>
+              </div>
+            </div>
+
+            <!-- 연결 상태 -->
+            <div id="dbxConnected" style="display:none;">
+              <div id="dbxStatus"></div>
+              <div class="setting-btn-row">
+                <button id="dbxBackupBtn" class="primary">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+                  지금 백업
+                </button>
+                <button id="dbxRestoreBtn">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="8 16 12 20 16 16"/><line x1="12" y1="20" x2="12" y2="11"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+                  Dropbox에서 복원
+                </button>
+                <button id="dbxDisconnectBtn" class="danger">연결 해제</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-card">
+            <h3>엑셀로 내보내기</h3>
+            <p>모든 영수증을 스프레드시트 파일(.csv)로 내려받습니다. 엑셀·Numbers·구글 시트에서 바로 열 수 있어요.</p>
+            <div class="setting-btn-row">
+              <button class="primary" id="exportCsvBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                CSV 파일 다운로드
+              </button>
+            </div>
+          </div>
 
           <div class="setting-card">
             <h3>JSON 백업 내보내기</h3>
@@ -611,7 +694,7 @@ svg{display:block;flex-shrink:0;}
             <p>앱이 업데이트될 때마다 좌측 상단 버전 번호가 올라갑니다.</p>
             <div class="setting-btn-row">
               <span style="font-size:12px;color:var(--label2);align-self:center;">
-                Receipt DB · <b id="appVersionStat">v1.05</b> · IndexedDB v2 · 백업 포맷 v2
+                Receipt DB · <b id="appVersionStat">v1.08</b> · IndexedDB v2 · 백업 포맷 v2
               </span>
             </div>
           </div>
@@ -626,6 +709,21 @@ svg{display:block;flex-shrink:0;}
 <div class="lightbox" id="lightbox">
   <button class="lightbox-close" id="lightboxClose">✕</button>
   <img id="lightboxImg" alt=""/>
+</div>
+
+<!-- Dropbox 복원 파일 선택 모달 -->
+<div id="dbxModal" style="display:none;position:fixed;inset:0;z-index:190;">
+  <div class="modal-overlay" id="dbxModalOverlay"></div>
+  <div class="modal-card">
+    <div class="modal-head">Dropbox 백업 파일 선택</div>
+    <div class="modal-sub">복원할 파일을 선택하세요. 같은 ID의 영수증은 덮어쓰여요.</div>
+    <div id="dbxBackupList">
+      <div class="empty-state">로딩 중...</div>
+    </div>
+    <div class="modal-foot">
+      <button id="dbxModalClose" style="border:1px solid var(--sep2);background:var(--card);color:var(--label);border-radius:var(--rs);padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;">닫기</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -645,7 +743,21 @@ svg{display:block;flex-shrink:0;}
 // v1.05 — 레이아웃 재구성 (위→아래 흐름, 미리보기 전체 폭). 품목명 input 폭 확대.
 //         금액 셀 readonly (수량×단가 자동), Tab 흐름 자연스럽게. 일자 클릭 시 달력 즉시.
 //         단가·금액·총액 모두 천단위 쉼표 (text+inputmode="numeric").
-const APP_VERSION='v1.05';
+// v1.07 — Dropbox OAuth (PKCE) 연동 (Phase 3): 설정 탭에서 연결, 수동 백업 업로드,
+//         Dropbox 파일 목록에서 복원 선택 모달. refresh token으로 자동 갱신.
+// v1.08 — 결제자(paidBy) 필드 추가 (식사·술자리·유흥 등 결제자 기록).
+//         사이드바 카드 썸네일 제거.
+// v1.09 — 상세 화면 레이아웃 재구성: 품목 테이블 최상단, 그 아래 좌=영수증 사진 / 우=정보(매장명·일자 등),
+//         하단 메모·태그 순서.
+// v1.10 — 드래그&드롭 사진 추가 (입력 폼·상세 화면 모두 지원, 데스크톱 자동 감지).
+//         카테고리 키워드 확장 검색: "술" 입력 시 소주·맥주·진로·테라 등 품목도 매칭.
+//         "결제자 홍길동" 접두어 검색 지원. 검색 플레이스홀더 힌트 추가.
+// v1.11 — 탭 순서 변경: 추가→내역→설정. 품목 단가·금액 천단위 쉼표 (상세 화면 포함).
+//         품목 입력 수량 type=text 전환 (스피너 제거). 프리뷰 헤더 우측 패딩 정렬.
+// v1.12 — 상세 화면 일자 kv 클릭 시 달력 즉시 열림. 사용방법 가이드 제거(프롬프트 복사 버튼 유지).
+//         데스크탑 초기 탭→추가, 모바일 초기 탭→내역. 모바일 목록 높이 제한+영수증 선택 시 자동 스크롤.
+//         엑셀(CSV) 내보내기 추가 — UTF-8 BOM, 엑셀·Numbers·구글 시트 직접 열림.
+const APP_VERSION='v1.12';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -745,7 +857,7 @@ const BASE_CATEGORIES=['마트','외식','술집','카페','배달','교통','�
 const CAT_RULES=[
   {cat:'마트', kws:['마트','슈퍼','편의점','이마트','롯데마트','홈플러스','코스트코','하나로','농협','GS25','CU','세븐일레븐','이마트24','미니스톱','트레이더스']},
   {cat:'외식', kws:['식당','맛집','분식','김밥','국밥','돈까스','갈비','삼겹살','냉면','치킨','피자','버거','햄버거','떡볶이','우동','초밥','샤브','죽','파스타','스테이크','쌀국수','한식','중식','일식','양식','뷔페','족발','보쌈','국수','만두','곱창','전골','찌개','곰탕','설렁탕','순대','튀김','마라']},
-  {cat:'술집', kws:['술집','포차','호프','주점','이자카야','와인바','맥주','막걸리','선술집','펍','BAR ','BAR(','퇴근길','한잔','대포']},
+  {cat:'술집', kws:['술집','포차','호프','주점','이자카야','와인바','맥주','막걸리','선술집','펍','BAR ','BAR(','퇴근길','한잔','대포','소주','진로','하이트','카스','테라','클라우드','켈리','새로','처음처럼','필라이트','오비맥주','청하','참이슬','제주맥주','와인','위스키','칵테일','생맥주']},
   {cat:'카페', kws:['카페','커피','스타벅스','투썸','이디야','컴포즈','메가커피','빽다방','폴바셋','할리스','파스쿠찌','앤제리너스','블루보틀','테라로사','커피빈','탐앤탐스','공차','요거트','베이커리','파리바게뜨','뚜레쥬르','던킨']},
   {cat:'배달', kws:['배달의민족','배민','요기요','쿠팡이츠','땡겨요']},
   {cat:'교통', kws:['주유','GS칼텍스','SK에너지','S-OIL','현대오일뱅크','택시','카카오T','우버','버스','지하철','코레일','KTX','SRT','하이패스','주차장','쏘카','그린카']},
@@ -1030,25 +1142,47 @@ function getFiltered(){
     // 검색 없으면 현재 보고 있는 월의 영수증만
     return receiptsForMonth(viewMonth);
   }
+
+  // ── "결제자 X" 접두어 검색 ──
+  if(q.startsWith('결제자 ')){
+    const pq=q.slice(4).trim();
+    if(pq) return receipts.filter(r=>(r.paidBy||'').toLowerCase().includes(pq));
+  }
+
+  // ── 카테고리명 매칭 시 해당 카테고리 키워드로 확장 ──
+  // 예: "술" → 술집 키워드(소주·진로·테라·맥주…)도 품목명·가게명에서 검색
+  const expandedKws=new Set();
+  for(const rule of CAT_RULES){
+    if(rule.cat.toLowerCase().startsWith(q)||rule.cat.toLowerCase()===q){
+      rule.kws.forEach(kw=>expandedKws.add(kw.toLowerCase()));
+    }
+  }
+
   // 검색 있으면 전체에서
   return receipts.filter(r=>{
     if((r.store||'').toLowerCase().includes(q))return true;
     if((r.category||'').toLowerCase().includes(q))return true;
     if((r.date||'').includes(q))return true;
+    if((r.paidBy||'').toLowerCase().includes(q))return true;
     if((r.notes||'').toLowerCase().includes(q))return true;
     if((r.tags||[]).join(' ').toLowerCase().includes(q))return true;
     if((r.items||[]).some(it=>(it.name||'').toLowerCase().includes(q)))return true;
+    // 카테고리 키워드 확장 — 가게명·품목명에서 카테고리 관련 키워드 매칭
+    if(expandedKws.size){
+      const storeL=(r.store||'').toLowerCase();
+      const itemsL=(r.items||[]).map(it=>(it.name||'').toLowerCase()).join('\n');
+      if([...expandedKws].some(kw=>storeL.includes(kw)||itemsL.includes(kw)))return true;
+    }
     return false;
   });
 }
 
 function _cardHtml(r){
   const sel=(r.id===selectedId)?' sel':'';
-  const thumbHtml=r.imageId?`<div class="r-thumb" data-img="${r.imageId}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></div>`:`<div class="r-thumb"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h12a2 2 0 0 1 2 2v15l-3-2-3 2-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2z"/></svg></div>`;
   const meta=[fmtDateKor(r.date)];
   if(r.category)meta.push(escapeHtml(r.category));
+  if(r.paidBy)meta.push(escapeHtml(r.paidBy));
   return `<div class="r-card${sel}" data-id="${r.id}">
-    ${thumbHtml}
     <div class="r-card-info">
       <div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div>
       <div class="r-card-meta">${meta.join(' · ')}</div>
@@ -1104,14 +1238,6 @@ function renderSide(){
       const id=el.dataset.id;selectReceipt(id);
     });
   });
-  // 썸네일 lazy 로드
-  list.querySelectorAll('.r-thumb[data-img]').forEach(async el=>{
-    const imgId=el.dataset.img;
-    const url=await _ensureImgUrl(imgId);
-    if(url&&el.isConnected){
-      el.innerHTML=`<img src="${url}" alt=""/>`;
-    }
-  });
 }
 
 function updateStats(){
@@ -1140,6 +1266,7 @@ function switchTab(name){
   document.getElementById('monthNav').style.display=(name==='list')?'flex':'none';
   document.querySelector('.side-search').style.display=(name==='list')?'block':'none';
   if(name==='input'){setTimeout(()=>document.getElementById('pasteTa').focus(),50);}
+  if(name==='settings'){renderDbxSettings();}
 }
 document.querySelectorAll('.tab').forEach(t=>{
   t.addEventListener('click',()=>switchTab(t.dataset.tab));
@@ -1254,10 +1381,10 @@ function renderPreviewForm(){
         const negCls=(it.amount||0)<0?' neg':'';
         return `<div class="prev-item-row" data-idx="${idx}">
           <input class="prev-item-name" data-f="name" placeholder="품목명" value="${escapeHtml(it.name||'')}" autocomplete="off"/>
-          <input class="prev-item-qty" data-f="quantity" type="number" min="0" step="1" value="${it.quantity||1}" inputmode="numeric"/>
+          <input class="prev-item-qty" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||1}"/>
           <input class="prev-item-price" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/>
           <div class="prev-item-amt readonly${negCls}" data-amt="${idx}">${_fmtN(it.amount||0)}</div>
-          <button type="button" class="prev-item-del" data-del="${idx}" title="이 품목 삭제" aria-label="삭제">×</button>
+          <button type="button" class="prev-item-del" tabindex="-1" data-del="${idx}" title="이 품목 삭제" aria-label="삭제">×</button>
         </div>`;
       }).join(''))
     : '<div class="prev-empty-items">품목 없음 — 필요하면 우측 <b>+ 추가</b>로 직접 입력</div>';
@@ -1403,10 +1530,11 @@ function bindPreviewFormEvents(){
       const f=inp.dataset.f;
       let composing=false;
 
-      // 값 추출: name은 그대로, quantity는 정수, unitPrice는 천단위 쉼표 텍스트라 _parseN
+      // 값 추출: name은 그대로, quantity는 정수(text→parseInt), unitPrice는 _parseN
       const readVal=()=>{
         if(f==='name')return inp.value;
         if(f==='unitPrice')return _parseN(inp.value);
+        if(f==='quantity')return parseInt(inp.value)||0;
         return parseFloat(inp.value)||0;
       };
       const assign=()=>_assignItemField(it,f,readVal());
@@ -1434,13 +1562,28 @@ function bindPreviewFormEvents(){
 
       if(f==='name'){
         inp.addEventListener('input',()=>{if(!composing)assign();});
-        inp.addEventListener('blur',()=>{assign();renderPreviewForm();});
-      }else if(f==='quantity'){
-        inp.addEventListener('input',()=>{assign();afterChange();});
+        // 포커스 시 전체 선택 — 바로 덮어쓸 수 있게
         inp.addEventListener('focus',()=>inp.select());
-        inp.addEventListener('blur',()=>{assign();renderPreviewForm();});
+        // blur 시 renderPreviewForm() 호출 금지:
+        //  ① blur → DOM 재건 → Tab 포커스 날아감 (issue 2)
+        //  ② blur → DOM 재건 → 직후 클릭 이벤트(+추가 등) 소실 (issue 1)
+        inp.addEventListener('blur',()=>{assign();_refreshPreviewSummary();});
+      }else if(f==='quantity'){
+        inp.addEventListener('input',()=>{
+          // 숫자만 허용
+          const cleaned=inp.value.replace(/[^0-9]/g,'');
+          if(inp.value!==cleaned)inp.value=cleaned;
+          assign();afterChange();
+        });
+        inp.addEventListener('focus',()=>inp.select());
+        inp.addEventListener('blur',()=>{
+          // 빈값 방지: 0이면 1로
+          const n=parseInt(inp.value)||1;
+          inp.value=String(n);
+          assign();_refreshPreviewSummary();
+        });
       }else if(f==='unitPrice'){
-        // 포커스 시 쉼표 제거, blur 시 쉼표 추가
+        // 포커스 시 쉼표 제거 + 전체 선택, blur 시 쉼표 복귀
         inp.addEventListener('focus',()=>{
           inp.value=String(it.unitPrice||0);
           inp.select();
@@ -1449,7 +1592,7 @@ function bindPreviewFormEvents(){
         inp.addEventListener('blur',()=>{
           assign();
           inp.value=_fmtN(it.unitPrice||0);
-          renderPreviewForm();
+          _refreshPreviewSummary();
         });
       }
     });
@@ -1524,10 +1667,11 @@ function _autoTotal(){
 }
 
 // ── PHOTO ──
-photoZone.addEventListener('click',()=>photoInp.click());
-photoInp.addEventListener('change',()=>{
-  const f=photoInp.files&&photoInp.files[0];
-  if(!f)return;
+const _isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+const _photoHint=_isTouch?'탭하여 카메라 또는 갤러리 열기':'클릭하거나 이미지를 드래그해서 추가';
+
+function _applyPhoto(f){
+  if(!f||!f.type.startsWith('image/'))return;
   if(pendingPhotoUrl){URL.revokeObjectURL(pendingPhotoUrl);}
   pendingPhotoBlob=f;
   pendingPhotoUrl=URL.createObjectURL(f);
@@ -1539,10 +1683,27 @@ photoInp.addEventListener('change',()=>{
     </button>
   `;
   photoZone.querySelector('.photo-remove').addEventListener('click',e=>{
-    e.stopPropagation();
-    clearPhoto();
+    e.stopPropagation();clearPhoto();
   });
+}
+
+photoZone.addEventListener('click',()=>photoInp.click());
+photoInp.addEventListener('change',()=>_applyPhoto(photoInp.files&&photoInp.files[0]));
+
+// 데스크탑 드래그&드롭
+['dragenter','dragover'].forEach(ev=>photoZone.addEventListener(ev,e=>{
+  e.preventDefault();e.stopPropagation();
+  photoZone.classList.add('drag');
+}));
+['dragleave','dragend'].forEach(ev=>photoZone.addEventListener(ev,e=>{
+  if(!photoZone.contains(e.relatedTarget))photoZone.classList.remove('drag');
+}));
+photoZone.addEventListener('drop',e=>{
+  e.preventDefault();e.stopPropagation();
+  photoZone.classList.remove('drag');
+  _applyPhoto(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]);
 });
+
 function clearPhoto(){
   if(pendingPhotoUrl){URL.revokeObjectURL(pendingPhotoUrl);pendingPhotoUrl=null;}
   pendingPhotoBlob=null;
@@ -1551,7 +1712,7 @@ function clearPhoto(){
   photoZone.innerHTML=`
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
     <div class="photo-zone-text">사진 추가</div>
-    <div class="photo-zone-hint">탭하여 카메라 또는 갤러리 열기</div>
+    <div class="photo-zone-hint">${_photoHint}</div>
   `;
 }
 
@@ -1597,6 +1758,7 @@ saveBtn.addEventListener('click',async()=>{
     category:finalCat,
     paymentMethod:document.getElementById('payMethod').value,
     paymentDetail:document.getElementById('payDetail').value.trim(),
+    paidBy:document.getElementById('payerInp').value.trim(),
     total:p.total||0,
     items:cleanItems,
     imageId,
@@ -1619,12 +1781,19 @@ saveBtn.addEventListener('click',async()=>{
   switchTab('list');
   renderSide();
   renderDetail();
+  // 모바일: 저장 후 상세 패널로 스크롤
+  if(_isTouch){
+    setTimeout(()=>{
+      document.querySelector('.main').scrollIntoView({behavior:'smooth',block:'start'});
+    },80);
+  }
 });
 
 function clearInputs(){
   pasteTa.value='';
   document.getElementById('payMethod').value='card';
   document.getElementById('payDetail').value='';
+  document.getElementById('payerInp').value='';
   document.getElementById('catInp').value='';
   document.getElementById('tagInp').value='';
   document.getElementById('noteInp').value='';
@@ -1652,6 +1821,12 @@ async function selectReceipt(id){
   }
   renderSide();
   await renderDetail();
+  // 모바일: 상세 패널로 부드럽게 스크롤
+  if(_isTouch){
+    setTimeout(()=>{
+      document.querySelector('.main').scrollIntoView({behavior:'smooth',block:'start'});
+    },80);
+  }
 }
 
 function renderMonthSummaryHtml(ym){
@@ -1811,31 +1986,36 @@ async function renderDetail(){
   const mismatch=sum!==r.total;
 
   body.innerHTML=`
-    ${photoHtml}
-
-    <div class="detail-grid">
-      ${kvHtml('매장명','store',r.store)}
-      ${kvHtml('일자','date',fmtDateKor(r.date),r.date,'date')}
-      ${kvHtml('카테고리','category',r.category||'—',r.category)}
-      ${kvHtml('결제수단','paymentMethod',payLabel,r.paymentMethod,'select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
-      ${kvHtml('결제 상세','paymentDetail',r.paymentDetail||'—',r.paymentDetail)}
-    </div>
-
     <div class="section-hd">품목 <button class="ghost-mini" id="addItemBtn">+ 품목 추가</button></div>
     <table class="items-table" id="itemsTable">
       <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
       <tbody>
         ${(r.items||[]).map((it,idx)=>`<tr data-idx="${idx}">
           <td><input class="item-name-inp" data-f="name" value="${escapeHtml(it.name)}"/></td>
-          <td><input class="item-num-inp" data-f="quantity" type="number" min="0" step="1" value="${it.quantity||0}"/></td>
-          <td><input class="item-num-inp" data-f="unitPrice" type="number" step="1" value="${it.unitPrice||0}"/></td>
-          <td><input class="item-num-inp" data-f="amount" type="number" step="1" value="${it.amount||0}" style="${(it.amount||0)<0?'color:var(--red);':''}"/></td>
+          <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||0}"/></td>
+          <td><input class="item-num-inp" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/></td>
+          <td><input class="item-num-inp" data-f="amount" type="text" inputmode="numeric" value="${_fmtN(it.amount||0)}" style="${(it.amount||0)<0?'color:var(--red);':''}"/></td>
           <td style="text-align:right;"><button class="item-del" data-del="${idx}" title="삭제">×</button></td>
         </tr>`).join('')}
         <tr class="total-row"><td>총액</td><td></td><td></td><td class="${(r.total||0)<0?'amt-neg':''}" style="font-size:14px;">${fmtMoney(r.total)}원</td><td></td></tr>
       </tbody>
     </table>
-    ${mismatch?`<div class="alert warn" style="margin-top:10px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><div>품목 합계 ${fmtMoney(sum)}원과 총액 ${fmtMoney(r.total)}원이 ${fmtMoney(Math.abs(sum-r.total))}원 달라요.</div></div>`:''}
+    ${mismatch?`<div class="alert warn" style="margin:10px 0 14px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><div>품목 합계 ${fmtMoney(sum)}원과 총액 ${fmtMoney(r.total)}원이 ${fmtMoney(Math.abs(sum-r.total))}원 달라요.</div></div>`:''}
+
+    <div class="detail-two-col">
+      <div>${photoHtml}</div>
+      <div>
+        <div class="section-hd" style="margin-top:0;">정보</div>
+        <div class="detail-kv-stack">
+          ${kvHtml('매장명','store',r.store)}
+          ${kvHtml('일자','date',fmtDateKor(r.date),r.date,'date')}
+          ${kvHtml('카테고리','category',r.category||'—',r.category)}
+          ${kvHtml('결제수단','paymentMethod',payLabel,r.paymentMethod,'select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
+          ${kvHtml('결제 상세','paymentDetail',r.paymentDetail||'—',r.paymentDetail)}
+          ${kvHtml('결제자','paidBy',r.paidBy||'—',r.paidBy||'')}
+        </div>
+      </div>
+    </div>
 
     <div class="section-hd">메모·태그</div>
     <div class="field-g">
@@ -1884,8 +2064,24 @@ async function renderDetail(){
 
   // 품목 편집
   body.querySelectorAll('#itemsTable input').forEach(inp=>{
-    inp.addEventListener('change',()=>persistItemChange(r));
-    inp.addEventListener('blur',()=>persistItemChange(r));
+    const f=inp.dataset.f;
+    inp.addEventListener('focus',()=>inp.select());
+    if(f==='unitPrice'||f==='amount'){
+      // 포커스 시 쉼표 제거해서 순수 숫자로, blur 시 쉼표 복원 후 저장
+      inp.addEventListener('focus',()=>{
+        inp.value=String(_parseN(inp.value));
+        inp.select();
+      });
+      inp.addEventListener('blur',()=>{
+        const n=_parseN(inp.value);
+        inp.value=_fmtN(n);
+        if(f==='amount')inp.style.color=n<0?'var(--red)':'';
+        persistItemChange(r);
+      });
+    }else{
+      inp.addEventListener('blur',()=>persistItemChange(r));
+      inp.addEventListener('change',()=>persistItemChange(r));
+    }
   });
   body.querySelectorAll('#itemsTable .item-del').forEach(btn=>{
     btn.addEventListener('click',async()=>{
@@ -1902,6 +2098,29 @@ async function renderDetail(){
     await dbPut('receipts',r);
     await loadAll();await renderDetail();
   });
+
+  // 상세 화면 드래그&드롭 (사진 교체/추가)
+  const dpArea=body.querySelector('.detail-photo');
+  if(dpArea){
+    ['dragenter','dragover'].forEach(ev=>dpArea.addEventListener(ev,e=>{
+      e.preventDefault();e.stopPropagation();dpArea.classList.add('drag');
+    }));
+    ['dragleave','dragend'].forEach(ev=>dpArea.addEventListener(ev,e=>{
+      if(!dpArea.contains(e.relatedTarget))dpArea.classList.remove('drag');
+    }));
+    dpArea.addEventListener('drop',async e=>{
+      e.preventDefault();e.stopPropagation();dpArea.classList.remove('drag');
+      const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+      if(!f||!f.type.startsWith('image/'))return;
+      const imgId='img_'+r.id.slice(4);
+      await dbPut('images',{id:imgId,blob:f,mime:f.type||'image/jpeg'});
+      r.imageId=imgId;r.updatedAt=nowISO();
+      await dbPut('receipts',r);
+      _revokeImgUrl(imgId);
+      toast('사진이 업데이트됐어요',{type:'success'});
+      await loadAll();await renderDetail();
+    });
+  }
 
   // 메모·태그
   const dn=document.getElementById('dNotes');
@@ -1962,6 +2181,10 @@ function startKvEdit(el,r){
   val.innerHTML='';val.appendChild(inp);
   inp.focus();
   if(inp.select)inp.select();
+  // 일자 입력 — 즉시 달력 열기 (Chrome/Edge)
+  if(type==='date'&&typeof inp.showPicker==='function'){
+    try{inp.showPicker();}catch(_){}
+  }
 
   let composing=false,done=false;
   inp.addEventListener('compositionstart',()=>{composing=true;});
@@ -1997,8 +2220,10 @@ async function persistItemChange(r){
       const f=inp.dataset.f;
       if(f==='name'){if(it.name!==inp.value){it.name=inp.value;changed=true;}}
       else{
-        const n=parseFloat(inp.value)||0;
-        const nn=Math.round(n);
+        // unitPrice·amount는 text+쉼표 포맷, _parseN으로 읽기; quantity는 정수
+        const nn=(f==='unitPrice'||f==='amount')
+          ? _parseN(inp.value)
+          : (parseInt(inp.value)||0);
         if(it[f]!==nn){it[f]=nn;changed=true;}
       }
     });
@@ -2048,6 +2273,47 @@ async function base64ToBlob(dataUrl){
   const res=await fetch(dataUrl);
   return await res.blob();
 }
+
+// ── CSV(엑셀) 내보내기 ──
+function exportCsv(){
+  if(!receipts.length){toast('저장된 영수증이 없어요',{type:'error'});return;}
+  const BOM='﻿'; // Excel UTF-8 자동 인식
+  const payL={card:'카드',cash:'현금',transfer:'계좌이체',other:'기타'};
+  const esc=v=>{
+    const s=String(v==null?'':v);
+    return (s.includes(',')||s.includes('"')||s.includes('\n'))?`"${s.replace(/"/g,'""')}"`:s;
+  };
+  const header=['일자','매장명','카테고리','결제수단','결제 상세','결제자','총액(원)','품목수','품목 목록','메모','태그'];
+  const sorted=[...receipts].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const rows=[header.map(esc).join(',')];
+  for(const r of sorted){
+    const items=(r.items||[]).filter(it=>it.name);
+    const itemStr=items.map(it=>`${it.name}×${it.quantity||1}(${_fmtN(it.amount||0)}원)`).join(' / ');
+    rows.push([
+      r.date||'',
+      r.store||'',
+      r.category||'',
+      payL[r.paymentMethod]||r.paymentMethod||'',
+      r.paymentDetail||'',
+      r.paidBy||'',
+      r.total||0,
+      items.length,
+      itemStr,
+      r.notes||'',
+      (r.tags||[]).join(', ')
+    ].map(esc).join(','));
+  }
+  const blob=new Blob([BOM+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  const today=new Date().toISOString().slice(0,10).replace(/-/g,'');
+  a.download=`영수증_${today}_${receipts.length}건.csv`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+  toast(`CSV ${receipts.length}건 내보냈어요. 엑셀에서 열어보세요`,{type:'success'});
+}
+document.getElementById('exportCsvBtn').addEventListener('click',exportCsv);
 
 document.getElementById('exportBtn').addEventListener('click',async()=>{
   try{
@@ -2134,21 +2400,408 @@ document.getElementById('resetBtn').addEventListener('click',async()=>{
 });
 
 // ════════════════════════════════════════════════════════════════
+// DROPBOX OAUTH (PKCE) + BACKUP — Phase 3
+// ════════════════════════════════════════════════════════════════
+// 연동 방식: Authorization Code + PKCE (서버·client_secret 불필요)
+// 토큰: short-lived access_token (4h) + long-lived refresh_token (offline)
+// 저장: 모두 localStorage (IndexedDB 아님)
+// ────────────────────────────────────────────────────────────────
+
+const _K={  // localStorage 키 모음
+  APP_KEY:       'dbx_app_key',
+  ACCESS_TOKEN:  'dbx_access_token',
+  REFRESH_TOKEN: 'dbx_refresh_token',
+  EXPIRES_AT:    'dbx_expires_at',
+  ACCOUNT:       'dbx_account',
+  LAST_BACKUP:   'dbx_last_backup',
+  CODE_VERIFIER: 'dbx_code_verifier',
+  STATE:         'dbx_oauth_state',
+};
+
+const _ls  = k     => localStorage.getItem(k)||'';
+const _lsSet = (k,v) => localStorage.setItem(k,v);
+const _lsDel = k     => localStorage.removeItem(k);
+
+function dbxIsConnected(){
+  return !!(_ls(_K.ACCESS_TOKEN)||_ls(_K.REFRESH_TOKEN));
+}
+function _dbxExpired(){
+  const exp=parseInt(_ls(_K.EXPIRES_AT)||'0',10);
+  return exp>0 && Date.now()>exp-60000;  // 1분 여유
+}
+function _dbxRedirectUri(){
+  return window.location.origin+window.location.pathname;
+}
+
+// ── PKCE 헬퍼 ──────────────────────────────────────────────────
+async function _dbxMakeVerifier(){
+  const a=new Uint8Array(32);crypto.getRandomValues(a);
+  return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function _dbxMakeChallenge(v){
+  const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v));
+  return btoa(String.fromCharCode(...new Uint8Array(d)))
+    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+// ── OAuth 시작 ──────────────────────────────────────────────────
+async function dbxConnect(){
+  const appKey=(document.getElementById('dbxAppKey')?.value||'').trim();
+  if(!appKey){toast('App Key를 입력해주세요',{type:'error'});return;}
+  _lsSet(_K.APP_KEY,appKey);
+
+  const verifier=await _dbxMakeVerifier();
+  const challenge=await _dbxMakeChallenge(verifier);
+  const state=Math.random().toString(36).slice(2)+Date.now().toString(36);
+  _lsSet(_K.CODE_VERIFIER,verifier);
+  _lsSet(_K.STATE,state);
+
+  const p=new URLSearchParams({
+    client_id:appKey,
+    response_type:'code',
+    code_challenge:challenge,
+    code_challenge_method:'S256',
+    state,
+    redirect_uri:_dbxRedirectUri(),
+    token_access_type:'offline',  // refresh_token 발급
+  });
+  window.location.href='https://www.dropbox.com/oauth2/authorize?'+p;
+}
+
+// ── OAuth 콜백 처리 — init() 에서 호출 ─────────────────────────
+async function dbxHandleCallback(){
+  const url=new URL(window.location.href);
+  const code=url.searchParams.get('code');
+  const state=url.searchParams.get('state');
+  const error=url.searchParams.get('error');
+
+  if(!code&&!error)return;  // 일반 페이지 로드
+  history.replaceState({},'',_dbxRedirectUri());  // URL 정리
+
+  if(error){
+    toast('Dropbox 연결이 취소됐어요',{type:'error'});
+    return;
+  }
+
+  const savedState=_ls(_K.STATE);
+  const verifier=_ls(_K.CODE_VERIFIER);
+  const appKey=_ls(_K.APP_KEY);
+
+  if(state!==savedState){
+    toast('보안 오류 — 연결을 다시 시도해주세요',{type:'error'});
+    return;
+  }
+  if(!appKey||!verifier){
+    toast('연결 정보가 없어요 — 다시 시도해주세요',{type:'error'});
+    return;
+  }
+
+  const t=toast('Dropbox 연결 중...',{duration:15000});
+  try{
+    const resp=await fetch('https://api.dropboxapi.com/oauth2/token',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({
+        code,
+        grant_type:'authorization_code',
+        client_id:appKey,
+        code_verifier:verifier,
+        redirect_uri:_dbxRedirectUri(),
+      }),
+    });
+    t.dismiss();
+    if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
+    const data=await resp.json();
+    _lsSet(_K.ACCESS_TOKEN,data.access_token||'');
+    if(data.refresh_token)_lsSet(_K.REFRESH_TOKEN,data.refresh_token);
+    if(data.expires_in)_lsSet(_K.EXPIRES_AT,String(Date.now()+data.expires_in*1000));
+    _lsDel(_K.CODE_VERIFIER);
+    _lsDel(_K.STATE);
+    await _dbxFetchAccount();
+    toast('Dropbox 연결 완료!',{type:'success'});
+    switchTab('settings');
+  }catch(e){
+    t.dismiss();
+    console.error('dbx callback',e);
+    toast('Dropbox 연결 실패: '+(e.message||e),{type:'error'});
+  }
+}
+
+// ── 토큰 갱신 ──────────────────────────────────────────────────
+async function _dbxRefresh(){
+  const rt=_ls(_K.REFRESH_TOKEN),ak=_ls(_K.APP_KEY);
+  if(!rt||!ak)return false;
+  try{
+    const resp=await fetch('https://api.dropboxapi.com/oauth2/token',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({grant_type:'refresh_token',refresh_token:rt,client_id:ak}),
+    });
+    if(!resp.ok)return false;
+    const data=await resp.json();
+    _lsSet(_K.ACCESS_TOKEN,data.access_token||'');
+    if(data.expires_in)_lsSet(_K.EXPIRES_AT,String(Date.now()+data.expires_in*1000));
+    return true;
+  }catch{return false;}
+}
+
+async function _dbxToken(){
+  if(_dbxExpired()){
+    const ok=await _dbxRefresh();
+    if(!ok){
+      toast('Dropbox 세션이 만료됐어요 — 설정에서 다시 연결해주세요',{type:'error'});
+      renderDbxSettings();
+      throw new Error('DBX_TOKEN_EXPIRED');
+    }
+  }
+  const t=_ls(_K.ACCESS_TOKEN);
+  if(!t)throw new Error('DBX_NO_TOKEN');
+  return t;
+}
+
+// ── 계정 정보 조회 ──────────────────────────────────────────────
+async function _dbxFetchAccount(){
+  try{
+    const token=await _dbxToken();
+    const resp=await fetch('https://api.dropboxapi.com/2/users/get_current_account',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+token},
+    });
+    if(!resp.ok)return;
+    const d=await resp.json();
+    _lsSet(_K.ACCOUNT,JSON.stringify({name:d.name?.display_name||'',email:d.email||''}));
+  }catch(e){console.warn('dbx account',e);}
+}
+
+// ── 백업 업로드 ────────────────────────────────────────────────
+async function dbxBackup(){
+  let lt;
+  try{
+    const token=await _dbxToken();
+    lt=toast('Dropbox에 백업 중... (사진 포함 시 수 초 소요)',{duration:60000});
+    const recs=await dbAll('receipts');
+    const imgs=await dbAll('images');
+    const imgsOut=[];
+    for(const im of imgs){
+      const b64=await blobToBase64(im.blob);
+      imgsOut.push({id:im.id,mime:im.mime||'image/jpeg',data:b64});
+    }
+    const payload={
+      app:'receipt-db',appVersion:APP_VERSION,version:2,
+      exportedAt:nowISO(),receipts:recs,images:imgsOut,storeCatMap,
+    };
+    const json=JSON.stringify(payload,null,2);
+    const filename=`receipt-db_${new Date().toISOString().slice(0,10)}_${recs.length}건.json`;
+    const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+token,
+        'Dropbox-API-Arg':JSON.stringify({path:'/'+filename,mode:'add',autorename:true,mute:false}),
+        'Content-Type':'application/octet-stream',
+      },
+      body:json,
+    });
+    if(lt)lt.dismiss();
+    if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
+    const now=new Date().toLocaleString('ko-KR');
+    _lsSet(_K.LAST_BACKUP,now);
+    toast(`Dropbox 백업 완료 — ${recs.length}건, 사진 ${imgs.length}장`,{type:'success'});
+    renderDbxSettings();
+  }catch(e){
+    if(lt)lt.dismiss();
+    if(e.message!=='DBX_TOKEN_EXPIRED'&&e.message!=='DBX_NO_TOKEN'){
+      console.error('dbx backup',e);
+      toast('백업 실패: '+(e.message||e),{type:'error'});
+    }
+  }
+}
+
+// ── Dropbox 파일 목록 ──────────────────────────────────────────
+async function _dbxListBackups(){
+  const token=await _dbxToken();
+  const resp=await fetch('https://api.dropboxapi.com/2/files/list_folder',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({path:'',recursive:false}),
+  });
+  if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
+  const data=await resp.json();
+  return (data.entries||[])
+    .filter(e=>e['.tag']==='file'&&e.name.startsWith('receipt-db_')&&e.name.endsWith('.json'))
+    .sort((a,b)=>b.server_modified.localeCompare(a.server_modified));
+}
+
+// ── Dropbox에서 복원 ───────────────────────────────────────────
+async function _dbxRestore(path,name){
+  try{
+    const token=await _dbxToken();
+    const resp=await fetch('https://content.dropboxapi.com/2/files/download',{
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+token,
+        'Dropbox-API-Arg':JSON.stringify({path}),
+      },
+    });
+    if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
+    const text=await resp.text();
+    const data=JSON.parse(text);
+    if(!data||data.app!=='receipt-db'||!Array.isArray(data.receipts)){
+      throw new Error('올바른 백업 파일이 아니에요');
+    }
+    if(!confirm(`'${name}'\n\n영수증 ${data.receipts.length}건을 복원할까요?\n같은 ID의 영수증은 덮어쓰여요.`))return;
+    let added=0,imgN=0;
+    for(const r of data.receipts){await dbPut('receipts',r);added++;}
+    if(Array.isArray(data.images)){
+      for(const im of data.images){
+        const blob=await base64ToBlob(im.data);
+        await dbPut('images',{id:im.id,blob,mime:im.mime||'image/jpeg'});imgN++;
+      }
+    }
+    if(data.storeCatMap&&typeof data.storeCatMap==='object'){
+      storeCatMap={...storeCatMap,...data.storeCatMap};
+      await saveStoreCatMap();
+    }
+    _dbxCloseModal();
+    toast(`복원 완료 — ${added}건, 사진 ${imgN}장`,{type:'success'});
+    await loadAll();renderDetail();
+  }catch(e){
+    if(e.message!=='DBX_TOKEN_EXPIRED'&&e.message!=='DBX_NO_TOKEN'){
+      console.error('dbx restore',e);
+      toast('복원 실패: '+(e.message||e),{type:'error'});
+    }
+  }
+}
+
+// ── 연결 해제 ──────────────────────────────────────────────────
+function dbxDisconnect(){
+  if(!confirm('Dropbox 연결을 해제할까요?\nDropbox의 백업 파일은 삭제되지 않아요.'))return;
+  [_K.ACCESS_TOKEN,_K.REFRESH_TOKEN,_K.EXPIRES_AT,
+   _K.ACCOUNT,_K.LAST_BACKUP,_K.CODE_VERIFIER,_K.STATE].forEach(_lsDel);
+  // App key는 보존 — 재연결 시 다시 입력 안 해도 되게
+  toast('Dropbox 연결이 해제됐어요');
+  renderDbxSettings();
+}
+
+// ── UI 상태 렌더링 ─────────────────────────────────────────────
+function renderDbxSettings(){
+  const notConn=document.getElementById('dbxNotConnected');
+  const conn=document.getElementById('dbxConnected');
+  if(!notConn||!conn)return;
+
+  // redirect URI 힌트 갱신
+  const hint=document.getElementById('dbxRedirectUriHint');
+  if(hint)hint.textContent=_dbxRedirectUri();
+
+  if(dbxIsConnected()){
+    notConn.style.display='none';
+    conn.style.display='block';
+    const acStr=_ls(_K.ACCOUNT);
+    const ac=acStr?JSON.parse(acStr):null;
+    const lb=_ls(_K.LAST_BACKUP);
+    const statusEl=document.getElementById('dbxStatus');
+    if(statusEl){
+      statusEl.innerHTML=`
+        <div style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--green-txt);margin-bottom:6px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          연결됨${ac&&ac.email?' · '+escapeHtml(ac.email):''}
+        </div>
+        <div style="font-size:11px;color:var(--label3);margin-bottom:10px;">
+          ${lb?'마지막 백업: '+escapeHtml(lb):'아직 백업하지 않았어요 — 아래 버튼으로 지금 백업하세요'}
+        </div>
+      `;
+    }
+  }else{
+    conn.style.display='none';
+    notConn.style.display='block';
+    const appKeyInp=document.getElementById('dbxAppKey');
+    if(appKeyInp&&!appKeyInp.value){
+      const saved=_ls(_K.APP_KEY);
+      if(saved)appKeyInp.value=saved;
+    }
+  }
+}
+
+// ── 복원 모달 ──────────────────────────────────────────────────
+function _dbxOpenModal(){
+  const modal=document.getElementById('dbxModal');
+  if(modal)modal.style.display='block';
+  const listEl=document.getElementById('dbxBackupList');
+  if(listEl)listEl.innerHTML='<div class="empty-state">로딩 중...</div>';
+
+  _dbxListBackups().then(files=>{
+    if(!listEl)return;
+    if(!files.length){
+      listEl.innerHTML='<div class="empty-state">Dropbox에 백업 파일이 없어요</div>';
+      return;
+    }
+    listEl.innerHTML=files.map(f=>{
+      const dt=f.server_modified?new Date(f.server_modified).toLocaleString('ko-KR'):'';
+      const sz=_dbxFmtSize(f.size);
+      const path=f.path_lower||f.path_display||'/'+f.name;
+      return `<div class="bkp-item">
+        <div class="bkp-item-info">
+          <div class="bkp-item-name">${escapeHtml(f.name)}</div>
+          <div class="bkp-item-meta">${escapeHtml(dt)}${sz?' · '+sz:''}</div>
+        </div>
+        <button class="bkp-restore-btn"
+          data-path="${escapeHtml(path)}"
+          data-name="${escapeHtml(f.name)}">복원</button>
+      </div>`;
+    }).join('');
+    listEl.querySelectorAll('.bkp-restore-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>_dbxRestore(btn.dataset.path,btn.dataset.name));
+    });
+  }).catch(e=>{
+    if(listEl)listEl.innerHTML=`<div class="alert err" style="margin:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg><div>목록 로딩 실패: ${escapeHtml(e.message||String(e))}</div></div>`;
+  });
+}
+function _dbxCloseModal(){
+  const m=document.getElementById('dbxModal');if(m)m.style.display='none';
+}
+function _dbxFmtSize(bytes){
+  if(!bytes||isNaN(bytes))return '';
+  if(bytes<1024)return bytes+'B';
+  if(bytes<1024*1024)return (bytes/1024).toFixed(0)+'KB';
+  return (bytes/1024/1024).toFixed(1)+'MB';
+}
+
+// ── 이벤트 바인딩 (init 에서 1회) ──────────────────────────────
+function _dbxBindEvents(){
+  const $=id=>document.getElementById(id);
+  $('dbxConnectBtn')?.addEventListener('click',dbxConnect);
+  $('dbxBackupBtn')?.addEventListener('click',dbxBackup);
+  $('dbxRestoreBtn')?.addEventListener('click',_dbxOpenModal);
+  $('dbxDisconnectBtn')?.addEventListener('click',dbxDisconnect);
+  $('dbxModalClose')?.addEventListener('click',_dbxCloseModal);
+  $('dbxModalOverlay')?.addEventListener('click',_dbxCloseModal);
+}
+
+// ════════════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════════════
 (async function init(){
   // 버전 표시 — DOM 두 곳에 모두 주입 (HTML 정적 텍스트가 stale해도 JS가 진실의 원천)
   const av=document.getElementById('appVersion');if(av)av.textContent=APP_VERSION;
   const avs=document.getElementById('appVersionStat');if(avs)avs.textContent=APP_VERSION;
+
+  // Dropbox 이벤트 바인딩 (1회)
+  _dbxBindEvents();
+
   try{
     await openDB();
     await loadStoreCatMap();
     await loadAll();
+    // 기기별 초기 탭: 데스크탑(비터치) → 추가, 모바일(터치) → 내역
+    if(!_isTouch) switchTab('input');
     renderDetail();
   }catch(e){
     console.error(e);
     toast('데이터베이스를 열 수 없어요. 브라우저 설정(시크릿 모드 등)을 확인해주세요.',{type:'error',duration:6000});
   }
+
+  // Dropbox OAuth 콜백 처리 — URL에 ?code= 있으면 토큰 교환
+  // (DB 로드 완료 후 실행 — 콜백 성공 시 settings 탭으로 이동)
+  await dbxHandleCallback();
 })();
 </script>
 
