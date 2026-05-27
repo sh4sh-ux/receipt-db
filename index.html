@@ -2847,7 +2847,10 @@ function _dbxExpired(){
   return exp>0 && Date.now()>exp-60000;  // 1분 여유
 }
 function _dbxRedirectUri(){
-  return window.location.origin+window.location.pathname;
+  // index.html 제거 — 모바일에서 /receipt-db/index.html로 접근해도
+  // Dropbox에 등록된 /receipt-db/ 와 정확히 일치시키기 위함
+  const path=window.location.pathname.replace(/index\.html$/,'');
+  return window.location.origin+path;
 }
 
 // ── PKCE 헬퍼 ──────────────────────────────────────────────────
