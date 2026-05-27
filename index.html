@@ -134,6 +134,7 @@ svg{display:block;flex-shrink:0;}
 .field-g{margin-bottom:16px;}
 .field-lbl{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
 .field-lbl-hint{font-weight:500;color:var(--label3);text-transform:none;letter-spacing:0;}
+.field-sub{font-size:11.5px;color:var(--label3);margin-top:4px;font-variant-numeric:tabular-nums;}
 .field-inp,.field-sel,.field-ta{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:9px 12px;font-size:14px;background:var(--bg);color:var(--label);outline:none;font-family:inherit;}
 .field-inp:focus,.field-sel:focus,.field-ta:focus{border-color:var(--blue);background:var(--card);}
 .field-ta{resize:vertical;min-height:220px;line-height:1.5;font-family:ui-monospace,'SF Mono','Menlo','Consolas',monospace;font-size:12.5px;white-space:pre;overflow-x:auto;}
@@ -195,6 +196,8 @@ svg{display:block;flex-shrink:0;}
 .prev-item-name::placeholder{color:var(--label3);}
 .prev-item-del{border:none;background:transparent;color:var(--label3);font-size:18px;line-height:1;padding:0;cursor:pointer;font-family:inherit;}
 .prev-item-del:hover{color:var(--red);}
+.sign-btn{width:20px;height:20px;border:1.5px solid var(--red);border-radius:50%;background:transparent;color:var(--red);font-size:11px;font-weight:700;line-height:1;padding:0;cursor:pointer;font-family:inherit;flex-shrink:0;margin-right:auto;opacity:.55;transition:opacity .12s,background .12s;}
+.sign-btn:hover{opacity:1;background:var(--red-bg);}
 .prev-empty-items{text-align:center;color:var(--label3);font-size:12px;padding:14px 0 10px;}
 
 .prev-foot{padding:9px 14px;border-top:1px solid var(--sep);display:flex;justify-content:space-between;align-items:center;font-size:12px;background:var(--fill2);}
@@ -589,6 +592,10 @@ svg{display:block;flex-shrink:0;}
 
               <div>
                 <div class="field-g">
+                  <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분, 선택</span></label>
+                  <input id="participantsInp" class="field-inp" type="text" placeholder="예: 철수, 영희, 민준"/>
+                </div>
+                <div class="field-g">
                   <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분, 선택</span></label>
                   <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
                 </div>
@@ -805,9 +812,12 @@ svg{display:block;flex-shrink:0;}
 // v1.18 — 사이드바 sticky: 영수증 목록이 길어져도 "+ 추가" 버튼 항상 하단 고정.
 //         자동 결제자 감지: "결제자 " 접두어 없이 이름 검색 → 전체 결과 paidBy 일치 시 결제자 요약 자동 표시.
 // v1.19 — Dropbox 자동 동기화: 영수증 저장·수정·삭제 시 백그라운드 자동 업로드(사진 제외 경량 JSON).
+// v1.20 — 미리보기 폼 품목 금액 셀에 원형 빨간 ± 버튼 추가: 클릭 시 금액 부호 전환(할인·환불 입력용).
+// v1.21 — 참석자(participants) 필드: 입력 폼·상세 화면에 쉼표 구분 입력, 상세에서 1인당 금액 표시.
+//          가계부에 '참석자별 분담' 막대 섹션 추가 (1/N 균등 배분). 검색 포함, CSV 내보내기 포함.
 //         앱 시작 시 Dropbox에서 자동 다운로드 후 로컬과 머지(같은 ID → updatedAt 최신 우선).
 //         삭제 항목 추적(deletedIds)으로 양방향 삭제 동기화. 사이드바에 마지막 동기화 시각 표시.
-const APP_VERSION='v1.19';
+const APP_VERSION='v1.21';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1053,6 +1063,21 @@ function categoryBreakdown(ym){
     .filter(x=>x.amt>0)  // 음수 합계는 표시 안 함 (이상 케이스 방지)
     .sort((a,b)=>b.amt-a.amt);
   return {breakdown:arr,total};
+}
+// 참석자별 분담 집계 — 참석자 N명이면 총액을 1/N씩 배분
+function participantBreakdown(ym){
+  const list=receiptsForMonth(ym);
+  const m=new Map();
+  for(const r of list){
+    const pp=r.participants||[];
+    if(!pp.length)continue;
+    const share=Math.round((r.total||0)/pp.length);
+    for(const name of pp)m.set(name,(m.get(name)||0)+share);
+  }
+  return [...m.entries()]
+    .map(([name,amt])=>({name,amt}))
+    .filter(x=>x.amt>0)
+    .sort((a,b)=>b.amt-a.amt);
 }
 function dailySparkline(ym){
   const days=daysInMonth(ym);
@@ -1318,6 +1343,11 @@ function getFiltered(){
     const pq=q.slice(4).trim();
     if(pq) return receipts.filter(r=>(r.paidBy||'').toLowerCase().includes(pq));
   }
+  // ── "참석자 X" 접두어 검색 ──
+  if(q.startsWith('참석자 ')){
+    const pq=q.slice(4).trim().toLowerCase();
+    if(pq) return receipts.filter(r=>(r.participants||[]).some(p=>p.toLowerCase().includes(pq)));
+  }
 
   // ── 카테고리명 매칭 시 해당 카테고리 키워드로 확장 ──
   const expandedKws=new Set();
@@ -1337,6 +1367,7 @@ function getFiltered(){
     if((r.date||'').includes(q))return true;
     if((r.paidBy||'').toLowerCase().includes(q))return true;
     if((r.notes||'').toLowerCase().includes(q))return true;
+    if((r.participants||[]).join(' ').toLowerCase().includes(q))return true;
     if((r.tags||[]).join(' ').toLowerCase().includes(q))return true;
     // 품목명 — 한영 대역 포함 검색
     if((r.items||[]).some(it=>{
@@ -1358,6 +1389,7 @@ function _cardHtml(r){
   const meta=[fmtDateKor(r.date)];
   if(r.category)meta.push(escapeHtml(r.category));
   if(r.paidBy)meta.push(escapeHtml(r.paidBy));
+  if((r.participants||[]).length>0)meta.push(`👥 ${r.participants.length}명`);
   return `<div class="r-card${sel}" data-id="${r.id}">
     <div class="r-card-info">
       <div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div>
@@ -1572,7 +1604,7 @@ function renderPreviewForm(){
           <input class="prev-item-name" data-f="name" placeholder="품목명" value="${escapeHtml(it.name||'')}" autocomplete="off"/>
           <input class="prev-item-qty" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||1}"/>
           <input class="prev-item-price" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/>
-          <div class="prev-item-amt readonly${negCls}" data-amt="${idx}">${_fmtN(it.amount||0)}</div>
+          <div class="prev-item-amt readonly${negCls}" data-amt="${idx}"><button type="button" class="sign-btn" data-sign="${idx}" tabindex="-1" title="부호 전환 (+/−)" aria-label="부호 전환">±</button>${_fmtN(it.amount||0)}</div>
           <button type="button" class="prev-item-del" tabindex="-1" data-del="${idx}" title="이 품목 삭제" aria-label="삭제">×</button>
         </div>`;
       }).join(''))
@@ -1795,6 +1827,18 @@ function bindPreviewFormEvents(){
         renderPreviewForm();
       });
     }
+
+    // ± 부호 전환 버튼
+    const signBtn=row.querySelector('.sign-btn');
+    if(signBtn){
+      signBtn.addEventListener('click',()=>{
+        it.amount=-(it.amount||0);
+        // unitPrice도 함께 반전 → 수량·단가 변경 후에도 부호 유지
+        if(it.unitPrice)it.unitPrice=-it.unitPrice;
+        _recalcTotalIfAuto();
+        renderPreviewForm();
+      });
+    }
   });
 
   // ── + 추가 버튼 ──
@@ -1934,6 +1978,7 @@ saveBtn.addEventListener('click',async()=>{
     imageId='img_'+id.slice(4);  // img_YYYYMMDD_NNN
     await dbPut('images',{id:imageId,blob:pendingPhotoBlob,mime:pendingPhotoBlob.type||'image/jpeg'});
   }
+  const participants=(document.getElementById('participantsInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const tags=(document.getElementById('tagInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const finalCat=document.getElementById('catInp').value.trim();
   // 이름 비어있는 품목은 자동 제거 (편집 중 빈 라인이 남았을 수 있음)
@@ -1953,6 +1998,7 @@ saveBtn.addEventListener('click',async()=>{
     items:cleanItems,
     imageId,
     notes:document.getElementById('noteInp').value,
+    participants,
     tags,
     createdAt:nowISO(),updatedAt:nowISO(),
   };
@@ -1987,6 +2033,7 @@ function clearInputs(){
   document.getElementById('payDetail').value='';
   document.getElementById('payerInp').value='';
   document.getElementById('catInp').value='';
+  document.getElementById('participantsInp').value='';
   document.getElementById('tagInp').value='';
   document.getElementById('noteInp').value='';
   clearPhoto();
@@ -2208,6 +2255,7 @@ function renderMonthSummaryHtml(ym){
   const sum=monthSummary(ym);
   const prev=monthSummary(ymOffset(ym,-1));
   const cats=categoryBreakdown(ym);
+  const pparts=participantBreakdown(ym);
   const spark=dailySparkline(ym);
 
   // 빈 상태
@@ -2280,6 +2328,29 @@ function renderMonthSummaryHtml(ym){
     `;
   }
 
+  // 참석자별 막대
+  let participantHtml='';
+  if(pparts.length){
+    const maxPP=Math.max(...pparts.map(p=>p.amt));
+    participantHtml=`
+      <div class="budget-section">
+        <div class="budget-section-hd">참석자별 분담 <span class="hd-sub">${pparts.length}명 · 1/N 균등 배분</span></div>
+        <div class="cat-bars">
+          ${pparts.map((p,i)=>{
+            const w=maxPP>0?(p.amt/maxPP*100):0;
+            return `<div class="cat-bar-row" data-rank="${Math.min(i,4)}">
+              <div class="cat-bar-top">
+                <span class="cat-bar-name">${escapeHtml(p.name)}</span>
+                <span class="cat-bar-amt">${fmtMoney(p.amt)}원</span>
+              </div>
+              <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;background:var(--blue);"></div></div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
   // 일별 sparkline
   const peakAmt=Math.max(...spark);
   const peakDay=peakAmt>0?spark.indexOf(peakAmt)+1:0;
@@ -2308,7 +2379,7 @@ function renderMonthSummaryHtml(ym){
     `;
   }
 
-  return summaryHtml+catHtml+sparkHtml;
+  return summaryHtml+catHtml+participantHtml+sparkHtml;
 }
 
 async function renderDetail(){
@@ -2429,6 +2500,11 @@ async function renderDetail(){
       <textarea id="dNotes" class="field-ta" style="min-height:60px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="메모">${escapeHtml(r.notes||'')}</textarea>
     </div>
     <div class="field-g">
+      <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분</span></label>
+      <input id="dParticipants" class="field-inp" type="text" value="${escapeHtml((r.participants||[]).join(', '))}" placeholder="예: 철수, 영희, 민준"/>
+      ${(r.participants||[]).length>1?`<div class="field-sub">1인당 약 ${fmtMoney(Math.round((r.total||0)/(r.participants||[]).length))}원</div>`:''}
+    </div>
+    <div class="field-g">
       <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
       <input id="dTags" class="field-inp" type="text" value="${escapeHtml((r.tags||[]).join(', '))}"/>
     </div>
@@ -2526,6 +2602,20 @@ async function renderDetail(){
       await dbPut('receipts',r);
       _revokeImgUrl(imgId);
       toast('사진이 업데이트됐어요',{type:'success'});
+      await loadAll();await renderDetail();
+      dbxSyncUpload();
+    });
+  }
+
+  // 참석자
+  const dp2=document.getElementById('dParticipants');
+  if(dp2){
+    dp2.addEventListener('blur',async()=>{
+      const participants=dp2.value.split(',').map(s=>s.trim()).filter(Boolean);
+      if(JSON.stringify(participants)===JSON.stringify(r.participants||[]))return;
+      r.participants=participants;r.updatedAt=nowISO();
+      await dbPut('receipts',r);
+      toast('참석자 저장됨');
       await loadAll();await renderDetail();
       dbxSyncUpload();
     });
@@ -2698,7 +2788,7 @@ function exportCsv(){
     const s=String(v==null?'':v);
     return (s.includes(',')||s.includes('"')||s.includes('\n'))?`"${s.replace(/"/g,'""')}"`:s;
   };
-  const header=['일자','매장명','카테고리','결제수단','결제 상세','결제자','총액(원)','품목수','품목 목록','메모','태그'];
+  const header=['일자','매장명','카테고리','결제수단','결제 상세','결제자','총액(원)','품목수','품목 목록','참석자','메모','태그'];
   const sorted=[...receipts].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   const rows=[header.map(esc).join(',')];
   for(const r of sorted){
@@ -2714,6 +2804,7 @@ function exportCsv(){
       r.total||0,
       items.length,
       itemStr,
+      (r.participants||[]).join(', '),
       r.notes||'',
       (r.tags||[]).join(', ')
     ].map(esc).join(','));
