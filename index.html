@@ -46,7 +46,7 @@ svg{display:block;flex-shrink:0;}
 .app{background:var(--card);border-radius:var(--r);border:1px solid var(--sep);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04),0 8px 32px rgba(0,0,0,.06);min-height:700px;display:grid;grid-template-columns:320px minmax(0,1fr);}
 
 /* ── LEFT SIDEBAR ── */
-.side{border-right:1px solid var(--sep);background:var(--left-bg);display:flex;flex-direction:column;min-height:700px;}
+.side{border-right:1px solid var(--sep);background:var(--left-bg);display:flex;flex-direction:column;min-height:700px;position:sticky;top:0;max-height:100vh;overflow:hidden;}
 .side-top{padding:26px var(--pad-x) 18px;}
 .app-eye-row{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
 .app-eye{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.5px;text-transform:uppercase;}
@@ -390,7 +390,7 @@ svg{display:block;flex-shrink:0;}
 @media(max-width:780px){
   .shell{padding:0;}
   .app{grid-template-columns:1fr;border-radius:0;border:none;box-shadow:none;min-height:100vh;}
-  .side{border-right:none;border-bottom:1px solid var(--sep);min-height:auto;}
+  .side{border-right:none;border-bottom:1px solid var(--sep);min-height:auto;position:static;max-height:none;overflow:visible;}
   .main{min-height:auto;}
   .side-top{padding:max(18px,calc(env(safe-area-inset-top,0px) + 12px)) 18px 14px;}
   .side-search,.side-list,.side-foot{padding-left:18px;padding-right:18px;}
@@ -797,7 +797,11 @@ svg{display:block;flex-shrink:0;}
 //         영수증 목록 테이블. "결제자 홍길동" 입력 → 해당 결제자 통계 한눈에.
 // v1.16 — 품목명 기반 카테고리 보조 추정: 가게명으로 못 잡을 때 품목 키워드 투표로 fallback.
 //         CAT_ITEM_RULES (술집·카페·교통·병원·문화·외식·마트) + 최소 2점 이상 시 채택.
-const APP_VERSION='v1.16';
+// v1.17 — 식품 동의어 사전(FOOD_TAXONOMY): 치즈→하바티/고다, 맥주→테라/카스/기네스 양방향 확장.
+//         품목 검색 통계 개선: 구매횟수·총수량·총지출 히어로 카드 + 단가 기준 최저/평균/최고 + 테이블 수량·단가 컬럼.
+// v1.18 — 사이드바 sticky: 영수증 목록이 길어져도 "+ 추가" 버튼 항상 하단 고정.
+//         자동 결제자 감지: "결제자 " 접두어 없이 이름 검색 → 전체 결과 paidBy 일치 시 결제자 요약 자동 표시.
+const APP_VERSION='v1.18';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1231,14 +1235,67 @@ const KO_EN_TERMS=[
   ['오일',['oil']],['식초',['vinegar']],['소스',['sauce']],
 ];
 
-// 검색어에 한영 대역 포함한 검색 텀 배열 반환
+// 식품 동의어·품종 사전 — 일반어 ↔ 브랜드/품종/영문 양방향 매칭
+// 예: "치즈" 검색 → 하바티·고다·mozzarella 포함 / "하바티" 검색 → 치즈 포함
+const FOOD_TAXONOMY=[
+  ['치즈',  ['cheese','하바티','havarti','고다','gouda','체다','cheddar','브리','brie',
+             '모짜렐라','mozzarella','카망베르','camembert','파마산','parmesan','parmigiano',
+             '에멘탈','emmental','크림치즈','cream cheese','리코타','ricotta','페타','feta',
+             '그뤼에르','gruyere','에담','edam','부라타','burrata']],
+  ['맥주',  ['beer','테라','카스','하이트','클라우드','켈리','필라이트','오비','기네스',
+             'guinness','호가든','hoegaarden','버드와이저','budweiser','칭따오','tsingtao',
+             '코로나','corona','하이네켄','heineken','에일','ale','라거','lager',
+             '흑맥주','stout','포터','porter','밀맥주','wheat beer','ipa']],
+  ['소주',  ['진로','참이슬','처음처럼','새로','청하','한라산','좋은데이','이슬로',
+             '제주한라산','오크','진로이즈백','참진이슬']],
+  ['막걸리',['탁주','동동주','쌀막걸리','느린마을','장수막걸리','이화주']],
+  ['와인',  ['wine','샤도네이','chardonnay','카베르네','cabernet','메를로','merlot',
+             '피노누아','pinot noir','소비뇽블랑','sauvignon blanc','리슬링','riesling',
+             '로제','rose','샴페인','champagne','프로세코','prosecco','스파클링']],
+  ['위스키',['whisky','whiskey','버번','bourbon','스카치','scotch','발렌타인','ballantine',
+             '조니워커','johnnie walker','잭다니엘','jack daniel','글렌피딕','glenfiddich',
+             '맥캘란','macallan','시바스','chivas','아이리시','irish']],
+  ['베이컨',['bacon','판체타','pancetta','베이컨스트립']],
+  ['햄',    ['ham','스팸','spam','런천','luncheon','프로슈토','prosciutto','살라미','salami',
+             '하몽','jamon','mortadella','모르타델라']],
+  ['소시지',['sausage','소세지','비엔나','vienna','프랑크','frankfurter','핫도그','hotdog',
+             'chorizo','초리조','부어스트','bratwurst','브라트부어스트']],
+  ['커피',  ['coffee','아메리카노','americano','에스프레소','espresso','라떼','latte',
+             '카푸치노','cappuccino','마키아토','macchiato','콜드브루','cold brew',
+             '플랫화이트','flat white','드립','drip','핸드드립']],
+  ['요거트',['yogurt','yoghurt','야쿠르트','yakult','액티비아','activia','그릭','greek']],
+  ['초콜릿',['chocolate','초코','choco','킷캣','kitkat','트위닉스','twix','스니커즈',
+             'snickers','허쉬','hershey','가나','ghana','토블론','toblerone','린트','lindt']],
+  ['크래커',['cracker','리츠','ritz','프리미어','premier','트리스킷','triscuit']],
+  ['아이스크림',['ice cream','icecream','아이스','gelato','젤라토','하겐다즈','haagen dazs',
+                '배스킨','baskin','나뚜루','natuur','설레임','비비빅']],
+];
+
+// 검색어에 한영 대역 + 식품 동의어 포함한 검색 텀 배열 반환
 function _getSearchTerms(q){
   const terms=[q];
+  // 1. 한↔영 직역 (KO_EN_TERMS)
   for(const[ko,ens]of KO_EN_TERMS){
-    // 한글로 검색 → 영문 추가
     if(q.includes(ko)||ko.includes(q)){ens.forEach(e=>terms.push(e));}
-    // 영문으로 검색 → 한글 추가
     for(const e of ens){if(q.includes(e)||e.includes(q)){terms.push(ko);break;}}
+  }
+  // 2. 식품 동의어 양방향 (FOOD_TAXONOMY)
+  for(const[generic,syns]of FOOD_TAXONOMY){
+    const gl=generic.toLowerCase();
+    // 일반어로 검색 (예: "치즈") → 모든 동의어 추가 (하바티, havarti, 고다…)
+    if(q===gl||q.includes(gl)||gl.includes(q)){
+      terms.push(generic);
+      syns.forEach(s=>terms.push(s.toLowerCase()));
+    }
+    // 동의어로 검색 (예: "하바티") → 일반어 + 나머지 동의어 추가
+    for(const s of syns){
+      const sl=s.toLowerCase();
+      if(q===sl||q.includes(sl)||sl.includes(q)){
+        terms.push(gl);
+        syns.forEach(x=>terms.push(x.toLowerCase()));
+        break;
+      }
+    }
   }
   return [...new Set(terms)];
 }
@@ -1968,44 +2025,72 @@ function renderSearchSummaryHtml(q, filtered){
 
   const terms=_getSearchTerms(q);
 
-  // 품목명 매칭 이력 수집
+  // 품목명 매칭 이력 수집 (unitPrice도 포함)
   const hitItems=[];
   for(const r of filtered){
     for(const it of (r.items||[])){
       const nameL=(it.name||'').toLowerCase();
       if(terms.some(t=>t&&nameL.includes(t))){
-        hitItems.push({name:it.name,amount:it.amount||0,quantity:it.quantity||1,
-          receiptId:r.id,date:r.date,store:r.store,paidBy:r.paidBy});
+        hitItems.push({
+          name:it.name, amount:it.amount||0,
+          quantity:it.quantity||1, unitPrice:it.unitPrice||0,
+          receiptId:r.id, date:r.date, store:r.store, paidBy:r.paidBy
+        });
       }
     }
   }
 
-  // 가격 통계 (품목 금액 기준, 양수만)
   let statsHtml='';
-  const posAmts=hitItems.map(it=>it.amount).filter(a=>a>0);
-  if(posAmts.length>1){
-    const minP=Math.min(...posAmts);
-    const maxP=Math.max(...posAmts);
-    const avgP=Math.round(posAmts.reduce((s,a)=>s+a,0)/posAmts.length);
-    statsHtml=`<div class="srch-stats">
-      <div class="srch-stat"><div class="srch-stat-lbl">최저가</div><div class="srch-stat-val">${fmtMoney(minP)}원</div></div>
-      <div class="srch-stat srch-stat-avg"><div class="srch-stat-lbl">평균가</div><div class="srch-stat-val">${fmtMoney(avgP)}원</div></div>
-      <div class="srch-stat"><div class="srch-stat-lbl">최고가</div><div class="srch-stat-val">${fmtMoney(maxP)}원</div></div>
-    </div>`;
-  }
-
   let bodyHtml='';
   if(hitItems.length>0){
-    // 품목 매칭 — 구매 이력 테이블
+    // ── 품목 통계 계산 ──
+    const totalQty=hitItems.reduce((s,it)=>s+(it.quantity||1),0);
+    const totalSpend=hitItems.reduce((s,it)=>s+Math.max(0,it.amount||0),0);
+    // 단가 기준 min/avg/max (unitPrice > 0인 항목만, 없으면 amount 사용)
+    const upList=hitItems.filter(it=>it.unitPrice>0).map(it=>it.unitPrice);
+    const priceList=upList.length>0 ? upList : hitItems.map(it=>it.amount).filter(a=>a>0);
+    const priceLabel=upList.length>0 ? '단가' : '금액';
+    const avgUnit=totalQty>0&&totalSpend>0 ? Math.round(totalSpend/totalQty) : 0;
+
+    // ── 히어로 요약 카드 (구매횟수 + 총지출) ──
+    statsHtml=`<div class="payer-hero" style="margin-bottom:12px;">
+      <div class="payer-stat">
+        <div class="payer-stat-lbl">구매 횟수</div>
+        <div class="payer-stat-val">${hitItems.length}<span style="font-size:14px;font-weight:500;color:var(--label3);margin-left:3px;">건</span></div>
+        <div class="payer-stat-sub">총 ${totalQty}개${avgUnit>0?' · 개당 평균 '+fmtMoney(avgUnit)+'원':''}</div>
+      </div>
+      <div class="payer-stat total">
+        <div class="payer-stat-lbl">총 지출</div>
+        <div class="payer-stat-val">${fmtMoney(totalSpend)}<span style="font-size:14px;font-weight:500;margin-left:3px;">원</span></div>
+        <div class="payer-stat-sub">${hitItems.length>0?fmtDateKor([...hitItems].sort((a,b)=>a.date.localeCompare(b.date))[0].date)+' ~ '+fmtDateKor([...hitItems].sort((a,b)=>b.date.localeCompare(a.date))[0].date):''}</div>
+      </div>
+    </div>`;
+
+    // ── 단가 min/avg/max (2건 이상일 때만) ──
+    if(priceList.length>1){
+      const minP=Math.min(...priceList);
+      const maxP=Math.max(...priceList);
+      const avgP=Math.round(priceList.reduce((s,a)=>s+a,0)/priceList.length);
+      statsHtml+=`<div class="srch-stats" style="margin-bottom:16px;">
+        <div class="srch-stat"><div class="srch-stat-lbl">최저 ${priceLabel}</div><div class="srch-stat-val">${fmtMoney(minP)}원</div></div>
+        <div class="srch-stat srch-stat-avg"><div class="srch-stat-lbl">평균 ${priceLabel}</div><div class="srch-stat-val">${fmtMoney(avgP)}원</div></div>
+        <div class="srch-stat"><div class="srch-stat-lbl">최고 ${priceLabel}</div><div class="srch-stat-val">${fmtMoney(maxP)}원</div></div>
+      </div>`;
+    }
+
+    // ── 구매 이력 테이블 (수량·단가 컬럼 추가) ──
+    const hasUP=hitItems.some(it=>it.unitPrice>0);
     const sorted=[...hitItems].sort((a,b)=>b.date.localeCompare(a.date));
     bodyHtml=`<div class="section-hd" style="margin-top:0;">구매 이력 <span style="font-weight:500;color:var(--label3);text-transform:none;letter-spacing:0;">${hitItems.length}건</span></div>
     <table class="srch-table">
-      <thead><tr><th>일자</th><th>매장명</th><th>품목명</th><th>금액</th></tr></thead>
+      <thead><tr><th>일자</th><th>매장명</th><th>품목명</th><th>수량</th>${hasUP?'<th>단가</th>':''}<th>금액</th></tr></thead>
       <tbody>${sorted.map(it=>`
         <tr class="srch-row" data-id="${it.receiptId}">
           <td style="white-space:nowrap;">${fmtDateKor(it.date)}</td>
           <td>${escapeHtml(it.store||'')}</td>
           <td>${escapeHtml(it.name||'')}</td>
+          <td style="text-align:right;">${it.quantity||1}</td>
+          ${hasUP?`<td>${it.unitPrice>0?fmtMoney(it.unitPrice)+'원':'—'}</td>`:''}
           <td class="${it.amount<0?'amt-neg':''}">${fmtMoney(it.amount)}원</td>
         </tr>`).join('')}
       </tbody>
@@ -2229,10 +2314,15 @@ async function renderDetail(){
     if(searchQuery){
       const filtered=getFiltered();
       const q=searchQuery.trim();
-      // ── 결제자 검색인지 판별 ──
-      const isPayerSearch=q.startsWith('결제자 ')&&q.length>4;
+      const qL=q.toLowerCase();
+      // ── 결제자 검색 판별: 명시적("결제자 X") 또는 자동(전체 결과의 paidBy가 q와 일치) ──
+      const isExplicitPayer=q.startsWith('결제자 ')&&q.length>4;
+      const isImplicitPayer=!isExplicitPayer&&qL.length>=2&&filtered.length>0&&
+        filtered.every(r=>(r.paidBy||'').toLowerCase().includes(qL))&&
+        filtered.some(r=>(r.paidBy||'').trim()!=='');
+      const isPayerSearch=isExplicitPayer||isImplicitPayer;
+      const payerName=isExplicitPayer?q.slice(4).trim():q;
       if(isPayerSearch){
-        const payerName=q.slice(4).trim();
         eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;
         title.textContent=`${payerName} 결제 내역`;
         sub.textContent=filtered.length>0?`${filtered.length}건 · 클릭하면 상세 보기`:'결과 없음';
@@ -2242,7 +2332,7 @@ async function renderDetail(){
         eye.textContent='검색';
         title.textContent=`'${q}' 검색 결과`;
         sub.textContent=filtered.length>0?`${filtered.length}개 영수증 · 클릭하면 상세 보기`:'결과 없음';
-        body.innerHTML=renderSearchSummaryHtml(q.toLowerCase(),filtered);
+        body.innerHTML=renderSearchSummaryHtml(qL,filtered);
       }
       body.querySelectorAll('.srch-row[data-id]').forEach(tr=>{
         tr.addEventListener('click',()=>selectReceipt(tr.dataset.id));
