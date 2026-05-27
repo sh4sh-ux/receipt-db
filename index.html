@@ -463,7 +463,10 @@ svg{display:block;flex-shrink:0;}
       <div class="side-list" id="sideList"></div>
 
       <div class="side-foot">
-        <div class="foot-stat" id="footStat">0건</div>
+        <div>
+          <div class="foot-stat" id="footStat">0건</div>
+          <span id="dbxSyncBadge" style="display:none;font-size:10px;color:var(--green-txt);font-weight:500;margin-top:1px;"></span>
+        </div>
         <button class="foot-add" id="footAdd">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           추가
@@ -801,7 +804,10 @@ svg{display:block;flex-shrink:0;}
 //         품목 검색 통계 개선: 구매횟수·총수량·총지출 히어로 카드 + 단가 기준 최저/평균/최고 + 테이블 수량·단가 컬럼.
 // v1.18 — 사이드바 sticky: 영수증 목록이 길어져도 "+ 추가" 버튼 항상 하단 고정.
 //         자동 결제자 감지: "결제자 " 접두어 없이 이름 검색 → 전체 결과 paidBy 일치 시 결제자 요약 자동 표시.
-const APP_VERSION='v1.18';
+// v1.19 — Dropbox 자동 동기화: 영수증 저장·수정·삭제 시 백그라운드 자동 업로드(사진 제외 경량 JSON).
+//         앱 시작 시 Dropbox에서 자동 다운로드 후 로컬과 머지(같은 ID → updatedAt 최신 우선).
+//         삭제 항목 추적(deletedIds)으로 양방향 삭제 동기화. 사이드바에 마지막 동기화 시각 표시.
+const APP_VERSION='v1.19';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1971,6 +1977,8 @@ saveBtn.addEventListener('click',async()=>{
       document.querySelector('.main').scrollIntoView({behavior:'smooth',block:'start'});
     },80);
   }
+  // 자동 동기화 (백그라운드 — UI 차단 없음)
+  dbxSyncUpload();
 });
 
 function clearInputs(){
@@ -2488,6 +2496,7 @@ async function renderDetail(){
       r.items.splice(idx,1);r.updatedAt=nowISO();
       await dbPut('receipts',r);
       await loadAll();await renderDetail();
+      dbxSyncUpload();
     });
   });
   document.getElementById('addItemBtn').addEventListener('click',async()=>{
@@ -2495,6 +2504,7 @@ async function renderDetail(){
     r.updatedAt=nowISO();
     await dbPut('receipts',r);
     await loadAll();await renderDetail();
+    dbxSyncUpload();
   });
 
   // 상세 화면 드래그&드롭 (사진 교체/추가)
@@ -2517,6 +2527,7 @@ async function renderDetail(){
       _revokeImgUrl(imgId);
       toast('사진이 업데이트됐어요',{type:'success'});
       await loadAll();await renderDetail();
+      dbxSyncUpload();
     });
   }
 
@@ -2530,6 +2541,7 @@ async function renderDetail(){
     r.notes=dn.value;r.updatedAt=nowISO();
     await dbPut('receipts',r);
     toast('메모 저장됨');
+    dbxSyncUpload();
   });
   const dt=document.getElementById('dTags');
   let tComp=false;
@@ -2541,6 +2553,7 @@ async function renderDetail(){
     r.tags=tags;r.updatedAt=nowISO();
     await dbPut('receipts',r);
     toast('태그 저장됨');
+    dbxSyncUpload();
   });
 }
 
@@ -2600,6 +2613,7 @@ function startKvEdit(el,r){
     }
     toast('수정됨');
     await loadAll();await renderDetail();
+    dbxSyncUpload();
   };
   inp.addEventListener('keydown',e=>{
     if(e.key==='Enter'&&!composing&&!e.isComposing){e.preventDefault();commit();}
@@ -2631,6 +2645,7 @@ async function persistItemChange(r){
     r.updatedAt=nowISO();
     await dbPut('receipts',r);
     await loadAll();await renderDetail();
+    dbxSyncUpload();
   }
 }
 
@@ -2641,11 +2656,13 @@ document.getElementById('detailDeleteBtn').addEventListener('click',async()=>{
   if(!r)return;
   if(!confirm(`'${r.store||'영수증'}'을(를) 삭제할까요? 사진도 함께 삭제됩니다.`))return;
   if(r.imageId){await dbDel('images',r.imageId);_revokeImgUrl(r.imageId);}
+  _dbxMarkDeleted(r.id);   // 삭제 추적 → 동기화 시 상대 기기에서도 삭제됨
   await dbDel('receipts',r.id);
   toast(`'${r.store||'영수증'}' 삭제됨`,{type:'success'});
   selectedId=null;
   await loadAll();
   renderDetail();
+  dbxSyncUpload();  // 백그라운드 자동 동기화
 });
 
 // ── LIGHTBOX ──
@@ -2812,6 +2829,8 @@ const _K={  // localStorage 키 모음
   EXPIRES_AT:    'dbx_expires_at',
   ACCOUNT:       'dbx_account',
   LAST_BACKUP:   'dbx_last_backup',
+  LAST_SYNC:     'dbx_last_sync',      // 자동 동기화 마지막 시각 (ISO)
+  DELETED_IDS:   'dbx_deleted_ids',    // 삭제된 영수증 ID 목록 (JSON array)
   CODE_VERIFIER: 'dbx_code_verifier',
   STATE:         'dbx_oauth_state',
 };
@@ -2989,7 +3008,7 @@ async function dbxBackup(){
       exportedAt:nowISO(),receipts:recs,images:imgsOut,storeCatMap,
     };
     const json=JSON.stringify(payload,null,2);
-    const filename=`receipt-db_${new Date().toISOString().slice(0,10)}_${recs.length}건.json`;
+    const filename=`receipt-db_${new Date().toISOString().slice(0,10)}_${recs.length}items.json`;
     const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{
       method:'POST',
       headers:{
@@ -3080,6 +3099,155 @@ function dbxDisconnect(){
   renderDbxSettings();
 }
 
+// ════════════════════════════════════════════════════════════════
+// DROPBOX 자동 동기화 (v1.19)
+// ════════════════════════════════════════════════════════════════
+// 전략: 사진 제외 경량 JSON(receipt-db_sync.json) 하나를 Dropbox에 유지.
+// 저장·수정·삭제 시 자동 업로드(백그라운드), 앱 시작 시 자동 다운로드+머지.
+// 사진은 기존 수동 풀백업(JSON export)으로 별도 관리.
+// ────────────────────────────────────────────────────────────────
+
+const _SYNC_PATH='/receipt-db_sync.json';
+
+// 삭제 추적: 삭제된 영수증 ID를 localStorage에 보관
+function _dbxMarkDeleted(id){
+  const ids=new Set(JSON.parse(_ls(_K.DELETED_IDS)||'[]'));
+  ids.add(id);
+  // 최대 2000개 유지 (오래된 것부터 정리)
+  const arr=[...ids];
+  if(arr.length>2000)arr.splice(0,arr.length-2000);
+  _lsSet(_K.DELETED_IDS,JSON.stringify(arr));
+}
+
+// 자동 업로드 — 사진 없이 영수증 메타데이터만 (빠름, 수십 KB)
+async function dbxSyncUpload(){
+  if(!dbxIsConnected())return;
+  try{
+    const token=await _dbxToken();
+    const recs=await dbAll('receipts');
+    const deletedIds=JSON.parse(_ls(_K.DELETED_IDS)||'[]');
+    const payload=JSON.stringify({
+      app:'receipt-db',
+      syncVersion:1,
+      exportedAt:nowISO(),
+      receipts:recs,
+      storeCatMap,
+      deletedIds,
+    });
+    const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+token,
+        'Dropbox-API-Arg':JSON.stringify({path:_SYNC_PATH,mode:'overwrite',mute:true}),
+        'Content-Type':'application/octet-stream',
+      },
+      body:payload,
+    });
+    if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
+    _lsSet(_K.LAST_SYNC,nowISO());
+    _dbxUpdateSyncBadge();
+  }catch(e){
+    // DBX_TOKEN_EXPIRED / DBX_NO_TOKEN은 이미 toast 처리됨, 나머지만 콘솔
+    if(e.message!=='DBX_TOKEN_EXPIRED'&&e.message!=='DBX_NO_TOKEN'){
+      console.warn('dbx auto-sync upload:',e.message||e);
+    }
+  }
+}
+
+// 자동 다운로드 + 머지 — 앱 시작 시 호출
+async function dbxSyncDownload(){
+  if(!dbxIsConnected())return;
+  try{
+    const token=await _dbxToken();
+    const resp=await fetch('https://content.dropboxapi.com/2/files/download',{
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+token,
+        'Dropbox-API-Arg':JSON.stringify({path:_SYNC_PATH}),
+      },
+    });
+    if(resp.status===409||resp.status===404)return;  // 파일 없음 = 첫 사용, 정상
+    if(!resp.ok)return;
+    const data=JSON.parse(await resp.text());
+    if(!data||data.app!=='receipt-db'||!Array.isArray(data.receipts))return;
+    await _dbxMerge(data);
+  }catch(e){
+    if(e.message!=='DBX_TOKEN_EXPIRED'&&e.message!=='DBX_NO_TOKEN'){
+      console.warn('dbx auto-sync download:',e.message||e);
+    }
+  }
+}
+
+// 머지 로직: 원격 + 로컬 → 최신 updatedAt 우선, 삭제 항목 적용
+async function _dbxMerge(remoteData){
+  const remoteRecs=remoteData.receipts||[];
+  const remoteDeletedIds=new Set(remoteData.deletedIds||[]);
+  const localDeletedIds=new Set(JSON.parse(_ls(_K.DELETED_IDS)||'[]'));
+  let changed=0;
+
+  // ① 원격에서 삭제된 항목을 로컬에서도 삭제
+  for(const id of remoteDeletedIds){
+    if(!localDeletedIds.has(id)&&receipts.find(r=>r.id===id)){
+      await dbDel('receipts',id);
+      _revokeImgUrl(id.replace('rec_','img_'));  // 이미지 캐시 정리 (있으면)
+      localDeletedIds.add(id);
+      changed++;
+    }
+  }
+  // 머지된 deletedIds 저장
+  const mergedDel=[...new Set([...localDeletedIds,...remoteDeletedIds])];
+  if(mergedDel.length>2000)mergedDel.splice(0,mergedDel.length-2000);
+  _lsSet(_K.DELETED_IDS,JSON.stringify(mergedDel));
+
+  // ② 원격 영수증 머지 (로컬에서 삭제한 것은 건너뜀)
+  for(const remote of remoteRecs){
+    if(localDeletedIds.has(remote.id))continue;
+    const local=receipts.find(r=>r.id===remote.id);
+    if(!local){
+      // 새 영수증 — 추가
+      await dbPut('receipts',remote);
+      changed++;
+    }else{
+      // 같은 ID — updatedAt 최신 것 사용
+      const lt=new Date(local.updatedAt||local.createdAt||0).getTime();
+      const rt=new Date(remote.updatedAt||remote.createdAt||0).getTime();
+      if(rt>lt){await dbPut('receipts',remote);changed++;}
+    }
+  }
+
+  // ③ storeCatMap 머지 (로컬에 없는 것만 추가)
+  if(remoteData.storeCatMap&&typeof remoteData.storeCatMap==='object'){
+    let catChanged=false;
+    for(const[k,v]of Object.entries(remoteData.storeCatMap)){
+      if(v&&!storeCatMap[k]){storeCatMap[k]=v;catChanged=true;}
+    }
+    if(catChanged)await saveStoreCatMap();
+  }
+
+  if(changed>0){
+    await loadAll();
+    renderDetail();
+    toast(`☁ ${changed}건 동기화됨`,{duration:2200});
+  }
+}
+
+// 사이드바 하단 동기화 뱃지 갱신
+function _dbxUpdateSyncBadge(){
+  const el=document.getElementById('dbxSyncBadge');
+  if(!el)return;
+  if(!dbxIsConnected()){el.style.display='none';return;}
+  const iso=_ls(_K.LAST_SYNC);
+  if(!iso){el.style.display='none';return;}
+  const diff=Math.round((Date.now()-new Date(iso).getTime())/60000);
+  let label;
+  if(diff<1)label='방금 동기화';
+  else if(diff<60)label=`${diff}분 전 동기화`;
+  else if(diff<1440)label=`${Math.round(diff/60)}시간 전 동기화`;
+  else label=new Date(iso).toLocaleDateString('ko-KR',{month:'short',day:'numeric'})+' 동기화';
+  el.textContent='☁ '+label;
+  el.style.display='block';
+}
+
 // ── UI 상태 렌더링 ─────────────────────────────────────────────
 function renderDbxSettings(){
   const notConn=document.getElementById('dbxNotConnected');
@@ -3096,15 +3264,24 @@ function renderDbxSettings(){
     const acStr=_ls(_K.ACCOUNT);
     const ac=acStr?JSON.parse(acStr):null;
     const lb=_ls(_K.LAST_BACKUP);
+    const ls=_ls(_K.LAST_SYNC);
     const statusEl=document.getElementById('dbxStatus');
     if(statusEl){
+      const fmtTime=iso=>{
+        if(!iso)return null;
+        const d=new Date(iso);
+        return d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      };
       statusEl.innerHTML=`
         <div style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--green-txt);margin-bottom:6px;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           연결됨${ac&&ac.email?' · '+escapeHtml(ac.email):''}
         </div>
+        <div style="font-size:11px;color:var(--label3);margin-bottom:4px;">
+          자동 동기화: ${fmtTime(ls)||'아직 동기화 전 — 영수증을 저장하면 자동 시작돼요'}
+        </div>
         <div style="font-size:11px;color:var(--label3);margin-bottom:10px;">
-          ${lb?'마지막 백업: '+escapeHtml(lb):'아직 백업하지 않았어요 — 아래 버튼으로 지금 백업하세요'}
+          전체 백업(사진 포함): ${lb?escapeHtml(lb):'아직 없음 — 아래 버튼으로 백업 권장'}
         </div>
       `;
     }
@@ -3192,6 +3369,11 @@ function _dbxBindEvents(){
     // 기기별 초기 탭: 데스크탑(비터치) → 추가, 모바일(터치) → 내역
     if(!_isTouch) switchTab('input');
     renderDetail();
+    // Dropbox 자동 동기화 — 연결된 경우 시작 시 최신 데이터 내려받아 머지
+    if(dbxIsConnected()){
+      _dbxUpdateSyncBadge();        // 이전 동기화 시각 즉시 표시
+      dbxSyncDownload();            // 백그라운드 다운로드+머지 (await 없음 — UI 차단 안 함)
+    }
   }catch(e){
     console.error(e);
     toast('데이터베이스를 열 수 없어요. 브라우저 설정(시크릿 모드 등)을 확인해주세요.',{type:'error',duration:6000});
