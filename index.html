@@ -262,6 +262,22 @@ svg{display:block;flex-shrink:0;}
 .items-table .item-del{border:none;background:transparent;color:var(--label3);font-size:16px;padding:0 4px;line-height:1;}
 .items-table .item-del:hover{color:var(--red);}
 
+/* ── SEARCH SUMMARY ── */
+.srch-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.srch-stat{background:var(--fill);border:1px solid var(--sep);border-radius:var(--rm);padding:14px 16px;text-align:center;}
+.srch-stat-avg{background:var(--blue-bg);border-color:var(--blue);}
+.srch-stat-lbl{font-size:10.5px;color:var(--label3);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;}
+.srch-stat-val{font-size:17px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums;}
+.srch-stat-avg .srch-stat-lbl,.srch-stat-avg .srch-stat-val{color:var(--blue-txt);}
+.srch-table{width:100%;border-collapse:collapse;margin-bottom:4px;}
+.srch-table th{font-size:11px;font-weight:600;color:var(--label2);padding:8px 8px;text-align:left;border-bottom:1px solid var(--sep);background:var(--fill2);}
+.srch-table th:last-child,.srch-table td:last-child{text-align:right;}
+.srch-table td{padding:10px 8px;border-bottom:1px solid var(--sep);font-size:13px;color:var(--label);}
+.srch-row{cursor:pointer;transition:background .1s;}
+.srch-row:hover{background:var(--fill);}
+.srch-total{text-align:right;font-size:13px;color:var(--label2);padding:10px 8px 0;}
+@media(max-width:780px){.srch-stats{gap:8px;}.srch-stat{padding:10px 8px;}.srch-stat-val{font-size:15px;}}
+
 .section-hd{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin:18px 0 8px;display:flex;justify-content:space-between;align-items:center;}
 .section-hd .ghost-mini{border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;text-transform:none;letter-spacing:0;}
 .section-hd .ghost-mini:hover{background:var(--fill);color:var(--label);}
@@ -757,7 +773,10 @@ svg{display:block;flex-shrink:0;}
 // v1.12 — 상세 화면 일자 kv 클릭 시 달력 즉시 열림. 사용방법 가이드 제거(프롬프트 복사 버튼 유지).
 //         데스크탑 초기 탭→추가, 모바일 초기 탭→내역. 모바일 목록 높이 제한+영수증 선택 시 자동 스크롤.
 //         엑셀(CSV) 내보내기 추가 — UTF-8 BOM, 엑셀·Numbers·구글 시트 직접 열림.
-const APP_VERSION='v1.12';
+// v1.13 — 검색 결과 오른쪽 패널: 품목 검색 시 최저/평균/최고가 카드 + 구매 이력 테이블.
+//         영수증 검색 시 매장명·카테고리·결제자·총액 목록 테이블. 행 클릭 → 상세 이동.
+//         한영 검색어 대역: "베이컨"→bacon, "치즈"→cheese 등 30개 식품 자동 매칭.
+const APP_VERSION='v1.13';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1136,6 +1155,39 @@ async function loadAll(){
   updateCatList();
 }
 
+// ── 한국어↔영어 식품 검색어 대역 (영수증에 영문으로 적힌 항목 한글 검색 지원) ──
+const KO_EN_TERMS=[
+  ['베이컨',['bacon']],['햄',['ham']],['소세지',['sausage']],['소시지',['sausage']],
+  ['치즈',['cheese']],['버터',['butter']],['크림',['cream']],['요거트',['yogurt','yoghurt']],
+  ['우유',['milk']],['주스',['juice']],['커피',['coffee']],['라떼',['latte']],
+  ['아메리카노',['americano']],['에스프레소',['espresso']],
+  ['오렌지',['orange']],['레몬',['lemon']],['라임',['lime']],['망고',['mango']],
+  ['바나나',['banana']],['키위',['kiwi']],['딸기',['strawberry']],['포도',['grape']],
+  ['사과',['apple']],['토마토',['tomato']],['아보카도',['avocado']],
+  ['감자',['potato']],['양파',['onion']],['당근',['carrot']],
+  ['브로콜리',['broccoli']],['시금치',['spinach']],['샐러드',['salad']],
+  ['연어',['salmon']],['참치',['tuna']],['새우',['shrimp']],['랍스터',['lobster']],
+  ['치킨',['chicken']],['스테이크',['steak']],['버거',['burger']],['햄버거',['hamburger']],
+  ['피자',['pizza']],['파스타',['pasta']],['스파게티',['spaghetti']],
+  ['케이크',['cake']],['쿠키',['cookie']],['크래커',['cracker']],
+  ['초콜릿',['chocolate']],['캔디',['candy']],['젤리',['jelly']],
+  ['아이스크림',['ice cream','icecream']],['시리얼',['cereal']],['그래놀라',['granola']],
+  ['와인',['wine']],['위스키',['whisky','whiskey']],['맥주',['beer']],
+  ['오일',['oil']],['식초',['vinegar']],['소스',['sauce']],
+];
+
+// 검색어에 한영 대역 포함한 검색 텀 배열 반환
+function _getSearchTerms(q){
+  const terms=[q];
+  for(const[ko,ens]of KO_EN_TERMS){
+    // 한글로 검색 → 영문 추가
+    if(q.includes(ko)||ko.includes(q)){ens.forEach(e=>terms.push(e));}
+    // 영문으로 검색 → 한글 추가
+    for(const e of ens){if(q.includes(e)||e.includes(q)){terms.push(ko);break;}}
+  }
+  return [...new Set(terms)];
+}
+
 function getFiltered(){
   const q=searchQuery.trim().toLowerCase();
   if(!q){
@@ -1150,13 +1202,15 @@ function getFiltered(){
   }
 
   // ── 카테고리명 매칭 시 해당 카테고리 키워드로 확장 ──
-  // 예: "술" → 술집 키워드(소주·진로·테라·맥주…)도 품목명·가게명에서 검색
   const expandedKws=new Set();
   for(const rule of CAT_RULES){
     if(rule.cat.toLowerCase().startsWith(q)||rule.cat.toLowerCase()===q){
       rule.kws.forEach(kw=>expandedKws.add(kw.toLowerCase()));
     }
   }
+
+  // ── 한영 대역 검색 텀 (베이컨→bacon 등) ──
+  const itemTerms=_getSearchTerms(q);
 
   // 검색 있으면 전체에서
   return receipts.filter(r=>{
@@ -1166,8 +1220,12 @@ function getFiltered(){
     if((r.paidBy||'').toLowerCase().includes(q))return true;
     if((r.notes||'').toLowerCase().includes(q))return true;
     if((r.tags||[]).join(' ').toLowerCase().includes(q))return true;
-    if((r.items||[]).some(it=>(it.name||'').toLowerCase().includes(q)))return true;
-    // 카테고리 키워드 확장 — 가게명·품목명에서 카테고리 관련 키워드 매칭
+    // 품목명 — 한영 대역 포함 검색
+    if((r.items||[]).some(it=>{
+      const n=(it.name||'').toLowerCase();
+      return itemTerms.some(t=>n.includes(t));
+    }))return true;
+    // 카테고리 키워드 확장
     if(expandedKws.size){
       const storeL=(r.store||'').toLowerCase();
       const itemsL=(r.items||[]).map(it=>(it.name||'').toLowerCase()).join('\n');
@@ -1829,6 +1887,84 @@ async function selectReceipt(id){
   }
 }
 
+// ── 검색 결과 요약 패널 ──
+function renderSearchSummaryHtml(q, filtered){
+  if(!filtered.length){
+    return `<div class="budget-empty-state">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div style="font-weight:600;margin-bottom:4px;">'${escapeHtml(q)}' 검색 결과가 없어요</div>
+      <div style="font-size:12px;color:var(--label3);">다른 검색어를 입력해보세요</div>
+    </div>`;
+  }
+
+  const terms=_getSearchTerms(q);
+
+  // 품목명 매칭 이력 수집
+  const hitItems=[];
+  for(const r of filtered){
+    for(const it of (r.items||[])){
+      const nameL=(it.name||'').toLowerCase();
+      if(terms.some(t=>t&&nameL.includes(t))){
+        hitItems.push({name:it.name,amount:it.amount||0,quantity:it.quantity||1,
+          receiptId:r.id,date:r.date,store:r.store,paidBy:r.paidBy});
+      }
+    }
+  }
+
+  // 가격 통계 (품목 금액 기준, 양수만)
+  let statsHtml='';
+  const posAmts=hitItems.map(it=>it.amount).filter(a=>a>0);
+  if(posAmts.length>1){
+    const minP=Math.min(...posAmts);
+    const maxP=Math.max(...posAmts);
+    const avgP=Math.round(posAmts.reduce((s,a)=>s+a,0)/posAmts.length);
+    statsHtml=`<div class="srch-stats">
+      <div class="srch-stat"><div class="srch-stat-lbl">최저가</div><div class="srch-stat-val">${fmtMoney(minP)}원</div></div>
+      <div class="srch-stat srch-stat-avg"><div class="srch-stat-lbl">평균가</div><div class="srch-stat-val">${fmtMoney(avgP)}원</div></div>
+      <div class="srch-stat"><div class="srch-stat-lbl">최고가</div><div class="srch-stat-val">${fmtMoney(maxP)}원</div></div>
+    </div>`;
+  }
+
+  let bodyHtml='';
+  if(hitItems.length>0){
+    // 품목 매칭 — 구매 이력 테이블
+    const sorted=[...hitItems].sort((a,b)=>b.date.localeCompare(a.date));
+    bodyHtml=`<div class="section-hd" style="margin-top:0;">구매 이력 <span style="font-weight:500;color:var(--label3);text-transform:none;letter-spacing:0;">${hitItems.length}건</span></div>
+    <table class="srch-table">
+      <thead><tr><th>일자</th><th>매장명</th><th>품목명</th><th>금액</th></tr></thead>
+      <tbody>${sorted.map(it=>`
+        <tr class="srch-row" data-id="${it.receiptId}">
+          <td style="white-space:nowrap;">${fmtDateKor(it.date)}</td>
+          <td>${escapeHtml(it.store||'')}</td>
+          <td>${escapeHtml(it.name||'')}</td>
+          <td class="${it.amount<0?'amt-neg':''}">${fmtMoney(it.amount)}원</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+  }else{
+    // 영수증 레벨 매칭 — 목록 테이블
+    const sorted=[...filtered].sort((a,b)=>b.date.localeCompare(a.date));
+    const total=sorted.reduce((s,r)=>s+(r.total||0),0);
+    const hasPayer=sorted.some(r=>r.paidBy);
+    bodyHtml=`<div class="section-hd" style="margin-top:0;">영수증 목록 <span style="font-weight:500;color:var(--label3);text-transform:none;letter-spacing:0;">${filtered.length}건</span></div>
+    <table class="srch-table">
+      <thead><tr><th>일자</th><th>매장명</th><th>카테고리</th>${hasPayer?'<th>결제자</th>':''}<th>총액</th></tr></thead>
+      <tbody>${sorted.map(r=>`
+        <tr class="srch-row" data-id="${r.id}">
+          <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
+          <td>${escapeHtml(r.store||'')}</td>
+          <td>${escapeHtml(r.category||'—')}</td>
+          ${hasPayer?`<td>${escapeHtml(r.paidBy||'—')}</td>`:''}
+          <td>${fmtMoney(r.total||0)}원</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    ${filtered.length>1?`<div class="srch-total">합계 <b>${fmtMoney(total)}원</b></div>`:''}`;
+  }
+
+  return statsHtml+bodyHtml;
+}
+
 function renderMonthSummaryHtml(ym){
   const sum=monthSummary(ym);
   const prev=monthSummary(ymOffset(ym,-1));
@@ -1943,17 +2079,26 @@ async function renderDetail(){
   const sub=document.getElementById('mainSub');
   const actions=document.getElementById('detailActions');
   if(!selectedId){
-    // 가계부 요약 화면
     actions.style.display='none';
-    eye.textContent='가계부';
-    title.textContent=ymLabel(viewMonth);
-    sub.textContent=searchQuery
-      ? `'${searchQuery}' 검색 결과 — 왼쪽에서 영수증을 선택하면 상세가 표시됩니다.`
-      : '왼쪽 목록에서 영수증을 선택하면 상세가 표시됩니다.';
-    body.innerHTML=renderMonthSummaryHtml(viewMonth);
-    // CTA 이벤트
-    const cta=body.querySelector('#budgetEmptyCta');
-    if(cta)cta.addEventListener('click',()=>switchTab('input'));
+    if(searchQuery){
+      // ── 검색 결과 요약 패널 ──
+      const filtered=getFiltered();
+      eye.textContent='검색';
+      title.textContent=`'${searchQuery}' 검색 결과`;
+      sub.textContent=filtered.length>0?`${filtered.length}개 영수증 · 클릭하면 상세 보기`:'결과 없음';
+      body.innerHTML=renderSearchSummaryHtml(searchQuery.trim().toLowerCase(),filtered);
+      body.querySelectorAll('.srch-row[data-id]').forEach(tr=>{
+        tr.addEventListener('click',()=>selectReceipt(tr.dataset.id));
+      });
+    }else{
+      // ── 가계부 요약 화면 ──
+      eye.textContent='가계부';
+      title.textContent=ymLabel(viewMonth);
+      sub.textContent='왼쪽 목록에서 영수증을 선택하면 상세가 표시됩니다.';
+      body.innerHTML=renderMonthSummaryHtml(viewMonth);
+      const cta=body.querySelector('#budgetEmptyCta');
+      if(cta)cta.addEventListener('click',()=>switchTab('input'));
+    }
     return;
   }
   const r=receipts.find(x=>x.id===selectedId);
