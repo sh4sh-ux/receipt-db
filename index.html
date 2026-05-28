@@ -588,50 +588,41 @@ svg{display:block;flex-shrink:0;}
               </div>
             </div>
 
-            <!-- ③ 옵션 (아래, 좌우 그리드) -->
+            <!-- ③ 옵션 (2열 그리드, DOM 순서 = 탭 순서) -->
             <div class="input-row options">
-              <div>
-                <div class="row-2">
-                  <div class="field-g">
-                    <label class="field-lbl">결제수단</label>
-                    <select id="payMethod" class="field-sel">
-                      <option value="card">카드</option>
-                      <option value="cash">현금</option>
-                      <option value="transfer">계좌이체</option>
-                      <option value="other">기타</option>
-                    </select>
-                  </div>
-                  <div class="field-g">
-                    <label class="field-lbl">결제 상세 <span class="field-lbl-hint">선택</span></label>
-                    <input id="payDetail" class="field-inp" type="text" placeholder="예: 현대카드"/>
-                  </div>
-                </div>
-                <div class="row-2">
-                  <div class="field-g">
-                    <label class="field-lbl">결제자 <span class="field-lbl-hint">선택</span></label>
-                    <input id="payerInp" class="field-inp" type="text" placeholder="예: 홍길동, 나, 회사"/>
-                  </div>
-                  <div class="field-g">
-                    <label class="field-lbl">카테고리 <span class="field-lbl-hint" id="catAutoHint">자동 분류돼요</span></label>
-                    <input id="catInp" class="field-inp" type="text" placeholder="예: 마트, 외식, 카페..." list="catList"/>
-                    <datalist id="catList"></datalist>
-                  </div>
-                </div>
+              <div class="field-g">
+                <label class="field-lbl">결제수단</label>
+                <select id="payMethod" class="field-sel">
+                  <option value="card">카드</option>
+                  <option value="cash">현금</option>
+                  <option value="transfer">계좌이체</option>
+                  <option value="other">기타</option>
+                </select>
               </div>
-
-              <div>
-                <div class="field-g">
-                  <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분, 선택</span></label>
-                  <input id="participantsInp" class="field-inp" type="text" placeholder="예: 철수, 영희, 민준"/>
-                </div>
-                <div class="field-g">
-                  <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분, 선택</span></label>
-                  <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
-                </div>
-                <div class="field-g">
-                  <label class="field-lbl">메모 <span class="field-lbl-hint">선택</span></label>
-                  <textarea id="noteInp" class="field-ta" style="min-height:80px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="기억할 내용이 있다면..."></textarea>
-                </div>
+              <div class="field-g">
+                <label class="field-lbl">결제 상세 <span class="field-lbl-hint">선택</span></label>
+                <select id="payDetail" class="field-sel"></select>
+              </div>
+              <div class="field-g">
+                <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분</span></label>
+                <input id="participantsInp" class="field-inp" type="text" placeholder="예: 철수, 영희, 민준"/>
+              </div>
+              <div class="field-g">
+                <label class="field-lbl">결제자 <span class="field-lbl-hint">선택</span></label>
+                <input id="payerInp" class="field-inp" type="text" placeholder="예: 홍길동, 나, 회사"/>
+              </div>
+              <div class="field-g">
+                <label class="field-lbl">카테고리 <span class="field-lbl-hint" id="catAutoHint">자동 분류돼요</span></label>
+                <input id="catInp" class="field-inp" type="text" placeholder="예: 마트, 외식, 카페..." list="catList"/>
+                <datalist id="catList"></datalist>
+              </div>
+              <div class="field-g">
+                <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
+                <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
+              </div>
+              <div class="field-g" style="grid-column:1/-1;">
+                <label class="field-lbl">메모 <span class="field-lbl-hint">선택</span></label>
+                <textarea id="noteInp" class="field-ta" style="min-height:80px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="기억할 내용이 있다면..."></textarea>
               </div>
             </div>
 
@@ -865,7 +856,10 @@ svg{display:block;flex-shrink:0;}
 // v1.31 — 검색창 입력 시 selectedId 즉시 초기화: 영수증 선택 후 검색하면 상세 화면이 그대로 남던 버그 수정.
 // v1.32 — 정보 필드(매장명·일자·카테고리·결제수단·결제자 등) click-to-edit 제거 → 항상 보이는 입력창.
 //         "수정 확인" 버튼 하나로 품목·메모·참석자·태그·정보 필드 모두 한 번에 저장.
-const APP_VERSION='v1.32';
+// v1.33 — 추가 탭 옵션 필드 탭 순서 정렬 (결제수단→결제상세→참석자→결제자→카테고리→태그→메모).
+//         결제 상세를 동적 드롭다운으로 전환: 카드(신한/삼성/하나/현대), 현금(페이스페이/현금),
+//         계좌이체(카카오페이/토스/계좌이체), 기타(기타). 결제수단 변경 시 자동 갱신.
+const APP_VERSION='v1.33';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1606,6 +1600,21 @@ const saveBtn=document.getElementById('saveBtn');
 const photoZone=document.getElementById('photoZone');
 const photoInp=document.getElementById('photoInp');
 
+// ── 결제 상세 동적 드롭다운 ──
+const PAY_DETAIL_OPTS={
+  card:['신한카드','삼성카드','하나카드','현대카드'],
+  cash:['페이스페이','현금'],
+  transfer:['카카오페이','토스','계좌이체'],
+  other:['기타']
+};
+function _updatePayDetailOpts(method,selected){
+  const sel=document.getElementById('payDetail');if(!sel)return;
+  const opts=PAY_DETAIL_OPTS[method]||PAY_DETAIL_OPTS.other;
+  sel.innerHTML=opts.map(o=>`<option value="${escapeHtml(o)}"${o===(selected||opts[0])?'selected':''}>${escapeHtml(o)}</option>`).join('');
+}
+document.getElementById('payMethod').addEventListener('change',function(){_updatePayDetailOpts(this.value,'');});
+_updatePayDetailOpts('card',''); // 초기화
+
 let _currentParsed=null;
 let _pasteComposing=false;
 let _catAutoFilled=false;  // 카테고리가 자동 채워진 상태인지
@@ -2175,7 +2184,7 @@ saveBtn.addEventListener('click',async()=>{
 function clearInputs(){
   pasteTa.value='';
   document.getElementById('payMethod').value='card';
-  document.getElementById('payDetail').value='';
+  _updatePayDetailOpts('card','');
   document.getElementById('payerInp').value='';
   document.getElementById('catInp').value='';
   document.getElementById('participantsInp').value='';
