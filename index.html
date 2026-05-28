@@ -817,7 +817,9 @@ svg{display:block;flex-shrink:0;}
 //          가계부에 '참석자별 분담' 막대 섹션 추가 (1/N 균등 배분). 검색 포함, CSV 내보내기 포함.
 //         앱 시작 시 Dropbox에서 자동 다운로드 후 로컬과 머지(같은 ID → updatedAt 최신 우선).
 //         삭제 항목 추적(deletedIds)으로 양방향 삭제 동기화. 사이드바에 마지막 동기화 시각 표시.
-const APP_VERSION='v1.21';
+// v1.22 — 참석자 검색 전용 통계 패널: 참석 횟수·분담 총액 히어로 카드, 카테고리별 분담금 막대,
+//         자주 함께한 멤버 칩, 참석 내역 테이블(인원·분담금). "참석자 X" 또는 이름 자동 감지.
+const APP_VERSION='v1.22';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -2251,6 +2253,117 @@ function renderPayerSummaryHtml(payerName, filtered){
   return heroHtml+catHtml+listHtml;
 }
 
+// ── 참석자 요약 패널 ──
+function renderParticipantSummaryHtml(name, filtered){
+  if(!filtered.length){
+    return `<div class="budget-empty-state">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div style="font-weight:600;margin-bottom:4px;">'${escapeHtml(name)}' 참석 내역이 없어요</div>
+      <div style="font-size:12px;color:var(--label3);">이름을 확인해보세요</div>
+    </div>`;
+  }
+
+  const sorted=[...filtered].sort((a,b)=>b.date.localeCompare(a.date));
+
+  // 분담금 계산 (각 영수증 total / 참석자 수)
+  const myShare=filtered.reduce((s,r)=>{
+    const cnt=(r.participants||[]).length||1;
+    return s+Math.round((r.total||0)/cnt);
+  },0);
+  const avgShare=filtered.length>0?Math.round(myShare/filtered.length):0;
+
+  // 히어로 카드 (참석 횟수 + 분담금)
+  const heroHtml=`<div class="payer-hero" style="margin-bottom:12px;">
+    <div class="payer-stat">
+      <div class="payer-stat-lbl">참석 횟수</div>
+      <div class="payer-stat-val">${filtered.length}<span style="font-size:14px;font-weight:500;color:var(--label3);margin-left:3px;">건</span></div>
+      <div class="payer-stat-sub">건당 평균 ${fmtMoney(avgShare)}원</div>
+    </div>
+    <div class="payer-stat total">
+      <div class="payer-stat-lbl">분담 총액</div>
+      <div class="payer-stat-val">${fmtMoney(myShare)}<span style="font-size:14px;font-weight:500;margin-left:3px;">원</span></div>
+      <div class="payer-stat-sub">${sorted[0]?fmtDateKor(sorted[sorted.length-1].date)+' ~ '+fmtDateKor(sorted[0].date):''}</div>
+    </div>
+  </div>`;
+
+  // 카테고리 분포 (분담금 기준)
+  const catMap={};
+  for(const r of filtered){
+    const k=r.category||'미분류';
+    const cnt=(r.participants||[]).length||1;
+    const share=Math.round((r.total||0)/cnt);
+    if(share>0) catMap[k]=(catMap[k]||0)+share;
+  }
+  const catEntries=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  const catTotal=catEntries.reduce((s,[,v])=>s+v,0);
+  let catHtml='';
+  if(catEntries.length>0){
+    catHtml=`<div class="budget-section">
+      <div class="budget-section-hd">카테고리별 <span class="hd-sub">${catEntries.length}개 · 분담금 기준</span></div>
+      <div class="cat-bars">
+        ${catEntries.map(([cat,amt],i)=>{
+          const pct=catTotal>0?amt/catTotal*100:0;
+          const isUncat=cat==='미분류';
+          return `<div class="cat-bar-row${isUncat?' uncat':''}" data-rank="${Math.min(i,4)}">
+            <div class="cat-bar-top">
+              <span class="cat-bar-name">${escapeHtml(cat)}<span class="cat-pct">${pct.toFixed(0)}%</span></span>
+              <span class="cat-bar-amt">${fmtMoney(amt)}원</span>
+            </div>
+            <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  // 자주 함께한 멤버 (동행자 빈도)
+  const coMap={};
+  for(const r of filtered){
+    for(const p of (r.participants||[])){
+      const pn=p.trim();
+      if(!pn||pn.toLowerCase()===name.toLowerCase())continue;
+      coMap[pn]=(coMap[pn]||0)+1;
+    }
+  }
+  const coEntries=Object.entries(coMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  let coHtml='';
+  if(coEntries.length>0){
+    coHtml=`<div class="budget-section">
+      <div class="budget-section-hd">자주 함께한 멤버</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${coEntries.map(([p,cnt])=>`
+          <div style="background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:8px 14px;font-size:13px;">
+            <span style="font-weight:600;">${escapeHtml(p)}</span>
+            <span style="color:var(--label3);margin-left:6px;font-size:11px;">${cnt}회</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // 영수증 목록 (참석 인원·본인 분담금 표시)
+  const listHtml=`<div class="budget-section">
+    <div class="budget-section-hd">참석 내역 <span class="hd-sub">${filtered.length}건</span></div>
+    <table class="srch-table">
+      <thead><tr><th>일자</th><th>매장명</th><th>카테고리</th><th>인원</th><th>분담금</th></tr></thead>
+      <tbody>${sorted.map(r=>{
+        const cnt=(r.participants||[]).length||1;
+        const share=Math.round((r.total||0)/cnt);
+        return `<tr class="srch-row" data-id="${r.id}">
+          <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
+          <td>${escapeHtml(r.store||'')}</td>
+          <td>${escapeHtml(r.category||'—')}</td>
+          <td style="text-align:right;">${cnt}명</td>
+          <td>${fmtMoney(share)}원</td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table>
+    <div class="srch-total">분담 총액 <b>${fmtMoney(myShare)}원</b></div>
+  </div>`;
+
+  return heroHtml+catHtml+coHtml+listHtml;
+}
+
 function renderMonthSummaryHtml(ym){
   const sum=monthSummary(ym);
   const prev=monthSummary(ymOffset(ym,-1));
@@ -2400,12 +2513,26 @@ async function renderDetail(){
         filtered.every(r=>(r.paidBy||'').toLowerCase().includes(qL))&&
         filtered.some(r=>(r.paidBy||'').trim()!=='');
       const isPayerSearch=isExplicitPayer||isImplicitPayer;
+
+      // ── 참석자 검색 판별: 명시적("참석자 X") 또는 자동(전체 결과에 해당 참석자 포함) ──
+      const isExplicitParticipant=q.startsWith('참석자 ')&&q.length>4;
+      const participantQ=isExplicitParticipant?q.slice(4).trim():q;
+      const isImplicitParticipant=!isExplicitParticipant&&!isPayerSearch&&qL.length>=2&&filtered.length>0&&
+        filtered.every(r=>(r.participants||[]).some(p=>p.toLowerCase().includes(qL)))&&
+        filtered.some(r=>(r.participants||[]).length>0);
+      const isParticipantSearch=isExplicitParticipant||isImplicitParticipant;
+
       const payerName=isExplicitPayer?q.slice(4).trim():q;
       if(isPayerSearch){
         eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;
         title.textContent=`${payerName} 결제 내역`;
         sub.textContent=filtered.length>0?`${filtered.length}건 · 클릭하면 상세 보기`:'결과 없음';
         body.innerHTML=renderPayerSummaryHtml(payerName,filtered);
+      }else if(isParticipantSearch){
+        eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><circle cx="20" cy="8" r="3"/><path d="M2 20c0-4 3.6-7 10-7"/><path d="M14 20c1-2.7 3-4.5 6-5"/></svg>`;
+        title.textContent=`${participantQ} 참석 내역`;
+        sub.textContent=filtered.length>0?`${filtered.length}건 · 클릭하면 상세 보기`:'결과 없음';
+        body.innerHTML=renderParticipantSummaryHtml(participantQ,filtered);
       }else{
         // ── 일반 검색 결과 요약 패널 ──
         eye.textContent='검색';
