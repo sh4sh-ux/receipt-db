@@ -951,7 +951,10 @@ svg{display:block;flex-shrink:0;}
 //         검색창 × 버튼 SVG 셀렉터 버그 수정(.search-wrap svg → > svg): × 아이콘 정렬 오류 해소.
 // v1.41 — 이달 패턴 순서: 카테고리·스파크라인 뒤로 이동 (요약→카테고리→일별→패턴).
 //         상세 화면 품목 불일치 경고: items=[] (직접 입력)일 때 경고 숨김.
-const APP_VERSION='v1.41';
+// v1.42 — 상세 화면 총액 편집 가능: 총액 행을 editable input으로 변경.
+//         직접 입력 수정 버그 수정: "수정 확인" 시 items=[] 이면 dTotalAmt 값 사용.
+//         (기존: items 합계로 무조건 덮어써 0원이 되던 버그)
+const APP_VERSION='v1.42';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -3662,7 +3665,7 @@ async function renderDetail(){
           <td><input class="item-num-inp" data-f="amount" type="text" inputmode="numeric" value="${_fmtN(it.amount||0)}" style="${(it.amount||0)<0?'color:var(--red);':''}"/></td>
           <td style="text-align:right;"><button class="item-del" data-del="${idx}" title="삭제">×</button></td>
         </tr>`).join('')}
-        <tr class="total-row"><td></td><td>총액</td><td></td><td></td><td class="detail-total-cell${(r.total||0)<0?' amt-neg':''}" style="font-size:14px;">${fmtMoney(r.total)}원</td><td></td></tr>
+        <tr class="total-row"><td></td><td>총액</td><td></td><td></td><td class="detail-total-cell" style="font-size:14px;"><div style="display:flex;align-items:center;justify-content:flex-end;gap:3px;"><input id="dTotalAmt" class="item-num-inp" type="text" inputmode="numeric" value="${_fmtN(r.total||0)}" style="max-width:130px;font-weight:700;font-size:14px;text-align:right;${(r.total||0)<0?'color:var(--red);':''}"/><span style="color:var(--label3);font-size:13px;font-weight:500;">원</span></div></td><td></td></tr>
       </tbody>
     </table>
     ${mismatch?`<div class="alert warn" style="margin:10px 0 14px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><div>품목 합계 ${fmtMoney(sum)}원과 총액 ${fmtMoney(r.total)}원이 ${fmtMoney(Math.abs(sum-r.total))}원 달라요.</div></div>`:''}
@@ -3794,7 +3797,13 @@ async function renderDetail(){
     if(_dp) r.participants=_dp.value.split(',').map(s=>s.trim()).filter(Boolean);
     const _dt=document.getElementById('dTags');
     if(_dt) r.tags=_dt.value.split(',').map(s=>s.trim()).filter(Boolean);
-    r.total=r.items.reduce((s,i)=>s+(i.amount||0),0);
+    // 총액: 품목 있으면 합계 자동계산, 없으면 dTotalAmt 입력값 사용 (직접 입력 영수증)
+    if((r.items||[]).length>0){
+      r.total=r.items.reduce((s,i)=>s+(i.amount||0),0);
+    }else{
+      const dTotalInp=document.getElementById('dTotalAmt');
+      if(dTotalInp) r.total=_parseN(dTotalInp.value);
+    }
     r.updatedAt=nowISO();
     if(r.store&&r.category) await learnCategory(r.store,r.category);
     await dbPut('receipts',r);
@@ -3845,8 +3854,8 @@ function _syncDetailFromInputs(r){
 function _liveUpdateDetailTotal(){
   let sum=0;
   document.querySelectorAll('#itemsTable tbody tr[data-idx] input[data-f="amount"]').forEach(inp=>{sum+=_parseN(inp.value);});
-  const tc=document.querySelector('#itemsTable tr.total-row .detail-total-cell');
-  if(tc){tc.textContent=fmtMoney(sum)+'원';tc.className='detail-total-cell'+(sum<0?' amt-neg':'');tc.style.fontSize='14px';}
+  const dTotalInp=document.getElementById('dTotalAmt');
+  if(dTotalInp){dTotalInp.value=_fmtN(sum);dTotalInp.style.color=sum<0?'var(--red)':'';}
 }
 function _bindDetailItemTableEvents(r){
   const tbl=document.getElementById('itemsTable');if(!tbl)return;
@@ -3872,6 +3881,13 @@ function _bindDetailItemTableEvents(r){
       dbxSyncUpload();
     });
   });
+  // 총액 input 직접 편집 이벤트 (직접 입력 영수증 or 수동 조정)
+  const _dTotalInp=document.getElementById('dTotalAmt');
+  if(_dTotalInp){
+    _dTotalInp.addEventListener('focus',()=>{_dTotalInp.value=String(_parseN(_dTotalInp.value));_dTotalInp.select();});
+    _dTotalInp.addEventListener('blur',()=>{const n=_parseN(_dTotalInp.value);_dTotalInp.value=_fmtN(n);_dTotalInp.style.color=n<0?'var(--red)':'';});
+    _dTotalInp.addEventListener('input',()=>_detailSetDirty(true));
+  }
 }
 function _reRenderDetailItems(r){
   const tbl=document.getElementById('itemsTable');if(!tbl)return;
@@ -3884,7 +3900,7 @@ function _reRenderDetailItems(r){
     <td><input class="item-num-inp" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/></td>
     <td><input class="item-num-inp" data-f="amount" type="text" inputmode="numeric" value="${_fmtN(it.amount||0)}" style="${(it.amount||0)<0?'color:var(--red);':''}"/></td>
     <td style="text-align:right;"><button class="item-del" data-del="${idx}" title="삭제">×</button></td>
-  </tr>`).join('')+`<tr class="total-row"><td></td><td>총액</td><td></td><td></td><td class="detail-total-cell${sum<0?' amt-neg':''}" style="font-size:14px;">${fmtMoney(sum)}원</td><td></td></tr>`;
+  </tr>`).join('')+`<tr class="total-row"><td></td><td>총액</td><td></td><td></td><td class="detail-total-cell" style="font-size:14px;"><div style="display:flex;align-items:center;justify-content:flex-end;gap:3px;"><input id="dTotalAmt" class="item-num-inp" type="text" inputmode="numeric" value="${_fmtN(sum)}" style="max-width:130px;font-weight:700;font-size:14px;text-align:right;${sum<0?'color:var(--red);':''}"/><span style="color:var(--label3);font-size:13px;font-weight:500;">원</span></div></td><td></td></tr>`;
   _bindDetailItemTableEvents(r);
   _initDetailItemDrag(r);
 }
