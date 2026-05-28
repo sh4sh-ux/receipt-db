@@ -840,7 +840,9 @@ svg{display:block;flex-shrink:0;}
 // v1.25 — 품목 금액 셀 ± 부호 전환 버튼 제거.
 // v1.26 — 품목 드래그&드롭 순서 변경(포인터 이벤트, 모바일+데스크톱). 중복 영수증 감지(날짜·가게·금액 일치 시 저장 전 확인 다이얼로그). 결제자+참석자 이름 동시 검색 시 통합 대시보드 패널.
 // v1.27 — 결제자·참석자·통합 패널 테이블에서 카테고리 컬럼 제거 (막대 그래프로 충분).
-const APP_VERSION='v1.27';
+// v1.28 — 통합 대시보드 중복 계산 수정: 참석 내역에서 본인이 결제자인 영수증 제외.
+//         참석 분담 = "타인이 낸 경우만" 집계. 히어로 카드 라벨 개선.
+const APP_VERSION='v1.28';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -2496,12 +2498,12 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     <div class="payer-stat total">
       <div class="payer-stat-lbl">결제 총액</div>
       <div class="payer-stat-val">${fmtMoney(totalPaid)}원</div>
-      <div class="payer-stat-sub">${payerRecs.length}건 결제</div>
+      <div class="payer-stat-sub">${payerRecs.length}건 · 카드/현금 지출</div>
     </div>
     <div class="payer-stat">
-      <div class="payer-stat-lbl">참석 분담 합계</div>
+      <div class="payer-stat-lbl">남에게 갚을 금액</div>
       <div class="payer-stat-val">${fmtMoney(totalShare)}원</div>
-      <div class="payer-stat-sub">${partRecs.length}건 참석</div>
+      <div class="payer-stat-sub">${partRecs.length}건 · 타인 결제 참석분</div>
     </div>
   </div>`;
 
@@ -2713,8 +2715,12 @@ async function renderDetail(){
       const pnL=personName.toLowerCase();
 
       // 이름이 결제자·참석자로 등장하는 영수증을 별도 필터링
+      // 참석 내역은 본인이 결제자인 영수증을 제외 — "남에게 갚아야 할 금액"만 집계
       const payerRecs=qL.length>=2?receipts.filter(r=>(r.paidBy||'').trim()&&(r.paidBy||'').toLowerCase().includes(pnL)):[];
-      const partRecs=qL.length>=2?receipts.filter(r=>(r.participants||[]).some(p=>p.toLowerCase().includes(pnL))):[];
+      const partRecs=qL.length>=2?receipts.filter(r=>
+        (r.participants||[]).some(p=>p.toLowerCase().includes(pnL))&&
+        !(r.paidBy||'').toLowerCase().includes(pnL)  // 본인이 결제자인 경우 제외
+      ):[];
       const hasPayer=payerRecs.length>0;
       const hasPart=partRecs.length>0;
 
