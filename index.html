@@ -949,7 +949,9 @@ svg{display:block;flex-shrink:0;}
 //         입력하여 저장. 부고장·청첩장 등 참고 이미지 첨부 가능. 경조사 기본 카테고리 추가.
 // v1.40 — 가계부 기간 필터를 pill 2행 → 드롭다운 1행으로 교체(전체/연도/월 옵션).
 //         검색창 × 버튼 SVG 셀렉터 버그 수정(.search-wrap svg → > svg): × 아이콘 정렬 오류 해소.
-const APP_VERSION='v1.40';
+// v1.41 — 이달 패턴 순서: 카테고리·스파크라인 뒤로 이동 (요약→카테고리→일별→패턴).
+//         상세 화면 품목 불일치 경고: items=[] (직접 입력)일 때 경고 숨김.
+const APP_VERSION='v1.41';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -3342,7 +3344,7 @@ function renderMonthSummaryHtml(ym){
     `;
   }
 
-  return summaryHtml+insightHtml+catHtml+participantHtml+sparkHtml;
+  return summaryHtml+catHtml+participantHtml+sparkHtml+insightHtml;
 }
 
 function _setMobPersonView(v){
@@ -3644,7 +3646,8 @@ async function renderDetail(){
   const tagsHtml=(r.tags||[]).map(t=>`<span style="display:inline-block;background:var(--fill);border:1px solid var(--sep);border-radius:12px;padding:3px 10px;font-size:11px;margin-right:4px;">${escapeHtml(t)}</span>`).join('');
   const payLabel={card:'카드',cash:'현금',transfer:'계좌이체',other:'기타'}[r.paymentMethod]||r.paymentMethod;
   const sum=(r.items||[]).reduce((s,i)=>s+(i.amount||0),0);
-  const mismatch=sum!==r.total;
+  // 품목이 하나라도 있을 때만 불일치 경고 (직접 입력은 items=[] → 경고 없음)
+  const mismatch=(r.items||[]).length>0 && sum!==r.total;
 
   body.innerHTML=`
     <div class="section-hd">품목 <button class="ghost-mini" id="addItemBtn">+ 품목 추가</button></div>
