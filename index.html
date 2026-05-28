@@ -52,16 +52,20 @@ svg{display:block;flex-shrink:0;}
 .app-eye{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.5px;text-transform:uppercase;}
 .app-version{font-size:10px;font-weight:600;color:var(--label3);background:var(--fill);border:1px solid var(--sep);border-radius:4px;padding:1px 5px;letter-spacing:.2px;font-variant-numeric:tabular-nums;line-height:1.4;cursor:default;}
 .app-version:hover{background:var(--fill2);color:var(--label2);}
-.app-title{font-size:22px;font-weight:700;letter-spacing:-.4px;line-height:1.15;margin-bottom:14px;}
+.app-title{font-size:22px;font-weight:700;letter-spacing:-.4px;line-height:1.15;margin-bottom:14px;cursor:pointer;transition:opacity .12s;user-select:none;}
+.app-title:hover{opacity:.65;}
 .tab-row{display:flex;gap:2px;background:var(--fill);border-radius:10px;padding:3px;}
 .tab{flex:1;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--label2);padding:7px 0;border-radius:8px;cursor:pointer;transition:all .15s;}
 .tab.on{background:var(--card);color:var(--label);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08);}
 
 .side-search{padding:0 var(--pad-x) 12px;}
 .search-wrap{position:relative;}
-.search-wrap input{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 12px 8px 32px;font-size:13px;background:var(--card);color:var(--label);outline:none;}
+.search-wrap input{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 30px 8px 32px;font-size:13px;background:var(--card);color:var(--label);outline:none;}
 .search-wrap input:focus{border-color:var(--blue);}
 .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--label3);}
+.search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border:none;background:var(--sep2);border-radius:50%;color:var(--label2);display:flex;align-items:center;justify-content:center;padding:0;opacity:0;pointer-events:none;cursor:pointer;transition:opacity .15s,background .12s;flex-shrink:0;}
+.search-clear.vis{opacity:1;pointer-events:auto;}
+.search-clear:hover{background:var(--label3);color:#fff;}
 
 .side-list{flex:1;overflow-y:auto;padding-bottom:8px;}
 .side-list::-webkit-scrollbar{width:3px;}
@@ -384,6 +388,13 @@ svg{display:block;flex-shrink:0;}
 .cat-bar-row[data-rank="3"] .cat-bar-fill{background:#A0CDEA;}
 .cat-bar-row[data-rank="4"] .cat-bar-fill{background:#C8DEEC;}
 .cat-bar-row.uncat .cat-bar-fill{background:var(--sep2);}
+.cat-bar-row.clickable{cursor:pointer;border-radius:6px;padding:3px 6px;margin:-3px -6px;transition:background .12s;}
+.cat-bar-row.clickable:hover{background:var(--fill);}
+.cat-bar-row.clickable.cat-active{background:var(--blue-bg);}
+.cat-bar-row.clickable.cat-active .cat-bar-name{color:var(--blue-txt);}
+.cat-filter-bar{display:flex;align-items:center;justify-content:space-between;background:var(--blue-bg);border:1px solid var(--blue);border-radius:8px;padding:6px 12px;margin-bottom:10px;font-size:12px;color:var(--blue-txt);font-weight:500;}
+.cat-filter-bar-x{background:none;border:none;color:var(--blue-txt);cursor:pointer;font-size:15px;line-height:1;padding:0 2px;opacity:.7;}
+.cat-filter-bar-x:hover{opacity:1;}
 
 .sparkline{background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:14px 16px;}
 .spark-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;font-size:11px;}
@@ -395,7 +406,15 @@ svg{display:block;flex-shrink:0;}
 .spark-bar.today{background:var(--green);opacity:1;}
 .spark-bar:hover{opacity:1;}
 .spark-bar[data-day]:hover::after{content:attr(data-day)'일 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--label);color:#fff;font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:5;}
+.spark-bar[data-lbl]:hover::after{content:attr(data-lbl)' 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--label);color:#fff;font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:5;}
 .spark-axis{display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--label3);}
+.spark-mode-toggle{display:flex;gap:2px;background:var(--fill);border-radius:6px;padding:2px;margin-bottom:10px;width:fit-content;}
+.spark-mode-btn{border:none;background:transparent;font-size:11px;font-weight:500;color:var(--label3);padding:3px 10px;border-radius:4px;cursor:pointer;transition:all .12s;}
+.spark-mode-btn.on{background:var(--card);color:var(--label);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06);}
+.insight-list{display:flex;flex-direction:column;gap:8px;}
+.insight-item{display:flex;gap:8px;font-size:13px;color:var(--label2);line-height:1.5;align-items:baseline;}
+.insight-dot{color:var(--blue);font-weight:700;font-size:16px;line-height:1.2;flex-shrink:0;}
+.insight-item b{color:var(--label);font-weight:600;}
 
 .budget-empty-state{padding:48px 24px;text-align:center;color:var(--label3);font-size:13px;background:var(--fill2);border:1px dashed var(--sep2);border-radius:var(--rm);}
 .budget-empty-state svg{margin:0 auto 12px;color:var(--sep2);}
@@ -496,6 +515,9 @@ svg{display:block;flex-shrink:0;}
         <div class="search-wrap">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input id="searchInp" type="text" placeholder="가게·품목·날짜·'결제자 홍길동'"/>
+          <button class="search-clear" id="searchClear" tabindex="-1" aria-label="검색어 지우기">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
       </div>
 
@@ -870,8 +892,18 @@ svg{display:block;flex-shrink:0;}
 //         "5월" 교차연도 5월 비교. _parseDateQ 파서 + renderAllSummaryHtml / renderYearSummaryHtml /
 //         renderCrossYearMonthHtml 렌더러 추가.
 // v1.35 — 인물 검색(결제자/참석자/통합) 패널에 시간 필터 추가: 전체·연도별·월별 pill 버튼.
+// v1.38 — Dropbox 자동 동기화 개선. ① visibilitychange: 탭/앱이 30초 이상 숨겨진 뒤 포그라운드
+//         복귀 시 즉시 양방향 동기화. ② 3분마다 폴링(setInterval). ③ 동기화 오류 시 사이드바
+//         하단 뱃지에 ⚠ 표시 (앰버 색상). ④ 뱃지 클릭 또는 설정 탭 "지금 동기화" 버튼으로
+//         강제 양방향 동기화(download → upload 순). ⑤ 앱 시작 시도 upload 포함.
+// v1.37 — 가계부 화면 3종 개선. ① 전월 대비 퍼센트(예: -54%) 추가. ② 지출 패턴 인사이트 카드:
+//         최대 3개 문장 요약(전월 증감·주말vs평일·최고 지출일·절약 비율·카테고리 집중도).
+//         ③ 스파크라인 일별/주별 토글 버튼 (선택 상태 localStorage 저장).
+// v1.36 — ① 검색창 × 지우기 버튼. ② 앱 제목 클릭 → 초기 화면 리셋. ③ 가계부 카테고리 막대 클릭
+//         시 해당 카테고리 영수증만 사이드바에 필터링 (재클릭 or × 버튼으로 해제). ④ 가계부 우측
+//         패널 상단에 전체·연도·월별 시간 필터 pill (인물 패널과 동일한 UX).
 //         연도 pill 클릭 시 해당 연도의 월 pill 추가 표시. 검색어 변경 시 필터 자동 초기화.
-const APP_VERSION='v1.35';
+const APP_VERSION='v1.38';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1525,11 +1557,17 @@ function renderSide(){
   if(monthTodayEl)monthTodayEl.classList.toggle('hidden',viewMonth===_currentYM());
 
   const list=document.getElementById('sideList');
-  const filtered=getFiltered();
+  const _base=getFiltered();
+  // 카테고리 필터 적용 (검색 없는 상태에서만)
+  const filtered=(!searchQuery&&_monthCatFilter)
+    ?_base.filter(r=>(r.category||'(미분류)')===_monthCatFilter)
+    :_base;
   if(!filtered.length){
     const emptyMsg=searchQuery
       ? `검색 결과가 없어요`
-      : `${ymLabel(viewMonth)}에<br/>저장된 영수증이 없어요`;
+      : _monthCatFilter
+        ? `${ymLabel(viewMonth)} <b>${escapeHtml(_monthCatFilter)}</b> 영수증이 없어요`
+        : `${ymLabel(viewMonth)}에<br/>저장된 영수증이 없어요`;
     list.innerHTML=`<div class="empty-state">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h12a2 2 0 0 1 2 2v15l-3-2-3 2-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2z"/></svg>
       <div>${emptyMsg}</div>
@@ -1604,8 +1642,10 @@ function changeMonth(offset){
   if(offset===0){viewMonth=_currentYM();}
   else{viewMonth=ymOffset(viewMonth,offset);}
   selectedId=null;
+  _ledgerTimeFilter={type:'month'};
+  _monthCatFilter=null;
   // 검색 중이었으면 검색 해제 (월 이동의 의도와 충돌)
-  if(searchQuery){searchQuery='';document.getElementById('searchInp').value='';}
+  if(searchQuery){searchQuery='';document.getElementById('searchInp').value='';_updateSearchClear();}
   renderSide();
   renderDetail();
 }
@@ -1621,10 +1661,28 @@ document.getElementById('monthLabel').addEventListener('click',()=>{
 // SEARCH (with IME guard)
 // ════════════════════════════════════════════════════════════════
 const searchInp=document.getElementById('searchInp');
+const searchClear=document.getElementById('searchClear');
 let _searchComposing=false;
+
+function _updateSearchClear(){searchClear.classList.toggle('vis',!!searchInp.value);}
+function _clearSearch(){
+  searchQuery='';searchInp.value='';_monthCatFilter=null;
+  _personTimeFilter={type:'all',value:''};_ledgerTimeFilter={type:'month'};
+  _updateSearchClear();renderSide();renderDetail();searchInp.focus();
+}
+searchClear.addEventListener('click',_clearSearch);
+
 searchInp.addEventListener('compositionstart',()=>{_searchComposing=true;});
-searchInp.addEventListener('compositionend',()=>{_searchComposing=false;searchQuery=searchInp.value;if(searchQuery)selectedId=null;_personTimeFilter={type:'all',value:''};renderSide();renderDetail();});
-searchInp.addEventListener('input',()=>{if(!_searchComposing){searchQuery=searchInp.value;if(searchQuery)selectedId=null;_personTimeFilter={type:'all',value:''};renderSide();renderDetail();}});
+searchInp.addEventListener('compositionend',()=>{_searchComposing=false;searchQuery=searchInp.value;if(searchQuery)selectedId=null;_monthCatFilter=null;_personTimeFilter={type:'all',value:''};_ledgerTimeFilter={type:'month'};_updateSearchClear();renderSide();renderDetail();});
+searchInp.addEventListener('input',()=>{if(!_searchComposing){searchQuery=searchInp.value;if(searchQuery)selectedId=null;_monthCatFilter=null;_personTimeFilter={type:'all',value:''};_ledgerTimeFilter={type:'month'};_updateSearchClear();renderSide();renderDetail();}});
+
+// 앱 제목 클릭 → 초기 화면으로 리셋
+document.querySelector('.app-title').addEventListener('click',()=>{
+  selectedId=null;_monthCatFilter=null;_ledgerTimeFilter={type:'month'};
+  if(searchQuery){searchQuery='';searchInp.value='';_updateSearchClear();}
+  _personTimeFilter={type:'all',value:''};
+  renderSide();renderDetail();
+});
 
 // ════════════════════════════════════════════════════════════════
 // INPUT VIEW — paste + photo + preview + save
@@ -2823,6 +2881,77 @@ function renderCrossYearMonthHtml(month, recs){
 
 // ─────────────────────────────────────────────────────────────────
 
+// ── 주별 집계: 7일씩 묶어 주합 배열 반환 ──
+function _weeklySparkline(dailySpark){
+  const weeks=[];
+  for(let i=0;i<dailySpark.length;i+=7){
+    weeks.push(dailySpark.slice(i,Math.min(i+7,dailySpark.length)).reduce((s,v)=>s+v,0));
+  }
+  return weeks;
+}
+
+// ── 지출 패턴 문장 요약 (최대 3개 인사이트) ──
+function _spendingInsightsHtml(ym,sum,prev,cats,spark){
+  const[y,m]=ym.split('-').map(Number);
+  const ins=[];
+
+  // 1. 전월 대비 증감
+  if(prev.count>0&&prev.total>0&&sum.total>0){
+    const diff=sum.total-prev.total;
+    const pct=Math.abs(Math.round(diff/prev.total*100));
+    if(pct>=5){
+      const dir=diff>0?'늘었어요':'줄었어요';
+      ins.push(`지난 달보다 <b>${pct}%</b> ${dir} (${fmtMoney(Math.abs(diff))}원 차이)`);
+    }
+  }
+
+  // 2. 주말 vs 평일 평균 비교
+  let wdT=0,wdN=0,weT=0,weN=0;
+  spark.forEach((amt,i)=>{
+    if(amt<=0)return;
+    const dow=new Date(y,m-1,i+1).getDay();
+    if(dow===0||dow===6){weT+=amt;weN++;}else{wdT+=amt;wdN++;}
+  });
+  if(wdN>0&&weN>0){
+    const wdA=Math.round(wdT/wdN),weA=Math.round(weT/weN);
+    const ratio=weA>wdA?weA/wdA:wdA/weA;
+    if(ratio>=1.5){
+      const higher=weA>wdA?'주말':'평일';
+      ins.push(`${higher} 지출이 <b>${ratio.toFixed(1)}배</b> 더 높아요 (평일 ${fmtMoney(wdA)}원 · 주말 ${fmtMoney(weA)}원)`);
+    }
+  }
+
+  // 3. 최고 지출일
+  const peak=Math.max(...spark);
+  if(peak>0){
+    const peakD=spark.indexOf(peak)+1;
+    ins.push(`<b>${peakD}일</b>이 이달 최고 지출일이에요 (${fmtMoney(peak)}원)`);
+  }
+
+  // 4. 지출 없는 날 비율 (절약 패턴)
+  const today=_todayYMD();
+  const isCur=ym===_currentYM();
+  const effDays=isCur?parseInt(today.slice(8,10),10):spark.length;
+  const zeroDays=spark.slice(0,effDays).filter(a=>a===0).length;
+  if(zeroDays>0&&zeroDays>=Math.ceil(effDays*0.35)){
+    ins.push(`<b>${zeroDays}일</b>은 지출이 없었어요 (${Math.round(zeroDays/effDays*100)}%)`);
+  }
+
+  // 5. 카테고리 집중도 (1개가 60% 이상)
+  if(cats.breakdown.length>0&&cats.breakdown[0].pct>=60&&!ins.some(s=>s.includes(cats.breakdown[0].cat))){
+    ins.push(`지출의 <b>${cats.breakdown[0].pct.toFixed(0)}%</b>가 ${escapeHtml(cats.breakdown[0].cat)}에 집중돼 있어요`);
+  }
+
+  if(!ins.length)return '';
+  const shown=ins.slice(0,3);
+  return `<div class="budget-section">
+    <div class="budget-section-hd">이달 패턴 <span class="hd-sub">${shown.length}개</span></div>
+    <div class="insight-list">
+      ${shown.map(txt=>`<div class="insight-item"><span class="insight-dot">·</span><span>${txt}</span></div>`).join('')}
+    </div>
+  </div>`;
+}
+
 function renderMonthSummaryHtml(ym){
   const sum=monthSummary(ym);
   const prev=monthSummary(ymOffset(ym,-1));
@@ -2840,14 +2969,14 @@ function renderMonthSummaryHtml(ym){
     </div>`;
   }
 
-  // 전월 대비 증감
+  // 전월 대비 증감 (퍼센트 포함)
   let diffHtml='';
   if(prev.count>0){
     const diff=sum.total-prev.total;
     const sign=diff>0?'up':(diff<0?'down':'');
     const arrow=diff>0?'▲':(diff<0?'▼':'·');
-    const absDiff=Math.abs(diff);
-    diffHtml=`<div class="sum-diff ${sign}"><span>${arrow}</span><span>지난 달 대비 ${diff>0?'+':''}${fmtMoney(diff)}원</span></div>`;
+    const pct=prev.total>0?` (${diff>0?'+':''}${Math.round(diff/prev.total*100)}%)`:'';
+    diffHtml=`<div class="sum-diff ${sign}"><span>${arrow}</span><span>지난 달 대비 ${diff>0?'+':''}${fmtMoney(diff)}원${pct}</span></div>`;
   }else{
     diffHtml=`<div class="sum-diff"><span>지난 달 기록 없음</span></div>`;
   }
@@ -2880,14 +3009,19 @@ function renderMonthSummaryHtml(ym){
   let catHtml='';
   if(cats.breakdown.length){
     const max=Math.max(...cats.breakdown.map(c=>c.amt));
+    const filterBarHtml=_monthCatFilter
+      ?`<div class="cat-filter-bar"><span>📂 ${escapeHtml(_monthCatFilter)} 필터 중</span><button class="cat-filter-bar-x" id="catFilterClearBtn" title="필터 해제">×</button></div>`
+      :'';
     catHtml=`
       <div class="budget-section">
         <div class="budget-section-hd">카테고리별 <span class="hd-sub">${cats.breakdown.length}개</span></div>
+        ${filterBarHtml}
         <div class="cat-bars">
           ${cats.breakdown.map((c,i)=>{
             const w=max>0?(c.amt/max*100):0;
             const isUncat=c.cat==='(미분류)';
-            return `<div class="cat-bar-row${isUncat?' uncat':''}" data-rank="${Math.min(i,4)}">
+            const isActive=_monthCatFilter===c.cat;
+            return `<div class="cat-bar-row clickable${isUncat?' uncat':''}${isActive?' cat-active':''}" data-rank="${Math.min(i,4)}" data-cat="${escapeHtml(c.cat)}">
               <div class="cat-bar-top">
                 <span class="cat-bar-name">${escapeHtml(c.cat)}<span class="cat-pct">${c.pct.toFixed(0)}%</span></span>
                 <span class="cat-bar-amt">${fmtMoney(c.amt)}원</span>
@@ -2925,33 +3059,60 @@ function renderMonthSummaryHtml(ym){
     `;
   }
 
-  // 일별 sparkline (기본 펼침)
+  // 지출 패턴 인사이트 카드
+  const insightHtml=_spendingInsightsHtml(ym,sum,prev,cats,spark);
+
+  // 일별/주별 sparkline (토글 가능)
   const peakAmt=Math.max(...spark);
   const peakDay=peakAmt>0?spark.indexOf(peakAmt)+1:0;
   const todayY=_currentYM()===ym?parseInt(_todayYMD().slice(8,10),10):-1;
+  const weekSpark=_weeklySparkline(spark);
+  const peakWeekAmt=Math.max(...weekSpark);
+  const peakWeekIdx=weekSpark.indexOf(peakWeekAmt);
+  const isWeek=_sparkMode==='week';
+  const displaySpark=isWeek?weekSpark:spark;
+  const displayPeak=isWeek?peakWeekAmt:peakAmt;
+  const sparkLabel=isWeek?'주별 지출':'일별 지출';
+  const peakLabel=isWeek
+    ?(peakWeekAmt>0?`최고 ${peakWeekIdx+1}주: ${fmtMoney(peakWeekAmt)}원`:null)
+    :(peakAmt>0?`최고 ${peakDay}일: ${fmtMoney(peakAmt)}원`:null);
+
   let sparkHtml='';
   if(spark.length){
+    const axisHtml=isWeek
+      ?`<div class="spark-axis">${weekSpark.map((_,wi)=>`<span>${wi+1}주</span>`).join('')}</div>`
+      :`<div class="spark-axis"><span>1일</span><span>${Math.round(spark.length/2)}일</span><span>${spark.length}일</span></div>`;
     sparkHtml=`
       <div class="budget-section">
-        ${_sectionToggleHtml('일별 지출',peakAmt>0?`최고 ${peakDay}일: ${fmtMoney(peakAmt)}원`:null,'month_spark',true)}
+        ${_sectionToggleHtml(sparkLabel,peakLabel,'month_spark',true)}
         <div class="section-body open">
-          <div class="sparkline" style="padding-top:8px;">
-            <div class="spark-bars">
-              ${spark.map((amt,i)=>{
-                const day=i+1;
-                const h=peakAmt>0?Math.max(2,Math.round(amt/peakAmt*100)):2;
-                const cls=(amt>0?(day===todayY?'has today':'has'):(day===todayY?'today':''));
-                return `<div class="spark-bar ${cls}" style="height:${h}%;" data-day="${day}" data-amt="${fmtMoney(amt)}"></div>`;
-              }).join('')}
+          <div style="padding-top:8px;">
+            <div class="spark-mode-toggle">
+              <button class="spark-mode-btn${!isWeek?' on':''}" data-spark="day">일별</button>
+              <button class="spark-mode-btn${isWeek?' on':''}" data-spark="week">주별</button>
             </div>
-            <div class="spark-axis"><span>1일</span><span>${Math.round(spark.length/2)}일</span><span>${spark.length}일</span></div>
+            <div class="sparkline">
+              <div class="spark-bars">
+                ${displaySpark.map((amt,i)=>{
+                  const h=displayPeak>0?Math.max(2,Math.round(amt/displayPeak*100)):2;
+                  if(isWeek){
+                    return `<div class="spark-bar${amt>0?' has':''}" style="height:${h}%;" data-lbl="${i+1}주" data-amt="${fmtMoney(amt)}"></div>`;
+                  }else{
+                    const day=i+1;
+                    const cls=amt>0?(day===todayY?'has today':'has'):(day===todayY?'today':'');
+                    return `<div class="spark-bar ${cls}" style="height:${h}%;" data-day="${day}" data-amt="${fmtMoney(amt)}"></div>`;
+                  }
+                }).join('')}
+              </div>
+              ${axisHtml}
+            </div>
           </div>
         </div>
       </div>
     `;
   }
 
-  return summaryHtml+catHtml+participantHtml+sparkHtml;
+  return summaryHtml+insightHtml+catHtml+participantHtml+sparkHtml;
 }
 
 function _setMobPersonView(v){
@@ -2960,6 +3121,12 @@ function _setMobPersonView(v){
 
 // 인물 검색 시간 필터 상태
 let _personTimeFilter={type:'all',value:''};
+// 가계부 우측 패널 시간 필터 상태 ('month' = 현재 viewMonth, 'year' = 연간, 'all' = 전체)
+let _ledgerTimeFilter={type:'month'};
+// 월간 카테고리 필터 (카테고리 막대 클릭 시 사이드바 필터링)
+let _monthCatFilter=null;
+// 스파크라인 모드 ('day' = 일별, 'week' = 주별) — localStorage 지속
+let _sparkMode=localStorage.getItem('receipt_sparkMode')||'day';
 
 function _applyPersonTimeFilter(recs,f){
   if(f.type==='year') return recs.filter(r=>(r.date||'').startsWith(f.value+'-'));
@@ -3006,6 +3173,49 @@ function _personFilterPillsHtml(allRecs, f){
   }
 
   if(!yearRow&&!monthRow)return '';
+  return `<div class="person-filter-wrap">${yearRow}${monthRow}</div>`;
+}
+
+// ── 가계부 우측 패널 시간 필터 pills ──
+function _ledgerFilterPillsHtml(f){
+  const yearMap=new Map();
+  for(const r of receipts){
+    if(!r.date)continue;
+    const y=r.date.slice(0,4),m=r.date.slice(5,7);
+    if(!yearMap.has(y))yearMap.set(y,new Set());
+    yearMap.get(y).add(m);
+  }
+  const years=[...yearMap.keys()].sort().reverse();
+  if(!years.length)return '';
+  const multiYear=years.length>1;
+
+  // 연도 행
+  const curY=viewMonth.slice(0,4);
+  let yearRow='';
+  {
+    const allActive=f.type==='all';
+    const yearActive=y=>(f.type==='year'&&f.value===y)||(f.type==='month'&&viewMonth.startsWith(y+'-'));
+    yearRow=`<div class="person-filter-row">
+      <button class="pf-pill${allActive?' active':''}" data-lf="all" data-lv="">전체</button>
+      ${years.map(y=>`<button class="pf-pill${yearActive(y)?' active':''}" data-lf="year" data-lv="${y}">${y}년</button>`).join('')}
+    </div>`;
+  }
+
+  // 월 행 — 현재 연도 or 선택된 연도의 월 목록
+  const monthYear=f.type==='year'?f.value:curY;
+  let monthRow='';
+  if(yearMap.has(monthYear)){
+    const months=[...yearMap.get(monthYear)].sort().reverse();
+    if(months.length>1||multiYear){
+      const allYearActive=f.type==='year'&&f.value===monthYear;
+      monthRow=`<div class="person-filter-row">
+        <button class="pf-pill sm${allYearActive?' active':''}" data-lf="year" data-lv="${monthYear}">${monthYear}년 전체</button>
+        ${months.map(m=>{const ym2=monthYear+'-'+m;const isActive=f.type==='month'&&viewMonth===ym2;return `<button class="pf-pill sm${isActive?' active':''}" data-lf="month" data-lv="${ym2}">${parseInt(m,10)}월</button>`;}).join('')}
+      </div>`;
+    }
+  }
+
+  if(!yearRow)return '';
   return `<div class="person-filter-wrap">${yearRow}${monthRow}</div>`;
 }
 
@@ -3122,12 +3332,59 @@ async function renderDetail(){
         });
       });
     }else{
-      // ── 가계부 요약 화면 ──
-      eye.textContent='가계부';
-      title.textContent=ymLabel(viewMonth);
-      sub.textContent='왼쪽 목록에서 영수증을 선택하면 상세가 표시됩니다.';
-      body.innerHTML=renderMonthSummaryHtml(viewMonth);
+      // ── 가계부 요약 화면 (시간 필터 pills 포함) ──
+      const pillsHtml=_ledgerFilterPillsHtml(_ledgerTimeFilter);
+      if(_ledgerTimeFilter.type==='all'){
+        eye.textContent='전체';
+        title.textContent='전체 내역';
+        sub.textContent=`${receipts.length}건`;
+        body.innerHTML=pillsHtml+renderAllSummaryHtml(receipts);
+      }else if(_ledgerTimeFilter.type==='year'){
+        const yRecs=receipts.filter(r=>(r.date||'').startsWith(_ledgerTimeFilter.value+'-'));
+        eye.textContent='연간';
+        title.textContent=`${_ledgerTimeFilter.value}년 내역`;
+        sub.textContent=yRecs.length>0?`${yRecs.length}건`:'영수증 없음';
+        body.innerHTML=pillsHtml+renderYearSummaryHtml(_ledgerTimeFilter.value,yRecs);
+      }else{
+        eye.textContent='가계부';
+        title.textContent=ymLabel(viewMonth);
+        sub.textContent='왼쪽 목록에서 영수증을 선택하면 상세가 표시됩니다.';
+        body.innerHTML=pillsHtml+renderMonthSummaryHtml(viewMonth);
+      }
       _bindSectionToggles(body);
+      // 가계부 시간 필터 pill 클릭
+      body.querySelectorAll('[data-lf]').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          const t=btn.dataset.lf,v=btn.dataset.lv;
+          if(t==='month'){viewMonth=v;_ledgerTimeFilter={type:'month'};}
+          else if(t==='year'){_ledgerTimeFilter={type:'year',value:v};}
+          else{_ledgerTimeFilter={type:'all'};}
+          _monthCatFilter=null;
+          renderSide();renderDetail();
+        });
+      });
+      // 카테고리 막대 클릭 → 사이드바 필터
+      body.querySelectorAll('.cat-bar-row[data-cat]').forEach(row=>{
+        row.addEventListener('click',()=>{
+          const cat=row.dataset.cat;
+          _monthCatFilter=(_monthCatFilter===cat)?null:cat;
+          renderSide();renderDetail();
+        });
+      });
+      const clearCat=body.querySelector('#catFilterClearBtn');
+      if(clearCat)clearCat.addEventListener('click',e=>{e.stopPropagation();_monthCatFilter=null;renderSide();renderDetail();});
+      // 스파크라인 일별/주별 토글
+      body.querySelectorAll('[data-spark]').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          _sparkMode=btn.dataset.spark;
+          localStorage.setItem('receipt_sparkMode',_sparkMode);
+          renderDetail();
+        });
+      });
+      // srch-row 클릭 (연간/전체 요약 테이블)
+      body.querySelectorAll('.srch-row[data-id]').forEach(tr=>{
+        tr.addEventListener('click',()=>selectReceipt(tr.dataset.id));
+      });
       const cta=body.querySelector('#budgetEmptyCta');
       if(cta)cta.addEventListener('click',()=>switchTab('input'));
     }
@@ -3925,6 +4182,11 @@ function _dbxMarkDeleted(id){
 }
 
 // 자동 업로드 — 사진 없이 영수증 메타데이터만 (빠름, 수십 KB)
+// 동기화 오류 상태 (뱃지 표시용)
+let _dbxSyncErr=false;
+// 마지막 자동 다운로드 시각 (폴링 throttle)
+let _lastAutoSyncAt=0;
+
 async function dbxSyncUpload(){
   if(!dbxIsConnected())return;
   try{
@@ -3949,17 +4211,18 @@ async function dbxSyncUpload(){
       body:payload,
     });
     if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
+    _dbxSyncErr=false;
     _lsSet(_K.LAST_SYNC,nowISO());
     _dbxUpdateSyncBadge();
   }catch(e){
-    // DBX_TOKEN_EXPIRED / DBX_NO_TOKEN은 이미 toast 처리됨, 나머지만 콘솔
-    if(e.message!=='DBX_TOKEN_EXPIRED'&&e.message!=='DBX_NO_TOKEN'){
-      console.warn('dbx auto-sync upload:',e.message||e);
-    }
+    if(e.message==='DBX_TOKEN_EXPIRED'||e.message==='DBX_NO_TOKEN')return;
+    _dbxSyncErr=true;
+    _dbxUpdateSyncBadge();
+    console.warn('dbx upload:',e.message||e);
   }
 }
 
-// 자동 다운로드 + 머지 — 앱 시작 시 호출
+// 자동 다운로드 + 머지 (앱 시작, visibilitychange, 폴링 시 호출)
 async function dbxSyncDownload(){
   if(!dbxIsConnected())return;
   try{
@@ -3978,10 +4241,39 @@ async function dbxSyncDownload(){
     await _dbxMerge(data);
   }catch(e){
     if(e.message!=='DBX_TOKEN_EXPIRED'&&e.message!=='DBX_NO_TOKEN'){
-      console.warn('dbx auto-sync download:',e.message||e);
+      console.warn('dbx download:',e.message||e);
     }
   }
 }
+
+// 양방향 수동/자동 동기화 (다운로드 → 업로드)
+let _dbxSyncing=false;
+async function dbxSyncNow(force=false){
+  if(!dbxIsConnected())return;
+  const now=Date.now();
+  if(!force&&now-_lastAutoSyncAt<60000)return;  // throttle: 60초
+  if(_dbxSyncing)return;
+  _dbxSyncing=true;
+  _lastAutoSyncAt=now;
+  _dbxUpdateSyncBadge('syncing');
+  try{
+    await dbxSyncDownload();   // 원격 변경 내려받기
+    await dbxSyncUpload();     // 로컬 최신본 올리기 (오류 재시도 포함)
+  }finally{
+    _dbxSyncing=false;
+    _dbxUpdateSyncBadge();
+  }
+}
+
+// ── 포그라운드 복귀 시 즉시 동기화 ──
+let _hiddenAt=0;
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){_hiddenAt=Date.now();}
+  else if(Date.now()-_hiddenAt>30000){dbxSyncNow();}  // 30초 이상 숨겨진 뒤 복귀
+});
+
+// ── 3분마다 폴링 ──
+setInterval(()=>dbxSyncNow(),3*60*1000);
 
 // 머지 로직: 원격 + 로컬 → 최신 updatedAt 우선, 삭제 항목 적용
 async function _dbxMerge(remoteData){
@@ -4037,20 +4329,33 @@ async function _dbxMerge(remoteData){
 }
 
 // 사이드바 하단 동기화 뱃지 갱신
-function _dbxUpdateSyncBadge(){
+function _dbxUpdateSyncBadge(status){
   const el=document.getElementById('dbxSyncBadge');
   if(!el)return;
   if(!dbxIsConnected()){el.style.display='none';return;}
+  // 동기화 중
+  if(status==='syncing'){
+    el.textContent='↻ 동기화 중...';
+    el.style.color='var(--label3)';el.style.cursor='default';el.style.display='block';return;
+  }
+  // 오류 상태
+  if(_dbxSyncErr){
+    el.textContent='⚠ 동기화 실패 — 탭하여 재시도';
+    el.style.color='var(--amber)';el.style.cursor='pointer';el.style.display='block';return;
+  }
   const iso=_ls(_K.LAST_SYNC);
-  if(!iso){el.style.display='none';return;}
+  if(!iso){
+    el.textContent='● 연결됨 (탭하여 동기화)';
+    el.style.color='var(--label3)';el.style.cursor='pointer';el.style.display='block';return;
+  }
   const diff=Math.round((Date.now()-new Date(iso).getTime())/60000);
   let label;
   if(diff<1)label='방금 동기화';
   else if(diff<60)label=`${diff}분 전 동기화`;
   else if(diff<1440)label=`${Math.round(diff/60)}시간 전 동기화`;
   else label=new Date(iso).toLocaleDateString('ko-KR',{month:'short',day:'numeric'})+' 동기화';
-  el.textContent='☁ '+label;
-  el.style.display='block';
+  el.textContent='● '+label;
+  el.style.color='var(--green-txt)';el.style.cursor='pointer';el.style.display='block';
 }
 
 // ── UI 상태 렌더링 ─────────────────────────────────────────────
@@ -4088,6 +4393,9 @@ function renderDbxSettings(){
         <div style="font-size:11px;color:var(--label3);margin-bottom:10px;">
           전체 백업(사진 포함): ${lb?escapeHtml(lb):'아직 없음 — 아래 버튼으로 백업 권장'}
         </div>
+        <button id="dbxSyncNowBtn" class="bkp-restore-btn" style="margin-bottom:8px;">
+          ↻ 지금 동기화 (양방향)
+        </button>
       `;
     }
   }else{
@@ -4154,6 +4462,12 @@ function _dbxBindEvents(){
   $('dbxDisconnectBtn')?.addEventListener('click',dbxDisconnect);
   $('dbxModalClose')?.addEventListener('click',_dbxCloseModal);
   $('dbxModalOverlay')?.addEventListener('click',_dbxCloseModal);
+  // 설정 탭 내 "지금 동기화" 버튼 — renderDbxSettings 후 렌더됨, 이벤트 위임
+  document.getElementById('viewSettings')?.addEventListener('click',e=>{
+    if(e.target.closest('#dbxSyncNowBtn'))dbxSyncNow(true);
+  });
+  // 사이드바 뱃지 클릭 → 수동 동기화
+  $('dbxSyncBadge')?.addEventListener('click',()=>dbxSyncNow(true));
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -4174,10 +4488,10 @@ function _dbxBindEvents(){
     // 기기별 초기 탭: 데스크탑(비터치) → 추가, 모바일(터치) → 내역
     if(!_isTouch) switchTab('input');
     renderDetail();
-    // Dropbox 자동 동기화 — 연결된 경우 시작 시 최신 데이터 내려받아 머지
+    // Dropbox 자동 동기화 — 연결된 경우 시작 시 양방향 머지 (await 없음 — UI 차단 안 함)
     if(dbxIsConnected()){
-      _dbxUpdateSyncBadge();        // 이전 동기화 시각 즉시 표시
-      dbxSyncDownload();            // 백그라운드 다운로드+머지 (await 없음 — UI 차단 안 함)
+      _dbxUpdateSyncBadge();   // 이전 동기화 시각 즉시 표시
+      dbxSyncNow(true);        // 강제 실행 (throttle 무시)
     }
   }catch(e){
     console.error(e);
