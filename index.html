@@ -424,6 +424,15 @@ svg{display:block;flex-shrink:0;}
   :root{--pad-x:18px;}
   .input-grid{grid-template-columns:1fr;gap:14px;}
   .row-3{grid-template-columns:1fr;}
+
+  /* 모바일 인물 검색: 요약 패널을 영수증 목록 위로 */
+  .app.mob-person-view aside.side{display:contents;}
+  .app.mob-person-view .side-top{order:1;}
+  .app.mob-person-view .month-nav{order:2;}
+  .app.mob-person-view .side-search{order:3;}
+  .app.mob-person-view main.main{order:4;}
+  .app.mob-person-view .side-list{order:5;border-top:1px solid var(--sep);}
+  .app.mob-person-view .side-foot{order:6;}
 }
 
 /* ── HIDDEN VIEWS ── */
@@ -851,7 +860,9 @@ svg{display:block;flex-shrink:0;}
 // v1.29 — 내역 화면 수정 확인 버튼: 품목·메모·참석자·태그 변경 후 "수정 확인" 버튼으로 한 번에 저장.
 //         blur 자동저장 제거 → 명시적 확인 UX. 되돌리기 버튼으로 변경 취소.
 //         내역 화면 품목 드래그&드롭: ⠿ 핸들로 품목 순서 변경 (포인터 이벤트, 모바일+데스크톱).
-const APP_VERSION='v1.29';
+// v1.30 — 모바일 인물 검색 레이아웃: 결제자/참석자/통합 패널 검색 시 요약 패널이 영수증 목록 위에 표시.
+//         CSS display:contents + order 트릭으로 DOM 변경 없이 순서 전환.
+const APP_VERSION='v1.30';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -2705,12 +2716,17 @@ function renderMonthSummaryHtml(ym){
   return summaryHtml+catHtml+participantHtml+sparkHtml;
 }
 
+function _setMobPersonView(v){
+  document.querySelector('.app').classList.toggle('mob-person-view',v);
+}
+
 async function renderDetail(){
   const body=document.getElementById('detailBody');
   const eye=document.getElementById('mainEye');
   const title=document.getElementById('mainTitle');
   const sub=document.getElementById('mainSub');
   const actions=document.getElementById('detailActions');
+  _setMobPersonView(false); // 기본값 해제; 인물 패널 진입 시 true로 전환
   if(!selectedId){
     actions.style.display='none';
     if(searchQuery){
@@ -2743,6 +2759,7 @@ async function renderDetail(){
         sub.textContent=recs.length>0?`${recs.length}건 · 클릭하면 상세 보기`:'결과 없음';
         body.innerHTML=renderPayerSummaryHtml(payerName,recs);
         _bindSectionToggles(body);
+        _setMobPersonView(true);
       }else if(isExplicitParticipant||(!isExplicitPayer&&hasPart&&!hasPayer)){
         // 참석자 전용
         const recs=isExplicitParticipant?partRecs:partRecs;
@@ -2751,6 +2768,7 @@ async function renderDetail(){
         sub.textContent=recs.length>0?`${recs.length}건 · 클릭하면 상세 보기`:'결과 없음';
         body.innerHTML=renderParticipantSummaryHtml(participantQ,recs);
         _bindSectionToggles(body);
+        _setMobPersonView(true);
       }else if(!isExplicitPayer&&!isExplicitParticipant&&hasPayer&&hasPart){
         // ── 결제자 + 참석자 통합 대시보드 ──
         eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4"/><path d="M16 11l2 2 4-4"/></svg>`;
@@ -2758,6 +2776,7 @@ async function renderDetail(){
         sub.textContent=`결제 ${payerRecs.length}건 · 참석 ${partRecs.length}건`;
         body.innerHTML=renderPersonDashboardHtml(personName,payerRecs,partRecs);
         _bindSectionToggles(body);
+        _setMobPersonView(true);
       }else{
         // ── 일반 검색 결과 요약 패널 ──
         eye.textContent='검색';
