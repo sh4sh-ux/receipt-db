@@ -335,7 +335,7 @@ svg{display:block;flex-shrink:0;}
 .section-toggle-icon.closed{transform:rotate(-90deg);}
 .section-body{overflow:hidden;transition:max-height .25s ease,opacity .2s ease;}
 .section-body.open{max-height:2000px;opacity:1;}
-.section-body.closed{max-height:0;opacity:0;}
+.section-body.closed{max-height:0;opacity:0;pointer-events:none;}
 .month-nav-today{font-size:11px;color:var(--blue-txt);background:transparent;border:none;padding:2px 4px 0;font-weight:500;margin-top:1px;}
 .month-nav-today:hover{text-decoration:underline;}
 .month-nav-today.hidden{visibility:hidden;}
@@ -832,7 +832,9 @@ svg{display:block;flex-shrink:0;}
 //         자주 함께한 멤버 칩, 참석 내역 테이블(인원·분담금). "참석자 X" 또는 이름 자동 감지.
 // v1.23 — 접이식 섹션 토글: 결제자·참석자·검색 패널의 구매이력/동행멤버 섹션 + 가계부의
 //         일별지출·참석자분담 섹션을 chevron 버튼으로 접고 펼치기. 열림/닫힘 상태 localStorage 저장.
-const APP_VERSION='v1.23';
+// v1.24 — 섹션 토글 버그 수정: SVG className → setAttribute 사용, section-body padding 구조 수정,
+//         closed 섹션 pointer-events:none 추가.
+const APP_VERSION='v1.24';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1237,15 +1239,16 @@ function _bindSectionToggles(container){
     }
     const body=btn.nextElementSibling;
     if(!body)return;
-    // 초기 상태 적용
     const icon=btn.querySelector('.section-toggle-icon');
-    body.className=`section-body ${isOpen?'open':'closed'}`;
-    if(icon) icon.className=`section-toggle-icon ${isOpen?'open':'closed'}`;
-    // 클릭 토글
+    // SVG element는 className이 SVGAnimatedString이므로 setAttribute 사용
+    function _applyToggleState(){
+      body.className=`section-body ${isOpen?'open':'closed'}`;
+      if(icon) icon.setAttribute('class',`section-toggle-icon ${isOpen?'open':'closed'}`);
+    }
+    _applyToggleState();
     btn.addEventListener('click',()=>{
       isOpen=!isOpen;
-      body.className=`section-body ${isOpen?'open':'closed'}`;
-      if(icon) icon.className=`section-toggle-icon ${isOpen?'open':'closed'}`;
+      _applyToggleState();
       if(key) localStorage.setItem('tog_'+key, isOpen?'1':'0');
     });
   });
@@ -2381,8 +2384,8 @@ function renderParticipantSummaryHtml(name, filtered){
   if(coEntries.length>0){
     coHtml=`<div class="budget-section">
       ${_sectionToggleHtml('자주 함께한 멤버',null,'part_companions',true)}
-      <div class="section-body open" style="padding-top:10px;">
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      <div class="section-body open">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:10px;">
           ${coEntries.map(([p,cnt])=>`
             <div style="background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:8px 14px;font-size:13px;">
               <span style="font-weight:600;">${escapeHtml(p)}</span>
@@ -2501,8 +2504,8 @@ function renderMonthSummaryHtml(ym){
     participantHtml=`
       <div class="budget-section">
         ${_sectionToggleHtml('참석자별 분담',`${pparts.length}명 · 1/N 균등 배분`,'month_participant',false)}
-        <div class="section-body closed" style="padding-top:8px;">
-          <div class="cat-bars">
+        <div class="section-body closed">
+          <div class="cat-bars" style="padding-top:8px;">
             ${pparts.map((p,i)=>{
               const w=maxPP>0?(p.amt/maxPP*100):0;
               return `<div class="cat-bar-row" data-rank="${Math.min(i,4)}">
@@ -2528,8 +2531,8 @@ function renderMonthSummaryHtml(ym){
     sparkHtml=`
       <div class="budget-section">
         ${_sectionToggleHtml('일별 지출',peakAmt>0?`최고 ${peakDay}일: ${fmtMoney(peakAmt)}원`:null,'month_spark',true)}
-        <div class="section-body open" style="padding-top:8px;">
-          <div class="sparkline">
+        <div class="section-body open">
+          <div class="sparkline" style="padding-top:8px;">
             <div class="spark-bars">
               ${spark.map((amt,i)=>{
                 const day=i+1;
