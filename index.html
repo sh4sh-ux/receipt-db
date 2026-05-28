@@ -325,6 +325,17 @@ svg{display:block;flex-shrink:0;}
 .month-nav-label.has-sel{color:var(--blue-txt);}
 .back-to-summary{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:var(--label3);background:transparent;border:none;padding:0;cursor:pointer;margin-bottom:4px;border-radius:4px;line-height:1.4;}
 .back-to-summary:hover{color:var(--blue-txt);}
+
+/* ── 섹션 접기/펼치기 ── */
+.section-toggle{display:flex;align-items:center;gap:0;background:none;border:none;padding:0;cursor:pointer;width:100%;}
+.section-toggle-lbl{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;flex:1;text-align:left;}
+.section-toggle-sub{font-size:11px;color:var(--label3);font-weight:500;text-transform:none;letter-spacing:0;margin-right:6px;}
+.section-toggle-icon{width:16px;height:16px;color:var(--label3);transition:transform .2s;flex-shrink:0;}
+.section-toggle-icon.open{transform:rotate(0deg);}
+.section-toggle-icon.closed{transform:rotate(-90deg);}
+.section-body{overflow:hidden;transition:max-height .25s ease,opacity .2s ease;}
+.section-body.open{max-height:2000px;opacity:1;}
+.section-body.closed{max-height:0;opacity:0;}
 .month-nav-today{font-size:11px;color:var(--blue-txt);background:transparent;border:none;padding:2px 4px 0;font-weight:500;margin-top:1px;}
 .month-nav-today:hover{text-decoration:underline;}
 .month-nav-today.hidden{visibility:hidden;}
@@ -819,7 +830,9 @@ svg{display:block;flex-shrink:0;}
 //         삭제 항목 추적(deletedIds)으로 양방향 삭제 동기화. 사이드바에 마지막 동기화 시각 표시.
 // v1.22 — 참석자 검색 전용 통계 패널: 참석 횟수·분담 총액 히어로 카드, 카테고리별 분담금 막대,
 //         자주 함께한 멤버 칩, 참석 내역 테이블(인원·분담금). "참석자 X" 또는 이름 자동 감지.
-const APP_VERSION='v1.22';
+// v1.23 — 접이식 섹션 토글: 결제자·참석자·검색 패널의 구매이력/동행멤버 섹션 + 가계부의
+//         일별지출·참석자분담 섹션을 chevron 버튼으로 접고 펼치기. 열림/닫힘 상태 localStorage 저장.
+const APP_VERSION='v1.23';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1202,6 +1215,42 @@ function validateParsed(p){
 // ════════════════════════════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════════════════════════════
+// 섹션 접기/펼치기 토글 헬퍼
+// key: localStorage 저장 키 (null이면 저장 안 함), defaultOpen: 기본값
+function _sectionToggleHtml(label, sub, key, defaultOpen=true){
+  const chevron=`<svg class="section-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`;
+  return `<button class="section-toggle" data-toggle-key="${key||''}" data-toggle-default="${defaultOpen?'1':'0'}">
+    <span class="section-toggle-lbl">${label}</span>
+    ${sub?`<span class="section-toggle-sub">${sub}</span>`:''}
+    ${chevron}
+  </button>`;
+}
+function _bindSectionToggles(container){
+  container.querySelectorAll('.section-toggle').forEach(btn=>{
+    const key=btn.dataset.toggleKey;
+    const defaultOpen=btn.dataset.toggleDefault!=='0';
+    // 저장된 상태 읽기 (key 있을 때만)
+    let isOpen=defaultOpen;
+    if(key){
+      const saved=localStorage.getItem('tog_'+key);
+      if(saved!==null) isOpen=saved==='1';
+    }
+    const body=btn.nextElementSibling;
+    if(!body)return;
+    // 초기 상태 적용
+    const icon=btn.querySelector('.section-toggle-icon');
+    body.className=`section-body ${isOpen?'open':'closed'}`;
+    if(icon) icon.className=`section-toggle-icon ${isOpen?'open':'closed'}`;
+    // 클릭 토글
+    btn.addEventListener('click',()=>{
+      isOpen=!isOpen;
+      body.className=`section-body ${isOpen?'open':'closed'}`;
+      if(icon) icon.className=`section-toggle-icon ${isOpen?'open':'closed'}`;
+      if(key) localStorage.setItem('tog_'+key, isOpen?'1':'0');
+    });
+  });
+}
+
 function fmtMoney(n){
   if(n==null||isNaN(n))return '0';
   const v=Math.round(Number(n));
@@ -2138,7 +2187,8 @@ function renderSearchSummaryHtml(q, filtered){
     // ── 구매 이력 테이블 (수량·단가 컬럼 추가) ──
     const hasUP=hitItems.some(it=>it.unitPrice>0);
     const sorted=[...hitItems].sort((a,b)=>b.date.localeCompare(a.date));
-    bodyHtml=`<div class="section-hd" style="margin-top:0;">구매 이력 <span style="font-weight:500;color:var(--label3);text-transform:none;letter-spacing:0;">${hitItems.length}건</span></div>
+    bodyHtml=`${_sectionToggleHtml('구매 이력',`${hitItems.length}건`,'srch_history',true)}
+    <div class="section-body open">
     <table class="srch-table">
       <thead><tr><th>일자</th><th>매장명</th><th>품목명</th><th>수량</th>${hasUP?'<th>단가</th>':''}<th>금액</th></tr></thead>
       <tbody>${sorted.map(it=>`
@@ -2151,7 +2201,8 @@ function renderSearchSummaryHtml(q, filtered){
           <td class="${it.amount<0?'amt-neg':''}">${fmtMoney(it.amount)}원</td>
         </tr>`).join('')}
       </tbody>
-    </table>`;
+    </table>
+    </div>`;
   }else{
     // 영수증 레벨 매칭 — 목록 테이블
     const sorted=[...filtered].sort((a,b)=>b.date.localeCompare(a.date));
@@ -2329,13 +2380,15 @@ function renderParticipantSummaryHtml(name, filtered){
   let coHtml='';
   if(coEntries.length>0){
     coHtml=`<div class="budget-section">
-      <div class="budget-section-hd">자주 함께한 멤버</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;">
-        ${coEntries.map(([p,cnt])=>`
-          <div style="background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:8px 14px;font-size:13px;">
-            <span style="font-weight:600;">${escapeHtml(p)}</span>
-            <span style="color:var(--label3);margin-left:6px;font-size:11px;">${cnt}회</span>
-          </div>`).join('')}
+      ${_sectionToggleHtml('자주 함께한 멤버',null,'part_companions',true)}
+      <div class="section-body open" style="padding-top:10px;">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${coEntries.map(([p,cnt])=>`
+            <div style="background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:8px 14px;font-size:13px;">
+              <span style="font-weight:600;">${escapeHtml(p)}</span>
+              <span style="color:var(--label3);margin-left:6px;font-size:11px;">${cnt}회</span>
+            </div>`).join('')}
+        </div>
       </div>
     </div>`;
   }
@@ -2441,30 +2494,32 @@ function renderMonthSummaryHtml(ym){
     `;
   }
 
-  // 참석자별 막대
+  // 참석자별 막대 (기본 접힘)
   let participantHtml='';
   if(pparts.length){
     const maxPP=Math.max(...pparts.map(p=>p.amt));
     participantHtml=`
       <div class="budget-section">
-        <div class="budget-section-hd">참석자별 분담 <span class="hd-sub">${pparts.length}명 · 1/N 균등 배분</span></div>
-        <div class="cat-bars">
-          ${pparts.map((p,i)=>{
-            const w=maxPP>0?(p.amt/maxPP*100):0;
-            return `<div class="cat-bar-row" data-rank="${Math.min(i,4)}">
-              <div class="cat-bar-top">
-                <span class="cat-bar-name">${escapeHtml(p.name)}</span>
-                <span class="cat-bar-amt">${fmtMoney(p.amt)}원</span>
-              </div>
-              <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;background:var(--blue);"></div></div>
-            </div>`;
-          }).join('')}
+        ${_sectionToggleHtml('참석자별 분담',`${pparts.length}명 · 1/N 균등 배분`,'month_participant',false)}
+        <div class="section-body closed" style="padding-top:8px;">
+          <div class="cat-bars">
+            ${pparts.map((p,i)=>{
+              const w=maxPP>0?(p.amt/maxPP*100):0;
+              return `<div class="cat-bar-row" data-rank="${Math.min(i,4)}">
+                <div class="cat-bar-top">
+                  <span class="cat-bar-name">${escapeHtml(p.name)}</span>
+                  <span class="cat-bar-amt">${fmtMoney(p.amt)}원</span>
+                </div>
+                <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;background:var(--blue);"></div></div>
+              </div>`;
+            }).join('')}
+          </div>
         </div>
       </div>
     `;
   }
 
-  // 일별 sparkline
+  // 일별 sparkline (기본 펼침)
   const peakAmt=Math.max(...spark);
   const peakDay=peakAmt>0?spark.indexOf(peakAmt)+1:0;
   const todayY=_currentYM()===ym?parseInt(_todayYMD().slice(8,10),10):-1;
@@ -2472,21 +2527,19 @@ function renderMonthSummaryHtml(ym){
   if(spark.length){
     sparkHtml=`
       <div class="budget-section">
-        <div class="budget-section-hd">일별 지출</div>
-        <div class="sparkline">
-          <div class="spark-hd">
-            <span style="color:var(--label2);">${spark.length}일</span>
-            <span class="spark-peak">${peakAmt>0?`최고 <b>${peakDay}일</b>: ${fmtMoney(peakAmt)}원`:'지출 없음'}</span>
+        ${_sectionToggleHtml('일별 지출',peakAmt>0?`최고 ${peakDay}일: ${fmtMoney(peakAmt)}원`:null,'month_spark',true)}
+        <div class="section-body open" style="padding-top:8px;">
+          <div class="sparkline">
+            <div class="spark-bars">
+              ${spark.map((amt,i)=>{
+                const day=i+1;
+                const h=peakAmt>0?Math.max(2,Math.round(amt/peakAmt*100)):2;
+                const cls=(amt>0?(day===todayY?'has today':'has'):(day===todayY?'today':''));
+                return `<div class="spark-bar ${cls}" style="height:${h}%;" data-day="${day}" data-amt="${fmtMoney(amt)}"></div>`;
+              }).join('')}
+            </div>
+            <div class="spark-axis"><span>1일</span><span>${Math.round(spark.length/2)}일</span><span>${spark.length}일</span></div>
           </div>
-          <div class="spark-bars">
-            ${spark.map((amt,i)=>{
-              const day=i+1;
-              const h=peakAmt>0?Math.max(2,Math.round(amt/peakAmt*100)):2;
-              const cls=(amt>0?(day===todayY?'has today':'has'):(day===todayY?'today':''));
-              return `<div class="spark-bar ${cls}" style="height:${h}%;" data-day="${day}" data-amt="${fmtMoney(amt)}"></div>`;
-            }).join('')}
-          </div>
-          <div class="spark-axis"><span>1일</span><span>${Math.round(spark.length/2)}일</span><span>${spark.length}일</span></div>
         </div>
       </div>
     `;
@@ -2528,17 +2581,20 @@ async function renderDetail(){
         title.textContent=`${payerName} 결제 내역`;
         sub.textContent=filtered.length>0?`${filtered.length}건 · 클릭하면 상세 보기`:'결과 없음';
         body.innerHTML=renderPayerSummaryHtml(payerName,filtered);
+        _bindSectionToggles(body);
       }else if(isParticipantSearch){
         eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><circle cx="20" cy="8" r="3"/><path d="M2 20c0-4 3.6-7 10-7"/><path d="M14 20c1-2.7 3-4.5 6-5"/></svg>`;
         title.textContent=`${participantQ} 참석 내역`;
         sub.textContent=filtered.length>0?`${filtered.length}건 · 클릭하면 상세 보기`:'결과 없음';
         body.innerHTML=renderParticipantSummaryHtml(participantQ,filtered);
+        _bindSectionToggles(body);
       }else{
         // ── 일반 검색 결과 요약 패널 ──
         eye.textContent='검색';
         title.textContent=`'${q}' 검색 결과`;
         sub.textContent=filtered.length>0?`${filtered.length}개 영수증 · 클릭하면 상세 보기`:'결과 없음';
         body.innerHTML=renderSearchSummaryHtml(qL,filtered);
+        _bindSectionToggles(body);
       }
       body.querySelectorAll('.srch-row[data-id]').forEach(tr=>{
         tr.addEventListener('click',()=>selectReceipt(tr.dataset.id));
@@ -2549,6 +2605,7 @@ async function renderDetail(){
       title.textContent=ymLabel(viewMonth);
       sub.textContent='왼쪽 목록에서 영수증을 선택하면 상세가 표시됩니다.';
       body.innerHTML=renderMonthSummaryHtml(viewMonth);
+      _bindSectionToggles(body);
       const cta=body.querySelector('#budgetEmptyCta');
       if(cta)cta.addEventListener('click',()=>switchTab('input'));
     }
