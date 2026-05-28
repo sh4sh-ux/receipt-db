@@ -248,12 +248,12 @@ svg{display:block;flex-shrink:0;}
   .detail-two-col{grid-template-columns:1fr;}
 }
 
-.kv{padding:10px 12px;background:var(--fill2);border-radius:var(--rm);border:1px solid var(--sep);}
-.kv-lbl{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;}
-.kv-val{font-size:14px;font-weight:500;line-height:1.4;word-break:break-word;}
-.kv-input{width:100%;border:1px solid var(--blue);background:var(--card);border-radius:6px;padding:7px 9px;font-size:14px;outline:none;font-family:inherit;}
-.kv-edit-hint{font-size:11px;color:var(--label3);margin-top:3px;display:none;}
-.kv.editing .kv-edit-hint{display:block;}
+.kv{padding:10px 12px;background:var(--fill2);border-radius:var(--rm);border:1px solid var(--sep);transition:border-color .15s;}
+.kv:focus-within{border-color:var(--blue);}
+.kv-lbl{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}
+.kv-inp{width:100%;border:none;background:transparent;font-size:14px;font-weight:500;color:var(--label);outline:none;font-family:inherit;padding:0;line-height:1.4;}
+.kv-inp::placeholder{color:var(--label3);font-weight:400;}
+.kv-inp:is(select){cursor:pointer;-webkit-appearance:none;appearance:none;}
 
 .items-table{width:100%;border-collapse:collapse;margin-bottom:6px;}
 .items-table th{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;padding:8px 6px;text-align:left;border-bottom:1px solid var(--sep);background:var(--fill2);}
@@ -863,7 +863,9 @@ svg{display:block;flex-shrink:0;}
 // v1.30 — 모바일 인물 검색 레이아웃: 결제자/참석자/통합 패널 검색 시 요약 패널이 영수증 목록 위에 표시.
 //         CSS display:contents + order 트릭으로 DOM 변경 없이 순서 전환.
 // v1.31 — 검색창 입력 시 selectedId 즉시 초기화: 영수증 선택 후 검색하면 상세 화면이 그대로 남던 버그 수정.
-const APP_VERSION='v1.31';
+// v1.32 — 정보 필드(매장명·일자·카테고리·결제수단·결제자 등) click-to-edit 제거 → 항상 보이는 입력창.
+//         "수정 확인" 버튼 하나로 품목·메모·참석자·태그·정보 필드 모두 한 번에 저장.
+const APP_VERSION='v1.32';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -2861,12 +2863,12 @@ async function renderDetail(){
       <div>
         <div class="section-hd" style="margin-top:0;">정보</div>
         <div class="detail-kv-stack">
-          ${kvHtml('매장명','store',r.store)}
-          ${kvHtml('일자','date',fmtDateKor(r.date),r.date,'date')}
-          ${kvHtml('카테고리','category',r.category||'—',r.category)}
-          ${kvHtml('결제수단','paymentMethod',payLabel,r.paymentMethod,'select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
-          ${kvHtml('결제 상세','paymentDetail',r.paymentDetail||'—',r.paymentDetail)}
-          ${kvHtml('결제자','paidBy',r.paidBy||'—',r.paidBy||'')}
+          ${kvHtml('매장명','store',r.store||'')}
+          ${kvHtml('일자','date',r.date||'','date')}
+          ${kvHtml('카테고리','category',r.category||'')}
+          ${kvHtml('결제수단','paymentMethod',r.paymentMethod||'card','select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
+          ${kvHtml('결제 상세','paymentDetail',r.paymentDetail||'')}
+          ${kvHtml('결제자','paidBy',r.paidBy||'')}
         </div>
       </div>
     </div>
@@ -2917,12 +2919,13 @@ async function renderDetail(){
     });
   }
 
-  // 인라인 편집 — kv 클릭
-  body.querySelectorAll('.kv').forEach(el=>{
-    el.addEventListener('click',()=>{
-      if(el.classList.contains('editing'))return;
-      startKvEdit(el,r);
-    });
+  // 정보 필드 dirty 추적 + 날짜 picker (저장은 수정 확인 버튼)
+  body.querySelectorAll('.kv .kv-inp').forEach(inp=>{
+    inp.addEventListener('input',()=>_detailSetDirty(true));
+    inp.addEventListener('change',()=>_detailSetDirty(true));
+    if(inp.type==='date'){
+      inp.addEventListener('focus',()=>{if(typeof inp.showPicker==='function')try{inp.showPicker();}catch(_){}});
+    }
   });
 
   // ── 품목 편집 (input → dirty 표시, blur → 포맷 복원, 저장은 수정 확인 버튼) ──
@@ -2973,6 +2976,9 @@ async function renderDetail(){
   // ── 수정 확인 / 되돌리기 ──
   document.getElementById('detailConfirmBtn').addEventListener('click',async()=>{
     _syncDetailFromInputs(r);
+    // 정보 필드 수집
+    body.querySelectorAll('.kv .kv-inp').forEach(inp=>{const f=inp.dataset.field;if(f)r[f]=inp.value;});
+    // 메모·참석자·태그 수집
     const _dn=document.getElementById('dNotes');
     if(_dn) r.notes=_dn.value;
     const _dp=document.getElementById('dParticipants');
@@ -2981,6 +2987,7 @@ async function renderDetail(){
     if(_dt) r.tags=_dt.value.split(',').map(s=>s.trim()).filter(Boolean);
     r.total=r.items.reduce((s,i)=>s+(i.amount||0),0);
     r.updatedAt=nowISO();
+    if(r.store&&r.category) await learnCategory(r.store,r.category);
     await dbPut('receipts',r);
     toast('수정됨',{type:'success'});
     await loadAll();await renderDetail();
@@ -2992,69 +2999,17 @@ async function renderDetail(){
   });
 }
 
-function kvHtml(label,field,display,rawValue,type,options){
-  const dispVal=display==null||display===''?'—':display;
-  const raw=escapeHtml(rawValue==null?'':rawValue);
-  return `<div class="kv" data-field="${field}" data-type="${type||'text'}" data-raw="${raw}"${options?` data-options='${JSON.stringify(options).replace(/'/g,'&#39;')}'`:''}>
-    <div class="kv-lbl">${escapeHtml(label)}</div>
-    <div class="kv-val">${escapeHtml(dispVal)}</div>
-    <div class="kv-edit-hint">클릭해서 편집 · Enter로 저장 · Esc로 취소</div>
-  </div>`;
-}
-
-function startKvEdit(el,r){
-  const field=el.dataset.field;
-  const type=el.dataset.type||'text';
-  const raw=el.dataset.raw||'';
-  const val=el.querySelector('.kv-val');
-  el.classList.add('editing');
-  let inp;
+// v1.32: 항상 보이는 입력창 (label + field, rawValue, type?, options?)
+function kvHtml(label,field,rawValue,type,options){
+  const rv=escapeHtml(rawValue==null?'':rawValue);
   if(type==='select'){
-    const opts=JSON.parse(el.dataset.options||'[]');
-    inp=document.createElement('select');inp.className='kv-input';
-    for(const[v,t]of opts){
-      const o=document.createElement('option');o.value=v;o.textContent=t;
-      if(v===raw)o.selected=true;
-      inp.appendChild(o);
-    }
+    const opts=(options||[]).map(([v,t])=>`<option value="${escapeHtml(v)}"${v===(rawValue||'')?'selected':''}>${escapeHtml(t)}</option>`).join('');
+    return `<div class="kv"><div class="kv-lbl">${escapeHtml(label)}</div><select class="kv-inp" data-field="${field}">${opts}</select></div>`;
   }else if(type==='date'){
-    inp=document.createElement('input');inp.type='date';inp.className='kv-input';inp.value=raw;
-  }else if(type==='time'){
-    inp=document.createElement('input');inp.type='time';inp.className='kv-input';inp.value=raw;
+    return `<div class="kv"><div class="kv-lbl">${escapeHtml(label)}</div><input class="kv-inp" type="date" data-field="${field}" value="${rv}"/></div>`;
   }else{
-    inp=document.createElement('input');inp.type='text';inp.className='kv-input';inp.value=raw;
+    return `<div class="kv"><div class="kv-lbl">${escapeHtml(label)}</div><input class="kv-inp" type="text" data-field="${field}" value="${rv}" placeholder="—"/></div>`;
   }
-  val.innerHTML='';val.appendChild(inp);
-  inp.focus();
-  if(inp.select)inp.select();
-  // 일자 입력 — 즉시 달력 열기 (Chrome/Edge)
-  if(type==='date'&&typeof inp.showPicker==='function'){
-    try{inp.showPicker();}catch(_){}
-  }
-
-  let composing=false,done=false;
-  inp.addEventListener('compositionstart',()=>{composing=true;});
-  inp.addEventListener('compositionend',()=>{composing=false;});
-  const cancel=()=>{if(done)return;done=true;el.classList.remove('editing');renderDetail();};
-  const commit=async()=>{
-    if(done)return;done=true;
-    const newVal=inp.value;
-    if(newVal===raw){cancel();return;}
-    r[field]=newVal;r.updatedAt=nowISO();
-    await dbPut('receipts',r);
-    // 카테고리·가게명 수정 시 학습
-    if((field==='category'||field==='store')&&r.store&&r.category){
-      await learnCategory(r.store,r.category);
-    }
-    toast('수정됨');
-    await loadAll();await renderDetail();
-    dbxSyncUpload();
-  };
-  inp.addEventListener('keydown',e=>{
-    if(e.key==='Enter'&&!composing&&!e.isComposing){e.preventDefault();commit();}
-    else if(e.key==='Escape'){e.preventDefault();cancel();}
-  });
-  inp.addEventListener('blur',()=>{setTimeout(()=>{if(!composing&&!done)commit();},0);});
 }
 
 // v1.29: persistItemChange → dirty 표시만 (저장은 수정 확인 버튼)
