@@ -422,6 +422,11 @@ svg{display:block;flex-shrink:0;}
 .adv-toggle-btn{background:none;border:none;color:var(--label3);font-size:12px;font-weight:500;cursor:pointer;padding:2px 0 8px;display:flex;align-items:center;gap:5px;transition:color .12s;letter-spacing:.1px;}
 .adv-toggle-btn:hover,.adv-toggle-btn.open{color:var(--label2);}
 .adv-toggle-arrow{display:inline-block;transition:transform .15s;font-style:normal;}
+/* v1.46 — 경조사 컨텍스트 필드 */
+.gyeongjo-box{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;padding:12px 14px;background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);margin-bottom:4px;}
+.gyeongjo-box .field-g{margin-bottom:0;}
+.gyeongjo-hint{grid-column:1/-1;font-size:12px;color:var(--label2);line-height:1.6;padding-top:2px;}
+.gyeongjo-hint strong{color:var(--label);font-weight:600;}
 .insight-list{display:flex;flex-direction:column;gap:8px;}
 .insight-item{display:flex;gap:8px;font-size:13px;color:var(--label2);line-height:1.5;align-items:baseline;}
 .insight-dot{color:var(--blue);font-weight:700;font-size:16px;line-height:1.2;flex-shrink:0;}
@@ -673,6 +678,28 @@ svg{display:block;flex-shrink:0;}
                 <label class="field-lbl">카테고리 <span class="field-lbl-hint" id="catAutoHint">자동 분류돼요</span></label>
                 <input id="catInp" class="field-inp" type="text" placeholder="예: 마트, 외식, 카페..." list="catList"/>
                 <datalist id="catList"></datalist>
+              </div>
+              <!-- 경조사 컨텍스트 필드 (부의금·축의금 선택 시 표시) -->
+              <div id="gyeongjoFields" style="grid-column:1/-1;display:none;">
+                <div class="gyeongjo-box">
+                  <div class="field-g">
+                    <label class="field-lbl">관계자 <span class="field-lbl-hint">아는 사람 이름</span></label>
+                    <input id="gjPersonInp" class="field-inp" type="text" placeholder="예: 오현준"/>
+                  </div>
+                  <div class="field-g">
+                    <label class="field-lbl">관계 <span class="field-lbl-hint">선택</span></label>
+                    <input id="gjRelInp" class="field-inp" type="text" placeholder="예: 부친상, 결혼" list="gjRelList"/>
+                    <datalist id="gjRelList">
+                      <option value="부친상"/><option value="모친상"/><option value="장인상"/>
+                      <option value="장모상"/><option value="조부상"/><option value="조모상"/>
+                      <option value="외조부상"/><option value="외조모상"/><option value="결혼"/>
+                      <option value="돌잔치"/><option value="칠순"/><option value="팔순"/>
+                    </datalist>
+                  </div>
+                  <div class="gyeongjo-hint" id="gjHint" style="display:none;">
+                    매장명 → <strong id="gjHintName"></strong>&ensp;·&ensp;태그에 관계자 이름 자동 추가
+                  </div>
+                </div>
               </div>
               <!-- 고급 옵션 토글 -->
               <div style="grid-column:1/-1;margin-top:-4px;">
@@ -962,7 +989,9 @@ svg{display:block;flex-shrink:0;}
 //         (기존: items 합계로 무조건 덮어써 0원이 되던 버그)
 // v1.45 — 불필요 기능 정리: 결제 상세 제거, 품목 드래그 제거, CAT_ITEM_RULES 제거,
 //         주별 스파크라인 제거(일별만 유지), 입력 폼 고급 옵션(참석자·결제자·태그) 접기/펼치기.
-const APP_VERSION='v1.45';
+// v1.46 — 경조사 컨텍스트 필드: 카테고리가 부의금·축의금일 때 관계자+관계 입력 → 매장명 자동 조합,
+//         관계자 이름 태그 자동 추가. 직접 입력 모드에서도 동작.
+const APP_VERSION='v1.46';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -2214,6 +2243,10 @@ saveBtn.addEventListener('click',async()=>{
   const participants=(document.getElementById('participantsInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const tags=(document.getElementById('tagInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const finalCat=document.getElementById('catInp').value.trim();
+  // 경조사 컨텍스트 — 관계자 태그 자동 추가, 매장명 재구성
+  const _gjName=_gjComposed();const _gjP=_gjPerson();
+  if(_gjName)p.store=_gjName;
+  if(_gjP&&!tags.includes(_gjP))tags.push(_gjP);
   // 이름 비어있는 품목은 자동 제거 (편집 중 빈 라인이 남았을 수 있음)
   const cleanItems=(p.items||[])
     .filter(it=>(it.name||'').trim())
@@ -2270,6 +2303,10 @@ function clearInputs(){
   document.getElementById('participantsInp').value='';
   document.getElementById('tagInp').value='';
   document.getElementById('noteInp').value='';
+  document.getElementById('gjPersonInp').value='';
+  document.getElementById('gjRelInp').value='';
+  document.getElementById('gjHint').style.display='none';
+  document.getElementById('gyeongjoFields').style.display='none';
   clearPhoto();
   _currentParsed=null;
   _catAutoFilled=false;
@@ -2332,7 +2369,7 @@ function _updateDirectSaveBtn(){
   if(_inputMode!=='direct')return;
   const store=(document.getElementById('directStore').value||'').trim();
   const total=(document.getElementById('directTotal').value||'').trim();
-  saveBtn.disabled=!(store&&total);
+  saveBtn.disabled=!((store||_gjComposed())&&total);
 }
 
 function _setInputMode(mode){
@@ -2358,7 +2395,10 @@ async function _saveDirectEntry(){
   const store=(document.getElementById('directStore').value||'').trim();
   const totalRaw=(document.getElementById('directTotal').value||'').trim();
   const total=_parseN(totalRaw);
-  if(!store){toast('상호명/내역을 입력해주세요',{type:'error'});return;}
+  // 경조사 컨텍스트 — 관계자 태그 자동 추가, 매장명 재구성
+  const _gjName=_gjComposed();const _gjP=_gjPerson();
+  const finalStore=_gjName||store;
+  if(!finalStore){toast('상호명/내역을 입력해주세요',{type:'error'});return;}
   if(!total){toast('금액을 입력해주세요',{type:'error'});return;}
   const dateVal=document.getElementById('directDate').value||new Date().toISOString().slice(0,10);
   const id=_newId(dateVal);
@@ -2370,11 +2410,12 @@ async function _saveDirectEntry(){
   const participants=(document.getElementById('participantsInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const tags=(document.getElementById('tagInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const finalCat=document.getElementById('catInp').value.trim();
+  if(_gjP&&!tags.includes(_gjP))tags.push(_gjP);
   const rec={
     id,
     date:dateVal,
     time:'',
-    store,
+    store:finalStore,
     category:finalCat,
     paymentMethod:document.getElementById('payMethod').value,
     paidBy:document.getElementById('payerInp').value.trim(),
@@ -2446,6 +2487,9 @@ async function _saveDirectEntry(){
   });
 
   directStore.addEventListener('input',_updateDirectSaveBtn);
+  // 경조사 필드 변경도 저장 버튼 활성화에 반영
+  document.getElementById('gjPersonInp').addEventListener('input',_updateDirectSaveBtn);
+  document.getElementById('gjRelInp').addEventListener('input',_updateDirectSaveBtn);
 
   // 가게명 blur → 카테고리 자동 채움
   directStore.addEventListener('blur',function(){
@@ -2457,6 +2501,36 @@ async function _saveDirectEntry(){
       if(auto){catInp.value=auto;_catAutoFilled=true;_updateCatHint();}
     }
   });
+})();
+// ── 경조사 컨텍스트 필드 ──
+const _gjCats=['부의금','축의금'];
+function _gjComposed(){
+  const p=(document.getElementById('gjPersonInp').value||'').trim();
+  const r=(document.getElementById('gjRelInp').value||'').trim();
+  return p&&r?`${p} ${r}`:p||'';
+}
+function _gjPerson(){return (document.getElementById('gjPersonInp').value||'').trim();}
+(()=>{
+  const catEl=document.getElementById('catInp');
+  const gjBox=document.getElementById('gyeongjoFields');
+  const gjHint=document.getElementById('gjHint');
+  const gjHintName=document.getElementById('gjHintName');
+  const gjPerson=document.getElementById('gjPersonInp');
+  const gjRel=document.getElementById('gjRelInp');
+  function _updateGjBox(){
+    const show=_gjCats.includes(catEl.value.trim());
+    gjBox.style.display=show?'':'none';
+    if(!show){gjPerson.value='';gjRel.value='';gjHint.style.display='none';}
+  }
+  function _updateGjHint(){
+    const name=_gjComposed();
+    if(name){gjHintName.textContent=name;gjHint.style.display='';}
+    else gjHint.style.display='none';
+  }
+  catEl.addEventListener('input',_updateGjBox);
+  catEl.addEventListener('change',_updateGjBox);
+  gjPerson.addEventListener('input',_updateGjHint);
+  gjRel.addEventListener('input',_updateGjHint);
 })();
 // ── 고급 옵션 토글 ──
 (()=>{
