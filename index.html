@@ -184,9 +184,14 @@ svg{display:block;flex-shrink:0;}
 .prev-items-count{color:var(--label3);font-weight:500;text-transform:none;letter-spacing:0;margin-left:4px;}
 .prev-add-item{border:1px dashed var(--sep2);background:transparent;color:var(--blue-txt);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:500;font-family:inherit;text-transform:none;letter-spacing:0;}
 .prev-add-item:hover{border-color:var(--blue);background:var(--blue-bg);border-style:solid;}
-.prev-items-head-row,.prev-item-row{display:grid;grid-template-columns:minmax(0,1fr) 64px 100px 110px 26px;gap:6px;align-items:center;}
+.prev-items-head-row,.prev-item-row{display:grid;grid-template-columns:18px minmax(0,1fr) 64px 100px 110px 26px;gap:6px;align-items:center;}
 .prev-items-head-row{padding:0 2px 4px;font-size:10.5px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.3px;}
-.prev-items-head-row span:nth-child(2),.prev-items-head-row span:nth-child(3),.prev-items-head-row span:nth-child(4){text-align:right;padding-right:9px;}
+.prev-items-head-row span:nth-child(3),.prev-items-head-row span:nth-child(4),.prev-items-head-row span:nth-child(5){text-align:right;padding-right:9px;}
+.drag-handle{width:18px;height:100%;display:flex;align-items:center;justify-content:center;cursor:grab;color:var(--label3);font-size:13px;flex-shrink:0;user-select:none;-webkit-user-select:none;touch-action:none;background:none;border:none;padding:0;}
+.drag-handle:active,.drag-handle.grabbing{cursor:grabbing;color:var(--label2);}
+.prev-item-row.dnd-active{opacity:.35;background:var(--fill2);border-radius:5px;}
+.prev-item-row.dnd-above{box-shadow:0 -2px 0 var(--blue);}
+.prev-item-row.dnd-below{box-shadow:0 2px 0 var(--blue);}
 .prev-item-row{margin-bottom:5px;}
 .prev-item-name,.prev-item-qty,.prev-item-price,.prev-item-amt{border:1px solid var(--sep2);background:var(--card);border-radius:5px;padding:7px 9px;font-size:13.5px;outline:none;font-family:inherit;color:var(--label);min-width:0;font-variant-numeric:tabular-nums;line-height:1.3;}
 .prev-item-qty,.prev-item-price,.prev-item-amt{text-align:right;}
@@ -204,7 +209,7 @@ svg{display:block;flex-shrink:0;}
 .prev-foot-val.mismatch{color:var(--red);}
 
 @media(max-width:780px){
-  .prev-items-head-row,.prev-item-row{grid-template-columns:minmax(0,1fr) 48px 82px 92px 24px;gap:4px;}
+  .prev-items-head-row,.prev-item-row{grid-template-columns:16px minmax(0,1fr) 48px 82px 92px 24px;gap:4px;}
   .prev-item-name,.prev-item-qty,.prev-item-price,.prev-item-amt{font-size:13px;padding:6px 7px;}
   .prev-items-head-row span:nth-child(2),.prev-items-head-row span:nth-child(3),.prev-items-head-row span:nth-child(4){padding-right:7px;}
 }
@@ -833,7 +838,8 @@ svg{display:block;flex-shrink:0;}
 // v1.24 — 섹션 토글 버그 수정: SVG className → setAttribute 사용, section-body padding 구조 수정,
 //         closed 섹션 pointer-events:none 추가.
 // v1.25 — 품목 금액 셀 ± 부호 전환 버튼 제거.
-const APP_VERSION='v1.25';
+// v1.26 — 품목 드래그&드롭 순서 변경(포인터 이벤트, 모바일+데스크톱). 중복 영수증 감지(날짜·가게·금액 일치 시 저장 전 확인 다이얼로그). 결제자+참석자 이름 동시 검색 시 통합 대시보드 패널.
+const APP_VERSION='v1.26';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1650,10 +1656,11 @@ function renderPreviewForm(){
   const matchOk=sum===p.total||namedItems.length===0;
 
   const itemsHtml=(p.items||[]).length
-    ? (`<div class="prev-items-head-row"><span>품목명</span><span>수량</span><span>단가</span><span>금액</span><span></span></div>` +
+    ? (`<div class="prev-items-head-row"><span></span><span>품목명</span><span>수량</span><span>단가</span><span>금액</span><span></span></div>` +
        p.items.map((it,idx)=>{
         const negCls=(it.amount||0)<0?' neg':'';
         return `<div class="prev-item-row" data-idx="${idx}">
+          <button type="button" class="drag-handle" tabindex="-1" title="드래그하여 순서 변경" aria-label="순서 변경">⠿</button>
           <input class="prev-item-name" data-f="name" placeholder="품목명" value="${escapeHtml(it.name||'')}" autocomplete="off"/>
           <input class="prev-item-qty" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||1}"/>
           <input class="prev-item-price" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/>
@@ -1898,6 +1905,54 @@ function bindPreviewFormEvents(){
       },20);
     });
   }
+  // 드래그&드롭 순서 변경 초기화
+  if(p)_initItemDrag(previewArea,p);
+}
+
+// ── 품목 드래그&드롭 순서 변경 (포인터 이벤트 — 마우스+터치 통합) ──
+let _dndState=null;
+function _initItemDrag(container, p){
+  Array.from(container.querySelectorAll('.prev-item-row')).forEach((row,idx)=>{
+    const handle=row.querySelector('.drag-handle');
+    if(!handle)return;
+    let _pid=null;
+    handle.addEventListener('pointerdown',e=>{
+      e.preventDefault();
+      handle.setPointerCapture(e.pointerId);
+      _pid=e.pointerId;
+      _dndState={srcIdx:idx,tgtIdx:null};
+      row.classList.add('dnd-active');
+      handle.classList.add('grabbing');
+    });
+    handle.addEventListener('pointermove',e=>{
+      if(_pid===null||e.pointerId!==_pid||!_dndState)return;
+      const allRows=Array.from(container.querySelectorAll('.prev-item-row'));
+      allRows.forEach(r=>r.classList.remove('dnd-above','dnd-below'));
+      const el=document.elementFromPoint(e.clientX,e.clientY);
+      const tRow=el&&el.closest('.prev-item-row');
+      if(tRow&&tRow!==row){
+        const tIdx=allRows.indexOf(tRow);
+        if(tIdx>=0){
+          _dndState.tgtIdx=tIdx;
+          tRow.classList.add(tIdx>_dndState.srcIdx?'dnd-below':'dnd-above');
+        }
+      }else{_dndState.tgtIdx=null;}
+    });
+    const _finish=e=>{
+      if(_pid===null||e.pointerId!==_pid)return;
+      _pid=null; handle.classList.remove('grabbing');
+      const allRows=Array.from(container.querySelectorAll('.prev-item-row'));
+      allRows.forEach(r=>r.classList.remove('dnd-active','dnd-above','dnd-below'));
+      if(_dndState&&_dndState.tgtIdx!==null&&_dndState.tgtIdx!==_dndState.srcIdx){
+        const item=p.items.splice(_dndState.srcIdx,1)[0];
+        p.items.splice(_dndState.tgtIdx,0,item);
+        _dndState=null;
+        renderPreviewForm();
+      }else{_dndState=null;}
+    };
+    handle.addEventListener('pointerup',_finish);
+    handle.addEventListener('pointercancel',_finish);
+  });
 }
 
 function _assignItemField(it,f,val){
@@ -1906,6 +1961,25 @@ function _assignItemField(it,f,val){
     const n=parseFloat(val);
     it[f]=isNaN(n)?0:Math.round(n);
   }
+}
+
+// ── 중복 확인 다이얼로그 ──
+function _confirmDup(storeName, date, total){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    ov.innerHTML=`<div style="background:var(--card);border-radius:var(--r);padding:24px 22px;max-width:320px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18);">
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--label);">⚠️ 중복 영수증 감지</div>
+      <div style="font-size:13px;color:var(--label2);line-height:1.55;margin-bottom:18px;">'${escapeHtml(storeName)}' ${fmtDateKor(date)} ${fmtMoney(total)}원<br/>같은 영수증이 이미 저장되어 있어요.</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button id="_dupCancel" style="padding:8px 14px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);color:var(--label2);font-size:13px;cursor:pointer;font-family:inherit;">취소</button>
+        <button id="_dupOk" style="padding:8px 14px;border:none;border-radius:8px;background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">그래도 저장</button>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.querySelector('#_dupCancel').addEventListener('click',()=>{ov.remove();resolve(false);});
+    ov.querySelector('#_dupOk').addEventListener('click',()=>{ov.remove();resolve(true);});
+  });
 }
 
 // 천단위 쉼표 포매팅 + 파싱 (text input용)
@@ -2044,6 +2118,9 @@ saveBtn.addEventListener('click',async()=>{
     tags,
     createdAt:nowISO(),updatedAt:nowISO(),
   };
+  // ── 중복 검사 ──
+  const dup=receipts.find(r=>r.date===rec.date&&(r.store||'').trim()===(rec.store||'').trim()&&r.total===rec.total);
+  if(dup){const ok=await _confirmDup(rec.store,rec.date,rec.total);if(!ok)return;}
   await dbPut('receipts',rec);
   // 카테고리 학습 — 가게명 + 카테고리 둘 다 있을 때, 사용자가 손댄 경우(또는 자동값이 맞다고 확인한 경우 모두)
   if(rec.store&&finalCat){
@@ -2408,6 +2485,87 @@ function renderParticipantSummaryHtml(name, filtered){
   return heroHtml+catHtml+coHtml+listHtml;
 }
 
+// ── 결제자 + 참석자 통합 대시보드 ──
+function renderPersonDashboardHtml(name, payerRecs, partRecs){
+  // 히어로 카드 — 결제 vs 참석
+  const totalPaid=payerRecs.reduce((s,r)=>s+(r.total||0),0);
+  const totalShare=partRecs.reduce((s,r)=>{
+    const cnt=(r.participants||[]).length||1;
+    return s+Math.round((r.total||0)/cnt);
+  },0);
+  const heroHtml=`<div class="payer-hero">
+    <div class="payer-stat total">
+      <div class="payer-stat-lbl">결제 총액</div>
+      <div class="payer-stat-val">${fmtMoney(totalPaid)}원</div>
+      <div class="payer-stat-sub">${payerRecs.length}건 결제</div>
+    </div>
+    <div class="payer-stat">
+      <div class="payer-stat-lbl">참석 분담 합계</div>
+      <div class="payer-stat-val">${fmtMoney(totalShare)}원</div>
+      <div class="payer-stat-sub">${partRecs.length}건 참석</div>
+    </div>
+  </div>`;
+
+  // 결제 내역 섹션
+  let payerSection='';
+  if(payerRecs.length>0){
+    // 카테고리별 막대 (결제 기준)
+    const catMap={};
+    payerRecs.forEach(r=>{if(r.category)(catMap[r.category]=(catMap[r.category]||0)+(r.total||0));});
+    const catEntries=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+    const maxCat=catEntries[0]?.[1]||1;
+    const catBars=catEntries.map(([c,amt])=>`<div class="cat-bar-row">
+      <div class="cat-bar-top"><span class="cat-bar-name">${escapeHtml(c)}</span><span class="cat-bar-amt">${fmtMoney(amt)}원</span></div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${amt/maxCat*100}%;background:var(--blue);"></div></div>
+    </div>`).join('');
+    const sorted=[...payerRecs].sort((a,b)=>b.date.localeCompare(a.date));
+    const rows=sorted.map(r=>`<tr class="srch-row" data-id="${r.id}">
+      <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
+      <td>${escapeHtml(r.store||'')}</td>
+      <td>${escapeHtml(r.category||'—')}</td>
+      <td>${fmtMoney(r.total||0)}원</td>
+    </tr>`).join('');
+    payerSection=`<div class="budget-section">
+      ${_sectionToggleHtml('결제 내역',`${payerRecs.length}건 · ${fmtMoney(totalPaid)}원`,'person_payer',true)}
+      <div class="section-body open">
+        <div class="cat-bars" style="padding-top:8px;">${catBars}</div>
+        <table class="srch-table" style="margin-top:10px;">
+          <thead><tr><th>일자</th><th>매장명</th><th>카테고리</th><th>총액</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  // 참석 내역 섹션
+  let partSection='';
+  if(partRecs.length>0){
+    const sorted=[...partRecs].sort((a,b)=>b.date.localeCompare(a.date));
+    const rows=sorted.map(r=>{
+      const cnt=(r.participants||[]).length||1;
+      const share=Math.round((r.total||0)/cnt);
+      return `<tr class="srch-row" data-id="${r.id}">
+        <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
+        <td>${escapeHtml(r.store||'')}</td>
+        <td>${escapeHtml(r.category||'—')}</td>
+        <td style="text-align:right;">${cnt}명</td>
+        <td>${fmtMoney(share)}원</td>
+      </tr>`;
+    }).join('');
+    partSection=`<div class="budget-section">
+      ${_sectionToggleHtml('참석 내역',`${partRecs.length}건 · 분담 ${fmtMoney(totalShare)}원`,'person_part',true)}
+      <div class="section-body open">
+        <table class="srch-table" style="margin-top:8px;">
+          <thead><tr><th>일자</th><th>매장명</th><th>카테고리</th><th>인원</th><th>분담금</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  return heroHtml+payerSection+partSection;
+}
+
 function renderMonthSummaryHtml(ym){
   const sum=monthSummary(ym);
   const prev=monthSummary(ymOffset(ym,-1));
@@ -2551,33 +2709,42 @@ async function renderDetail(){
       const filtered=getFiltered();
       const q=searchQuery.trim();
       const qL=q.toLowerCase();
-      // ── 결제자 검색 판별: 명시적("결제자 X") 또는 자동(전체 결과의 paidBy가 q와 일치) ──
+      // ── 결제자/참석자 역할 감지 ──
       const isExplicitPayer=q.startsWith('결제자 ')&&q.length>4;
-      const isImplicitPayer=!isExplicitPayer&&qL.length>=2&&filtered.length>0&&
-        filtered.every(r=>(r.paidBy||'').toLowerCase().includes(qL))&&
-        filtered.some(r=>(r.paidBy||'').trim()!=='');
-      const isPayerSearch=isExplicitPayer||isImplicitPayer;
-
-      // ── 참석자 검색 판별: 명시적("참석자 X") 또는 자동(전체 결과에 해당 참석자 포함) ──
       const isExplicitParticipant=q.startsWith('참석자 ')&&q.length>4;
-      const participantQ=isExplicitParticipant?q.slice(4).trim():q;
-      const isImplicitParticipant=!isExplicitParticipant&&!isPayerSearch&&qL.length>=2&&filtered.length>0&&
-        filtered.every(r=>(r.participants||[]).some(p=>p.toLowerCase().includes(qL)))&&
-        filtered.some(r=>(r.participants||[]).length>0);
-      const isParticipantSearch=isExplicitParticipant||isImplicitParticipant;
+      const personName=isExplicitPayer?q.slice(4).trim():(isExplicitParticipant?q.slice(4).trim():q);
+      const pnL=personName.toLowerCase();
 
-      const payerName=isExplicitPayer?q.slice(4).trim():q;
-      if(isPayerSearch){
+      // 이름이 결제자·참석자로 등장하는 영수증을 별도 필터링
+      const payerRecs=qL.length>=2?receipts.filter(r=>(r.paidBy||'').trim()&&(r.paidBy||'').toLowerCase().includes(pnL)):[];
+      const partRecs=qL.length>=2?receipts.filter(r=>(r.participants||[]).some(p=>p.toLowerCase().includes(pnL))):[];
+      const hasPayer=payerRecs.length>0;
+      const hasPart=partRecs.length>0;
+
+      const payerName=personName;
+      const participantQ=personName;
+      if(isExplicitPayer||(!isExplicitParticipant&&hasPayer&&!hasPart)){
+        // 결제자 전용
+        const recs=isExplicitPayer?payerRecs:payerRecs;
         eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;
         title.textContent=`${payerName} 결제 내역`;
-        sub.textContent=filtered.length>0?`${filtered.length}건 · 클릭하면 상세 보기`:'결과 없음';
-        body.innerHTML=renderPayerSummaryHtml(payerName,filtered);
+        sub.textContent=recs.length>0?`${recs.length}건 · 클릭하면 상세 보기`:'결과 없음';
+        body.innerHTML=renderPayerSummaryHtml(payerName,recs);
         _bindSectionToggles(body);
-      }else if(isParticipantSearch){
+      }else if(isExplicitParticipant||(!isExplicitPayer&&hasPart&&!hasPayer)){
+        // 참석자 전용
+        const recs=isExplicitParticipant?partRecs:partRecs;
         eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><circle cx="20" cy="8" r="3"/><path d="M2 20c0-4 3.6-7 10-7"/><path d="M14 20c1-2.7 3-4.5 6-5"/></svg>`;
         title.textContent=`${participantQ} 참석 내역`;
-        sub.textContent=filtered.length>0?`${filtered.length}건 · 클릭하면 상세 보기`:'결과 없음';
-        body.innerHTML=renderParticipantSummaryHtml(participantQ,filtered);
+        sub.textContent=recs.length>0?`${recs.length}건 · 클릭하면 상세 보기`:'결과 없음';
+        body.innerHTML=renderParticipantSummaryHtml(participantQ,recs);
+        _bindSectionToggles(body);
+      }else if(!isExplicitPayer&&!isExplicitParticipant&&hasPayer&&hasPart){
+        // ── 결제자 + 참석자 통합 대시보드 ──
+        eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4"/><path d="M16 11l2 2 4-4"/></svg>`;
+        title.textContent=`${personName}`;
+        sub.textContent=`결제 ${payerRecs.length}건 · 참석 ${partRecs.length}건`;
+        body.innerHTML=renderPersonDashboardHtml(personName,payerRecs,partRecs);
         _bindSectionToggles(body);
       }else{
         // ── 일반 검색 결과 요약 패널 ──
