@@ -62,10 +62,10 @@ svg{display:block;flex-shrink:0;}
 .search-wrap{position:relative;}
 .search-wrap input{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 30px 8px 32px;font-size:13px;background:var(--card);color:var(--label);outline:none;}
 .search-wrap input:focus{border-color:var(--blue);}
-.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--label3);}
-.search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;border:none;background:var(--sep2);border-radius:50%;color:var(--label2);display:flex;align-items:center;justify-content:center;padding:0;opacity:0;pointer-events:none;cursor:pointer;transition:opacity .15s,background .12s;flex-shrink:0;}
+.search-wrap > svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--label3);}
+.search-clear{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:20px;height:20px;border:none;background:transparent;border-radius:50%;color:var(--label3);display:flex;align-items:center;justify-content:center;padding:0;opacity:0;pointer-events:none;cursor:pointer;transition:opacity .15s,background .12s,color .12s;flex-shrink:0;}
 .search-clear.vis{opacity:1;pointer-events:auto;}
-.search-clear:hover{background:var(--label3);color:#fff;}
+.search-clear:hover{background:var(--sep2);color:var(--label2);}
 
 .side-list{flex:1;overflow-y:auto;padding-bottom:8px;}
 .side-list::-webkit-scrollbar{width:3px;}
@@ -368,6 +368,10 @@ svg{display:block;flex-shrink:0;}
 .pf-pill:hover{border-color:var(--blue);color:var(--blue);}
 .pf-pill.active{border-color:var(--blue);background:var(--blue);color:#fff;}
 .pf-pill.sm{font-size:11px;padding:3px 10px;}
+/* 가계부 기간 드롭다운 */
+.ledger-filter-row{display:flex;align-items:center;gap:8px;padding-bottom:14px;}
+.ledger-filter-sel{border:1.5px solid var(--sep2);border-radius:var(--rs);padding:6px 28px 6px 10px;font-size:13px;font-weight:500;background:var(--card);color:var(--label);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 8px center;min-width:140px;}
+.ledger-filter-sel:focus{border-color:var(--blue);}
 .budget-section{margin-bottom:22px;}
 .budget-section-hd{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline;}
 .budget-section-hd .hd-sub{font-size:11px;color:var(--label3);font-weight:500;text-transform:none;letter-spacing:0;}
@@ -943,7 +947,9 @@ svg{display:block;flex-shrink:0;}
 //         연도 pill 클릭 시 해당 연도의 월 pill 추가 표시. 검색어 변경 시 필터 자동 초기화.
 // v1.39 — 직접 입력 모드: "추가" 탭 상단에 모드 토글 추가. GPT 붙여넣기 없이 상호명·날짜·금액만
 //         입력하여 저장. 부고장·청첩장 등 참고 이미지 첨부 가능. 경조사 기본 카테고리 추가.
-const APP_VERSION='v1.39';
+// v1.40 — 가계부 기간 필터를 pill 2행 → 드롭다운 1행으로 교체(전체/연도/월 옵션).
+//         검색창 × 버튼 SVG 셀렉터 버그 수정(.search-wrap svg → > svg): × 아이콘 정렬 오류 해소.
+const APP_VERSION='v1.40';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -3411,36 +3417,24 @@ function _ledgerFilterPillsHtml(f){
   }
   const years=[...yearMap.keys()].sort().reverse();
   if(!years.length)return '';
-  const multiYear=years.length>1;
 
-  // 연도 행
-  const curY=viewMonth.slice(0,4);
-  let yearRow='';
-  {
-    const allActive=f.type==='all';
-    const yearActive=y=>(f.type==='year'&&f.value===y)||(f.type==='month'&&viewMonth.startsWith(y+'-'));
-    yearRow=`<div class="person-filter-row">
-      <button class="pf-pill${allActive?' active':''}" data-lf="all" data-lv="">전체</button>
-      ${years.map(y=>`<button class="pf-pill${yearActive(y)?' active':''}" data-lf="year" data-lv="${y}">${y}년</button>`).join('')}
-    </div>`;
-  }
+  // 현재 선택 값
+  let selVal='all';
+  if(f.type==='year') selVal=`year:${f.value}`;
+  else if(f.type==='month') selVal=`month:${viewMonth}`;
 
-  // 월 행 — 현재 연도 or 선택된 연도의 월 목록
-  const monthYear=f.type==='year'?f.value:curY;
-  let monthRow='';
-  if(yearMap.has(monthYear)){
-    const months=[...yearMap.get(monthYear)].sort().reverse();
-    if(months.length>1||multiYear){
-      const allYearActive=f.type==='year'&&f.value===monthYear;
-      monthRow=`<div class="person-filter-row">
-        <button class="pf-pill sm${allYearActive?' active':''}" data-lf="year" data-lv="${monthYear}">${monthYear}년 전체</button>
-        ${months.map(m=>{const ym2=monthYear+'-'+m;const isActive=f.type==='month'&&viewMonth===ym2;return `<button class="pf-pill sm${isActive?' active':''}" data-lf="month" data-lv="${ym2}">${parseInt(m,10)}월</button>`;}).join('')}
-      </div>`;
+  let opts=`<option value="all"${selVal==='all'?' selected':''}>전체 기간</option>`;
+  for(const y of years){
+    const months=[...yearMap.get(y)].sort().reverse();
+    opts+=`<optgroup label="${y}년">`;
+    opts+=`<option value="year:${y}"${selVal===`year:${y}`?' selected':''}>${y}년 전체</option>`;
+    for(const m of months){
+      const ym=`${y}-${m}`;
+      opts+=`<option value="month:${ym}"${selVal===`month:${ym}`?' selected':''}>${y}년 ${parseInt(m,10)}월</option>`;
     }
+    opts+=`</optgroup>`;
   }
-
-  if(!yearRow)return '';
-  return `<div class="person-filter-wrap">${yearRow}${monthRow}</div>`;
+  return `<div class="ledger-filter-row"><select class="ledger-filter-sel" id="ledgerFilterSel">${opts}</select></div>`;
 }
 
 async function renderDetail(){
@@ -3576,17 +3570,18 @@ async function renderDetail(){
         body.innerHTML=pillsHtml+renderMonthSummaryHtml(viewMonth);
       }
       _bindSectionToggles(body);
-      // 가계부 시간 필터 pill 클릭
-      body.querySelectorAll('[data-lf]').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-          const t=btn.dataset.lf,v=btn.dataset.lv;
-          if(t==='month'){viewMonth=v;_ledgerTimeFilter={type:'month'};}
-          else if(t==='year'){_ledgerTimeFilter={type:'year',value:v};}
-          else{_ledgerTimeFilter={type:'all'};}
+      // 가계부 기간 드롭다운 change
+      const _lfSel=body.querySelector('#ledgerFilterSel');
+      if(_lfSel){
+        _lfSel.addEventListener('change',()=>{
+          const v=_lfSel.value;
+          if(v==='all'){_ledgerTimeFilter={type:'all'};}
+          else if(v.startsWith('year:')){_ledgerTimeFilter={type:'year',value:v.slice(5)};}
+          else if(v.startsWith('month:')){viewMonth=v.slice(6);_ledgerTimeFilter={type:'month'};}
           _monthCatFilter=null;
           renderSide();renderDetail();
         });
-      });
+      }
       // 카테고리 막대 클릭 → 사이드바 필터
       body.querySelectorAll('.cat-bar-row[data-cat]').forEach(row=>{
         row.addEventListener('click',()=>{
