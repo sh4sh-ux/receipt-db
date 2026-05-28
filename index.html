@@ -859,7 +859,10 @@ svg{display:block;flex-shrink:0;}
 // v1.33 — 추가 탭 옵션 필드 탭 순서 정렬 (결제수단→결제상세→참석자→결제자→카테고리→태그→메모).
 //         결제 상세를 동적 드롭다운으로 전환: 카드(신한/삼성/하나/현대), 현금(페이스페이/현금),
 //         계좌이체(카카오페이/토스/계좌이체), 기타(기타). 결제수단 변경 시 자동 갱신.
-const APP_VERSION='v1.33';
+// v1.34 — 날짜 검색: "전체" 전체 연도 요약, "2026년" 연간 요약(월별 막대), "2026년 5월" 월 가계부,
+//         "5월" 교차연도 5월 비교. _parseDateQ 파서 + renderAllSummaryHtml / renderYearSummaryHtml /
+//         renderCrossYearMonthHtml 렌더러 추가.
+const APP_VERSION='v1.34';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1410,11 +1413,34 @@ function _getSearchTerms(q){
   return [...new Set(terms)];
 }
 
+// 날짜 검색 패턴 파싱: "전체" / "2026년" / "2026년 5월" / "5월"
+function _parseDateQ(raw){
+  const q=raw.trim();
+  if(q==='전체') return {type:'all'};
+  let m;
+  m=q.match(/^(\d{4})년\s*(\d{1,2})월$/);
+  if(m) return {type:'ym',year:m[1],month:m[2].padStart(2,'0'),ym:`${m[1]}-${m[2].padStart(2,'0')}`};
+  m=q.match(/^(\d{4})년$/);
+  if(m) return {type:'year',year:m[1]};
+  m=q.match(/^(\d{1,2})월$/);
+  if(m) return {type:'month',month:m[1].padStart(2,'0')};
+  return null;
+}
+
 function getFiltered(){
   const q=searchQuery.trim().toLowerCase();
   if(!q){
     // 검색 없으면 현재 보고 있는 월의 영수증만
     return receiptsForMonth(viewMonth);
+  }
+
+  // ── 날짜 검색 ──
+  const dq=_parseDateQ(searchQuery.trim());
+  if(dq){
+    if(dq.type==='all') return [...receipts];
+    if(dq.type==='ym')  return receipts.filter(r=>(r.date||'').startsWith(dq.ym));
+    if(dq.type==='year') return receipts.filter(r=>(r.date||'').startsWith(dq.year+'-'));
+    if(dq.type==='month') return receipts.filter(r=>(r.date||'').slice(5,7)===dq.month);
   }
 
   // ── "결제자 X" 접두어 검색 ──
@@ -2597,6 +2623,197 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
   return heroHtml+payerSection+partSection;
 }
 
+// ── v1.34 날짜 검색 요약 패널 ───────────────────────────────────
+
+function _catBarsHtml(cats){
+  if(!cats.length) return '';
+  const maxC=Math.max(...cats.map(c=>c.amt));
+  return `<div class="budget-section">
+    <div class="budget-section-hd">카테고리별 <span class="hd-sub">${cats.length}개</span></div>
+    <div class="cat-bars">
+      ${cats.map((c,i)=>{
+        const w=maxC>0?(c.amt/maxC*100):0;
+        return `<div class="cat-bar-row${c.cat==='(미분류)'?' uncat':''}" data-rank="${Math.min(i,4)}">
+          <div class="cat-bar-top">
+            <span class="cat-bar-name">${escapeHtml(c.cat)}<span class="cat-pct">${c.pct.toFixed(0)}%</span></span>
+            <span class="cat-bar-amt">${fmtMoney(c.amt)}원</span>
+          </div>
+          <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function _calcCats(recs){
+  const m=new Map(); let t=0;
+  for(const r of recs){
+    const c=(r.category&&r.category.trim())||'(미분류)';
+    const a=r.total||0;
+    m.set(c,(m.get(c)||0)+a);
+    if(a>0) t+=a;
+  }
+  return [...m.entries()]
+    .map(([cat,amt])=>({cat,amt,pct:t>0?amt/t*100:0}))
+    .filter(x=>x.amt>0)
+    .sort((a,b)=>b.amt-a.amt);
+}
+
+function renderAllSummaryHtml(recs){
+  if(!recs.length) return `<div class="budget-empty-state">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h12a2 2 0 0 1 2 2v15l-3-2-3 2-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2z"/></svg>
+    <div>저장된 영수증이 없어요</div></div>`;
+
+  const total=recs.reduce((s,r)=>s+(r.total||0),0);
+  const count=recs.length;
+
+  const yearMap=new Map();
+  for(const r of recs){ if(!r.date)continue; const y=r.date.slice(0,4); yearMap.set(y,(yearMap.get(y)||0)+(r.total||0)); }
+  const years=[...yearMap.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+  const yearCount=years.length;
+  const yearAvg=yearCount>0?Math.round(total/yearCount):0;
+
+  const summaryHtml=`<div class="budget-section"><div class="summary-grid">
+    <div class="sum-card">
+      <div class="sum-lbl">총 지출</div>
+      <div class="sum-val${total<0?' amt-neg':''}">${fmtMoney(total)}<span class="sum-unit">원</span></div>
+      <div class="sum-diff"><span>${yearCount}년치 누계</span></div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-lbl">영수증</div>
+      <div class="sum-val">${count}<span class="sum-unit">장</span></div>
+      <div class="sum-diff"><span>${years.map(([y])=>y).join(' · ')}</span></div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-lbl">연평균</div>
+      <div class="sum-val">${fmtMoney(yearAvg)}<span class="sum-unit">원</span></div>
+      <div class="sum-diff"><span>${yearCount}년 평균</span></div>
+    </div>
+  </div></div>`;
+
+  let yearHtml='';
+  if(years.length>1){
+    const maxY=Math.max(...years.map(([,v])=>v));
+    yearHtml=`<div class="budget-section">
+      <div class="budget-section-hd">연도별 지출 <span class="hd-sub">${yearCount}년</span></div>
+      <div class="cat-bars">
+        ${years.map(([y,amt],i)=>`<div class="cat-bar-row" data-rank="${Math.min(i,4)}">
+          <div class="cat-bar-top">
+            <span class="cat-bar-name">${y}년</span>
+            <span class="cat-bar-amt">${fmtMoney(amt)}원</span>
+          </div>
+          <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${maxY>0?(amt/maxY*100):0}%;"></div></div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  return summaryHtml+yearHtml+_catBarsHtml(_calcCats(recs));
+}
+
+function renderYearSummaryHtml(year, recs){
+  if(!recs.length) return `<div class="budget-empty-state">
+    <div><b>${year}년</b>에 저장된 영수증이 없어요</div></div>`;
+
+  const total=recs.reduce((s,r)=>s+(r.total||0),0);
+  const count=recs.length;
+  const MNAMES=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const mArr=new Array(12).fill(0);
+  for(const r of recs){ if(!r.date)continue; const m=parseInt(r.date.slice(5,7),10)-1; if(m>=0&&m<12)mArr[m]+=(r.total||0); }
+  const monthsWithData=mArr.filter(v=>v>0).length;
+  const monthAvg=Math.round(total/12);
+
+  const summaryHtml=`<div class="budget-section"><div class="summary-grid">
+    <div class="sum-card">
+      <div class="sum-lbl">총 지출</div>
+      <div class="sum-val${total<0?' amt-neg':''}">${fmtMoney(total)}<span class="sum-unit">원</span></div>
+      <div class="sum-diff"><span>${year}년 누계</span></div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-lbl">영수증</div>
+      <div class="sum-val">${count}<span class="sum-unit">장</span></div>
+      <div class="sum-diff"><span>${monthsWithData}개월 기록</span></div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-lbl">월평균</div>
+      <div class="sum-val">${fmtMoney(monthAvg)}<span class="sum-unit">원</span></div>
+      <div class="sum-diff"><span>12개월 기준</span></div>
+    </div>
+  </div></div>`;
+
+  const peakM=Math.max(...mArr);
+  const peakIdx=peakM>0?mArr.indexOf(peakM):-1;
+  const monthHtml=`<div class="budget-section">
+    ${_sectionToggleHtml('월별 지출',peakM>0?`최고 ${MNAMES[peakIdx]}: ${fmtMoney(peakM)}원`:null,'year_month_'+year,true)}
+    <div class="section-body open">
+      <div class="sparkline" style="padding-top:8px;">
+        <div class="spark-bars">
+          ${mArr.map((amt,i)=>{
+            const h=peakM>0?Math.max(2,Math.round(amt/peakM*100)):2;
+            return `<div class="spark-bar ${amt>0?'has':''}" style="height:${h}%;" data-day="${i+1}" data-amt="${fmtMoney(amt)}원"></div>`;
+          }).join('')}
+        </div>
+        <div class="spark-axis"><span>1월</span><span>6월</span><span>12월</span></div>
+      </div>
+    </div>
+  </div>`;
+
+  return summaryHtml+monthHtml+_catBarsHtml(_calcCats(recs));
+}
+
+function renderCrossYearMonthHtml(month, recs){
+  const monthLabel=`${parseInt(month,10)}월`;
+  if(!recs.length) return `<div class="budget-empty-state">
+    <div>저장된 <b>${monthLabel}</b> 영수증이 없어요</div></div>`;
+
+  const total=recs.reduce((s,r)=>s+(r.total||0),0);
+  const count=recs.length;
+  const yearMap=new Map();
+  for(const r of recs){ if(!r.date)continue; const y=r.date.slice(0,4); yearMap.set(y,(yearMap.get(y)||0)+(r.total||0)); }
+  const years=[...yearMap.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+  const yearCount=years.length;
+  const yearAvg=yearCount>0?Math.round(total/yearCount):0;
+
+  const summaryHtml=`<div class="budget-section"><div class="summary-grid">
+    <div class="sum-card">
+      <div class="sum-lbl">총 지출</div>
+      <div class="sum-val${total<0?' amt-neg':''}">${fmtMoney(total)}<span class="sum-unit">원</span></div>
+      <div class="sum-diff"><span>${monthLabel} 누계</span></div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-lbl">영수증</div>
+      <div class="sum-val">${count}<span class="sum-unit">장</span></div>
+      <div class="sum-diff"><span>${yearCount}년치 ${monthLabel}</span></div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-lbl">연평균</div>
+      <div class="sum-val">${fmtMoney(yearAvg)}<span class="sum-unit">원</span></div>
+      <div class="sum-diff"><span>${yearCount}년 평균</span></div>
+    </div>
+  </div></div>`;
+
+  let yearHtml='';
+  if(years.length){
+    const maxY=Math.max(...years.map(([,v])=>v));
+    yearHtml=`<div class="budget-section">
+      <div class="budget-section-hd">연도별 ${monthLabel} <span class="hd-sub">${yearCount}년</span></div>
+      <div class="cat-bars">
+        ${years.map(([y,amt],i)=>`<div class="cat-bar-row" data-rank="${Math.min(i,4)}">
+          <div class="cat-bar-top">
+            <span class="cat-bar-name">${y}년</span>
+            <span class="cat-bar-amt">${fmtMoney(amt)}원</span>
+          </div>
+          <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${maxY>0?(amt/maxY*100):0}%;background:var(--blue);"></div></div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  return summaryHtml+yearHtml+_catBarsHtml(_calcCats(recs));
+}
+
+// ─────────────────────────────────────────────────────────────────
+
 function renderMonthSummaryHtml(ym){
   const sum=monthSummary(ym);
   const prev=monthSummary(ymOffset(ym,-1));
@@ -2745,6 +2962,38 @@ async function renderDetail(){
       const filtered=getFiltered();
       const q=searchQuery.trim();
       const qL=q.toLowerCase();
+
+      // ── 날짜 검색 (전체 / 연도 / 연월 / 교차 월) ──
+      const dq=_parseDateQ(q);
+      if(dq){
+        if(dq.type==='all'){
+          eye.textContent='전체';
+          title.textContent='전체 내역';
+          sub.textContent=`${receipts.length}건`;
+          body.innerHTML=renderAllSummaryHtml(receipts);
+        }else if(dq.type==='ym'){
+          eye.textContent='가계부';
+          title.textContent=ymLabel(dq.ym);
+          sub.textContent=filtered.length>0?`${filtered.length}건`:'영수증 없음';
+          body.innerHTML=renderMonthSummaryHtml(dq.ym);
+        }else if(dq.type==='year'){
+          eye.textContent='연간';
+          title.textContent=`${dq.year}년 내역`;
+          sub.textContent=filtered.length>0?`${filtered.length}건`:'영수증 없음';
+          body.innerHTML=renderYearSummaryHtml(dq.year,filtered);
+        }else if(dq.type==='month'){
+          eye.textContent='비교';
+          title.textContent=`${parseInt(dq.month,10)}월 연도별 비교`;
+          sub.textContent=filtered.length>0?`${filtered.length}건`:'영수증 없음';
+          body.innerHTML=renderCrossYearMonthHtml(dq.month,filtered);
+        }
+        _bindSectionToggles(body);
+        body.querySelectorAll('.srch-row[data-id]').forEach(tr=>{
+          tr.addEventListener('click',()=>selectReceipt(tr.dataset.id));
+        });
+        return;
+      }
+
       // ── 결제자/참석자 역할 감지 ──
       const isExplicitPayer=q.startsWith('결제자 ')&&q.length>4;
       const isExplicitParticipant=q.startsWith('참석자 ')&&q.length>4;
