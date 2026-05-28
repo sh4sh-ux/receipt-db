@@ -962,7 +962,7 @@ svg{display:block;flex-shrink:0;}
 // v1.42 — 상세 화면 총액 편집 가능: 총액 행을 editable input으로 변경.
 //         직접 입력 수정 버그 수정: "수정 확인" 시 items=[] 이면 dTotalAmt 값 사용.
 //         (기존: items 합계로 무조건 덮어써 0원이 되던 버그)
-const APP_VERSION='v1.43';
+const APP_VERSION='v1.44';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -2064,12 +2064,12 @@ function bindPreviewFormEvents(){
           assign();_refreshPreviewSummary();
         });
       }else if(f==='unitPrice'){
-        // 포커스 시 쉼표 제거 + 전체 선택, blur 시 쉼표 복귀
+        // 포커스 시 쉼표 제거 + 전체 선택, 입력 시 실시간 쉼표, blur 시 최종 포맷
         inp.addEventListener('focus',()=>{
           inp.value=String(it.unitPrice||0);
           inp.select();
         });
-        inp.addEventListener('input',()=>{assign();afterChange();});
+        inp.addEventListener('input',()=>{_liveCommaFmt(inp);assign();afterChange();});
         inp.addEventListener('blur',()=>{
           assign();
           inp.value=_fmtN(it.unitPrice||0);
@@ -2191,6 +2191,23 @@ function _parseN(s){
   if(!cleaned||cleaned==='-')return 0;
   const n=parseInt(cleaned,10);
   return isNaN(n)?0:n;
+}
+// v1.44 — 숫자 input 실시간 천단위 쉼표 (커서 위치 보정 포함)
+function _liveCommaFmt(inp){
+  const sel=inp.selectionStart;
+  const oldVal=inp.value;
+  const digitsBeforeCursor=oldVal.slice(0,sel).replace(/[^0-9]/g,'').length;
+  const digits=oldVal.replace(/[^0-9]/g,'');
+  const formatted=digits?Number(digits).toLocaleString('ko-KR'):'';
+  if(oldVal===formatted) return; // 변경 없으면 스킵
+  inp.value=formatted;
+  // 쉼표 삽입 후 커서 위치 복원
+  let newPos=formatted.length, dc=0;
+  for(let i=0;i<formatted.length;i++){
+    if(/[0-9]/.test(formatted[i])) dc++;
+    if(dc>=digitsBeforeCursor){newPos=i+1;break;}
+  }
+  inp.setSelectionRange(newPos,newPos);
 }
 
 // 수량과 단가가 둘 다 nonzero일 때만 금액 = 수량×단가 자동 갱신.
@@ -3935,17 +3952,51 @@ function _liveUpdateDetailTotal(){
 }
 function _bindDetailItemTableEvents(r){
   const tbl=document.getElementById('itemsTable');if(!tbl)return;
-  tbl.querySelectorAll('input').forEach(inp=>{
-    const f=inp.dataset.f;
-    inp.addEventListener('focus',()=>inp.select());
-    if(f==='unitPrice'||f==='amount'){
-      inp.addEventListener('focus',()=>{inp.value=String(_parseN(inp.value));inp.select();});
-      inp.addEventListener('blur',()=>{const n=_parseN(inp.value);inp.value=_fmtN(n);if(f==='amount')inp.style.color=n<0?'var(--red)':'';_liveUpdateDetailTotal();});
-      inp.addEventListener('input',()=>{_detailSetDirty(true);_liveUpdateDetailTotal();});
-    }else{
-      inp.addEventListener('input',()=>_detailSetDirty(true));
+
+  // v1.44 — 같은 행 수량×단가 → 금액 자동계산 (둘 다 0이 아닐 때만)
+  function _calcRowAmt(tr){
+    const qInp=tr.querySelector('input[data-f="quantity"]');
+    const pInp=tr.querySelector('input[data-f="unitPrice"]');
+    const aInp=tr.querySelector('input[data-f="amount"]');
+    if(!qInp||!pInp||!aInp) return;
+    const qty=parseInt(qInp.value)||0;
+    const price=_parseN(pInp.value);
+    if(qty!==0&&price!==0){
+      const amt=qty*price;
+      aInp.value=_fmtN(amt);
+      aInp.style.color=amt<0?'var(--red)':'';
     }
+    _liveUpdateDetailTotal();
+  }
+
+  tbl.querySelectorAll('tbody tr[data-idx]').forEach(tr=>{
+    tr.querySelectorAll('input').forEach(inp=>{
+      const f=inp.dataset.f;if(!f) return;
+      if(f==='quantity'){
+        inp.addEventListener('focus',()=>inp.select());
+        inp.addEventListener('input',()=>{
+          inp.value=inp.value.replace(/[^0-9]/g,'');
+          _calcRowAmt(tr);_detailSetDirty(true);
+        });
+        inp.addEventListener('blur',()=>{
+          if(!inp.value||parseInt(inp.value)===0) inp.value='1';
+          _calcRowAmt(tr);
+        });
+      }else if(f==='unitPrice'){
+        inp.addEventListener('focus',()=>{inp.value=String(_parseN(inp.value));inp.select();});
+        inp.addEventListener('input',()=>{_liveCommaFmt(inp);_calcRowAmt(tr);_detailSetDirty(true);});
+        inp.addEventListener('blur',()=>{inp.value=_fmtN(_parseN(inp.value));_calcRowAmt(tr);});
+      }else if(f==='amount'){
+        inp.addEventListener('focus',()=>{inp.value=String(_parseN(inp.value));inp.select();});
+        inp.addEventListener('input',()=>{_liveCommaFmt(inp);_detailSetDirty(true);_liveUpdateDetailTotal();});
+        inp.addEventListener('blur',()=>{const n=_parseN(inp.value);inp.value=_fmtN(n);inp.style.color=n<0?'var(--red)':'';_liveUpdateDetailTotal();});
+      }else{
+        inp.addEventListener('focus',()=>inp.select());
+        inp.addEventListener('input',()=>_detailSetDirty(true));
+      }
+    });
   });
+
   tbl.querySelectorAll('.item-del').forEach(btn=>{
     btn.addEventListener('click',async()=>{
       const idx=parseInt(btn.dataset.del,10);
@@ -3962,7 +4013,7 @@ function _bindDetailItemTableEvents(r){
   if(_dTotalInp){
     _dTotalInp.addEventListener('focus',()=>{_dTotalInp.value=String(_parseN(_dTotalInp.value));_dTotalInp.select();});
     _dTotalInp.addEventListener('blur',()=>{const n=_parseN(_dTotalInp.value);_dTotalInp.value=_fmtN(n);_dTotalInp.style.color=n<0?'var(--red)':'';});
-    _dTotalInp.addEventListener('input',()=>_detailSetDirty(true));
+    _dTotalInp.addEventListener('input',()=>{_liveCommaFmt(_dTotalInp);_detailSetDirty(true);});
   }
 }
 function _reRenderDetailItems(r){
