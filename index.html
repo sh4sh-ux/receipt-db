@@ -199,11 +199,6 @@ svg{display:block;flex-shrink:0;}
 .prev-items-head-row,.prev-item-row{display:grid;grid-template-columns:18px minmax(0,1fr) 64px 100px 110px 26px;gap:6px;align-items:center;}
 .prev-items-head-row{padding:0 2px 4px;font-size:10.5px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.3px;}
 .prev-items-head-row span:nth-child(3),.prev-items-head-row span:nth-child(4),.prev-items-head-row span:nth-child(5){text-align:right;padding-right:9px;}
-.drag-handle{width:18px;height:100%;display:flex;align-items:center;justify-content:center;cursor:grab;color:var(--label3);font-size:13px;flex-shrink:0;user-select:none;-webkit-user-select:none;touch-action:none;background:none;border:none;padding:0;}
-.drag-handle:active,.drag-handle.grabbing{cursor:grabbing;color:var(--label2);}
-.prev-item-row.dnd-active{opacity:.35;background:var(--fill2);border-radius:5px;}
-.prev-item-row.dnd-above{box-shadow:0 -2px 0 var(--blue);}
-.prev-item-row.dnd-below{box-shadow:0 2px 0 var(--blue);}
 .prev-item-row{margin-bottom:5px;}
 .prev-item-name,.prev-item-qty,.prev-item-price,.prev-item-amt{border:1px solid var(--sep2);background:var(--card);border-radius:5px;padding:7px 9px;font-size:13.5px;outline:none;font-family:inherit;color:var(--label);min-width:0;font-variant-numeric:tabular-nums;line-height:1.3;}
 .prev-item-qty,.prev-item-price,.prev-item-amt{text-align:right;}
@@ -279,11 +274,6 @@ svg{display:block;flex-shrink:0;}
 .items-table .item-num-inp:focus{border-color:var(--blue);}
 .items-table .item-del{border:none;background:transparent;color:var(--label3);font-size:16px;padding:0 4px;line-height:1;}
 .items-table .item-del:hover{color:var(--red);}
-.items-table .item-drag{cursor:grab;color:var(--label3);background:none;border:none;padding:0 2px;font-size:13px;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;}
-.items-table .item-drag:active,.items-table .item-drag.grabbing{cursor:grabbing;color:var(--label2);}
-.items-table tr.dnd-active{opacity:.3;}
-.items-table tr.dnd-above td{box-shadow:inset 0 2px 0 var(--blue);}
-.items-table tr.dnd-below td{box-shadow:inset 0 -2px 0 var(--blue);}
 .detail-save-bar{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--sep);padding:12px 0 4px;display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:16px;z-index:5;}
 
 /* ── SEARCH SUMMARY ── */
@@ -428,9 +418,10 @@ svg{display:block;flex-shrink:0;}
 .spark-bar[data-day]:hover::after{content:attr(data-day)'일 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--label);color:#fff;font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:5;}
 .spark-bar[data-lbl]:hover::after{content:attr(data-lbl)' 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--label);color:#fff;font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:5;}
 .spark-axis{display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--label3);}
-.spark-mode-toggle{display:flex;gap:2px;background:var(--fill);border-radius:6px;padding:2px;margin-bottom:10px;width:fit-content;}
-.spark-mode-btn{border:none;background:transparent;font-size:11px;font-weight:500;color:var(--label3);padding:3px 10px;border-radius:4px;cursor:pointer;transition:all .12s;}
-.spark-mode-btn.on{background:var(--card);color:var(--label);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06);}
+/* v1.45 — 고급 옵션 토글 */
+.adv-toggle-btn{background:none;border:none;color:var(--label3);font-size:12px;font-weight:500;cursor:pointer;padding:2px 0 8px;display:flex;align-items:center;gap:5px;transition:color .12s;letter-spacing:.1px;}
+.adv-toggle-btn:hover,.adv-toggle-btn.open{color:var(--label2);}
+.adv-toggle-arrow{display:inline-block;transition:transform .15s;font-style:normal;}
 .insight-list{display:flex;flex-direction:column;gap:8px;}
 .insight-item{display:flex;gap:8px;font-size:13px;color:var(--label2);line-height:1.5;align-items:baseline;}
 .insight-dot{color:var(--blue);font-weight:700;font-size:16px;line-height:1.2;flex-shrink:0;}
@@ -679,25 +670,32 @@ svg{display:block;flex-shrink:0;}
                 </select>
               </div>
               <div class="field-g">
-                <label class="field-lbl">결제 상세 <span class="field-lbl-hint">선택</span></label>
-                <select id="payDetail" class="field-sel"></select>
-              </div>
-              <div class="field-g">
-                <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분</span></label>
-                <input id="participantsInp" class="field-inp" type="text" placeholder="예: 철수, 영희, 민준"/>
-              </div>
-              <div class="field-g">
-                <label class="field-lbl">결제자 <span class="field-lbl-hint">선택</span></label>
-                <input id="payerInp" class="field-inp" type="text" placeholder="예: 홍길동, 나, 회사"/>
-              </div>
-              <div class="field-g">
                 <label class="field-lbl">카테고리 <span class="field-lbl-hint" id="catAutoHint">자동 분류돼요</span></label>
                 <input id="catInp" class="field-inp" type="text" placeholder="예: 마트, 외식, 카페..." list="catList"/>
                 <datalist id="catList"></datalist>
               </div>
-              <div class="field-g">
-                <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
-                <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
+              <!-- 고급 옵션 토글 -->
+              <div style="grid-column:1/-1;margin-top:-4px;">
+                <button type="button" class="adv-toggle-btn" id="advToggleBtn">
+                  <em class="adv-toggle-arrow" id="advToggleArrow">▾</em>고급 옵션
+                </button>
+              </div>
+              <!-- 고급 옵션 필드 (참석자·결제자·태그) -->
+              <div id="advFields" style="grid-column:1/-1;display:none;">
+                <div class="input-row options" style="padding:0;margin:0;gap:16px;">
+                  <div class="field-g">
+                    <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분</span></label>
+                    <input id="participantsInp" class="field-inp" type="text" placeholder="예: 철수, 영희, 민준"/>
+                  </div>
+                  <div class="field-g">
+                    <label class="field-lbl">결제자 <span class="field-lbl-hint">선택</span></label>
+                    <input id="payerInp" class="field-inp" type="text" placeholder="예: 홍길동, 나, 회사"/>
+                  </div>
+                  <div class="field-g" style="grid-column:1/-1;">
+                    <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
+                    <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
+                  </div>
+                </div>
               </div>
               <div class="field-g" style="grid-column:1/-1;">
                 <label class="field-lbl">메모 <span class="field-lbl-hint">선택</span></label>
@@ -962,7 +960,9 @@ svg{display:block;flex-shrink:0;}
 // v1.42 — 상세 화면 총액 편집 가능: 총액 행을 editable input으로 변경.
 //         직접 입력 수정 버그 수정: "수정 확인" 시 items=[] 이면 dTotalAmt 값 사용.
 //         (기존: items 합계로 무조건 덮어써 0원이 되던 버그)
-const APP_VERSION='v1.44';
+// v1.45 — 불필요 기능 정리: 결제 상세 제거, 품목 드래그 제거, CAT_ITEM_RULES 제거,
+//         주별 스파크라인 제거(일별만 유지), 입력 폼 고급 옵션(참석자·결제자·태그) 접기/펼치기.
+const APP_VERSION='v1.45';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1077,16 +1077,6 @@ const CAT_RULES=[
   {cat:'축의금', kws:['축의','청첩','결혼식','웨딩','돌잔치','돌상','화환(축)']},
 ];
 
-// 품목명 기반 카테고리 키워드 (가게명 매칭 실패 시 보조 추정)
-const CAT_ITEM_RULES=[
-  {cat:'술집',   score:3, kws:['소주','맥주','테라','진로','참이슬','처음처럼','카스','클라우드','켈리','새로','필라이트','하이트','오비','청하','막걸리','와인','위스키','사케','사워','칵테일','하이볼','안주','생맥주']},
-  {cat:'카페',   score:2, kws:['아메리카노','라떼','카푸치노','에스프레소','마키아토','플랫화이트','콜드브루','아이스티','허브티','케이크','스콘','쿠키','크로아상','머핀','샌드위치']},
-  {cat:'교통',   score:3, kws:['휘발유','경유','등유','LPG','주유','리터','ℓ','충전(kWh)','충전량','고속도로','통행료','하이패스','주차']},
-  {cat:'병원·약국', score:3, kws:['처방','조제','약품','정제','캡슐','시럽','연고','진료','처치','검사료','주사']},
-  {cat:'문화',   score:3, kws:['입장권','관람권','티켓','좌석','스크린','공연','관람','대여','렌탈']},
-  {cat:'외식',   score:1, kws:['삼겹살','갈비','볶음밥','비빔밥','냉면','국밥','라면','찌개','전골','도시락','정식','세트메뉴','덮밥','우동','파스타','피자','버거','치킨','초밥','회','샤브','뷔페']},
-  {cat:'마트',   score:1, kws:['우유','계란','두부','쌀','설탕','소금','식용유','라면','과자','음료수','생수','화장지','세제','샴푸']},
-];
 
 // 사용자 학습 사전 — 가게명 → 카테고리
 let storeCatMap={};  // { "하나로마트 청담점": "마트", ... }
@@ -1101,7 +1091,7 @@ async function saveStoreCatMap(){
   try{await dbPut('settings',{key:'storeCatMap',value:storeCatMap});}catch(e){}
 }
 
-function autocategorize(storeName, items=[]){
+function autocategorize(storeName){
   const s=(storeName||'').trim();
   // 1. 사용자 사전 — 정확 일치 우선
   if(s&&storeCatMap[s])return storeCatMap[s];
@@ -1120,26 +1110,6 @@ function autocategorize(storeName, items=[]){
       for(const kw of rule.kws){
         if(s.includes(kw)||sLower.includes(kw.toLowerCase()))return rule.cat;
       }
-    }
-  }
-  // 4. 품목명 보조 추정 (가게명 매칭 실패 시) — 품목별 카테고리 투표
-  if(items&&items.length){
-    const votes={};
-    for(const it of items){
-      const name=(it.name||'').toLowerCase();
-      if(!name)continue;
-      for(const rule of CAT_ITEM_RULES){
-        for(const kw of rule.kws){
-          if(name.includes(kw.toLowerCase())){
-            votes[rule.cat]=(votes[rule.cat]||0)+rule.score;
-            break; // 한 품목에서 같은 카테고리 중복 점수 방지
-          }
-        }
-      }
-    }
-    if(Object.keys(votes).length){
-      const best=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
-      if(best[1]>=2) return best[0]; // 최소 2점 이상이어야 채택
     }
   }
   return '';
@@ -1764,25 +1734,9 @@ const saveBtn=document.getElementById('saveBtn');
 const photoZone=document.getElementById('photoZone');
 const photoInp=document.getElementById('photoInp');
 
-// ── 결제 상세 동적 드롭다운 ──
-const PAY_DETAIL_OPTS={
-  card:['신한카드','삼성카드','하나카드','현대카드'],
-  cash:['페이스페이','현금'],
-  transfer:['카카오페이','토스','계좌이체'],
-  other:['기타']
-};
-function _updatePayDetailOpts(method,selected){
-  const sel=document.getElementById('payDetail');if(!sel)return;
-  const opts=PAY_DETAIL_OPTS[method]||PAY_DETAIL_OPTS.other;
-  sel.innerHTML=opts.map(o=>`<option value="${escapeHtml(o)}"${o===(selected||opts[0])?'selected':''}>${escapeHtml(o)}</option>`).join('');
-}
-document.getElementById('payMethod').addEventListener('change',function(){_updatePayDetailOpts(this.value,'');});
-_updatePayDetailOpts('card',''); // 초기화
-
 let _currentParsed=null;
 let _pasteComposing=false;
 let _catAutoFilled=false;  // 카테고리가 자동 채워진 상태인지
-let _catAutoSource='store'; // 'store' | 'items' — 어디서 자동 분류됐는지
 pasteTa.addEventListener('compositionstart',()=>{_pasteComposing=true;});
 pasteTa.addEventListener('compositionend',()=>{_pasteComposing=false;updatePreview();});
 pasteTa.addEventListener('input',()=>{if(!_pasteComposing)updatePreview();});
@@ -1792,16 +1746,14 @@ pasteTa.addEventListener('paste',()=>{setTimeout(updatePreview,30);});
 const catInpEl=document.getElementById('catInp');
 let _catComposing=false;
 catInpEl.addEventListener('compositionstart',()=>{_catComposing=true;});
-catInpEl.addEventListener('compositionend',()=>{_catComposing=false;_catAutoFilled=false;_catAutoSource='store';_updateCatHint();});
-catInpEl.addEventListener('input',()=>{if(!_catComposing){_catAutoFilled=false;_catAutoSource='store';_updateCatHint();}});
+catInpEl.addEventListener('compositionend',()=>{_catComposing=false;_catAutoFilled=false;_updateCatHint();});
+catInpEl.addEventListener('input',()=>{if(!_catComposing){_catAutoFilled=false;_updateCatHint();}});
 
 function _updateCatHint(){
   const hint=document.getElementById('catAutoHint');
   if(!hint)return;
   if(_catAutoFilled){
-    hint.textContent=_catAutoSource==='items'
-      ? '→ 품목명에서 자동 분류됨 (수정 가능)'
-      : '→ 가게명에서 자동 분류됨 (수정 가능)';
+    hint.textContent='→ 가게명에서 자동 분류됨 (수정 가능)';
     hint.style.color='var(--green-txt)';
   }else{
     hint.textContent='자동 분류돼요';
@@ -1828,13 +1780,11 @@ function updatePreview(){
   }
   _currentParsed=p;
   // 가게명 인식되면 카테고리 자동 채움 (입력란이 비어있거나 이전에 자동 채웠을 때만)
-  if(p&&p.store||((p?.items||[]).length)){
-    const autoStore=autocategorize(p.store);
-    const auto=autoStore||autocategorize(p.store, p.items||[]);
+  if(p&&p.store){
+    const auto=autocategorize(p.store);
     if(auto && (catInpEl.value.trim()===''||_catAutoFilled)){
       catInpEl.value=auto;
       _catAutoFilled=true;
-      _catAutoSource=autoStore?'store':'items';
       _updateCatHint();
     }
   }
@@ -1855,11 +1805,10 @@ function renderPreviewForm(){
   const matchOk=sum===p.total||namedItems.length===0;
 
   const itemsHtml=(p.items||[]).length
-    ? (`<div class="prev-items-head-row"><span></span><span>품목명</span><span>수량</span><span>단가</span><span>금액</span><span></span></div>` +
+    ? (`<div class="prev-items-head-row"><span>품목명</span><span>수량</span><span>단가</span><span>금액</span><span></span></div>` +
        p.items.map((it,idx)=>{
         const negCls=(it.amount||0)<0?' neg':'';
         return `<div class="prev-item-row" data-idx="${idx}">
-          <button type="button" class="drag-handle" tabindex="-1" title="드래그하여 순서 변경" aria-label="순서 변경">⠿</button>
           <input class="prev-item-name" data-f="name" placeholder="품목명" value="${escapeHtml(it.name||'')}" autocomplete="off"/>
           <input class="prev-item-qty" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||1}"/>
           <input class="prev-item-price" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/>
@@ -1951,9 +1900,8 @@ function bindPreviewFormEvents(){
       p.store=storeInp.value.trim();
       // 매장명 바뀌면 카테고리 자동 재추정 (자동 채움 상태일 때만 덮어쓰기)
       if(_catAutoFilled||catInpEl.value.trim()===''){
-        const autoStore=autocategorize(p.store);
-        const auto=autoStore||autocategorize(p.store, p.items||[]);
-        if(auto){catInpEl.value=auto;_catAutoFilled=true;_catAutoSource=autoStore?'store':'items';_updateCatHint();}
+        const auto=autocategorize(p.store);
+        if(auto){catInpEl.value=auto;_catAutoFilled=true;_updateCatHint();}
       }
       // 검증 갱신 — 다시 그리지 않고 alert 영역만 갱신하려면 더 복잡해지니 일단 전체 다시
       renderPreviewForm();
@@ -2104,54 +2052,6 @@ function bindPreviewFormEvents(){
       },20);
     });
   }
-  // 드래그&드롭 순서 변경 초기화
-  if(p)_initItemDrag(previewArea,p);
-}
-
-// ── 품목 드래그&드롭 순서 변경 (포인터 이벤트 — 마우스+터치 통합) ──
-let _dndState=null;
-function _initItemDrag(container, p){
-  Array.from(container.querySelectorAll('.prev-item-row')).forEach((row,idx)=>{
-    const handle=row.querySelector('.drag-handle');
-    if(!handle)return;
-    let _pid=null;
-    handle.addEventListener('pointerdown',e=>{
-      e.preventDefault();
-      handle.setPointerCapture(e.pointerId);
-      _pid=e.pointerId;
-      _dndState={srcIdx:idx,tgtIdx:null};
-      row.classList.add('dnd-active');
-      handle.classList.add('grabbing');
-    });
-    handle.addEventListener('pointermove',e=>{
-      if(_pid===null||e.pointerId!==_pid||!_dndState)return;
-      const allRows=Array.from(container.querySelectorAll('.prev-item-row'));
-      allRows.forEach(r=>r.classList.remove('dnd-above','dnd-below'));
-      const el=document.elementFromPoint(e.clientX,e.clientY);
-      const tRow=el&&el.closest('.prev-item-row');
-      if(tRow&&tRow!==row){
-        const tIdx=allRows.indexOf(tRow);
-        if(tIdx>=0){
-          _dndState.tgtIdx=tIdx;
-          tRow.classList.add(tIdx>_dndState.srcIdx?'dnd-below':'dnd-above');
-        }
-      }else{_dndState.tgtIdx=null;}
-    });
-    const _finish=e=>{
-      if(_pid===null||e.pointerId!==_pid)return;
-      _pid=null; handle.classList.remove('grabbing');
-      const allRows=Array.from(container.querySelectorAll('.prev-item-row'));
-      allRows.forEach(r=>r.classList.remove('dnd-active','dnd-above','dnd-below'));
-      if(_dndState&&_dndState.tgtIdx!==null&&_dndState.tgtIdx!==_dndState.srcIdx){
-        const item=p.items.splice(_dndState.srcIdx,1)[0];
-        p.items.splice(_dndState.tgtIdx,0,item);
-        _dndState=null;
-        renderPreviewForm();
-      }else{_dndState=null;}
-    };
-    handle.addEventListener('pointerup',_finish);
-    handle.addEventListener('pointercancel',_finish);
-  });
 }
 
 function _assignItemField(it,f,val){
@@ -2325,7 +2225,6 @@ saveBtn.addEventListener('click',async()=>{
     store:(p.store||'').trim(),
     category:finalCat,
     paymentMethod:document.getElementById('payMethod').value,
-    paymentDetail:document.getElementById('payDetail').value.trim(),
     paidBy:document.getElementById('payerInp').value.trim(),
     total:p.total||0,
     items:cleanItems,
@@ -2366,7 +2265,6 @@ saveBtn.addEventListener('click',async()=>{
 function clearInputs(){
   pasteTa.value='';
   document.getElementById('payMethod').value='card';
-  _updatePayDetailOpts('card','');
   document.getElementById('payerInp').value='';
   document.getElementById('catInp').value='';
   document.getElementById('participantsInp').value='';
@@ -2479,7 +2377,6 @@ async function _saveDirectEntry(){
     store,
     category:finalCat,
     paymentMethod:document.getElementById('payMethod').value,
-    paymentDetail:document.getElementById('payDetail').value.trim(),
     paidBy:document.getElementById('payerInp').value.trim(),
     total,
     items:[],
@@ -2561,6 +2458,21 @@ async function _saveDirectEntry(){
     }
   });
 })();
+// ── 고급 옵션 토글 ──
+(()=>{
+  const btn=document.getElementById('advToggleBtn');
+  const fields=document.getElementById('advFields');
+  const arrow=document.getElementById('advToggleArrow');
+  let open=localStorage.getItem('receipt_advOpen')==='1';
+  function applyAdv(){
+    fields.style.display=open?'':'none';
+    arrow.style.transform=open?'rotate(180deg)':'';
+    btn.classList.toggle('open',open);
+  }
+  applyAdv();
+  btn.addEventListener('click',()=>{open=!open;localStorage.setItem('receipt_advOpen',open?'1':'0');applyAdv();});
+})();
+
 document.getElementById('clearBtn').addEventListener('click',()=>{
   if(pasteTa.value||pendingPhotoBlob){
     if(!confirm('입력 내용을 모두 비울까요?'))return;
@@ -3190,14 +3102,6 @@ function renderCrossYearMonthHtml(month, recs){
 
 // ─────────────────────────────────────────────────────────────────
 
-// ── 주별 집계: 7일씩 묶어 주합 배열 반환 ──
-function _weeklySparkline(dailySpark){
-  const weeks=[];
-  for(let i=0;i<dailySpark.length;i+=7){
-    weeks.push(dailySpark.slice(i,Math.min(i+7,dailySpark.length)).reduce((s,v)=>s+v,0));
-  }
-  return weeks;
-}
 
 // ── 지출 패턴 문장 요약 (최대 3개 인사이트) ──
 function _spendingInsightsHtml(ym,sum,prev,cats,spark){
@@ -3390,49 +3294,29 @@ function renderMonthSummaryHtml(ym){
   // 지출 패턴 인사이트 카드
   const insightHtml=_spendingInsightsHtml(ym,sum,prev,cats,spark);
 
-  // 일별/주별 sparkline (토글 가능)
+  // 일별 sparkline
   const peakAmt=Math.max(...spark);
   const peakDay=peakAmt>0?spark.indexOf(peakAmt)+1:0;
   const todayY=_currentYM()===ym?parseInt(_todayYMD().slice(8,10),10):-1;
-  const weekSpark=_weeklySparkline(spark);
-  const peakWeekAmt=Math.max(...weekSpark);
-  const peakWeekIdx=weekSpark.indexOf(peakWeekAmt);
-  const isWeek=_sparkMode==='week';
-  const displaySpark=isWeek?weekSpark:spark;
-  const displayPeak=isWeek?peakWeekAmt:peakAmt;
-  const sparkLabel=isWeek?'주별 지출':'일별 지출';
-  const peakLabel=isWeek
-    ?(peakWeekAmt>0?`최고 ${peakWeekIdx+1}주: ${fmtMoney(peakWeekAmt)}원`:null)
-    :(peakAmt>0?`최고 ${peakDay}일: ${fmtMoney(peakAmt)}원`:null);
+  const peakLabel=peakAmt>0?`최고 ${peakDay}일: ${fmtMoney(peakAmt)}원`:null;
 
   let sparkHtml='';
   if(spark.length){
-    const axisHtml=isWeek
-      ?`<div class="spark-axis">${weekSpark.map((_,wi)=>`<span>${wi+1}주</span>`).join('')}</div>`
-      :`<div class="spark-axis"><span>1일</span><span>${Math.round(spark.length/2)}일</span><span>${spark.length}일</span></div>`;
     sparkHtml=`
       <div class="budget-section">
-        ${_sectionToggleHtml(sparkLabel,peakLabel,'month_spark',true)}
+        ${_sectionToggleHtml('일별 지출',peakLabel,'month_spark',true)}
         <div class="section-body open">
           <div style="padding-top:8px;">
-            <div class="spark-mode-toggle">
-              <button class="spark-mode-btn${!isWeek?' on':''}" data-spark="day">일별</button>
-              <button class="spark-mode-btn${isWeek?' on':''}" data-spark="week">주별</button>
-            </div>
             <div class="sparkline">
               <div class="spark-bars">
-                ${displaySpark.map((amt,i)=>{
-                  const h=displayPeak>0?Math.max(2,Math.round(amt/displayPeak*100)):2;
-                  if(isWeek){
-                    return `<div class="spark-bar${amt>0?' has':''}" style="height:${h}%;" data-lbl="${i+1}주" data-amt="${fmtMoney(amt)}"></div>`;
-                  }else{
-                    const day=i+1;
-                    const cls=amt>0?(day===todayY?'has today':'has'):(day===todayY?'today':'');
-                    return `<div class="spark-bar ${cls}" style="height:${h}%;" data-day="${day}" data-amt="${fmtMoney(amt)}"></div>`;
-                  }
+                ${spark.map((amt,i)=>{
+                  const h=peakAmt>0?Math.max(2,Math.round(amt/peakAmt*100)):2;
+                  const day=i+1;
+                  const cls=amt>0?(day===todayY?'has today':'has'):(day===todayY?'today':'');
+                  return `<div class="spark-bar ${cls}" style="height:${h}%;" data-day="${day}" data-amt="${fmtMoney(amt)}"></div>`;
                 }).join('')}
               </div>
-              ${axisHtml}
+              <div class="spark-axis"><span>1일</span><span>${Math.round(spark.length/2)}일</span><span>${spark.length}일</span></div>
             </div>
           </div>
         </div>
@@ -3453,8 +3337,6 @@ let _personTimeFilter={type:'all',value:''};
 let _ledgerTimeFilter={type:'month'};
 // 월간 카테고리 필터 (카테고리 막대 클릭 시 사이드바 필터링)
 let _monthCatFilter=null;
-// 스파크라인 모드 ('day' = 일별, 'week' = 주별) — localStorage 지속
-let _sparkMode=localStorage.getItem('receipt_sparkMode')||'day';
 
 function _applyPersonTimeFilter(recs,f){
   if(f.type==='year') return recs.filter(r=>(r.date||'').startsWith(f.value+'-'));
@@ -3690,14 +3572,6 @@ async function renderDetail(){
       });
       const clearCat=body.querySelector('#catFilterClearBtn');
       if(clearCat)clearCat.addEventListener('click',e=>{e.stopPropagation();_monthCatFilter=null;renderSide();renderDetail();});
-      // 스파크라인 일별/주별 토글
-      body.querySelectorAll('[data-spark]').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-          _sparkMode=btn.dataset.spark;
-          localStorage.setItem('receipt_sparkMode',_sparkMode);
-          renderDetail();
-        });
-      });
       // srch-row 클릭 (연간/전체 요약 테이블)
       body.querySelectorAll('.srch-row[data-id]').forEach(tr=>{
         tr.addEventListener('click',()=>selectReceipt(tr.dataset.id));
@@ -3748,17 +3622,16 @@ async function renderDetail(){
   body.innerHTML=`
     <div class="section-hd">품목 <button class="ghost-mini" id="addItemBtn">+ 품목 추가</button></div>
     <table class="items-table" id="itemsTable">
-      <thead><tr><th style="width:22px;padding:8px 3px;"></th><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
+      <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
       <tbody>
         ${(r.items||[]).map((it,idx)=>`<tr data-idx="${idx}">
-          <td style="padding:9px 3px;"><button class="item-drag" tabindex="-1" title="순서 변경">⠿</button></td>
           <td><input class="item-name-inp" data-f="name" value="${escapeHtml(it.name)}"/></td>
           <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||0}"/></td>
           <td><input class="item-num-inp" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/></td>
           <td><input class="item-num-inp" data-f="amount" type="text" inputmode="numeric" value="${_fmtN(it.amount||0)}" style="${(it.amount||0)<0?'color:var(--red);':''}"/></td>
           <td style="text-align:right;"><button class="item-del" data-del="${idx}" title="삭제">×</button></td>
         </tr>`).join('')}
-        <tr class="total-row"><td></td><td>총액</td><td></td><td></td><td class="detail-total-cell" style="font-size:14px;"><div style="display:flex;align-items:center;justify-content:flex-end;gap:3px;"><input id="dTotalAmt" class="item-num-inp" type="text" inputmode="numeric" value="${_fmtN(r.total||0)}" style="max-width:130px;font-weight:700;font-size:14px;text-align:right;${(r.total||0)<0?'color:var(--red);':''}"/><span style="color:var(--label3);font-size:13px;font-weight:500;">원</span></div></td><td></td></tr>
+        <tr class="total-row"><td>총액</td><td></td><td></td><td class="detail-total-cell" style="font-size:14px;"><div style="display:flex;align-items:center;justify-content:flex-end;gap:3px;"><input id="dTotalAmt" class="item-num-inp" type="text" inputmode="numeric" value="${_fmtN(r.total||0)}" style="max-width:130px;font-weight:700;font-size:14px;text-align:right;${(r.total||0)<0?'color:var(--red);':''}"/><span style="color:var(--label3);font-size:13px;font-weight:500;">원</span></div></td><td></td></tr>
       </tbody>
     </table>
     ${mismatch?`<div class="alert warn" style="margin:10px 0 14px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><div>품목 합계 ${fmtMoney(sum)}원과 총액 ${fmtMoney(r.total)}원이 ${fmtMoney(Math.abs(sum-r.total))}원 달라요.</div></div>`:''}
@@ -3772,7 +3645,6 @@ async function renderDetail(){
           ${kvHtml('일자','date',r.date||'','date')}
           ${kvHtml('카테고리','category',r.category||'')}
           ${kvHtml('결제수단','paymentMethod',r.paymentMethod||'card','select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
-          ${kvHtml('결제 상세','paymentDetail',r.paymentDetail||'')}
           ${kvHtml('결제자','paidBy',r.paidBy||'')}
         </div>
       </div>
@@ -3835,7 +3707,6 @@ async function renderDetail(){
 
   // ── 품목 편집 (input → dirty 표시, blur → 포맷 복원, 저장은 수정 확인 버튼) ──
   _bindDetailItemTableEvents(r);
-  _initDetailItemDrag(r);
 
   document.getElementById('addItemBtn').addEventListener('click',async()=>{
     _syncDetailFromInputs(r);
@@ -4021,55 +3892,13 @@ function _reRenderDetailItems(r){
   const tbody=tbl.querySelector('tbody');if(!tbody)return;
   const sum=r.items.reduce((s,i)=>s+(i.amount||0),0);
   tbody.innerHTML=r.items.map((it,idx)=>`<tr data-idx="${idx}">
-    <td style="padding:9px 3px;"><button class="item-drag" tabindex="-1" title="순서 변경">⠿</button></td>
     <td><input class="item-name-inp" data-f="name" value="${escapeHtml(it.name)}"/></td>
     <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||0}"/></td>
     <td><input class="item-num-inp" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/></td>
     <td><input class="item-num-inp" data-f="amount" type="text" inputmode="numeric" value="${_fmtN(it.amount||0)}" style="${(it.amount||0)<0?'color:var(--red);':''}"/></td>
     <td style="text-align:right;"><button class="item-del" data-del="${idx}" title="삭제">×</button></td>
-  </tr>`).join('')+`<tr class="total-row"><td></td><td>총액</td><td></td><td></td><td class="detail-total-cell" style="font-size:14px;"><div style="display:flex;align-items:center;justify-content:flex-end;gap:3px;"><input id="dTotalAmt" class="item-num-inp" type="text" inputmode="numeric" value="${_fmtN(sum)}" style="max-width:130px;font-weight:700;font-size:14px;text-align:right;${sum<0?'color:var(--red);':''}"/><span style="color:var(--label3);font-size:13px;font-weight:500;">원</span></div></td><td></td></tr>`;
+  </tr>`).join('')+`<tr class="total-row"><td>총액</td><td></td><td></td><td class="detail-total-cell" style="font-size:14px;"><div style="display:flex;align-items:center;justify-content:flex-end;gap:3px;"><input id="dTotalAmt" class="item-num-inp" type="text" inputmode="numeric" value="${_fmtN(sum)}" style="max-width:130px;font-weight:700;font-size:14px;text-align:right;${sum<0?'color:var(--red);':''}"/><span style="color:var(--label3);font-size:13px;font-weight:500;">원</span></div></td><td></td></tr>`;
   _bindDetailItemTableEvents(r);
-  _initDetailItemDrag(r);
-}
-function _initDetailItemDrag(r){
-  const tbl=document.getElementById('itemsTable');if(!tbl)return;
-  let _dndDState=null;
-  Array.from(tbl.querySelectorAll('tbody tr[data-idx]')).forEach((row,idx)=>{
-    const handle=row.querySelector('.item-drag');if(!handle)return;
-    let _pid=null;
-    handle.addEventListener('pointerdown',e=>{
-      e.preventDefault();handle.setPointerCapture(e.pointerId);_pid=e.pointerId;
-      _dndDState={srcIdx:idx,tgtIdx:null};
-      row.classList.add('dnd-active');handle.classList.add('grabbing');
-    });
-    handle.addEventListener('pointermove',e=>{
-      if(_pid===null||e.pointerId!==_pid||!_dndDState)return;
-      const allRows=Array.from(tbl.querySelectorAll('tbody tr[data-idx]'));
-      allRows.forEach(rr=>rr.classList.remove('dnd-above','dnd-below'));
-      const el=document.elementFromPoint(e.clientX,e.clientY);
-      const tRow=el&&el.closest('tr[data-idx]');
-      if(tRow&&tRow!==row&&tbl.contains(tRow)){
-        const tIdx=allRows.indexOf(tRow);
-        if(tIdx>=0){_dndDState.tgtIdx=tIdx;tRow.classList.add(tIdx>_dndDState.srcIdx?'dnd-below':'dnd-above');}
-      }else{_dndDState.tgtIdx=null;}
-    });
-    const _finish=e=>{
-      if(_pid===null||e.pointerId!==_pid)return;
-      _pid=null;handle.classList.remove('grabbing');
-      const allRows=Array.from(tbl.querySelectorAll('tbody tr[data-idx]'));
-      allRows.forEach(rr=>rr.classList.remove('dnd-active','dnd-above','dnd-below'));
-      if(_dndDState&&_dndDState.tgtIdx!==null&&_dndDState.tgtIdx!==_dndDState.srcIdx){
-        _syncDetailFromInputs(r);
-        const item=r.items.splice(_dndDState.srcIdx,1)[0];
-        r.items.splice(_dndDState.tgtIdx,0,item);
-        _dndDState=null;
-        _detailSetDirty(true);
-        _reRenderDetailItems(r);
-      }else{_dndDState=null;}
-    };
-    handle.addEventListener('pointerup',_finish);
-    handle.addEventListener('pointercancel',_finish);
-  });
 }
 
 // ── DELETE ──
@@ -4121,7 +3950,7 @@ function exportCsv(){
     const s=String(v==null?'':v);
     return (s.includes(',')||s.includes('"')||s.includes('\n'))?`"${s.replace(/"/g,'""')}"`:s;
   };
-  const header=['일자','매장명','카테고리','결제수단','결제 상세','결제자','총액(원)','품목수','품목 목록','참석자','메모','태그'];
+  const header=['일자','매장명','카테고리','결제수단','결제자','총액(원)','품목수','품목 목록','참석자','메모','태그'];
   const sorted=[...receipts].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   const rows=[header.map(esc).join(',')];
   for(const r of sorted){
@@ -4132,7 +3961,6 @@ function exportCsv(){
       r.store||'',
       r.category||'',
       payL[r.paymentMethod]||r.paymentMethod||'',
-      r.paymentDetail||'',
       r.paidBy||'',
       r.total||0,
       items.length,
