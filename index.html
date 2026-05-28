@@ -349,6 +349,13 @@ svg{display:block;flex-shrink:0;}
 .month-nav-today:hover{text-decoration:underline;}
 .month-nav-today.hidden{visibility:hidden;}
 
+/* 인물 검색 시간 필터 */
+.person-filter-wrap{display:flex;flex-direction:column;gap:6px;padding-bottom:16px;}
+.person-filter-row{display:flex;flex-wrap:wrap;gap:6px;}
+.pf-pill{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:500;border:1.5px solid var(--sep);background:var(--fill2);color:var(--label2);cursor:pointer;transition:all .15s;line-height:1.3;}
+.pf-pill:hover{border-color:var(--blue);color:var(--blue);}
+.pf-pill.active{border-color:var(--blue);background:var(--blue);color:#fff;}
+.pf-pill.sm{font-size:11px;padding:3px 10px;}
 .budget-section{margin-bottom:22px;}
 .budget-section-hd{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline;}
 .budget-section-hd .hd-sub{font-size:11px;color:var(--label3);font-weight:500;text-transform:none;letter-spacing:0;}
@@ -862,7 +869,9 @@ svg{display:block;flex-shrink:0;}
 // v1.34 — 날짜 검색: "전체" 전체 연도 요약, "2026년" 연간 요약(월별 막대), "2026년 5월" 월 가계부,
 //         "5월" 교차연도 5월 비교. _parseDateQ 파서 + renderAllSummaryHtml / renderYearSummaryHtml /
 //         renderCrossYearMonthHtml 렌더러 추가.
-const APP_VERSION='v1.34';
+// v1.35 — 인물 검색(결제자/참석자/통합) 패널에 시간 필터 추가: 전체·연도별·월별 pill 버튼.
+//         연도 pill 클릭 시 해당 연도의 월 pill 추가 표시. 검색어 변경 시 필터 자동 초기화.
+const APP_VERSION='v1.35';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1614,8 +1623,8 @@ document.getElementById('monthLabel').addEventListener('click',()=>{
 const searchInp=document.getElementById('searchInp');
 let _searchComposing=false;
 searchInp.addEventListener('compositionstart',()=>{_searchComposing=true;});
-searchInp.addEventListener('compositionend',()=>{_searchComposing=false;searchQuery=searchInp.value;if(searchQuery)selectedId=null;renderSide();renderDetail();});
-searchInp.addEventListener('input',()=>{if(!_searchComposing){searchQuery=searchInp.value;if(searchQuery)selectedId=null;renderSide();renderDetail();}});
+searchInp.addEventListener('compositionend',()=>{_searchComposing=false;searchQuery=searchInp.value;if(searchQuery)selectedId=null;_personTimeFilter={type:'all',value:''};renderSide();renderDetail();});
+searchInp.addEventListener('input',()=>{if(!_searchComposing){searchQuery=searchInp.value;if(searchQuery)selectedId=null;_personTimeFilter={type:'all',value:''};renderSide();renderDetail();}});
 
 // ════════════════════════════════════════════════════════════════
 // INPUT VIEW — paste + photo + preview + save
@@ -2949,6 +2958,57 @@ function _setMobPersonView(v){
   document.querySelector('.app').classList.toggle('mob-person-view',v);
 }
 
+// 인물 검색 시간 필터 상태
+let _personTimeFilter={type:'all',value:''};
+
+function _applyPersonTimeFilter(recs,f){
+  if(f.type==='year') return recs.filter(r=>(r.date||'').startsWith(f.value+'-'));
+  if(f.type==='ym')   return recs.filter(r=>(r.date||'').startsWith(f.value));
+  return recs;
+}
+
+function _personFilterPillsHtml(allRecs, f){
+  // 연도별 집계
+  const yearMap=new Map();
+  for(const r of allRecs){
+    if(!r.date)continue;
+    const y=r.date.slice(0,4), m=r.date.slice(5,7);
+    if(!yearMap.has(y))yearMap.set(y,new Set());
+    yearMap.get(y).add(m);
+  }
+  const years=[...yearMap.keys()].sort().reverse();
+  if(!years.length)return '';
+  const multiYear=years.length>1;
+
+  // 연도 행 (2년 이상일 때만)
+  let yearRow='';
+  if(multiYear){
+    yearRow=`<div class="person-filter-row">
+      <button class="pf-pill${f.type==='all'?' active':''}" data-pf="all" data-pv="">전체</button>
+      ${years.map(y=>`<button class="pf-pill${f.type!=='all'&&(f.value===y||(f.type==='ym'&&f.value.startsWith(y+'-')))?' active':''}" data-pf="year" data-pv="${y}">${y}년</button>`).join('')}
+    </div>`;
+  }
+
+  // 월 행 — 선택된 연도 or 단일 연도 시 표시
+  let monthRow='';
+  const monthYear=f.type==='year'?f.value:(f.type==='ym'?f.value.slice(0,4):(!multiYear?years[0]:null));
+  if(monthYear&&yearMap.has(monthYear)){
+    const months=[...yearMap.get(monthYear)].sort().reverse();
+    if(months.length>1){
+      const allActive=!multiYear?(f.type==='all'):(f.type==='year'&&f.value===monthYear);
+      const allPfType=multiYear?'year':'all';
+      const allPfVal=multiYear?monthYear:'';
+      monthRow=`<div class="person-filter-row">
+        <button class="pf-pill sm${allActive?' active':''}" data-pf="${allPfType}" data-pv="${allPfVal}">${multiYear?monthYear+'년 전체':'전체'}</button>
+        ${months.map(m=>{const ym=monthYear+'-'+m;return `<button class="pf-pill sm${f.type==='ym'&&f.value===ym?' active':''}" data-pf="ym" data-pv="${ym}">${parseInt(m,10)}월</button>`;}).join('')}
+      </div>`;
+    }
+  }
+
+  if(!yearRow&&!monthRow)return '';
+  return `<div class="person-filter-wrap">${yearRow}${monthRow}</div>`;
+}
+
 async function renderDetail(){
   const body=document.getElementById('detailBody');
   const eye=document.getElementById('mainEye');
@@ -3014,28 +3074,33 @@ async function renderDetail(){
       const participantQ=personName;
       if(isExplicitPayer||(!isExplicitParticipant&&hasPayer&&!hasPart)){
         // 결제자 전용
-        const recs=isExplicitPayer?payerRecs:payerRecs;
+        const allRecs=payerRecs;
+        const recs=_applyPersonTimeFilter(allRecs,_personTimeFilter);
         eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;
         title.textContent=`${payerName} 결제 내역`;
         sub.textContent=recs.length>0?`${recs.length}건 · 클릭하면 상세 보기`:'결과 없음';
-        body.innerHTML=renderPayerSummaryHtml(payerName,recs);
+        body.innerHTML=_personFilterPillsHtml(allRecs,_personTimeFilter)+renderPayerSummaryHtml(payerName,recs);
         _bindSectionToggles(body);
         _setMobPersonView(true);
       }else if(isExplicitParticipant||(!isExplicitPayer&&hasPart&&!hasPayer)){
         // 참석자 전용
-        const recs=isExplicitParticipant?partRecs:partRecs;
+        const allRecs=partRecs;
+        const recs=_applyPersonTimeFilter(allRecs,_personTimeFilter);
         eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><circle cx="20" cy="8" r="3"/><path d="M2 20c0-4 3.6-7 10-7"/><path d="M14 20c1-2.7 3-4.5 6-5"/></svg>`;
         title.textContent=`${participantQ} 참석 내역`;
         sub.textContent=recs.length>0?`${recs.length}건 · 클릭하면 상세 보기`:'결과 없음';
-        body.innerHTML=renderParticipantSummaryHtml(participantQ,recs);
+        body.innerHTML=_personFilterPillsHtml(allRecs,_personTimeFilter)+renderParticipantSummaryHtml(participantQ,recs);
         _bindSectionToggles(body);
         _setMobPersonView(true);
       }else if(!isExplicitPayer&&!isExplicitParticipant&&hasPayer&&hasPart){
         // ── 결제자 + 참석자 통합 대시보드 ──
+        const allPayerF=_applyPersonTimeFilter(payerRecs,_personTimeFilter);
+        const allPartF=_applyPersonTimeFilter(partRecs,_personTimeFilter);
+        const allRecs=[...new Set([...payerRecs,...partRecs])];
         eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4"/><path d="M16 11l2 2 4-4"/></svg>`;
         title.textContent=`${personName}`;
-        sub.textContent=`결제 ${payerRecs.length}건 · 참석 ${partRecs.length}건`;
-        body.innerHTML=renderPersonDashboardHtml(personName,payerRecs,partRecs);
+        sub.textContent=`결제 ${allPayerF.length}건 · 참석 ${allPartF.length}건`;
+        body.innerHTML=_personFilterPillsHtml(allRecs,_personTimeFilter)+renderPersonDashboardHtml(personName,allPayerF,allPartF);
         _bindSectionToggles(body);
         _setMobPersonView(true);
       }else{
@@ -3048,6 +3113,13 @@ async function renderDetail(){
       }
       body.querySelectorAll('.srch-row[data-id]').forEach(tr=>{
         tr.addEventListener('click',()=>selectReceipt(tr.dataset.id));
+      });
+      // 인물 패널 시간 필터 클릭
+      body.querySelectorAll('.pf-pill').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          _personTimeFilter={type:btn.dataset.pf,value:btn.dataset.pv};
+          renderDetail();
+        });
       });
     }else{
       // ── 가계부 요약 화면 ──
