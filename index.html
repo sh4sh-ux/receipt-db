@@ -46,7 +46,7 @@ svg{display:block;flex-shrink:0;}
 .app{background:var(--card);border-radius:var(--r);border:1px solid var(--sep);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04),0 8px 32px rgba(0,0,0,.06);min-height:700px;display:grid;grid-template-columns:320px minmax(0,1fr);}
 
 /* ── LEFT SIDEBAR ── */
-.side{border-right:1px solid var(--sep);background:var(--left-bg);display:flex;flex-direction:column;min-height:700px;position:sticky;top:0;max-height:100vh;overflow:hidden;}
+.side{border-right:1px solid var(--sep);background:var(--left-bg);display:flex;flex-direction:column;min-height:700px;}
 .side-top{padding:26px var(--pad-x) 18px;}
 .app-eye-row{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
 .app-eye{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.5px;text-transform:uppercase;}
@@ -115,26 +115,12 @@ svg{display:block;flex-shrink:0;}
 .guide-copy{border:1px solid var(--blue);background:var(--card);color:var(--blue-txt);border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:5px;margin-top:8px;}
 .guide-copy:hover{background:var(--blue);color:#fff;}
 
-/* 새 레이아웃 — 위→아래 흐름. 미리보기가 전체 폭 사용 */
-.input-stack{display:flex;flex-direction:column;gap:20px;}
-.input-row.top{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;}
-.input-row.preview{}
-.input-row.options{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.input-row.actions{display:flex;gap:8px;}
-.input-row.actions .primary-btn,.input-row.actions .ghost-btn{margin-top:0;}
-.input-row.actions .primary-btn{flex:2;}
-.input-row.actions .ghost-btn{flex:1;}
-@media(max-width:900px){
-  .input-row.top,.input-row.options{grid-template-columns:1fr;}
-  .input-row.actions{flex-direction:column;}
-}
-/* 위 영역의 textarea는 살짝 낮게 — 사진 zone과 균형 */
-.input-row.top .field-ta{min-height:180px;}
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+@media(max-width:900px){.input-grid{grid-template-columns:1fr;}}
 
 .field-g{margin-bottom:16px;}
 .field-lbl{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
 .field-lbl-hint{font-weight:500;color:var(--label3);text-transform:none;letter-spacing:0;}
-.field-sub{font-size:11.5px;color:var(--label3);margin-top:4px;font-variant-numeric:tabular-nums;}
 .field-inp,.field-sel,.field-ta{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:9px 12px;font-size:14px;background:var(--bg);color:var(--label);outline:none;font-family:inherit;}
 .field-inp:focus,.field-sel:focus,.field-ta:focus{border-color:var(--blue);background:var(--card);}
 .field-ta{resize:vertical;min-height:220px;line-height:1.5;font-family:ui-monospace,'SF Mono','Menlo','Consolas',monospace;font-size:12.5px;white-space:pre;overflow-x:auto;}
@@ -151,65 +137,23 @@ svg{display:block;flex-shrink:0;}
 .photo-zone{border:1.5px dashed var(--sep2);border-radius:var(--rm);padding:18px;text-align:center;color:var(--label3);background:var(--fill2);cursor:pointer;transition:all .15s;position:relative;}
 .photo-zone:hover{border-color:var(--blue);color:var(--blue-txt);background:var(--blue-bg);}
 .photo-zone.has{padding:0;border-style:solid;background:var(--card);}
-.photo-zone.drag,.detail-photo.drag{border-color:var(--blue)!important;background:var(--blue-bg)!important;outline:2px dashed var(--blue);outline-offset:-3px;}
-.detail-photo.drag img{opacity:.4;}
 .photo-zone svg{margin:0 auto 6px;}
 .photo-zone-text{font-size:13px;}
 .photo-zone-hint{font-size:11px;color:var(--label3);margin-top:3px;}
 .photo-preview{width:100%;max-height:280px;object-fit:contain;display:block;border-radius:var(--rm);}
 .photo-remove{position:absolute;top:8px;right:8px;width:30px;height:30px;border:none;border-radius:15px;background:rgba(0,0,0,.7);color:#fff;display:flex;align-items:center;justify-content:center;}
 
-/* ── 미리보기 (편집 가능한 폼) ── */
-.preview-form{border:1px solid var(--sep);border-radius:var(--rm);background:var(--card);overflow:hidden;}
-.prev-row{padding:10px 14px;border-bottom:1px solid var(--sep);display:flex;gap:10px;align-items:center;}
-.prev-row.split{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.prev-store,.prev-date,.prev-total{border:none;background:transparent;font-size:14px;outline:none;font-family:inherit;padding:4px 2px;color:var(--label);width:100%;min-width:0;}
-.prev-store{font-weight:700;font-size:15.5px;letter-spacing:-.2px;}
-.prev-store::placeholder{color:var(--label3);font-weight:500;}
-.prev-date{color:var(--label2);font-size:13px;}
-.prev-total{text-align:right;font-weight:700;font-size:17px;font-variant-numeric:tabular-nums;}
-.prev-store:focus,.prev-date:focus,.prev-total:focus{background:var(--fill2);border-radius:5px;}
-.prev-total-cell{display:flex;align-items:center;gap:3px;flex:1;justify-content:flex-end;min-width:0;}
-.prev-total-cell .prev-total{flex:1 1 auto;max-width:140px;}
-.prev-total-cell::after{content:'원';color:var(--label3);font-size:12px;font-weight:500;flex-shrink:0;}
-
-.prev-total-hint{padding:2px 14px 8px;font-size:11px;color:var(--label3);display:flex;justify-content:flex-end;align-items:center;gap:6px;background:var(--card);}
-.prev-total-hint.diff{color:var(--amber);font-weight:500;}
-.prev-total-hint b{font-weight:600;font-variant-numeric:tabular-nums;}
-.prev-total-reset{border:1px solid var(--sep2);background:var(--card);border-radius:5px;padding:1px 7px;font-size:11px;color:var(--label2);cursor:pointer;font-family:inherit;line-height:1.3;}
-.prev-total-reset:hover{background:var(--fill);color:var(--label);border-color:var(--label3);}
-
-.prev-items{padding:10px 14px 4px;}
-.prev-items-hd{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--label2);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px;}
-.prev-items-count{color:var(--label3);font-weight:500;text-transform:none;letter-spacing:0;margin-left:4px;}
-.prev-add-item{border:1px dashed var(--sep2);background:transparent;color:var(--blue-txt);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:500;font-family:inherit;text-transform:none;letter-spacing:0;}
-.prev-add-item:hover{border-color:var(--blue);background:var(--blue-bg);border-style:solid;}
-.prev-items-head-row,.prev-item-row{display:grid;grid-template-columns:minmax(0,1fr) 64px 100px 110px 26px;gap:6px;align-items:center;}
-.prev-items-head-row{padding:0 2px 4px;font-size:10.5px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.3px;}
-.prev-items-head-row span:nth-child(2),.prev-items-head-row span:nth-child(3),.prev-items-head-row span:nth-child(4){text-align:right;padding-right:9px;}
-.prev-item-row{margin-bottom:5px;}
-.prev-item-name,.prev-item-qty,.prev-item-price,.prev-item-amt{border:1px solid var(--sep2);background:var(--card);border-radius:5px;padding:7px 9px;font-size:13.5px;outline:none;font-family:inherit;color:var(--label);min-width:0;font-variant-numeric:tabular-nums;line-height:1.3;}
-.prev-item-qty,.prev-item-price,.prev-item-amt{text-align:right;}
-.prev-item-amt.readonly{background:var(--fill2);color:var(--label);cursor:default;display:flex;align-items:center;justify-content:flex-end;font-weight:500;}
-.prev-item-amt.readonly.neg{color:var(--red);}
-.prev-item-name:focus,.prev-item-qty:focus,.prev-item-price:focus{border-color:var(--blue);}
-.prev-item-name::placeholder{color:var(--label3);}
-.prev-item-del{border:none;background:transparent;color:var(--label3);font-size:18px;line-height:1;padding:0;cursor:pointer;font-family:inherit;}
-.prev-item-del:hover{color:var(--red);}
-.sign-btn{width:20px;height:20px;border:1.5px solid var(--red);border-radius:50%;background:transparent;color:var(--red);font-size:11px;font-weight:700;line-height:1;padding:0;cursor:pointer;font-family:inherit;flex-shrink:0;margin-right:auto;opacity:.55;transition:opacity .12s,background .12s;}
-.sign-btn:hover{opacity:1;background:var(--red-bg);}
-.prev-empty-items{text-align:center;color:var(--label3);font-size:12px;padding:14px 0 10px;}
-
-.prev-foot{padding:9px 14px;border-top:1px solid var(--sep);display:flex;justify-content:space-between;align-items:center;font-size:12px;background:var(--fill2);}
-.prev-foot-lbl{color:var(--label2);}
-.prev-foot-val{font-weight:600;font-variant-numeric:tabular-nums;}
-.prev-foot-val.mismatch{color:var(--red);}
-
-@media(max-width:780px){
-  .prev-items-head-row,.prev-item-row{grid-template-columns:minmax(0,1fr) 48px 82px 92px 24px;gap:4px;}
-  .prev-item-name,.prev-item-qty,.prev-item-price,.prev-item-amt{font-size:13px;padding:6px 7px;}
-  .prev-items-head-row span:nth-child(2),.prev-items-head-row span:nth-child(3),.prev-items-head-row span:nth-child(4){padding-right:7px;}
-}
+.preview-card{border:1px solid var(--sep);border-radius:var(--rm);padding:14px 16px;background:var(--card);}
+.preview-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.preview-store{font-size:15px;font-weight:700;}
+.preview-date{font-size:12px;color:var(--label2);margin-top:2px;}
+.preview-total{font-size:18px;font-weight:700;}
+.preview-items{margin-top:8px;border-top:1px solid var(--sep);padding-top:10px;}
+.preview-item-row{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:13px;line-height:1.4;}
+.preview-item-name{flex:1;color:var(--label);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.preview-item-qty{color:var(--label3);font-size:11px;flex-shrink:0;}
+.preview-item-amt{font-weight:600;flex-shrink:0;min-width:70px;text-align:right;}
+.preview-foot{margin-top:10px;padding-top:10px;border-top:1px solid var(--sep);display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--label2);}
 
 .alert{border-radius:var(--rm);padding:12px 14px;margin-top:10px;display:flex;gap:10px;font-size:13px;line-height:1.5;}
 .alert svg{flex-shrink:0;margin-top:1px;}
@@ -234,17 +178,6 @@ svg{display:block;flex-shrink:0;}
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
 @media(max-width:900px){.detail-grid{grid-template-columns:1fr;}}
 
-/* ── 상세 화면 재구성 레이아웃 ── */
-.detail-two-col{display:grid;grid-template-columns:1fr 1.15fr;gap:20px;margin:14px 0 18px;align-items:start;}
-.detail-kv-stack{display:flex;flex-direction:column;gap:8px;}
-/* 두 컬럼 안에서 photo의 bottom margin 제거 */
-.detail-two-col .detail-photo{margin-bottom:0;}
-/* photo empty 상태 — 컬럼 안에서 패딩 축소 */
-.detail-two-col .detail-photo-empty{padding:28px 16px;}
-@media(max-width:780px){
-  .detail-two-col{grid-template-columns:1fr;}
-}
-
 .kv{padding:10px 12px;background:var(--fill2);border-radius:var(--rm);border:1px solid var(--sep);}
 .kv-lbl{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;}
 .kv-val{font-size:14px;font-weight:500;line-height:1.4;word-break:break-word;}
@@ -264,33 +197,6 @@ svg{display:block;flex-shrink:0;}
 .items-table .item-num-inp:focus{border-color:var(--blue);}
 .items-table .item-del{border:none;background:transparent;color:var(--label3);font-size:16px;padding:0 4px;line-height:1;}
 .items-table .item-del:hover{color:var(--red);}
-
-/* ── SEARCH SUMMARY ── */
-.srch-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
-.srch-stat{background:var(--fill);border:1px solid var(--sep);border-radius:var(--rm);padding:14px 16px;text-align:center;}
-.srch-stat-avg{background:var(--blue-bg);border-color:var(--blue);}
-.srch-stat-lbl{font-size:10.5px;color:var(--label3);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;}
-.srch-stat-val{font-size:17px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums;}
-.srch-stat-avg .srch-stat-lbl,.srch-stat-avg .srch-stat-val{color:var(--blue-txt);}
-.srch-table{width:100%;border-collapse:collapse;margin-bottom:4px;}
-.srch-table th{font-size:11px;font-weight:600;color:var(--label2);padding:8px 8px;text-align:left;border-bottom:1px solid var(--sep);background:var(--fill2);}
-.srch-table th:last-child,.srch-table td:last-child{text-align:right;}
-.srch-table td{padding:10px 8px;border-bottom:1px solid var(--sep);font-size:13px;color:var(--label);}
-.srch-row{cursor:pointer;transition:background .1s;}
-.srch-row:hover{background:var(--fill);}
-.srch-total{text-align:right;font-size:13px;color:var(--label2);padding:10px 8px 0;}
-@media(max-width:780px){.srch-stats{gap:8px;}.srch-stat{padding:10px 8px;}.srch-stat-val{font-size:15px;}}
-
-/* ── PAYER SUMMARY ── */
-.payer-hero{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
-.payer-stat{background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:16px 18px;}
-.payer-stat.total{background:var(--blue-bg);border-color:var(--blue);}
-.payer-stat-lbl{font-size:10.5px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:7px;}
-.payer-stat.total .payer-stat-lbl{color:var(--blue-txt);}
-.payer-stat-val{font-size:22px;font-weight:700;letter-spacing:-.4px;font-variant-numeric:tabular-nums;line-height:1.15;}
-.payer-stat.total .payer-stat-val{color:var(--blue-txt);}
-.payer-stat-sub{margin-top:5px;font-size:11px;color:var(--label3);}
-@media(max-width:600px){.payer-hero{gap:8px;}.payer-stat-val{font-size:18px;}}
 
 .section-hd{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin:18px 0 8px;display:flex;justify-content:space-between;align-items:center;}
 .section-hd .ghost-mini{border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;text-transform:none;letter-spacing:0;}
@@ -320,22 +226,7 @@ svg{display:block;flex-shrink:0;}
 .month-nav-btn:hover{background:var(--fill);color:var(--label);}
 .month-nav-btn:disabled{opacity:.3;cursor:not-allowed;}
 .month-nav-center{flex:1;text-align:center;min-width:0;}
-.month-nav-label{font-size:14px;font-weight:700;color:var(--label);letter-spacing:-.2px;cursor:pointer;border-radius:6px;padding:2px 6px;transition:background .12s;}
-.month-nav-label:hover{background:var(--fill);}
-.month-nav-label.has-sel{color:var(--blue-txt);}
-.back-to-summary{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:var(--label3);background:transparent;border:none;padding:0;cursor:pointer;margin-bottom:4px;border-radius:4px;line-height:1.4;}
-.back-to-summary:hover{color:var(--blue-txt);}
-
-/* ── 섹션 접기/펼치기 ── */
-.section-toggle{display:flex;align-items:center;gap:0;background:none;border:none;padding:0;cursor:pointer;width:100%;}
-.section-toggle-lbl{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;flex:1;text-align:left;}
-.section-toggle-sub{font-size:11px;color:var(--label3);font-weight:500;text-transform:none;letter-spacing:0;margin-right:6px;}
-.section-toggle-icon{width:16px;height:16px;color:var(--label3);transition:transform .2s;flex-shrink:0;}
-.section-toggle-icon.open{transform:rotate(0deg);}
-.section-toggle-icon.closed{transform:rotate(-90deg);}
-.section-body{overflow:hidden;transition:max-height .25s ease,opacity .2s ease;}
-.section-body.open{max-height:2000px;opacity:1;}
-.section-body.closed{max-height:0;opacity:0;}
+.month-nav-label{font-size:14px;font-weight:700;color:var(--label);letter-spacing:-.2px;}
 .month-nav-today{font-size:11px;color:var(--blue-txt);background:transparent;border:none;padding:2px 4px 0;font-weight:500;margin-top:1px;}
 .month-nav-today:hover{text-decoration:underline;}
 .month-nav-today.hidden{visibility:hidden;}
@@ -404,12 +295,12 @@ svg{display:block;flex-shrink:0;}
 @media(max-width:780px){
   .shell{padding:0;}
   .app{grid-template-columns:1fr;border-radius:0;border:none;box-shadow:none;min-height:100vh;}
-  .side{border-right:none;border-bottom:1px solid var(--sep);min-height:auto;position:static;max-height:none;overflow:visible;}
+  .side{border-right:none;border-bottom:1px solid var(--sep);min-height:auto;}
   .main{min-height:auto;}
   .side-top{padding:max(18px,calc(env(safe-area-inset-top,0px) + 12px)) 18px 14px;}
   .side-search,.side-list,.side-foot{padding-left:18px;padding-right:18px;}
   .side-search{padding-bottom:10px;}
-  .side-list{max-height:42vh;overflow-y:auto;}
+  .side-list{max-height:none;}
   .main-top{padding:18px 18px 14px;}
   .main-body{padding:18px 18px 60px;}
   :root{--pad-x:18px;}
@@ -420,22 +311,6 @@ svg{display:block;flex-shrink:0;}
 /* ── HIDDEN VIEWS ── */
 .view{display:none;}
 .view.on{display:block;}
-
-/* ── MODAL ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:190;}
-.modal-card{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;background:var(--card);border-radius:var(--r);padding:26px 28px;width:min(520px,calc(100vw - 32px));max-height:calc(100vh - 80px);overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.22);}
-.modal-head{font-size:16px;font-weight:700;margin-bottom:4px;}
-.modal-sub{font-size:12.5px;color:var(--label2);margin-bottom:16px;line-height:1.55;}
-.modal-foot{margin-top:16px;display:flex;justify-content:flex-end;gap:8px;}
-.bkp-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--sep);border-radius:var(--rm);margin-bottom:8px;}
-.bkp-item-info{flex:1;min-width:0;}
-.bkp-item-name{font-size:12.5px;font-weight:500;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.bkp-item-meta{font-size:11px;color:var(--label3);margin-top:2px;}
-.bkp-restore-btn{border:1px solid var(--blue);background:transparent;color:var(--blue-txt);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;flex-shrink:0;cursor:pointer;}
-.bkp-restore-btn:hover{background:var(--blue);color:#fff;}
-.dbx-guide{background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:12px 14px;margin-bottom:12px;font-size:12px;color:var(--label2);line-height:1.8;}
-.dbx-guide b{color:var(--label);}
-.dbx-guide code{background:var(--fill);border:1px solid var(--sep);border-radius:3px;padding:1px 4px;font-size:11px;font-family:ui-monospace,'SF Mono','Menlo',monospace;}
 </style>
 </head>
 <body>
@@ -448,12 +323,12 @@ svg{display:block;flex-shrink:0;}
       <div class="side-top">
         <div class="app-eye-row">
           <span class="app-eye">Receipt DB</span>
-          <span class="app-version" id="appVersion" title="앱 버전">v1.08</span>
+          <span class="app-version" id="appVersion" title="앱 버전">v1.02</span>
         </div>
         <div class="app-title">영수증 보관함</div>
         <div class="tab-row">
-          <button class="tab" data-tab="input">추가</button>
           <button class="tab on" data-tab="list">내역</button>
+          <button class="tab" data-tab="input">추가</button>
           <button class="tab" data-tab="settings">설정</button>
         </div>
       </div>
@@ -470,17 +345,14 @@ svg{display:block;flex-shrink:0;}
       <div class="side-search">
         <div class="search-wrap">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="searchInp" type="text" placeholder="가게·품목·날짜·'결제자 홍길동'"/>
+          <input id="searchInp" type="text" placeholder="가게·품목·날짜 검색"/>
         </div>
       </div>
 
       <div class="side-list" id="sideList"></div>
 
       <div class="side-foot">
-        <div>
-          <div class="foot-stat" id="footStat">0건</div>
-          <span id="dbxSyncBadge" style="display:none;font-size:10px;color:var(--green-txt);font-weight:500;margin-top:1px;"></span>
-        </div>
+        <div class="foot-stat" id="footStat">0건</div>
         <button class="foot-add" id="footAdd">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           추가
@@ -524,17 +396,25 @@ svg{display:block;flex-shrink:0;}
           </div>
         </div>
         <div class="main-body">
-          <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
-            <button class="guide-copy" id="promptCopyBtn">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              프롬프트 복사
-            </button>
+          <div class="guide">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div class="guide-body">
+              <b>사용 방법</b>
+              <ol class="guide-steps">
+                <li>아래 <b>프롬프트 복사</b> 버튼을 누르세요.</li>
+                <li>ChatGPT 등에 영수증 사진과 함께 붙여넣고 응답을 받으세요.</li>
+                <li>응답을 그대로 복사해 아래 <b>붙여넣기 영역</b>에 붙이세요.</li>
+                <li>미리보기를 확인하고 사진을 첨부한 뒤 저장하세요.</li>
+              </ol>
+              <button class="guide-copy" id="promptCopyBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                프롬프트 복사
+              </button>
+            </div>
           </div>
 
-          <div class="input-stack">
-
-            <!-- ① 붙여넣기 + 사진 (위, 좌우) -->
-            <div class="input-row top">
+          <div class="input-grid">
+            <div>
               <div class="field-g">
                 <label class="field-lbl">붙여넣기 <span class="field-lbl-hint">GPT 응답 그대로</span></label>
                 <textarea id="pasteTa" class="field-ta" placeholder="매장명: 하나로마트 청담점
@@ -558,67 +438,48 @@ svg{display:block;flex-shrink:0;}
               </div>
             </div>
 
-            <!-- ② 미리보기 (가운데, 전체 폭) -->
-            <div class="input-row preview">
-              <div class="field-g" style="margin-bottom:0;">
-                <label class="field-lbl">미리보기 <span class="field-lbl-hint">직접 수정 가능 · 금액은 자동 계산</span></label>
+            <div>
+              <div class="field-g">
+                <label class="field-lbl">미리보기</label>
                 <div id="previewArea">
                   <div class="empty-state" style="padding:32px 16px;background:var(--fill2);border-radius:var(--rm);border:1px dashed var(--sep2);">
-                    텍스트를 붙여넣으면 자동으로 파싱되어 표시됩니다.<br/><span style="font-size:11px;">붙여넣기 후 미리보기에서 직접 수정 가능해요.</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- ③ 옵션 (아래, 좌우 그리드) -->
-            <div class="input-row options">
-              <div>
-                <div class="row-2">
-                  <div class="field-g">
-                    <label class="field-lbl">결제수단</label>
-                    <select id="payMethod" class="field-sel">
-                      <option value="card">카드</option>
-                      <option value="cash">현금</option>
-                      <option value="transfer">계좌이체</option>
-                      <option value="other">기타</option>
-                    </select>
-                  </div>
-                  <div class="field-g">
-                    <label class="field-lbl">결제 상세 <span class="field-lbl-hint">선택</span></label>
-                    <input id="payDetail" class="field-inp" type="text" placeholder="예: 현대카드"/>
-                  </div>
-                </div>
-                <div class="row-2">
-                  <div class="field-g">
-                    <label class="field-lbl">결제자 <span class="field-lbl-hint">선택</span></label>
-                    <input id="payerInp" class="field-inp" type="text" placeholder="예: 홍길동, 나, 회사"/>
-                  </div>
-                  <div class="field-g">
-                    <label class="field-lbl">카테고리 <span class="field-lbl-hint" id="catAutoHint">자동 분류돼요</span></label>
-                    <input id="catInp" class="field-inp" type="text" placeholder="예: 마트, 외식, 카페..." list="catList"/>
-                    <datalist id="catList"></datalist>
+                    텍스트를 붙여넣으면 자동으로 파싱되어 표시됩니다.
                   </div>
                 </div>
               </div>
 
-              <div>
+              <div class="row-2">
                 <div class="field-g">
-                  <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분, 선택</span></label>
-                  <input id="participantsInp" class="field-inp" type="text" placeholder="예: 철수, 영희, 민준"/>
+                  <label class="field-lbl">결제수단</label>
+                  <select id="payMethod" class="field-sel">
+                    <option value="card">카드</option>
+                    <option value="cash">현금</option>
+                    <option value="transfer">계좌이체</option>
+                    <option value="other">기타</option>
+                  </select>
                 </div>
                 <div class="field-g">
-                  <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분, 선택</span></label>
-                  <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
-                </div>
-                <div class="field-g">
-                  <label class="field-lbl">메모 <span class="field-lbl-hint">선택</span></label>
-                  <textarea id="noteInp" class="field-ta" style="min-height:80px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="기억할 내용이 있다면..."></textarea>
+                  <label class="field-lbl">결제 상세 <span class="field-lbl-hint">선택</span></label>
+                  <input id="payDetail" class="field-inp" type="text" placeholder="예: 현대카드"/>
                 </div>
               </div>
-            </div>
 
-            <!-- ④ 저장/초기화 -->
-            <div class="input-row actions">
+              <div class="field-g">
+                <label class="field-lbl">카테고리 <span class="field-lbl-hint" id="catAutoHint">자동 분류돼요</span></label>
+                <input id="catInp" class="field-inp" type="text" placeholder="예: 마트, 외식, 카페..." list="catList"/>
+                <datalist id="catList"></datalist>
+              </div>
+
+              <div class="field-g">
+                <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분, 선택</span></label>
+                <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
+              </div>
+
+              <div class="field-g">
+                <label class="field-lbl">메모 <span class="field-lbl-hint">선택</span></label>
+                <textarea id="noteInp" class="field-ta" style="min-height:60px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="기억할 내용이 있다면..."></textarea>
+              </div>
+
               <button class="primary-btn" id="saveBtn" disabled>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 저장
@@ -639,63 +500,6 @@ svg{display:block;flex-shrink:0;}
           </div>
         </div>
         <div class="main-body">
-
-          <!-- ─── Dropbox 자동 백업 ─── -->
-          <div class="setting-card">
-            <h3>☁ Dropbox 자동 백업</h3>
-            <p>Dropbox App을 연결하면 영수증 데이터를 클라우드에 안전하게 백업할 수 있어요.</p>
-
-            <!-- 미연결 상태 -->
-            <div id="dbxNotConnected">
-              <div class="dbx-guide">
-                <b>Dropbox 앱 설정 방법 (1회만)</b><br>
-                1. <a href="https://www.dropbox.com/developers/apps/create" target="_blank" rel="noopener" style="color:var(--blue-txt);">Dropbox 개발자 콘솔</a>에서 새 앱 생성<br>
-                &nbsp;&nbsp;→ Choose an API: <b>Scoped access</b> · 접근 유형: <b>App folder</b><br>
-                2. 앱 생성 후 <b>Permissions</b> 탭에서 체크:<br>
-                &nbsp;&nbsp;<code>files.content.write</code> · <code>files.content.read</code> · <code>account_info.read</code> → Submit<br>
-                3. <b>Settings</b> 탭 → Redirect URIs에 아래 주소 추가:<br>
-                &nbsp;&nbsp;<code id="dbxRedirectUriHint" style="word-break:break-all;">—</code><br>
-                4. Settings 탭의 <b>App key</b>를 아래에 붙여넣기
-              </div>
-              <div style="margin-bottom:10px;">
-                <div class="field-lbl">App Key <span class="field-lbl-hint">Dropbox 앱 Settings 탭에서 복사</span></div>
-                <input id="dbxAppKey" class="field-inp" type="text" placeholder="예: abc123xyz456789"/>
-              </div>
-              <div class="setting-btn-row">
-                <button id="dbxConnectBtn" class="primary">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                  Dropbox 연결하기
-                </button>
-              </div>
-            </div>
-
-            <!-- 연결 상태 -->
-            <div id="dbxConnected" style="display:none;">
-              <div id="dbxStatus"></div>
-              <div class="setting-btn-row">
-                <button id="dbxBackupBtn" class="primary">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-                  지금 백업
-                </button>
-                <button id="dbxRestoreBtn">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="8 16 12 20 16 16"/><line x1="12" y1="20" x2="12" y2="11"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-                  Dropbox에서 복원
-                </button>
-                <button id="dbxDisconnectBtn" class="danger">연결 해제</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="setting-card">
-            <h3>엑셀로 내보내기</h3>
-            <p>모든 영수증을 스프레드시트 파일(.csv)로 내려받습니다. 엑셀·Numbers·구글 시트에서 바로 열 수 있어요.</p>
-            <div class="setting-btn-row">
-              <button class="primary" id="exportCsvBtn">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-                CSV 파일 다운로드
-              </button>
-            </div>
-          </div>
 
           <div class="setting-card">
             <h3>JSON 백업 내보내기</h3>
@@ -746,7 +550,7 @@ svg{display:block;flex-shrink:0;}
             <p>앱이 업데이트될 때마다 좌측 상단 버전 번호가 올라갑니다.</p>
             <div class="setting-btn-row">
               <span style="font-size:12px;color:var(--label2);align-self:center;">
-                Receipt DB · <b id="appVersionStat">v1.08</b> · IndexedDB v2 · 백업 포맷 v2
+                Receipt DB · <b id="appVersionStat">v1.02</b> · IndexedDB v2 · 백업 포맷 v2
               </span>
             </div>
           </div>
@@ -763,21 +567,6 @@ svg{display:block;flex-shrink:0;}
   <img id="lightboxImg" alt=""/>
 </div>
 
-<!-- Dropbox 복원 파일 선택 모달 -->
-<div id="dbxModal" style="display:none;position:fixed;inset:0;z-index:190;">
-  <div class="modal-overlay" id="dbxModalOverlay"></div>
-  <div class="modal-card">
-    <div class="modal-head">Dropbox 백업 파일 선택</div>
-    <div class="modal-sub">복원할 파일을 선택하세요. 같은 ID의 영수증은 덮어쓰여요.</div>
-    <div id="dbxBackupList">
-      <div class="empty-state">로딩 중...</div>
-    </div>
-    <div class="modal-foot">
-      <button id="dbxModalClose" style="border:1px solid var(--sep2);background:var(--card);color:var(--label);border-radius:var(--rs);padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;">닫기</button>
-    </div>
-  </div>
-</div>
-
 <script>
 'use strict';
 
@@ -788,51 +577,7 @@ svg{display:block;flex-shrink:0;}
 // v1.00 — MVP (영수증 추가/목록/상세/검색/JSON 백업)
 // v1.01 — 가계부 화면 (월 네비, 요약 카드, 카테고리 막대, sparkline)
 // v1.02 — 시간 필드 UI 제거 + 카테고리 자동 분류 9개 + 사용자 학습 사전 + 버전 표시
-// v1.03 — 미리보기를 편집 가능한 폼으로 (매장명·일자·총액·품목 직접 수정 + 추가/삭제)
-//         + 품목 없는 영수증(노래방·주유·병원)도 저장 가능 (warning만)
-// v1.04 — 합계 자동화: 수량×단가 = 금액, 모든 금액 합 = 총액. GPT 응답 총액 무시.
-//         실제 영수증과 다를 땐 총액 input 직접 수정 (수동 모드), ↺로 자동 복귀
-// v1.05 — 레이아웃 재구성 (위→아래 흐름, 미리보기 전체 폭). 품목명 input 폭 확대.
-//         금액 셀 readonly (수량×단가 자동), Tab 흐름 자연스럽게. 일자 클릭 시 달력 즉시.
-//         단가·금액·총액 모두 천단위 쉼표 (text+inputmode="numeric").
-// v1.07 — Dropbox OAuth (PKCE) 연동 (Phase 3): 설정 탭에서 연결, 수동 백업 업로드,
-//         Dropbox 파일 목록에서 복원 선택 모달. refresh token으로 자동 갱신.
-// v1.08 — 결제자(paidBy) 필드 추가 (식사·술자리·유흥 등 결제자 기록).
-//         사이드바 카드 썸네일 제거.
-// v1.09 — 상세 화면 레이아웃 재구성: 품목 테이블 최상단, 그 아래 좌=영수증 사진 / 우=정보(매장명·일자 등),
-//         하단 메모·태그 순서.
-// v1.10 — 드래그&드롭 사진 추가 (입력 폼·상세 화면 모두 지원, 데스크톱 자동 감지).
-//         카테고리 키워드 확장 검색: "술" 입력 시 소주·맥주·진로·테라 등 품목도 매칭.
-//         "결제자 홍길동" 접두어 검색 지원. 검색 플레이스홀더 힌트 추가.
-// v1.11 — 탭 순서 변경: 추가→내역→설정. 품목 단가·금액 천단위 쉼표 (상세 화면 포함).
-//         품목 입력 수량 type=text 전환 (스피너 제거). 프리뷰 헤더 우측 패딩 정렬.
-// v1.12 — 상세 화면 일자 kv 클릭 시 달력 즉시 열림. 사용방법 가이드 제거(프롬프트 복사 버튼 유지).
-//         데스크탑 초기 탭→추가, 모바일 초기 탭→내역. 모바일 목록 높이 제한+영수증 선택 시 자동 스크롤.
-//         엑셀(CSV) 내보내기 추가 — UTF-8 BOM, 엑셀·Numbers·구글 시트 직접 열림.
-// v1.13 — 검색 결과 오른쪽 패널: 품목 검색 시 최저/평균/최고가 카드 + 구매 이력 테이블.
-//         영수증 검색 시 매장명·카테고리·결제자·총액 목록 테이블. 행 클릭 → 상세 이동.
-//         한영 검색어 대역: "베이컨"→bacon, "치즈"→cheese 등 30개 식품 자동 매칭.
-// v1.14 — 가계부 복귀 UX: 상세 화면 상단 "← N월 가계부" 버튼 + 월 레이블 클릭 → 요약 복귀.
-//         영수증 선택 중 월 레이블 파란색 강조 + 툴팁으로 클릭 힌트.
-// v1.15 — 결제자 검색 시 전용 요약 패널: 결제 건수+합계 히어로 카드, 카테고리 분포 막대,
-//         영수증 목록 테이블. "결제자 홍길동" 입력 → 해당 결제자 통계 한눈에.
-// v1.16 — 품목명 기반 카테고리 보조 추정: 가게명으로 못 잡을 때 품목 키워드 투표로 fallback.
-//         CAT_ITEM_RULES (술집·카페·교통·병원·문화·외식·마트) + 최소 2점 이상 시 채택.
-// v1.17 — 식품 동의어 사전(FOOD_TAXONOMY): 치즈→하바티/고다, 맥주→테라/카스/기네스 양방향 확장.
-//         품목 검색 통계 개선: 구매횟수·총수량·총지출 히어로 카드 + 단가 기준 최저/평균/최고 + 테이블 수량·단가 컬럼.
-// v1.18 — 사이드바 sticky: 영수증 목록이 길어져도 "+ 추가" 버튼 항상 하단 고정.
-//         자동 결제자 감지: "결제자 " 접두어 없이 이름 검색 → 전체 결과 paidBy 일치 시 결제자 요약 자동 표시.
-// v1.19 — Dropbox 자동 동기화: 영수증 저장·수정·삭제 시 백그라운드 자동 업로드(사진 제외 경량 JSON).
-// v1.20 — 미리보기 폼 품목 금액 셀에 원형 빨간 ± 버튼 추가: 클릭 시 금액 부호 전환(할인·환불 입력용).
-// v1.21 — 참석자(participants) 필드: 입력 폼·상세 화면에 쉼표 구분 입력, 상세에서 1인당 금액 표시.
-//          가계부에 '참석자별 분담' 막대 섹션 추가 (1/N 균등 배분). 검색 포함, CSV 내보내기 포함.
-//         앱 시작 시 Dropbox에서 자동 다운로드 후 로컬과 머지(같은 ID → updatedAt 최신 우선).
-//         삭제 항목 추적(deletedIds)으로 양방향 삭제 동기화. 사이드바에 마지막 동기화 시각 표시.
-// v1.22 — 참석자 검색 전용 통계 패널: 참석 횟수·분담 총액 히어로 카드, 카테고리별 분담금 막대,
-//         자주 함께한 멤버 칩, 참석 내역 테이블(인원·분담금). "참석자 X" 또는 이름 자동 감지.
-// v1.23 — 접이식 섹션 토글: 결제자·참석자·검색 패널의 구매이력/동행멤버 섹션 + 가계부의
-//         일별지출·참석자분담 섹션을 chevron 버튼으로 접고 펼치기. 열림/닫힘 상태 localStorage 저장.
-const APP_VERSION='v1.23';
+const APP_VERSION='v1.02';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -932,24 +677,13 @@ const BASE_CATEGORIES=['마트','외식','술집','카페','배달','교통','�
 const CAT_RULES=[
   {cat:'마트', kws:['마트','슈퍼','편의점','이마트','롯데마트','홈플러스','코스트코','하나로','농협','GS25','CU','세븐일레븐','이마트24','미니스톱','트레이더스']},
   {cat:'외식', kws:['식당','맛집','분식','김밥','국밥','돈까스','갈비','삼겹살','냉면','치킨','피자','버거','햄버거','떡볶이','우동','초밥','샤브','죽','파스타','스테이크','쌀국수','한식','중식','일식','양식','뷔페','족발','보쌈','국수','만두','곱창','전골','찌개','곰탕','설렁탕','순대','튀김','마라']},
-  {cat:'술집', kws:['술집','포차','호프','주점','이자카야','와인바','맥주','막걸리','선술집','펍','BAR ','BAR(','퇴근길','한잔','대포','소주','진로','하이트','카스','테라','클라우드','켈리','새로','처음처럼','필라이트','오비맥주','청하','참이슬','제주맥주','와인','위스키','칵테일','생맥주']},
+  {cat:'술집', kws:['술집','포차','호프','주점','이자카야','와인바','맥주','막걸리','선술집','펍','BAR ','BAR(','퇴근길','한잔','대포']},
   {cat:'카페', kws:['카페','커피','스타벅스','투썸','이디야','컴포즈','메가커피','빽다방','폴바셋','할리스','파스쿠찌','앤제리너스','블루보틀','테라로사','커피빈','탐앤탐스','공차','요거트','베이커리','파리바게뜨','뚜레쥬르','던킨']},
   {cat:'배달', kws:['배달의민족','배민','요기요','쿠팡이츠','땡겨요']},
   {cat:'교통', kws:['주유','GS칼텍스','SK에너지','S-OIL','현대오일뱅크','택시','카카오T','우버','버스','지하철','코레일','KTX','SRT','하이패스','주차장','쏘카','그린카']},
   {cat:'쇼핑', kws:['올리브영','다이소','유니클로','ABC마트','쿠팡','11번가','G마켓','옥션','무신사','지그재그','29CM','SSG','신세계','현대백화점','롯데백화점','갤러리아','AK플라자','이케아']},
   {cat:'병원·약국', kws:['병원','의원','약국','치과','한의원','내과','피부과','정형외과','이비인후과','안과','정신과','산부인과','소아과','클리닉','약방']},
   {cat:'문화', kws:['CGV','메가박스','롯데시네마','영화관','교보문고','영풍문고','예스24','알라딘','서점','전시','공연','콘서트','뮤지컬','연극','박물관','미술관']},
-];
-
-// 품목명 기반 카테고리 키워드 (가게명 매칭 실패 시 보조 추정)
-const CAT_ITEM_RULES=[
-  {cat:'술집',   score:3, kws:['소주','맥주','테라','진로','참이슬','처음처럼','카스','클라우드','켈리','새로','필라이트','하이트','오비','청하','막걸리','와인','위스키','사케','사워','칵테일','하이볼','안주','생맥주']},
-  {cat:'카페',   score:2, kws:['아메리카노','라떼','카푸치노','에스프레소','마키아토','플랫화이트','콜드브루','아이스티','허브티','케이크','스콘','쿠키','크로아상','머핀','샌드위치']},
-  {cat:'교통',   score:3, kws:['휘발유','경유','등유','LPG','주유','리터','ℓ','충전(kWh)','충전량','고속도로','통행료','하이패스','주차']},
-  {cat:'병원·약국', score:3, kws:['처방','조제','약품','정제','캡슐','시럽','연고','진료','처치','검사료','주사']},
-  {cat:'문화',   score:3, kws:['입장권','관람권','티켓','좌석','스크린','공연','관람','대여','렌탈']},
-  {cat:'외식',   score:1, kws:['삼겹살','갈비','볶음밥','비빔밥','냉면','국밥','라면','찌개','전골','도시락','정식','세트메뉴','덮밥','우동','파스타','피자','버거','치킨','초밥','회','샤브','뷔페']},
-  {cat:'마트',   score:1, kws:['우유','계란','두부','쌀','설탕','소금','식용유','라면','과자','음료수','생수','화장지','세제','샴푸']},
 ];
 
 // 사용자 학습 사전 — 가게명 → 카테고리
@@ -965,45 +699,22 @@ async function saveStoreCatMap(){
   try{await dbPut('settings',{key:'storeCatMap',value:storeCatMap});}catch(e){}
 }
 
-function autocategorize(storeName, items=[]){
-  const s=(storeName||'').trim();
+function autocategorize(storeName){
+  if(!storeName)return '';
+  const s=storeName.trim();
+  if(!s)return '';
   // 1. 사용자 사전 — 정확 일치 우선
-  if(s&&storeCatMap[s])return storeCatMap[s];
-  // 2. 사용자 사전 — 부분 일치
-  if(s){
-    const sLower=s.toLowerCase();
-    for(const[key,cat]of Object.entries(storeCatMap)){
-      if(!key)continue;
-      if(s.includes(key)||key.includes(s)||sLower.includes(key.toLowerCase()))return cat;
-    }
+  if(storeCatMap[s])return storeCatMap[s];
+  // 2. 사용자 사전 — 부분 일치 (가게명이 더 자세히 들어와도 짧은 키워드로 잡힘)
+  const sLower=s.toLowerCase();
+  for(const[key,cat]of Object.entries(storeCatMap)){
+    if(!key)continue;
+    if(s.includes(key)||key.includes(s)||sLower.includes(key.toLowerCase()))return cat;
   }
-  // 3. 가게명 규칙 사전
-  if(s){
-    const sLower=s.toLowerCase();
-    for(const rule of CAT_RULES){
-      for(const kw of rule.kws){
-        if(s.includes(kw)||sLower.includes(kw.toLowerCase()))return rule.cat;
-      }
-    }
-  }
-  // 4. 품목명 보조 추정 (가게명 매칭 실패 시) — 품목별 카테고리 투표
-  if(items&&items.length){
-    const votes={};
-    for(const it of items){
-      const name=(it.name||'').toLowerCase();
-      if(!name)continue;
-      for(const rule of CAT_ITEM_RULES){
-        for(const kw of rule.kws){
-          if(name.includes(kw.toLowerCase())){
-            votes[rule.cat]=(votes[rule.cat]||0)+rule.score;
-            break; // 한 품목에서 같은 카테고리 중복 점수 방지
-          }
-        }
-      }
-    }
-    if(Object.keys(votes).length){
-      const best=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
-      if(best[1]>=2) return best[0]; // 최소 2점 이상이어야 채택
+  // 3. 규칙 사전
+  for(const rule of CAT_RULES){
+    for(const kw of rule.kws){
+      if(s.includes(kw)||sLower.includes(kw.toLowerCase()))return rule.cat;
     }
   }
   return '';
@@ -1078,21 +789,6 @@ function categoryBreakdown(ym){
     .filter(x=>x.amt>0)  // 음수 합계는 표시 안 함 (이상 케이스 방지)
     .sort((a,b)=>b.amt-a.amt);
   return {breakdown:arr,total};
-}
-// 참석자별 분담 집계 — 참석자 N명이면 총액을 1/N씩 배분
-function participantBreakdown(ym){
-  const list=receiptsForMonth(ym);
-  const m=new Map();
-  for(const r of list){
-    const pp=r.participants||[];
-    if(!pp.length)continue;
-    const share=Math.round((r.total||0)/pp.length);
-    for(const name of pp)m.set(name,(m.get(name)||0)+share);
-  }
-  return [...m.entries()]
-    .map(([name,amt])=>({name,amt}))
-    .filter(x=>x.amt>0)
-    .sort((a,b)=>b.amt-a.amt);
 }
 function dailySparkline(ym){
   const days=daysInMonth(ym);
@@ -1176,9 +872,7 @@ function parseReceiptText(raw){
         const unitPrice=_stripNum(parts[parts.length-2]);
         const quantity=_stripNum(parts[parts.length-3])||1;
         const name=parts.slice(0,parts.length-3).join(' | ').trim();
-        // 이름 비어있어도 살림 — 폼에서 직접 채울 수 있게 (노래방·주유·병원 같이 품목명 없는 영수증 대응)
-        // 단, 모두 0이면 제외 (완전히 빈 라인)
-        if(name||amount||unitPrice||quantity>1){
+        if(name){
           out.items.push({name,quantity,unitPrice,amount,category:''});
         }
       }
@@ -1191,23 +885,13 @@ function parseReceiptText(raw){
 function validateParsed(p){
   if(!p)return {ok:false,errors:['파싱된 내용이 없어요']};
   const errs=[];const warns=[];
-  if(!(p.store||'').trim())errs.push('매장명을 입력해주세요');
-  if(!p.date)errs.push('일자를 입력해주세요');
-  if(!(p.total>0))errs.push('총액을 입력해주세요');
-
-  // 이름 있는 품목만 진짜 품목으로 카운트
-  const namedItems=(p.items||[]).filter(it=>(it.name||'').trim());
-  if(!namedItems.length){
-    warns.push('품목 정보가 없어요. 노래방·주유·병원처럼 품목이 없는 영수증은 그대로 저장 가능, 필요하면 아래에서 직접 추가하세요.');
-  }
-  // 합계 검증 — 사용자가 총액을 수동으로 손댔을 때만 차이 안내
-  // (자동 모드면 항상 일치하니까 알림 불필요)
-  if(p._totalManual && namedItems.length){
-    const sum=namedItems.reduce((s,i)=>s+(i.amount||0),0);
-    if(sum!==p.total){
-      const diff=Math.abs(sum-p.total);
-      warns.push(`수동 입력 총액 ${fmtMoney(p.total)}원이 품목 합계 ${fmtMoney(sum)}원과 ${fmtMoney(diff)}원 달라요. 봉사료·할인·세금 등 영수증 사정으로 다르면 그대로 저장하세요.`);
-    }
+  if(!p.store)errs.push('매장명이 비어있어요');
+  if(!p.date)errs.push('일자를 인식할 수 없어요 (YYYY.MM.DD 형식 확인)');
+  if(!p.items.length)errs.push('품목이 하나도 없어요');
+  if(p.total<=0&&p.items.length)warns.push('총액이 0원이거나 인식되지 않았어요');
+  if(p.items.length&&p.total){
+    const sum=p.items.reduce((s,i)=>s+(i.amount||0),0);
+    if(sum!==p.total)warns.push(`품목 합계 ${fmtMoney(sum)}원이 총액 ${fmtMoney(p.total)}원과 달라요 (차이 ${fmtMoney(Math.abs(sum-p.total))}원)`);
   }
   return {ok:errs.length===0,errors:errs,warnings:warns};
 }
@@ -1215,42 +899,6 @@ function validateParsed(p){
 // ════════════════════════════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════════════════════════════
-// 섹션 접기/펼치기 토글 헬퍼
-// key: localStorage 저장 키 (null이면 저장 안 함), defaultOpen: 기본값
-function _sectionToggleHtml(label, sub, key, defaultOpen=true){
-  const chevron=`<svg class="section-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`;
-  return `<button class="section-toggle" data-toggle-key="${key||''}" data-toggle-default="${defaultOpen?'1':'0'}">
-    <span class="section-toggle-lbl">${label}</span>
-    ${sub?`<span class="section-toggle-sub">${sub}</span>`:''}
-    ${chevron}
-  </button>`;
-}
-function _bindSectionToggles(container){
-  container.querySelectorAll('.section-toggle').forEach(btn=>{
-    const key=btn.dataset.toggleKey;
-    const defaultOpen=btn.dataset.toggleDefault!=='0';
-    // 저장된 상태 읽기 (key 있을 때만)
-    let isOpen=defaultOpen;
-    if(key){
-      const saved=localStorage.getItem('tog_'+key);
-      if(saved!==null) isOpen=saved==='1';
-    }
-    const body=btn.nextElementSibling;
-    if(!body)return;
-    // 초기 상태 적용
-    const icon=btn.querySelector('.section-toggle-icon');
-    body.className=`section-body ${isOpen?'open':'closed'}`;
-    if(icon) icon.className=`section-toggle-icon ${isOpen?'open':'closed'}`;
-    // 클릭 토글
-    btn.addEventListener('click',()=>{
-      isOpen=!isOpen;
-      body.className=`section-body ${isOpen?'open':'closed'}`;
-      if(icon) icon.className=`section-toggle-icon ${isOpen?'open':'closed'}`;
-      if(key) localStorage.setItem('tog_'+key, isOpen?'1':'0');
-    });
-  });
-}
-
 function fmtMoney(n){
   if(n==null||isNaN(n))return '0';
   const v=Math.round(Number(n));
@@ -1296,152 +944,31 @@ async function loadAll(){
   updateCatList();
 }
 
-// ── 한국어↔영어 식품 검색어 대역 (영수증에 영문으로 적힌 항목 한글 검색 지원) ──
-const KO_EN_TERMS=[
-  ['베이컨',['bacon']],['햄',['ham']],['소세지',['sausage']],['소시지',['sausage']],
-  ['치즈',['cheese']],['버터',['butter']],['크림',['cream']],['요거트',['yogurt','yoghurt']],
-  ['우유',['milk']],['주스',['juice']],['커피',['coffee']],['라떼',['latte']],
-  ['아메리카노',['americano']],['에스프레소',['espresso']],
-  ['오렌지',['orange']],['레몬',['lemon']],['라임',['lime']],['망고',['mango']],
-  ['바나나',['banana']],['키위',['kiwi']],['딸기',['strawberry']],['포도',['grape']],
-  ['사과',['apple']],['토마토',['tomato']],['아보카도',['avocado']],
-  ['감자',['potato']],['양파',['onion']],['당근',['carrot']],
-  ['브로콜리',['broccoli']],['시금치',['spinach']],['샐러드',['salad']],
-  ['연어',['salmon']],['참치',['tuna']],['새우',['shrimp']],['랍스터',['lobster']],
-  ['치킨',['chicken']],['스테이크',['steak']],['버거',['burger']],['햄버거',['hamburger']],
-  ['피자',['pizza']],['파스타',['pasta']],['스파게티',['spaghetti']],
-  ['케이크',['cake']],['쿠키',['cookie']],['크래커',['cracker']],
-  ['초콜릿',['chocolate']],['캔디',['candy']],['젤리',['jelly']],
-  ['아이스크림',['ice cream','icecream']],['시리얼',['cereal']],['그래놀라',['granola']],
-  ['와인',['wine']],['위스키',['whisky','whiskey']],['맥주',['beer']],
-  ['오일',['oil']],['식초',['vinegar']],['소스',['sauce']],
-];
-
-// 식품 동의어·품종 사전 — 일반어 ↔ 브랜드/품종/영문 양방향 매칭
-// 예: "치즈" 검색 → 하바티·고다·mozzarella 포함 / "하바티" 검색 → 치즈 포함
-const FOOD_TAXONOMY=[
-  ['치즈',  ['cheese','하바티','havarti','고다','gouda','체다','cheddar','브리','brie',
-             '모짜렐라','mozzarella','카망베르','camembert','파마산','parmesan','parmigiano',
-             '에멘탈','emmental','크림치즈','cream cheese','리코타','ricotta','페타','feta',
-             '그뤼에르','gruyere','에담','edam','부라타','burrata']],
-  ['맥주',  ['beer','테라','카스','하이트','클라우드','켈리','필라이트','오비','기네스',
-             'guinness','호가든','hoegaarden','버드와이저','budweiser','칭따오','tsingtao',
-             '코로나','corona','하이네켄','heineken','에일','ale','라거','lager',
-             '흑맥주','stout','포터','porter','밀맥주','wheat beer','ipa']],
-  ['소주',  ['진로','참이슬','처음처럼','새로','청하','한라산','좋은데이','이슬로',
-             '제주한라산','오크','진로이즈백','참진이슬']],
-  ['막걸리',['탁주','동동주','쌀막걸리','느린마을','장수막걸리','이화주']],
-  ['와인',  ['wine','샤도네이','chardonnay','카베르네','cabernet','메를로','merlot',
-             '피노누아','pinot noir','소비뇽블랑','sauvignon blanc','리슬링','riesling',
-             '로제','rose','샴페인','champagne','프로세코','prosecco','스파클링']],
-  ['위스키',['whisky','whiskey','버번','bourbon','스카치','scotch','발렌타인','ballantine',
-             '조니워커','johnnie walker','잭다니엘','jack daniel','글렌피딕','glenfiddich',
-             '맥캘란','macallan','시바스','chivas','아이리시','irish']],
-  ['베이컨',['bacon','판체타','pancetta','베이컨스트립']],
-  ['햄',    ['ham','스팸','spam','런천','luncheon','프로슈토','prosciutto','살라미','salami',
-             '하몽','jamon','mortadella','모르타델라']],
-  ['소시지',['sausage','소세지','비엔나','vienna','프랑크','frankfurter','핫도그','hotdog',
-             'chorizo','초리조','부어스트','bratwurst','브라트부어스트']],
-  ['커피',  ['coffee','아메리카노','americano','에스프레소','espresso','라떼','latte',
-             '카푸치노','cappuccino','마키아토','macchiato','콜드브루','cold brew',
-             '플랫화이트','flat white','드립','drip','핸드드립']],
-  ['요거트',['yogurt','yoghurt','야쿠르트','yakult','액티비아','activia','그릭','greek']],
-  ['초콜릿',['chocolate','초코','choco','킷캣','kitkat','트위닉스','twix','스니커즈',
-             'snickers','허쉬','hershey','가나','ghana','토블론','toblerone','린트','lindt']],
-  ['크래커',['cracker','리츠','ritz','프리미어','premier','트리스킷','triscuit']],
-  ['아이스크림',['ice cream','icecream','아이스','gelato','젤라토','하겐다즈','haagen dazs',
-                '배스킨','baskin','나뚜루','natuur','설레임','비비빅']],
-];
-
-// 검색어에 한영 대역 + 식품 동의어 포함한 검색 텀 배열 반환
-function _getSearchTerms(q){
-  const terms=[q];
-  // 1. 한↔영 직역 (KO_EN_TERMS)
-  for(const[ko,ens]of KO_EN_TERMS){
-    if(q.includes(ko)||ko.includes(q)){ens.forEach(e=>terms.push(e));}
-    for(const e of ens){if(q.includes(e)||e.includes(q)){terms.push(ko);break;}}
-  }
-  // 2. 식품 동의어 양방향 (FOOD_TAXONOMY)
-  for(const[generic,syns]of FOOD_TAXONOMY){
-    const gl=generic.toLowerCase();
-    // 일반어로 검색 (예: "치즈") → 모든 동의어 추가 (하바티, havarti, 고다…)
-    if(q===gl||q.includes(gl)||gl.includes(q)){
-      terms.push(generic);
-      syns.forEach(s=>terms.push(s.toLowerCase()));
-    }
-    // 동의어로 검색 (예: "하바티") → 일반어 + 나머지 동의어 추가
-    for(const s of syns){
-      const sl=s.toLowerCase();
-      if(q===sl||q.includes(sl)||sl.includes(q)){
-        terms.push(gl);
-        syns.forEach(x=>terms.push(x.toLowerCase()));
-        break;
-      }
-    }
-  }
-  return [...new Set(terms)];
-}
-
 function getFiltered(){
   const q=searchQuery.trim().toLowerCase();
   if(!q){
     // 검색 없으면 현재 보고 있는 월의 영수증만
     return receiptsForMonth(viewMonth);
   }
-
-  // ── "결제자 X" 접두어 검색 ──
-  if(q.startsWith('결제자 ')){
-    const pq=q.slice(4).trim();
-    if(pq) return receipts.filter(r=>(r.paidBy||'').toLowerCase().includes(pq));
-  }
-  // ── "참석자 X" 접두어 검색 ──
-  if(q.startsWith('참석자 ')){
-    const pq=q.slice(4).trim().toLowerCase();
-    if(pq) return receipts.filter(r=>(r.participants||[]).some(p=>p.toLowerCase().includes(pq)));
-  }
-
-  // ── 카테고리명 매칭 시 해당 카테고리 키워드로 확장 ──
-  const expandedKws=new Set();
-  for(const rule of CAT_RULES){
-    if(rule.cat.toLowerCase().startsWith(q)||rule.cat.toLowerCase()===q){
-      rule.kws.forEach(kw=>expandedKws.add(kw.toLowerCase()));
-    }
-  }
-
-  // ── 한영 대역 검색 텀 (베이컨→bacon 등) ──
-  const itemTerms=_getSearchTerms(q);
-
   // 검색 있으면 전체에서
   return receipts.filter(r=>{
     if((r.store||'').toLowerCase().includes(q))return true;
     if((r.category||'').toLowerCase().includes(q))return true;
     if((r.date||'').includes(q))return true;
-    if((r.paidBy||'').toLowerCase().includes(q))return true;
     if((r.notes||'').toLowerCase().includes(q))return true;
-    if((r.participants||[]).join(' ').toLowerCase().includes(q))return true;
     if((r.tags||[]).join(' ').toLowerCase().includes(q))return true;
-    // 품목명 — 한영 대역 포함 검색
-    if((r.items||[]).some(it=>{
-      const n=(it.name||'').toLowerCase();
-      return itemTerms.some(t=>n.includes(t));
-    }))return true;
-    // 카테고리 키워드 확장
-    if(expandedKws.size){
-      const storeL=(r.store||'').toLowerCase();
-      const itemsL=(r.items||[]).map(it=>(it.name||'').toLowerCase()).join('\n');
-      if([...expandedKws].some(kw=>storeL.includes(kw)||itemsL.includes(kw)))return true;
-    }
+    if((r.items||[]).some(it=>(it.name||'').toLowerCase().includes(q)))return true;
     return false;
   });
 }
 
 function _cardHtml(r){
   const sel=(r.id===selectedId)?' sel':'';
+  const thumbHtml=r.imageId?`<div class="r-thumb" data-img="${r.imageId}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></div>`:`<div class="r-thumb"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h12a2 2 0 0 1 2 2v15l-3-2-3 2-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2z"/></svg></div>`;
   const meta=[fmtDateKor(r.date)];
   if(r.category)meta.push(escapeHtml(r.category));
-  if(r.paidBy)meta.push(escapeHtml(r.paidBy));
-  if((r.participants||[]).length>0)meta.push(`👥 ${r.participants.length}명`);
   return `<div class="r-card${sel}" data-id="${r.id}">
+    ${thumbHtml}
     <div class="r-card-info">
       <div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div>
       <div class="r-card-meta">${meta.join(' · ')}</div>
@@ -1451,13 +978,9 @@ function _cardHtml(r){
 }
 
 function renderSide(){
-  // 월 네비 라벨 갱신 — 영수증 선택 중이면 파란색 힌트 표시
+  // 월 네비 라벨 갱신
   const monthLabelEl=document.getElementById('monthLabel');
-  if(monthLabelEl){
-    monthLabelEl.textContent=ymLabel(viewMonth);
-    monthLabelEl.title=selectedId?'클릭하면 가계부 요약으로 돌아가요':'';
-    monthLabelEl.classList.toggle('has-sel',!!selectedId);
-  }
+  if(monthLabelEl)monthLabelEl.textContent=ymLabel(viewMonth);
   const monthTodayEl=document.getElementById('monthToday');
   if(monthTodayEl)monthTodayEl.classList.toggle('hidden',viewMonth===_currentYM());
 
@@ -1501,6 +1024,14 @@ function renderSide(){
       const id=el.dataset.id;selectReceipt(id);
     });
   });
+  // 썸네일 lazy 로드
+  list.querySelectorAll('.r-thumb[data-img]').forEach(async el=>{
+    const imgId=el.dataset.img;
+    const url=await _ensureImgUrl(imgId);
+    if(url&&el.isConnected){
+      el.innerHTML=`<img src="${url}" alt=""/>`;
+    }
+  });
 }
 
 function updateStats(){
@@ -1529,7 +1060,6 @@ function switchTab(name){
   document.getElementById('monthNav').style.display=(name==='list')?'flex':'none';
   document.querySelector('.side-search').style.display=(name==='list')?'block':'none';
   if(name==='input'){setTimeout(()=>document.getElementById('pasteTa').focus(),50);}
-  if(name==='settings'){renderDbxSettings();}
 }
 document.querySelectorAll('.tab').forEach(t=>{
   t.addEventListener('click',()=>switchTab(t.dataset.tab));
@@ -1549,10 +1079,6 @@ function changeMonth(offset){
 document.getElementById('monthPrev').addEventListener('click',()=>changeMonth(-1));
 document.getElementById('monthNext').addEventListener('click',()=>changeMonth(1));
 document.getElementById('monthToday').addEventListener('click',()=>changeMonth(0));
-// 월 레이블 클릭 → 영수증 선택 해제, 가계부 요약으로 복귀
-document.getElementById('monthLabel').addEventListener('click',()=>{
-  if(selectedId){selectedId=null;renderSide();renderDetail();}
-});
 
 // ════════════════════════════════════════════════════════════════
 // SEARCH (with IME guard)
@@ -1560,8 +1086,8 @@ document.getElementById('monthLabel').addEventListener('click',()=>{
 const searchInp=document.getElementById('searchInp');
 let _searchComposing=false;
 searchInp.addEventListener('compositionstart',()=>{_searchComposing=true;});
-searchInp.addEventListener('compositionend',()=>{_searchComposing=false;searchQuery=searchInp.value;renderSide();renderDetail();});
-searchInp.addEventListener('input',()=>{if(!_searchComposing){searchQuery=searchInp.value;renderSide();renderDetail();}});
+searchInp.addEventListener('compositionend',()=>{_searchComposing=false;searchQuery=searchInp.value;renderSide();});
+searchInp.addEventListener('input',()=>{if(!_searchComposing){searchQuery=searchInp.value;renderSide();}});
 
 // ════════════════════════════════════════════════════════════════
 // INPUT VIEW — paste + photo + preview + save
@@ -1575,7 +1101,6 @@ const photoInp=document.getElementById('photoInp');
 let _currentParsed=null;
 let _pasteComposing=false;
 let _catAutoFilled=false;  // 카테고리가 자동 채워진 상태인지
-let _catAutoSource='store'; // 'store' | 'items' — 어디서 자동 분류됐는지
 pasteTa.addEventListener('compositionstart',()=>{_pasteComposing=true;});
 pasteTa.addEventListener('compositionend',()=>{_pasteComposing=false;updatePreview();});
 pasteTa.addEventListener('input',()=>{if(!_pasteComposing)updatePreview();});
@@ -1585,16 +1110,14 @@ pasteTa.addEventListener('paste',()=>{setTimeout(updatePreview,30);});
 const catInpEl=document.getElementById('catInp');
 let _catComposing=false;
 catInpEl.addEventListener('compositionstart',()=>{_catComposing=true;});
-catInpEl.addEventListener('compositionend',()=>{_catComposing=false;_catAutoFilled=false;_catAutoSource='store';_updateCatHint();});
-catInpEl.addEventListener('input',()=>{if(!_catComposing){_catAutoFilled=false;_catAutoSource='store';_updateCatHint();}});
+catInpEl.addEventListener('compositionend',()=>{_catComposing=false;_catAutoFilled=false;_updateCatHint();});
+catInpEl.addEventListener('input',()=>{if(!_catComposing){_catAutoFilled=false;_updateCatHint();}});
 
 function _updateCatHint(){
   const hint=document.getElementById('catAutoHint');
   if(!hint)return;
   if(_catAutoFilled){
-    hint.textContent=_catAutoSource==='items'
-      ? '→ 품목명에서 자동 분류됨 (수정 가능)'
-      : '→ 가게명에서 자동 분류됨 (수정 가능)';
+    hint.textContent='→ 가게명에서 자동 분류됨 (수정 가능)';
     hint.style.color='var(--green-txt)';
   }else{
     hint.textContent='자동 분류돼요';
@@ -1606,28 +1129,18 @@ function updatePreview(){
   const v=pasteTa.value;
   if(!v.trim()){
     _currentParsed=null;
-    previewArea.innerHTML=`<div class="empty-state" style="padding:32px 16px;background:var(--fill2);border-radius:var(--rm);border:1px dashed var(--sep2);">텍스트를 붙여넣으면 자동으로 파싱되어 표시됩니다.<br/><span style="font-size:11px;">붙여넣기 후 미리보기에서 직접 수정 가능해요.</span></div>`;
+    previewArea.innerHTML=`<div class="empty-state" style="padding:32px 16px;background:var(--fill2);border-radius:var(--rm);border:1px dashed var(--sep2);">텍스트를 붙여넣으면 자동으로 파싱되어 표시됩니다.</div>`;
     saveBtn.disabled=true;
     return;
   }
   const p=parseReceiptText(v);
-  if(p){
-    // GPT가 읽어온 총액은 참고용으로만 보존, 미리보기는 항상 자동 합계로 시작
-    p._gptTotal=p.total;
-    p._totalManual=false;
-    // 모든 품목 amount를 (가능하면) 수량×단가로 재계산 — GPT 표기 오류 보정
-    for(const it of p.items||[])_recalcAmount(it);
-    p.total=(p.items||[]).reduce((s,i)=>s+(i.amount||0),0);
-  }
   _currentParsed=p;
   // 가게명 인식되면 카테고리 자동 채움 (입력란이 비어있거나 이전에 자동 채웠을 때만)
-  if(p&&p.store||((p?.items||[]).length)){
-    const autoStore=autocategorize(p.store);
-    const auto=autoStore||autocategorize(p.store, p.items||[]);
+  if(p&&p.store){
+    const auto=autocategorize(p.store);
     if(auto && (catInpEl.value.trim()===''||_catAutoFilled)){
       catInpEl.value=auto;
       _catAutoFilled=true;
-      _catAutoSource=autoStore?'store':'items';
       _updateCatHint();
     }
   }
@@ -1636,32 +1149,19 @@ function updatePreview(){
     saveBtn.disabled=true;
     return;
   }
-  renderPreviewForm();
-}
-
-// 미리보기 폼을 그리고 이벤트 바인딩. 사용자가 어디든 손댈 수 있게.
-function renderPreviewForm(){
-  const p=_currentParsed;
-  if(!p){return;}
-  const namedItems=(p.items||[]).filter(it=>(it.name||'').trim());
-  const sum=namedItems.reduce((s,i)=>s+(i.amount||0),0);
-  const matchOk=sum===p.total||namedItems.length===0;
-
-  const itemsHtml=(p.items||[]).length
-    ? (`<div class="prev-items-head-row"><span>품목명</span><span>수량</span><span>단가</span><span>금액</span><span></span></div>` +
-       p.items.map((it,idx)=>{
-        const negCls=(it.amount||0)<0?' neg':'';
-        return `<div class="prev-item-row" data-idx="${idx}">
-          <input class="prev-item-name" data-f="name" placeholder="품목명" value="${escapeHtml(it.name||'')}" autocomplete="off"/>
-          <input class="prev-item-qty" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||1}"/>
-          <input class="prev-item-price" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/>
-          <div class="prev-item-amt readonly${negCls}" data-amt="${idx}"><button type="button" class="sign-btn" data-sign="${idx}" tabindex="-1" title="부호 전환 (+/−)" aria-label="부호 전환">±</button>${_fmtN(it.amount||0)}</div>
-          <button type="button" class="prev-item-del" tabindex="-1" data-del="${idx}" title="이 품목 삭제" aria-label="삭제">×</button>
-        </div>`;
-      }).join(''))
-    : '<div class="prev-empty-items">품목 없음 — 필요하면 우측 <b>+ 추가</b>로 직접 입력</div>';
-
   const v2=validateParsed(p);
+  const itemsHtml=p.items.map(it=>{
+    const cls=(it.amount<0)?' amt-neg':'';
+    const q=(it.quantity>1)?`<span class="preview-item-qty">×${it.quantity}</span>`:'';
+    return `<div class="preview-item-row">
+      <span class="preview-item-name">${escapeHtml(it.name)}</span>
+      ${q}
+      <span class="preview-item-amt${cls}">${fmtMoney(it.amount)}원</span>
+    </div>`;
+  }).join('');
+  const sum=p.items.reduce((s,i)=>s+(i.amount||0),0);
+  const matchOk=sum===p.total;
+  const matchHtml=p.items.length?`<div class="preview-foot"><span>품목 합계</span><span${matchOk?'':' style="color:var(--red);font-weight:600;"'}>${fmtMoney(sum)}원${matchOk?'':' ≠ 총액'}</span></div>`:'';
   let alertsHtml='';
   if(v2.errors.length){
     alertsHtml+=`<div class="alert err"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>${v2.errors.map(escapeHtml).join('<br>')}</div></div>`;
@@ -1670,293 +1170,32 @@ function renderPreviewForm(){
     alertsHtml+=`<div class="alert warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><div>${v2.warnings.map(escapeHtml).join('<br>')}</div></div>`;
   }
   if(!v2.errors.length&&!v2.warnings.length){
-    alertsHtml=`<div class="alert ok"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><div>정상이에요. 필요한 부분 수정 후 사진 첨부하고 저장하세요.</div></div>`;
+    alertsHtml=`<div class="alert ok"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><div>정상적으로 파싱되었어요. 사진을 첨부하고 저장하세요.</div></div>`;
   }
-
-  const autoTotal=_autoTotal();
-  const totalDiff=p.total!==autoTotal;
-  const totalHintHtml=p._totalManual
-    ? `<div class="prev-total-hint${totalDiff?' diff':''}">
-        ${totalDiff
-          ? `수동 입력 · 자동 합계 <b>${fmtMoney(autoTotal)}원</b>과 다름`
-          : `수동 입력 · 자동 합계와 일치`}
-        <button type="button" class="prev-total-reset" title="자동 합계로 되돌리기">↺ 자동</button>
-      </div>`
-    : `<div class="prev-total-hint">자동 합계 · 품목 금액의 합</div>`;
-
   previewArea.innerHTML=`
-    <div class="preview-form">
-      <div class="prev-row">
-        <input class="prev-store" placeholder="매장명" value="${escapeHtml(p.store||'')}" autocomplete="off"/>
-      </div>
-      <div class="prev-row split">
-        <input class="prev-date" type="date" value="${p.date||''}"/>
-        <span class="prev-total-cell"><input class="prev-total" type="text" inputmode="numeric" placeholder="0" value="${_fmtN(p.total||0)}"/></span>
-      </div>
-      ${totalHintHtml}
-      <div class="prev-items">
-        <div class="prev-items-hd">
-          <span>품목 ${namedItems.length>0?`<span class="prev-items-count">· ${namedItems.length}개</span>`:''}</span>
-          <button type="button" class="prev-add-item">+ 추가</button>
+    <div class="preview-card">
+      <div class="preview-hd">
+        <div>
+          <div class="preview-store">${escapeHtml(p.store||'(매장명 없음)')}</div>
+          <div class="preview-date">${fmtDateKor(p.date)||'(날짜 없음)'}</div>
         </div>
-        ${itemsHtml}
+        <div>
+          <div class="preview-total${p.total<0?' amt-neg':''}">${fmtMoney(p.total)}원</div>
+        </div>
       </div>
-      ${namedItems.length>0?`<div class="prev-foot"><span class="prev-foot-lbl">품목 합계</span><span class="prev-foot-val${matchOk?'':' mismatch'}">${fmtMoney(sum)}원${matchOk?'':` ≠ 총액 ${fmtMoney(p.total)}원`}</span></div>`:''}
+      <div class="preview-items">${itemsHtml||'<div style="color:var(--label3);font-size:12px;padding:6px 0;">품목이 없어요</div>'}</div>
+      ${matchHtml}
     </div>
     ${alertsHtml}
   `;
-
-  bindPreviewFormEvents();
   saveBtn.disabled=v2.errors.length>0;
-}
-
-// 합계·검증·저장 활성화만 부분 갱신 — input 포커스를 깨지 않기 위함
-function _refreshPreviewSummary(){
-  const p=_currentParsed;
-  if(!p)return;
-  const namedItems=(p.items||[]).filter(it=>(it.name||'').trim());
-  const sum=namedItems.reduce((s,i)=>s+(i.amount||0),0);
-  const matchOk=sum===p.total||namedItems.length===0;
-  // 합계 라인
-  const foot=previewArea.querySelector('.prev-foot-val');
-  if(foot){
-    foot.textContent=`${fmtMoney(sum)}원${matchOk?'':` ≠ 총액 ${fmtMoney(p.total)}원`}`;
-    foot.classList.toggle('mismatch',!matchOk);
-  }
-  // alert 영역은 입력 중에 자주 바뀌면 거슬리니 일단 두고, 저장 버튼만 체크
-  const v2=validateParsed(p);
-  saveBtn.disabled=v2.errors.length>0;
-}
-
-function bindPreviewFormEvents(){
-  const p=_currentParsed;
-  if(!p)return;
-
-  // ── 헤더: 매장명 ──
-  const storeInp=previewArea.querySelector('.prev-store');
-  if(storeInp){
-    let composing=false;
-    storeInp.addEventListener('compositionstart',()=>{composing=true;});
-    storeInp.addEventListener('compositionend',()=>{composing=false;p.store=storeInp.value;});
-    storeInp.addEventListener('input',()=>{if(!composing)p.store=storeInp.value;});
-    storeInp.addEventListener('blur',()=>{
-      p.store=storeInp.value.trim();
-      // 매장명 바뀌면 카테고리 자동 재추정 (자동 채움 상태일 때만 덮어쓰기)
-      if(_catAutoFilled||catInpEl.value.trim()===''){
-        const autoStore=autocategorize(p.store);
-        const auto=autoStore||autocategorize(p.store, p.items||[]);
-        if(auto){catInpEl.value=auto;_catAutoFilled=true;_catAutoSource=autoStore?'store':'items';_updateCatHint();}
-      }
-      // 검증 갱신 — 다시 그리지 않고 alert 영역만 갱신하려면 더 복잡해지니 일단 전체 다시
-      renderPreviewForm();
-    });
-  }
-  // ── 일자 — 클릭/포커스 시 달력 즉시 열기 ──
-  const dateInp=previewArea.querySelector('.prev-date');
-  if(dateInp){
-    const openPicker=()=>{
-      if(typeof dateInp.showPicker==='function'){
-        try{dateInp.showPicker();}catch(_){/* iOS 등 일부에서 안 됨 */}
-      }
-    };
-    dateInp.addEventListener('click',openPicker);
-    dateInp.addEventListener('focus',openPicker);
-    dateInp.addEventListener('change',()=>{p.date=dateInp.value;renderPreviewForm();});
-  }
-  // ── 총액 ── (사용자가 직접 손대면 수동 모드로 전환, 쉼표 표시)
-  const totalInp=previewArea.querySelector('.prev-total');
-  if(totalInp){
-    const commit=()=>{
-      p._totalManual=true;
-      p.total=_parseN(totalInp.value);
-      _refreshPreviewSummary();
-    };
-    totalInp.addEventListener('input',commit);
-    totalInp.addEventListener('focus',()=>{
-      // 포커스 시 쉼표 제거해서 편집 편하게
-      totalInp.value=String(p.total||0);
-      totalInp.select();
-    });
-    totalInp.addEventListener('blur',()=>{
-      commit();
-      totalInp.value=_fmtN(p.total);
-      renderPreviewForm();
-    });
-  }
-  // ── 자동 복귀 버튼 ↺ ──
-  const resetBtn=previewArea.querySelector('.prev-total-reset');
-  if(resetBtn){
-    resetBtn.addEventListener('click',()=>{
-      p._totalManual=false;
-      _recalcTotalIfAuto();
-      renderPreviewForm();
-    });
-  }
-
-  // ── 품목 행 ──
-  previewArea.querySelectorAll('.prev-item-row').forEach(row=>{
-    const idx=parseInt(row.dataset.idx,10);
-    const it=p.items[idx];if(!it)return;
-
-    // 품목 input들 (name, quantity, unitPrice) — amount는 div라 제외됨
-    row.querySelectorAll('input').forEach(inp=>{
-      const f=inp.dataset.f;
-      let composing=false;
-
-      // 값 추출: name은 그대로, quantity는 정수(text→parseInt), unitPrice는 _parseN
-      const readVal=()=>{
-        if(f==='name')return inp.value;
-        if(f==='unitPrice')return _parseN(inp.value);
-        if(f==='quantity')return parseInt(inp.value)||0;
-        return parseFloat(inp.value)||0;
-      };
-      const assign=()=>_assignItemField(it,f,readVal());
-
-      // 입력 후처리 — 수량/단가면 amount 자동 갱신, 총액 자동 모드면 총액도 갱신
-      const afterChange=()=>{
-        if(f==='quantity'||f==='unitPrice'){
-          _recalcAmount(it);
-          const amtEl=row.querySelector('.prev-item-amt');
-          if(amtEl){
-            amtEl.textContent=_fmtN(it.amount||0);
-            amtEl.classList.toggle('neg',(it.amount||0)<0);
-          }
-        }
-        _recalcTotalIfAuto();
-        if(!p._totalManual){
-          const tInp=previewArea.querySelector('.prev-total');
-          if(tInp&&document.activeElement!==tInp)tInp.value=_fmtN(p.total);
-        }
-        _refreshPreviewSummary();
-      };
-
-      inp.addEventListener('compositionstart',()=>{composing=true;});
-      inp.addEventListener('compositionend',()=>{composing=false;assign();afterChange();});
-
-      if(f==='name'){
-        inp.addEventListener('input',()=>{if(!composing)assign();});
-        // 포커스 시 전체 선택 — 바로 덮어쓸 수 있게
-        inp.addEventListener('focus',()=>inp.select());
-        // blur 시 renderPreviewForm() 호출 금지:
-        //  ① blur → DOM 재건 → Tab 포커스 날아감 (issue 2)
-        //  ② blur → DOM 재건 → 직후 클릭 이벤트(+추가 등) 소실 (issue 1)
-        inp.addEventListener('blur',()=>{assign();_refreshPreviewSummary();});
-      }else if(f==='quantity'){
-        inp.addEventListener('input',()=>{
-          // 숫자만 허용
-          const cleaned=inp.value.replace(/[^0-9]/g,'');
-          if(inp.value!==cleaned)inp.value=cleaned;
-          assign();afterChange();
-        });
-        inp.addEventListener('focus',()=>inp.select());
-        inp.addEventListener('blur',()=>{
-          // 빈값 방지: 0이면 1로
-          const n=parseInt(inp.value)||1;
-          inp.value=String(n);
-          assign();_refreshPreviewSummary();
-        });
-      }else if(f==='unitPrice'){
-        // 포커스 시 쉼표 제거 + 전체 선택, blur 시 쉼표 복귀
-        inp.addEventListener('focus',()=>{
-          inp.value=String(it.unitPrice||0);
-          inp.select();
-        });
-        inp.addEventListener('input',()=>{assign();afterChange();});
-        inp.addEventListener('blur',()=>{
-          assign();
-          inp.value=_fmtN(it.unitPrice||0);
-          _refreshPreviewSummary();
-        });
-      }
-    });
-
-    const delBtn=row.querySelector('.prev-item-del');
-    if(delBtn){
-      delBtn.addEventListener('click',()=>{
-        p.items.splice(idx,1);
-        _recalcTotalIfAuto();
-        renderPreviewForm();
-      });
-    }
-
-    // ± 부호 전환 버튼
-    const signBtn=row.querySelector('.sign-btn');
-    if(signBtn){
-      signBtn.addEventListener('click',()=>{
-        it.amount=-(it.amount||0);
-        // unitPrice도 함께 반전 → 수량·단가 변경 후에도 부호 유지
-        if(it.unitPrice)it.unitPrice=-it.unitPrice;
-        _recalcTotalIfAuto();
-        renderPreviewForm();
-      });
-    }
-  });
-
-  // ── + 추가 버튼 ──
-  const addBtn=previewArea.querySelector('.prev-add-item');
-  if(addBtn){
-    addBtn.addEventListener('click',()=>{
-      p.items=p.items||[];
-      p.items.push({name:'',quantity:1,unitPrice:0,amount:0,category:''});
-      renderPreviewForm();
-      // 새 라인 name input에 포커스
-      setTimeout(()=>{
-        const rows=previewArea.querySelectorAll('.prev-item-row');
-        const last=rows[rows.length-1];
-        if(last)last.querySelector('.prev-item-name').focus();
-      },20);
-    });
-  }
-}
-
-function _assignItemField(it,f,val){
-  if(f==='name'){it.name=val;}
-  else{
-    const n=parseFloat(val);
-    it[f]=isNaN(n)?0:Math.round(n);
-  }
-}
-
-// 천단위 쉼표 포매팅 + 파싱 (text input용)
-function _fmtN(n){
-  if(n==null||isNaN(n))return '0';
-  return Math.round(Number(n)).toLocaleString('ko-KR');
-}
-function _parseN(s){
-  const cleaned=String(s==null?'':s).replace(/[^0-9-]/g,'');
-  if(!cleaned||cleaned==='-')return 0;
-  const n=parseInt(cleaned,10);
-  return isNaN(n)?0:n;
-}
-
-// 수량과 단가가 둘 다 nonzero일 때만 금액 = 수량×단가 자동 갱신.
-// 둘 중 하나라도 0이면 사용자가 amount만 직접 입력한 의도로 보고 그대로 둠.
-function _recalcAmount(it){
-  if(!it)return;
-  if((it.quantity||0)!==0 && (it.unitPrice||0)!==0){
-    it.amount=Math.round(it.quantity*it.unitPrice);
-  }
-}
-
-// 사용자가 총액을 손대지 않았으면(자동 모드) 총액 = Σ(amount).
-function _recalcTotalIfAuto(){
-  const p=_currentParsed;
-  if(!p||p._totalManual)return;
-  p.total=(p.items||[]).reduce((s,i)=>s+(i.amount||0),0);
-}
-
-function _autoTotal(){
-  const p=_currentParsed;
-  if(!p)return 0;
-  return (p.items||[]).reduce((s,i)=>s+(i.amount||0),0);
 }
 
 // ── PHOTO ──
-const _isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
-const _photoHint=_isTouch?'탭하여 카메라 또는 갤러리 열기':'클릭하거나 이미지를 드래그해서 추가';
-
-function _applyPhoto(f){
-  if(!f||!f.type.startsWith('image/'))return;
+photoZone.addEventListener('click',()=>photoInp.click());
+photoInp.addEventListener('change',()=>{
+  const f=photoInp.files&&photoInp.files[0];
+  if(!f)return;
   if(pendingPhotoUrl){URL.revokeObjectURL(pendingPhotoUrl);}
   pendingPhotoBlob=f;
   pendingPhotoUrl=URL.createObjectURL(f);
@@ -1968,27 +1207,10 @@ function _applyPhoto(f){
     </button>
   `;
   photoZone.querySelector('.photo-remove').addEventListener('click',e=>{
-    e.stopPropagation();clearPhoto();
+    e.stopPropagation();
+    clearPhoto();
   });
-}
-
-photoZone.addEventListener('click',()=>photoInp.click());
-photoInp.addEventListener('change',()=>_applyPhoto(photoInp.files&&photoInp.files[0]));
-
-// 데스크탑 드래그&드롭
-['dragenter','dragover'].forEach(ev=>photoZone.addEventListener(ev,e=>{
-  e.preventDefault();e.stopPropagation();
-  photoZone.classList.add('drag');
-}));
-['dragleave','dragend'].forEach(ev=>photoZone.addEventListener(ev,e=>{
-  if(!photoZone.contains(e.relatedTarget))photoZone.classList.remove('drag');
-}));
-photoZone.addEventListener('drop',e=>{
-  e.preventDefault();e.stopPropagation();
-  photoZone.classList.remove('drag');
-  _applyPhoto(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]);
 });
-
 function clearPhoto(){
   if(pendingPhotoUrl){URL.revokeObjectURL(pendingPhotoUrl);pendingPhotoUrl=null;}
   pendingPhotoBlob=null;
@@ -1997,7 +1219,7 @@ function clearPhoto(){
   photoZone.innerHTML=`
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
     <div class="photo-zone-text">사진 추가</div>
-    <div class="photo-zone-hint">${_photoHint}</div>
+    <div class="photo-zone-hint">탭하여 카메라 또는 갤러리 열기</div>
   `;
 }
 
@@ -2029,27 +1251,20 @@ saveBtn.addEventListener('click',async()=>{
     imageId='img_'+id.slice(4);  // img_YYYYMMDD_NNN
     await dbPut('images',{id:imageId,blob:pendingPhotoBlob,mime:pendingPhotoBlob.type||'image/jpeg'});
   }
-  const participants=(document.getElementById('participantsInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const tags=(document.getElementById('tagInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const finalCat=document.getElementById('catInp').value.trim();
-  // 이름 비어있는 품목은 자동 제거 (편집 중 빈 라인이 남았을 수 있음)
-  const cleanItems=(p.items||[])
-    .filter(it=>(it.name||'').trim())
-    .map(it=>({name:it.name.trim(),quantity:it.quantity||1,unitPrice:it.unitPrice||0,amount:it.amount||0,category:''}));
   const rec={
     id,
     date,
     time:p.time||'',
-    store:(p.store||'').trim(),
+    store:p.store||'',
     category:finalCat,
     paymentMethod:document.getElementById('payMethod').value,
     paymentDetail:document.getElementById('payDetail').value.trim(),
-    paidBy:document.getElementById('payerInp').value.trim(),
     total:p.total||0,
-    items:cleanItems,
+    items:p.items.map(it=>({name:it.name,quantity:it.quantity,unitPrice:it.unitPrice,amount:it.amount,category:''})),
     imageId,
     notes:document.getElementById('noteInp').value,
-    participants,
     tags,
     createdAt:nowISO(),updatedAt:nowISO(),
   };
@@ -2068,23 +1283,13 @@ saveBtn.addEventListener('click',async()=>{
   switchTab('list');
   renderSide();
   renderDetail();
-  // 모바일: 저장 후 상세 패널로 스크롤
-  if(_isTouch){
-    setTimeout(()=>{
-      document.querySelector('.main').scrollIntoView({behavior:'smooth',block:'start'});
-    },80);
-  }
-  // 자동 동기화 (백그라운드 — UI 차단 없음)
-  dbxSyncUpload();
 });
 
 function clearInputs(){
   pasteTa.value='';
   document.getElementById('payMethod').value='card';
   document.getElementById('payDetail').value='';
-  document.getElementById('payerInp').value='';
   document.getElementById('catInp').value='';
-  document.getElementById('participantsInp').value='';
   document.getElementById('tagInp').value='';
   document.getElementById('noteInp').value='';
   clearPhoto();
@@ -2111,317 +1316,12 @@ async function selectReceipt(id){
   }
   renderSide();
   await renderDetail();
-  // 모바일: 상세 패널로 부드럽게 스크롤
-  if(_isTouch){
-    setTimeout(()=>{
-      document.querySelector('.main').scrollIntoView({behavior:'smooth',block:'start'});
-    },80);
-  }
-}
-
-// ── 검색 결과 요약 패널 ──
-function renderSearchSummaryHtml(q, filtered){
-  if(!filtered.length){
-    return `<div class="budget-empty-state">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <div style="font-weight:600;margin-bottom:4px;">'${escapeHtml(q)}' 검색 결과가 없어요</div>
-      <div style="font-size:12px;color:var(--label3);">다른 검색어를 입력해보세요</div>
-    </div>`;
-  }
-
-  const terms=_getSearchTerms(q);
-
-  // 품목명 매칭 이력 수집 (unitPrice도 포함)
-  const hitItems=[];
-  for(const r of filtered){
-    for(const it of (r.items||[])){
-      const nameL=(it.name||'').toLowerCase();
-      if(terms.some(t=>t&&nameL.includes(t))){
-        hitItems.push({
-          name:it.name, amount:it.amount||0,
-          quantity:it.quantity||1, unitPrice:it.unitPrice||0,
-          receiptId:r.id, date:r.date, store:r.store, paidBy:r.paidBy
-        });
-      }
-    }
-  }
-
-  let statsHtml='';
-  let bodyHtml='';
-  if(hitItems.length>0){
-    // ── 품목 통계 계산 ──
-    const totalQty=hitItems.reduce((s,it)=>s+(it.quantity||1),0);
-    const totalSpend=hitItems.reduce((s,it)=>s+Math.max(0,it.amount||0),0);
-    // 단가 기준 min/avg/max (unitPrice > 0인 항목만, 없으면 amount 사용)
-    const upList=hitItems.filter(it=>it.unitPrice>0).map(it=>it.unitPrice);
-    const priceList=upList.length>0 ? upList : hitItems.map(it=>it.amount).filter(a=>a>0);
-    const priceLabel=upList.length>0 ? '단가' : '금액';
-    const avgUnit=totalQty>0&&totalSpend>0 ? Math.round(totalSpend/totalQty) : 0;
-
-    // ── 히어로 요약 카드 (구매횟수 + 총지출) ──
-    statsHtml=`<div class="payer-hero" style="margin-bottom:12px;">
-      <div class="payer-stat">
-        <div class="payer-stat-lbl">구매 횟수</div>
-        <div class="payer-stat-val">${hitItems.length}<span style="font-size:14px;font-weight:500;color:var(--label3);margin-left:3px;">건</span></div>
-        <div class="payer-stat-sub">총 ${totalQty}개${avgUnit>0?' · 개당 평균 '+fmtMoney(avgUnit)+'원':''}</div>
-      </div>
-      <div class="payer-stat total">
-        <div class="payer-stat-lbl">총 지출</div>
-        <div class="payer-stat-val">${fmtMoney(totalSpend)}<span style="font-size:14px;font-weight:500;margin-left:3px;">원</span></div>
-        <div class="payer-stat-sub">${hitItems.length>0?fmtDateKor([...hitItems].sort((a,b)=>a.date.localeCompare(b.date))[0].date)+' ~ '+fmtDateKor([...hitItems].sort((a,b)=>b.date.localeCompare(a.date))[0].date):''}</div>
-      </div>
-    </div>`;
-
-    // ── 단가 min/avg/max (2건 이상일 때만) ──
-    if(priceList.length>1){
-      const minP=Math.min(...priceList);
-      const maxP=Math.max(...priceList);
-      const avgP=Math.round(priceList.reduce((s,a)=>s+a,0)/priceList.length);
-      statsHtml+=`<div class="srch-stats" style="margin-bottom:16px;">
-        <div class="srch-stat"><div class="srch-stat-lbl">최저 ${priceLabel}</div><div class="srch-stat-val">${fmtMoney(minP)}원</div></div>
-        <div class="srch-stat srch-stat-avg"><div class="srch-stat-lbl">평균 ${priceLabel}</div><div class="srch-stat-val">${fmtMoney(avgP)}원</div></div>
-        <div class="srch-stat"><div class="srch-stat-lbl">최고 ${priceLabel}</div><div class="srch-stat-val">${fmtMoney(maxP)}원</div></div>
-      </div>`;
-    }
-
-    // ── 구매 이력 테이블 (수량·단가 컬럼 추가) ──
-    const hasUP=hitItems.some(it=>it.unitPrice>0);
-    const sorted=[...hitItems].sort((a,b)=>b.date.localeCompare(a.date));
-    bodyHtml=`${_sectionToggleHtml('구매 이력',`${hitItems.length}건`,'srch_history',true)}
-    <div class="section-body open">
-    <table class="srch-table">
-      <thead><tr><th>일자</th><th>매장명</th><th>품목명</th><th>수량</th>${hasUP?'<th>단가</th>':''}<th>금액</th></tr></thead>
-      <tbody>${sorted.map(it=>`
-        <tr class="srch-row" data-id="${it.receiptId}">
-          <td style="white-space:nowrap;">${fmtDateKor(it.date)}</td>
-          <td>${escapeHtml(it.store||'')}</td>
-          <td>${escapeHtml(it.name||'')}</td>
-          <td style="text-align:right;">${it.quantity||1}</td>
-          ${hasUP?`<td>${it.unitPrice>0?fmtMoney(it.unitPrice)+'원':'—'}</td>`:''}
-          <td class="${it.amount<0?'amt-neg':''}">${fmtMoney(it.amount)}원</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>
-    </div>`;
-  }else{
-    // 영수증 레벨 매칭 — 목록 테이블
-    const sorted=[...filtered].sort((a,b)=>b.date.localeCompare(a.date));
-    const total=sorted.reduce((s,r)=>s+(r.total||0),0);
-    const hasPayer=sorted.some(r=>r.paidBy);
-    bodyHtml=`<div class="section-hd" style="margin-top:0;">영수증 목록 <span style="font-weight:500;color:var(--label3);text-transform:none;letter-spacing:0;">${filtered.length}건</span></div>
-    <table class="srch-table">
-      <thead><tr><th>일자</th><th>매장명</th><th>카테고리</th>${hasPayer?'<th>결제자</th>':''}<th>총액</th></tr></thead>
-      <tbody>${sorted.map(r=>`
-        <tr class="srch-row" data-id="${r.id}">
-          <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
-          <td>${escapeHtml(r.store||'')}</td>
-          <td>${escapeHtml(r.category||'—')}</td>
-          ${hasPayer?`<td>${escapeHtml(r.paidBy||'—')}</td>`:''}
-          <td>${fmtMoney(r.total||0)}원</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>
-    ${filtered.length>1?`<div class="srch-total">합계 <b>${fmtMoney(total)}원</b></div>`:''}`;
-  }
-
-  return statsHtml+bodyHtml;
-}
-
-// ── 결제자 요약 패널 ──
-function renderPayerSummaryHtml(payerName, filtered){
-  if(!filtered.length){
-    return `<div class="budget-empty-state">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <div style="font-weight:600;margin-bottom:4px;">'${escapeHtml(payerName)}' 결제 내역이 없어요</div>
-      <div style="font-size:12px;color:var(--label3);">결제자 이름을 확인해보세요</div>
-    </div>`;
-  }
-
-  const sorted=[...filtered].sort((a,b)=>b.date.localeCompare(a.date));
-  const total=sorted.reduce((s,r)=>s+(r.total||0),0);
-  const avg=filtered.length>0?Math.round(total/filtered.length):0;
-
-  // 히어로 카드
-  const heroHtml=`<div class="payer-hero">
-    <div class="payer-stat">
-      <div class="payer-stat-lbl">결제 건수</div>
-      <div class="payer-stat-val">${filtered.length}<span style="font-size:14px;font-weight:500;color:var(--label3);margin-left:3px;">건</span></div>
-      <div class="payer-stat-sub">건당 평균 ${fmtMoney(avg)}원</div>
-    </div>
-    <div class="payer-stat total">
-      <div class="payer-stat-lbl">합계 금액</div>
-      <div class="payer-stat-val">${fmtMoney(total)}<span style="font-size:14px;font-weight:500;margin-left:3px;">원</span></div>
-      <div class="payer-stat-sub">${sorted[0]?fmtDateKor(sorted[sorted.length-1].date)+' ~ '+fmtDateKor(sorted[0].date):''}</div>
-    </div>
-  </div>`;
-
-  // 카테고리 분포
-  const catMap={};
-  for(const r of filtered){
-    const k=r.category||'미분류';
-    if(r.total>0) catMap[k]=(catMap[k]||0)+(r.total||0);
-  }
-  const catEntries=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
-  const catTotal=catEntries.reduce((s,[,v])=>s+v,0);
-  let catHtml='';
-  if(catEntries.length>0){
-    catHtml=`<div class="budget-section">
-      <div class="budget-section-hd">카테고리별 <span class="hd-sub">${catEntries.length}개</span></div>
-      <div class="cat-bars">
-        ${catEntries.map(([cat,amt],i)=>{
-          const pct=catTotal>0?amt/catTotal*100:0;
-          const w=pct.toFixed(1);
-          const isUncat=cat==='미분류';
-          return `<div class="cat-bar-row${isUncat?' uncat':''}" data-rank="${Math.min(i,4)}">
-            <div class="cat-bar-top">
-              <span class="cat-bar-name">${escapeHtml(cat)}<span class="cat-pct">${pct.toFixed(0)}%</span></span>
-              <span class="cat-bar-amt">${fmtMoney(amt)}원</span>
-            </div>
-            <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%"></div></div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
-  }
-
-  // 영수증 목록
-  const listHtml=`<div class="budget-section">
-    <div class="budget-section-hd">영수증 목록 <span class="hd-sub">${filtered.length}건</span></div>
-    <table class="srch-table">
-      <thead><tr><th>일자</th><th>매장명</th><th>카테고리</th><th>총액</th></tr></thead>
-      <tbody>${sorted.map(r=>`
-        <tr class="srch-row" data-id="${r.id}">
-          <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
-          <td>${escapeHtml(r.store||'')}</td>
-          <td>${escapeHtml(r.category||'—')}</td>
-          <td>${fmtMoney(r.total||0)}원</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>
-    ${filtered.length>1?`<div class="srch-total">합계 <b>${fmtMoney(total)}원</b></div>`:''}
-  </div>`;
-
-  return heroHtml+catHtml+listHtml;
-}
-
-// ── 참석자 요약 패널 ──
-function renderParticipantSummaryHtml(name, filtered){
-  if(!filtered.length){
-    return `<div class="budget-empty-state">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <div style="font-weight:600;margin-bottom:4px;">'${escapeHtml(name)}' 참석 내역이 없어요</div>
-      <div style="font-size:12px;color:var(--label3);">이름을 확인해보세요</div>
-    </div>`;
-  }
-
-  const sorted=[...filtered].sort((a,b)=>b.date.localeCompare(a.date));
-
-  // 분담금 계산 (각 영수증 total / 참석자 수)
-  const myShare=filtered.reduce((s,r)=>{
-    const cnt=(r.participants||[]).length||1;
-    return s+Math.round((r.total||0)/cnt);
-  },0);
-  const avgShare=filtered.length>0?Math.round(myShare/filtered.length):0;
-
-  // 히어로 카드 (참석 횟수 + 분담금)
-  const heroHtml=`<div class="payer-hero" style="margin-bottom:12px;">
-    <div class="payer-stat">
-      <div class="payer-stat-lbl">참석 횟수</div>
-      <div class="payer-stat-val">${filtered.length}<span style="font-size:14px;font-weight:500;color:var(--label3);margin-left:3px;">건</span></div>
-      <div class="payer-stat-sub">건당 평균 ${fmtMoney(avgShare)}원</div>
-    </div>
-    <div class="payer-stat total">
-      <div class="payer-stat-lbl">분담 총액</div>
-      <div class="payer-stat-val">${fmtMoney(myShare)}<span style="font-size:14px;font-weight:500;margin-left:3px;">원</span></div>
-      <div class="payer-stat-sub">${sorted[0]?fmtDateKor(sorted[sorted.length-1].date)+' ~ '+fmtDateKor(sorted[0].date):''}</div>
-    </div>
-  </div>`;
-
-  // 카테고리 분포 (분담금 기준)
-  const catMap={};
-  for(const r of filtered){
-    const k=r.category||'미분류';
-    const cnt=(r.participants||[]).length||1;
-    const share=Math.round((r.total||0)/cnt);
-    if(share>0) catMap[k]=(catMap[k]||0)+share;
-  }
-  const catEntries=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
-  const catTotal=catEntries.reduce((s,[,v])=>s+v,0);
-  let catHtml='';
-  if(catEntries.length>0){
-    catHtml=`<div class="budget-section">
-      <div class="budget-section-hd">카테고리별 <span class="hd-sub">${catEntries.length}개 · 분담금 기준</span></div>
-      <div class="cat-bars">
-        ${catEntries.map(([cat,amt],i)=>{
-          const pct=catTotal>0?amt/catTotal*100:0;
-          const isUncat=cat==='미분류';
-          return `<div class="cat-bar-row${isUncat?' uncat':''}" data-rank="${Math.min(i,4)}">
-            <div class="cat-bar-top">
-              <span class="cat-bar-name">${escapeHtml(cat)}<span class="cat-pct">${pct.toFixed(0)}%</span></span>
-              <span class="cat-bar-amt">${fmtMoney(amt)}원</span>
-            </div>
-            <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
-  }
-
-  // 자주 함께한 멤버 (동행자 빈도)
-  const coMap={};
-  for(const r of filtered){
-    for(const p of (r.participants||[])){
-      const pn=p.trim();
-      if(!pn||pn.toLowerCase()===name.toLowerCase())continue;
-      coMap[pn]=(coMap[pn]||0)+1;
-    }
-  }
-  const coEntries=Object.entries(coMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  let coHtml='';
-  if(coEntries.length>0){
-    coHtml=`<div class="budget-section">
-      ${_sectionToggleHtml('자주 함께한 멤버',null,'part_companions',true)}
-      <div class="section-body open" style="padding-top:10px;">
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          ${coEntries.map(([p,cnt])=>`
-            <div style="background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:8px 14px;font-size:13px;">
-              <span style="font-weight:600;">${escapeHtml(p)}</span>
-              <span style="color:var(--label3);margin-left:6px;font-size:11px;">${cnt}회</span>
-            </div>`).join('')}
-        </div>
-      </div>
-    </div>`;
-  }
-
-  // 영수증 목록 (참석 인원·본인 분담금 표시)
-  const listHtml=`<div class="budget-section">
-    <div class="budget-section-hd">참석 내역 <span class="hd-sub">${filtered.length}건</span></div>
-    <table class="srch-table">
-      <thead><tr><th>일자</th><th>매장명</th><th>카테고리</th><th>인원</th><th>분담금</th></tr></thead>
-      <tbody>${sorted.map(r=>{
-        const cnt=(r.participants||[]).length||1;
-        const share=Math.round((r.total||0)/cnt);
-        return `<tr class="srch-row" data-id="${r.id}">
-          <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
-          <td>${escapeHtml(r.store||'')}</td>
-          <td>${escapeHtml(r.category||'—')}</td>
-          <td style="text-align:right;">${cnt}명</td>
-          <td>${fmtMoney(share)}원</td>
-        </tr>`;
-      }).join('')}
-      </tbody>
-    </table>
-    <div class="srch-total">분담 총액 <b>${fmtMoney(myShare)}원</b></div>
-  </div>`;
-
-  return heroHtml+catHtml+coHtml+listHtml;
 }
 
 function renderMonthSummaryHtml(ym){
   const sum=monthSummary(ym);
   const prev=monthSummary(ymOffset(ym,-1));
   const cats=categoryBreakdown(ym);
-  const pparts=participantBreakdown(ym);
   const spark=dailySparkline(ym);
 
   // 빈 상태
@@ -2494,32 +1394,7 @@ function renderMonthSummaryHtml(ym){
     `;
   }
 
-  // 참석자별 막대 (기본 접힘)
-  let participantHtml='';
-  if(pparts.length){
-    const maxPP=Math.max(...pparts.map(p=>p.amt));
-    participantHtml=`
-      <div class="budget-section">
-        ${_sectionToggleHtml('참석자별 분담',`${pparts.length}명 · 1/N 균등 배분`,'month_participant',false)}
-        <div class="section-body closed" style="padding-top:8px;">
-          <div class="cat-bars">
-            ${pparts.map((p,i)=>{
-              const w=maxPP>0?(p.amt/maxPP*100):0;
-              return `<div class="cat-bar-row" data-rank="${Math.min(i,4)}">
-                <div class="cat-bar-top">
-                  <span class="cat-bar-name">${escapeHtml(p.name)}</span>
-                  <span class="cat-bar-amt">${fmtMoney(p.amt)}원</span>
-                </div>
-                <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;background:var(--blue);"></div></div>
-              </div>`;
-            }).join('')}
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // 일별 sparkline (기본 펼침)
+  // 일별 sparkline
   const peakAmt=Math.max(...spark);
   const peakDay=peakAmt>0?spark.indexOf(peakAmt)+1:0;
   const todayY=_currentYM()===ym?parseInt(_todayYMD().slice(8,10),10):-1;
@@ -2527,25 +1402,27 @@ function renderMonthSummaryHtml(ym){
   if(spark.length){
     sparkHtml=`
       <div class="budget-section">
-        ${_sectionToggleHtml('일별 지출',peakAmt>0?`최고 ${peakDay}일: ${fmtMoney(peakAmt)}원`:null,'month_spark',true)}
-        <div class="section-body open" style="padding-top:8px;">
-          <div class="sparkline">
-            <div class="spark-bars">
-              ${spark.map((amt,i)=>{
-                const day=i+1;
-                const h=peakAmt>0?Math.max(2,Math.round(amt/peakAmt*100)):2;
-                const cls=(amt>0?(day===todayY?'has today':'has'):(day===todayY?'today':''));
-                return `<div class="spark-bar ${cls}" style="height:${h}%;" data-day="${day}" data-amt="${fmtMoney(amt)}"></div>`;
-              }).join('')}
-            </div>
-            <div class="spark-axis"><span>1일</span><span>${Math.round(spark.length/2)}일</span><span>${spark.length}일</span></div>
+        <div class="budget-section-hd">일별 지출</div>
+        <div class="sparkline">
+          <div class="spark-hd">
+            <span style="color:var(--label2);">${spark.length}일</span>
+            <span class="spark-peak">${peakAmt>0?`최고 <b>${peakDay}일</b>: ${fmtMoney(peakAmt)}원`:'지출 없음'}</span>
           </div>
+          <div class="spark-bars">
+            ${spark.map((amt,i)=>{
+              const day=i+1;
+              const h=peakAmt>0?Math.max(2,Math.round(amt/peakAmt*100)):2;
+              const cls=(amt>0?(day===todayY?'has today':'has'):(day===todayY?'today':''));
+              return `<div class="spark-bar ${cls}" style="height:${h}%;" data-day="${day}" data-amt="${fmtMoney(amt)}"></div>`;
+            }).join('')}
+          </div>
+          <div class="spark-axis"><span>1일</span><span>${Math.round(spark.length/2)}일</span><span>${spark.length}일</span></div>
         </div>
       </div>
     `;
   }
 
-  return summaryHtml+catHtml+participantHtml+sparkHtml;
+  return summaryHtml+catHtml+sparkHtml;
 }
 
 async function renderDetail(){
@@ -2555,71 +1432,22 @@ async function renderDetail(){
   const sub=document.getElementById('mainSub');
   const actions=document.getElementById('detailActions');
   if(!selectedId){
+    // 가계부 요약 화면
     actions.style.display='none';
-    if(searchQuery){
-      const filtered=getFiltered();
-      const q=searchQuery.trim();
-      const qL=q.toLowerCase();
-      // ── 결제자 검색 판별: 명시적("결제자 X") 또는 자동(전체 결과의 paidBy가 q와 일치) ──
-      const isExplicitPayer=q.startsWith('결제자 ')&&q.length>4;
-      const isImplicitPayer=!isExplicitPayer&&qL.length>=2&&filtered.length>0&&
-        filtered.every(r=>(r.paidBy||'').toLowerCase().includes(qL))&&
-        filtered.some(r=>(r.paidBy||'').trim()!=='');
-      const isPayerSearch=isExplicitPayer||isImplicitPayer;
-
-      // ── 참석자 검색 판별: 명시적("참석자 X") 또는 자동(전체 결과에 해당 참석자 포함) ──
-      const isExplicitParticipant=q.startsWith('참석자 ')&&q.length>4;
-      const participantQ=isExplicitParticipant?q.slice(4).trim():q;
-      const isImplicitParticipant=!isExplicitParticipant&&!isPayerSearch&&qL.length>=2&&filtered.length>0&&
-        filtered.every(r=>(r.participants||[]).some(p=>p.toLowerCase().includes(qL)))&&
-        filtered.some(r=>(r.participants||[]).length>0);
-      const isParticipantSearch=isExplicitParticipant||isImplicitParticipant;
-
-      const payerName=isExplicitPayer?q.slice(4).trim():q;
-      if(isPayerSearch){
-        eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;
-        title.textContent=`${payerName} 결제 내역`;
-        sub.textContent=filtered.length>0?`${filtered.length}건 · 클릭하면 상세 보기`:'결과 없음';
-        body.innerHTML=renderPayerSummaryHtml(payerName,filtered);
-        _bindSectionToggles(body);
-      }else if(isParticipantSearch){
-        eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><circle cx="20" cy="8" r="3"/><path d="M2 20c0-4 3.6-7 10-7"/><path d="M14 20c1-2.7 3-4.5 6-5"/></svg>`;
-        title.textContent=`${participantQ} 참석 내역`;
-        sub.textContent=filtered.length>0?`${filtered.length}건 · 클릭하면 상세 보기`:'결과 없음';
-        body.innerHTML=renderParticipantSummaryHtml(participantQ,filtered);
-        _bindSectionToggles(body);
-      }else{
-        // ── 일반 검색 결과 요약 패널 ──
-        eye.textContent='검색';
-        title.textContent=`'${q}' 검색 결과`;
-        sub.textContent=filtered.length>0?`${filtered.length}개 영수증 · 클릭하면 상세 보기`:'결과 없음';
-        body.innerHTML=renderSearchSummaryHtml(qL,filtered);
-        _bindSectionToggles(body);
-      }
-      body.querySelectorAll('.srch-row[data-id]').forEach(tr=>{
-        tr.addEventListener('click',()=>selectReceipt(tr.dataset.id));
-      });
-    }else{
-      // ── 가계부 요약 화면 ──
-      eye.textContent='가계부';
-      title.textContent=ymLabel(viewMonth);
-      sub.textContent='왼쪽 목록에서 영수증을 선택하면 상세가 표시됩니다.';
-      body.innerHTML=renderMonthSummaryHtml(viewMonth);
-      _bindSectionToggles(body);
-      const cta=body.querySelector('#budgetEmptyCta');
-      if(cta)cta.addEventListener('click',()=>switchTab('input'));
-    }
+    eye.textContent='가계부';
+    title.textContent=ymLabel(viewMonth);
+    sub.textContent=searchQuery
+      ? `'${searchQuery}' 검색 결과 — 왼쪽에서 영수증을 선택하면 상세가 표시됩니다.`
+      : '왼쪽 목록에서 영수증을 선택하면 상세가 표시됩니다.';
+    body.innerHTML=renderMonthSummaryHtml(viewMonth);
+    // CTA 이벤트
+    const cta=body.querySelector('#budgetEmptyCta');
+    if(cta)cta.addEventListener('click',()=>switchTab('input'));
     return;
   }
   const r=receipts.find(x=>x.id===selectedId);
   if(!r){selectedId=null;return renderDetail();}
-  eye.innerHTML=`<button class="back-to-summary" id="backToSummaryBtn">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-    ${ymLabel(viewMonth)} 가계부
-  </button>`;
-  document.getElementById('backToSummaryBtn').addEventListener('click',()=>{
-    selectedId=null;renderSide();renderDetail();
-  });
+  eye.textContent='영수증';
   title.textContent=r.store||'(매장명 없음)';
   sub.textContent=`${fmtDateKor(r.date)} · ${fmtMoney(r.total)}원`;
   actions.style.display='flex';
@@ -2647,46 +1475,36 @@ async function renderDetail(){
   const mismatch=sum!==r.total;
 
   body.innerHTML=`
+    ${photoHtml}
+
+    <div class="detail-grid">
+      ${kvHtml('매장명','store',r.store)}
+      ${kvHtml('일자','date',fmtDateKor(r.date),r.date,'date')}
+      ${kvHtml('카테고리','category',r.category||'—',r.category)}
+      ${kvHtml('결제수단','paymentMethod',payLabel,r.paymentMethod,'select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
+      ${kvHtml('결제 상세','paymentDetail',r.paymentDetail||'—',r.paymentDetail)}
+    </div>
+
     <div class="section-hd">품목 <button class="ghost-mini" id="addItemBtn">+ 품목 추가</button></div>
     <table class="items-table" id="itemsTable">
       <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
       <tbody>
         ${(r.items||[]).map((it,idx)=>`<tr data-idx="${idx}">
           <td><input class="item-name-inp" data-f="name" value="${escapeHtml(it.name)}"/></td>
-          <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||0}"/></td>
-          <td><input class="item-num-inp" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/></td>
-          <td><input class="item-num-inp" data-f="amount" type="text" inputmode="numeric" value="${_fmtN(it.amount||0)}" style="${(it.amount||0)<0?'color:var(--red);':''}"/></td>
+          <td><input class="item-num-inp" data-f="quantity" type="number" min="0" step="1" value="${it.quantity||0}"/></td>
+          <td><input class="item-num-inp" data-f="unitPrice" type="number" step="1" value="${it.unitPrice||0}"/></td>
+          <td><input class="item-num-inp" data-f="amount" type="number" step="1" value="${it.amount||0}" style="${(it.amount||0)<0?'color:var(--red);':''}"/></td>
           <td style="text-align:right;"><button class="item-del" data-del="${idx}" title="삭제">×</button></td>
         </tr>`).join('')}
         <tr class="total-row"><td>총액</td><td></td><td></td><td class="${(r.total||0)<0?'amt-neg':''}" style="font-size:14px;">${fmtMoney(r.total)}원</td><td></td></tr>
       </tbody>
     </table>
-    ${mismatch?`<div class="alert warn" style="margin:10px 0 14px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><div>품목 합계 ${fmtMoney(sum)}원과 총액 ${fmtMoney(r.total)}원이 ${fmtMoney(Math.abs(sum-r.total))}원 달라요.</div></div>`:''}
-
-    <div class="detail-two-col">
-      <div>${photoHtml}</div>
-      <div>
-        <div class="section-hd" style="margin-top:0;">정보</div>
-        <div class="detail-kv-stack">
-          ${kvHtml('매장명','store',r.store)}
-          ${kvHtml('일자','date',fmtDateKor(r.date),r.date,'date')}
-          ${kvHtml('카테고리','category',r.category||'—',r.category)}
-          ${kvHtml('결제수단','paymentMethod',payLabel,r.paymentMethod,'select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
-          ${kvHtml('결제 상세','paymentDetail',r.paymentDetail||'—',r.paymentDetail)}
-          ${kvHtml('결제자','paidBy',r.paidBy||'—',r.paidBy||'')}
-        </div>
-      </div>
-    </div>
+    ${mismatch?`<div class="alert warn" style="margin-top:10px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><div>품목 합계 ${fmtMoney(sum)}원과 총액 ${fmtMoney(r.total)}원이 ${fmtMoney(Math.abs(sum-r.total))}원 달라요.</div></div>`:''}
 
     <div class="section-hd">메모·태그</div>
     <div class="field-g">
       <label class="field-lbl">메모</label>
       <textarea id="dNotes" class="field-ta" style="min-height:60px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="메모">${escapeHtml(r.notes||'')}</textarea>
-    </div>
-    <div class="field-g">
-      <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분</span></label>
-      <input id="dParticipants" class="field-inp" type="text" value="${escapeHtml((r.participants||[]).join(', '))}" placeholder="예: 철수, 영희, 민준"/>
-      ${(r.participants||[]).length>1?`<div class="field-sub">1인당 약 ${fmtMoney(Math.round((r.total||0)/(r.participants||[]).length))}원</div>`:''}
     </div>
     <div class="field-g">
       <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
@@ -2730,24 +1548,8 @@ async function renderDetail(){
 
   // 품목 편집
   body.querySelectorAll('#itemsTable input').forEach(inp=>{
-    const f=inp.dataset.f;
-    inp.addEventListener('focus',()=>inp.select());
-    if(f==='unitPrice'||f==='amount'){
-      // 포커스 시 쉼표 제거해서 순수 숫자로, blur 시 쉼표 복원 후 저장
-      inp.addEventListener('focus',()=>{
-        inp.value=String(_parseN(inp.value));
-        inp.select();
-      });
-      inp.addEventListener('blur',()=>{
-        const n=_parseN(inp.value);
-        inp.value=_fmtN(n);
-        if(f==='amount')inp.style.color=n<0?'var(--red)':'';
-        persistItemChange(r);
-      });
-    }else{
-      inp.addEventListener('blur',()=>persistItemChange(r));
-      inp.addEventListener('change',()=>persistItemChange(r));
-    }
+    inp.addEventListener('change',()=>persistItemChange(r));
+    inp.addEventListener('blur',()=>persistItemChange(r));
   });
   body.querySelectorAll('#itemsTable .item-del').forEach(btn=>{
     btn.addEventListener('click',async()=>{
@@ -2756,7 +1558,6 @@ async function renderDetail(){
       r.items.splice(idx,1);r.updatedAt=nowISO();
       await dbPut('receipts',r);
       await loadAll();await renderDetail();
-      dbxSyncUpload();
     });
   });
   document.getElementById('addItemBtn').addEventListener('click',async()=>{
@@ -2764,46 +1565,7 @@ async function renderDetail(){
     r.updatedAt=nowISO();
     await dbPut('receipts',r);
     await loadAll();await renderDetail();
-    dbxSyncUpload();
   });
-
-  // 상세 화면 드래그&드롭 (사진 교체/추가)
-  const dpArea=body.querySelector('.detail-photo');
-  if(dpArea){
-    ['dragenter','dragover'].forEach(ev=>dpArea.addEventListener(ev,e=>{
-      e.preventDefault();e.stopPropagation();dpArea.classList.add('drag');
-    }));
-    ['dragleave','dragend'].forEach(ev=>dpArea.addEventListener(ev,e=>{
-      if(!dpArea.contains(e.relatedTarget))dpArea.classList.remove('drag');
-    }));
-    dpArea.addEventListener('drop',async e=>{
-      e.preventDefault();e.stopPropagation();dpArea.classList.remove('drag');
-      const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
-      if(!f||!f.type.startsWith('image/'))return;
-      const imgId='img_'+r.id.slice(4);
-      await dbPut('images',{id:imgId,blob:f,mime:f.type||'image/jpeg'});
-      r.imageId=imgId;r.updatedAt=nowISO();
-      await dbPut('receipts',r);
-      _revokeImgUrl(imgId);
-      toast('사진이 업데이트됐어요',{type:'success'});
-      await loadAll();await renderDetail();
-      dbxSyncUpload();
-    });
-  }
-
-  // 참석자
-  const dp2=document.getElementById('dParticipants');
-  if(dp2){
-    dp2.addEventListener('blur',async()=>{
-      const participants=dp2.value.split(',').map(s=>s.trim()).filter(Boolean);
-      if(JSON.stringify(participants)===JSON.stringify(r.participants||[]))return;
-      r.participants=participants;r.updatedAt=nowISO();
-      await dbPut('receipts',r);
-      toast('참석자 저장됨');
-      await loadAll();await renderDetail();
-      dbxSyncUpload();
-    });
-  }
 
   // 메모·태그
   const dn=document.getElementById('dNotes');
@@ -2815,7 +1577,6 @@ async function renderDetail(){
     r.notes=dn.value;r.updatedAt=nowISO();
     await dbPut('receipts',r);
     toast('메모 저장됨');
-    dbxSyncUpload();
   });
   const dt=document.getElementById('dTags');
   let tComp=false;
@@ -2827,7 +1588,6 @@ async function renderDetail(){
     r.tags=tags;r.updatedAt=nowISO();
     await dbPut('receipts',r);
     toast('태그 저장됨');
-    dbxSyncUpload();
   });
 }
 
@@ -2866,10 +1626,6 @@ function startKvEdit(el,r){
   val.innerHTML='';val.appendChild(inp);
   inp.focus();
   if(inp.select)inp.select();
-  // 일자 입력 — 즉시 달력 열기 (Chrome/Edge)
-  if(type==='date'&&typeof inp.showPicker==='function'){
-    try{inp.showPicker();}catch(_){}
-  }
 
   let composing=false,done=false;
   inp.addEventListener('compositionstart',()=>{composing=true;});
@@ -2887,7 +1643,6 @@ function startKvEdit(el,r){
     }
     toast('수정됨');
     await loadAll();await renderDetail();
-    dbxSyncUpload();
   };
   inp.addEventListener('keydown',e=>{
     if(e.key==='Enter'&&!composing&&!e.isComposing){e.preventDefault();commit();}
@@ -2906,10 +1661,8 @@ async function persistItemChange(r){
       const f=inp.dataset.f;
       if(f==='name'){if(it.name!==inp.value){it.name=inp.value;changed=true;}}
       else{
-        // unitPrice·amount는 text+쉼표 포맷, _parseN으로 읽기; quantity는 정수
-        const nn=(f==='unitPrice'||f==='amount')
-          ? _parseN(inp.value)
-          : (parseInt(inp.value)||0);
+        const n=parseFloat(inp.value)||0;
+        const nn=Math.round(n);
         if(it[f]!==nn){it[f]=nn;changed=true;}
       }
     });
@@ -2919,7 +1672,6 @@ async function persistItemChange(r){
     r.updatedAt=nowISO();
     await dbPut('receipts',r);
     await loadAll();await renderDetail();
-    dbxSyncUpload();
   }
 }
 
@@ -2930,13 +1682,11 @@ document.getElementById('detailDeleteBtn').addEventListener('click',async()=>{
   if(!r)return;
   if(!confirm(`'${r.store||'영수증'}'을(를) 삭제할까요? 사진도 함께 삭제됩니다.`))return;
   if(r.imageId){await dbDel('images',r.imageId);_revokeImgUrl(r.imageId);}
-  _dbxMarkDeleted(r.id);   // 삭제 추적 → 동기화 시 상대 기기에서도 삭제됨
   await dbDel('receipts',r.id);
   toast(`'${r.store||'영수증'}' 삭제됨`,{type:'success'});
   selectedId=null;
   await loadAll();
   renderDetail();
-  dbxSyncUpload();  // 백그라운드 자동 동기화
 });
 
 // ── LIGHTBOX ──
@@ -2962,48 +1712,6 @@ async function base64ToBlob(dataUrl){
   const res=await fetch(dataUrl);
   return await res.blob();
 }
-
-// ── CSV(엑셀) 내보내기 ──
-function exportCsv(){
-  if(!receipts.length){toast('저장된 영수증이 없어요',{type:'error'});return;}
-  const BOM='﻿'; // Excel UTF-8 자동 인식
-  const payL={card:'카드',cash:'현금',transfer:'계좌이체',other:'기타'};
-  const esc=v=>{
-    const s=String(v==null?'':v);
-    return (s.includes(',')||s.includes('"')||s.includes('\n'))?`"${s.replace(/"/g,'""')}"`:s;
-  };
-  const header=['일자','매장명','카테고리','결제수단','결제 상세','결제자','총액(원)','품목수','품목 목록','참석자','메모','태그'];
-  const sorted=[...receipts].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-  const rows=[header.map(esc).join(',')];
-  for(const r of sorted){
-    const items=(r.items||[]).filter(it=>it.name);
-    const itemStr=items.map(it=>`${it.name}×${it.quantity||1}(${_fmtN(it.amount||0)}원)`).join(' / ');
-    rows.push([
-      r.date||'',
-      r.store||'',
-      r.category||'',
-      payL[r.paymentMethod]||r.paymentMethod||'',
-      r.paymentDetail||'',
-      r.paidBy||'',
-      r.total||0,
-      items.length,
-      itemStr,
-      (r.participants||[]).join(', '),
-      r.notes||'',
-      (r.tags||[]).join(', ')
-    ].map(esc).join(','));
-  }
-  const blob=new Blob([BOM+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  const today=new Date().toISOString().slice(0,10).replace(/-/g,'');
-  a.download=`영수증_${today}_${receipts.length}건.csv`;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(url),60000);
-  toast(`CSV ${receipts.length}건 내보냈어요. 엑셀에서 열어보세요`,{type:'success'});
-}
-document.getElementById('exportCsvBtn').addEventListener('click',exportCsv);
 
 document.getElementById('exportBtn').addEventListener('click',async()=>{
   try{
@@ -3090,576 +1798,21 @@ document.getElementById('resetBtn').addEventListener('click',async()=>{
 });
 
 // ════════════════════════════════════════════════════════════════
-// DROPBOX OAUTH (PKCE) + BACKUP — Phase 3
-// ════════════════════════════════════════════════════════════════
-// 연동 방식: Authorization Code + PKCE (서버·client_secret 불필요)
-// 토큰: short-lived access_token (4h) + long-lived refresh_token (offline)
-// 저장: 모두 localStorage (IndexedDB 아님)
-// ────────────────────────────────────────────────────────────────
-
-const _K={  // localStorage 키 모음
-  APP_KEY:       'dbx_app_key',
-  ACCESS_TOKEN:  'dbx_access_token',
-  REFRESH_TOKEN: 'dbx_refresh_token',
-  EXPIRES_AT:    'dbx_expires_at',
-  ACCOUNT:       'dbx_account',
-  LAST_BACKUP:   'dbx_last_backup',
-  LAST_SYNC:     'dbx_last_sync',      // 자동 동기화 마지막 시각 (ISO)
-  DELETED_IDS:   'dbx_deleted_ids',    // 삭제된 영수증 ID 목록 (JSON array)
-  CODE_VERIFIER: 'dbx_code_verifier',
-  STATE:         'dbx_oauth_state',
-};
-
-const _ls  = k     => localStorage.getItem(k)||'';
-const _lsSet = (k,v) => localStorage.setItem(k,v);
-const _lsDel = k     => localStorage.removeItem(k);
-
-function dbxIsConnected(){
-  return !!(_ls(_K.ACCESS_TOKEN)||_ls(_K.REFRESH_TOKEN));
-}
-function _dbxExpired(){
-  const exp=parseInt(_ls(_K.EXPIRES_AT)||'0',10);
-  return exp>0 && Date.now()>exp-60000;  // 1분 여유
-}
-function _dbxRedirectUri(){
-  // index.html 제거 — 모바일에서 /receipt-db/index.html로 접근해도
-  // Dropbox에 등록된 /receipt-db/ 와 정확히 일치시키기 위함
-  const path=window.location.pathname.replace(/index\.html$/,'');
-  return window.location.origin+path;
-}
-
-// ── PKCE 헬퍼 ──────────────────────────────────────────────────
-async function _dbxMakeVerifier(){
-  const a=new Uint8Array(32);crypto.getRandomValues(a);
-  return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('');
-}
-async function _dbxMakeChallenge(v){
-  const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v));
-  return btoa(String.fromCharCode(...new Uint8Array(d)))
-    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-}
-
-// ── OAuth 시작 ──────────────────────────────────────────────────
-async function dbxConnect(){
-  const appKey=(document.getElementById('dbxAppKey')?.value||'').trim();
-  if(!appKey){toast('App Key를 입력해주세요',{type:'error'});return;}
-  _lsSet(_K.APP_KEY,appKey);
-
-  const verifier=await _dbxMakeVerifier();
-  const challenge=await _dbxMakeChallenge(verifier);
-  const state=Math.random().toString(36).slice(2)+Date.now().toString(36);
-  _lsSet(_K.CODE_VERIFIER,verifier);
-  _lsSet(_K.STATE,state);
-
-  const p=new URLSearchParams({
-    client_id:appKey,
-    response_type:'code',
-    code_challenge:challenge,
-    code_challenge_method:'S256',
-    state,
-    redirect_uri:_dbxRedirectUri(),
-    token_access_type:'offline',  // refresh_token 발급
-  });
-  window.location.href='https://www.dropbox.com/oauth2/authorize?'+p;
-}
-
-// ── OAuth 콜백 처리 — init() 에서 호출 ─────────────────────────
-async function dbxHandleCallback(){
-  const url=new URL(window.location.href);
-  const code=url.searchParams.get('code');
-  const state=url.searchParams.get('state');
-  const error=url.searchParams.get('error');
-
-  if(!code&&!error)return;  // 일반 페이지 로드
-  history.replaceState({},'',_dbxRedirectUri());  // URL 정리
-
-  if(error){
-    toast('Dropbox 연결이 취소됐어요',{type:'error'});
-    return;
-  }
-
-  const savedState=_ls(_K.STATE);
-  const verifier=_ls(_K.CODE_VERIFIER);
-  const appKey=_ls(_K.APP_KEY);
-
-  if(state!==savedState){
-    toast('보안 오류 — 연결을 다시 시도해주세요',{type:'error'});
-    return;
-  }
-  if(!appKey||!verifier){
-    toast('연결 정보가 없어요 — 다시 시도해주세요',{type:'error'});
-    return;
-  }
-
-  const t=toast('Dropbox 연결 중...',{duration:15000});
-  try{
-    const resp=await fetch('https://api.dropboxapi.com/oauth2/token',{
-      method:'POST',
-      headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:new URLSearchParams({
-        code,
-        grant_type:'authorization_code',
-        client_id:appKey,
-        code_verifier:verifier,
-        redirect_uri:_dbxRedirectUri(),
-      }),
-    });
-    t.dismiss();
-    if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
-    const data=await resp.json();
-    _lsSet(_K.ACCESS_TOKEN,data.access_token||'');
-    if(data.refresh_token)_lsSet(_K.REFRESH_TOKEN,data.refresh_token);
-    if(data.expires_in)_lsSet(_K.EXPIRES_AT,String(Date.now()+data.expires_in*1000));
-    _lsDel(_K.CODE_VERIFIER);
-    _lsDel(_K.STATE);
-    await _dbxFetchAccount();
-    toast('Dropbox 연결 완료!',{type:'success'});
-    switchTab('settings');
-  }catch(e){
-    t.dismiss();
-    console.error('dbx callback',e);
-    toast('Dropbox 연결 실패: '+(e.message||e),{type:'error'});
-  }
-}
-
-// ── 토큰 갱신 ──────────────────────────────────────────────────
-async function _dbxRefresh(){
-  const rt=_ls(_K.REFRESH_TOKEN),ak=_ls(_K.APP_KEY);
-  if(!rt||!ak)return false;
-  try{
-    const resp=await fetch('https://api.dropboxapi.com/oauth2/token',{
-      method:'POST',
-      headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:new URLSearchParams({grant_type:'refresh_token',refresh_token:rt,client_id:ak}),
-    });
-    if(!resp.ok)return false;
-    const data=await resp.json();
-    _lsSet(_K.ACCESS_TOKEN,data.access_token||'');
-    if(data.expires_in)_lsSet(_K.EXPIRES_AT,String(Date.now()+data.expires_in*1000));
-    return true;
-  }catch{return false;}
-}
-
-async function _dbxToken(){
-  if(_dbxExpired()){
-    const ok=await _dbxRefresh();
-    if(!ok){
-      toast('Dropbox 세션이 만료됐어요 — 설정에서 다시 연결해주세요',{type:'error'});
-      renderDbxSettings();
-      throw new Error('DBX_TOKEN_EXPIRED');
-    }
-  }
-  const t=_ls(_K.ACCESS_TOKEN);
-  if(!t)throw new Error('DBX_NO_TOKEN');
-  return t;
-}
-
-// ── 계정 정보 조회 ──────────────────────────────────────────────
-async function _dbxFetchAccount(){
-  try{
-    const token=await _dbxToken();
-    const resp=await fetch('https://api.dropboxapi.com/2/users/get_current_account',{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+token},
-    });
-    if(!resp.ok)return;
-    const d=await resp.json();
-    _lsSet(_K.ACCOUNT,JSON.stringify({name:d.name?.display_name||'',email:d.email||''}));
-  }catch(e){console.warn('dbx account',e);}
-}
-
-// ── 백업 업로드 ────────────────────────────────────────────────
-async function dbxBackup(){
-  let lt;
-  try{
-    const token=await _dbxToken();
-    lt=toast('Dropbox에 백업 중... (사진 포함 시 수 초 소요)',{duration:60000});
-    const recs=await dbAll('receipts');
-    const imgs=await dbAll('images');
-    const imgsOut=[];
-    for(const im of imgs){
-      const b64=await blobToBase64(im.blob);
-      imgsOut.push({id:im.id,mime:im.mime||'image/jpeg',data:b64});
-    }
-    const payload={
-      app:'receipt-db',appVersion:APP_VERSION,version:2,
-      exportedAt:nowISO(),receipts:recs,images:imgsOut,storeCatMap,
-    };
-    const json=JSON.stringify(payload,null,2);
-    const filename=`receipt-db_${new Date().toISOString().slice(0,10)}_${recs.length}items.json`;
-    const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{
-      method:'POST',
-      headers:{
-        'Authorization':'Bearer '+token,
-        'Dropbox-API-Arg':JSON.stringify({path:'/'+filename,mode:'add',autorename:true,mute:false}),
-        'Content-Type':'application/octet-stream',
-      },
-      body:json,
-    });
-    if(lt)lt.dismiss();
-    if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
-    const now=new Date().toLocaleString('ko-KR');
-    _lsSet(_K.LAST_BACKUP,now);
-    toast(`Dropbox 백업 완료 — ${recs.length}건, 사진 ${imgs.length}장`,{type:'success'});
-    renderDbxSettings();
-  }catch(e){
-    if(lt)lt.dismiss();
-    if(e.message!=='DBX_TOKEN_EXPIRED'&&e.message!=='DBX_NO_TOKEN'){
-      console.error('dbx backup',e);
-      toast('백업 실패: '+(e.message||e),{type:'error'});
-    }
-  }
-}
-
-// ── Dropbox 파일 목록 ──────────────────────────────────────────
-async function _dbxListBackups(){
-  const token=await _dbxToken();
-  const resp=await fetch('https://api.dropboxapi.com/2/files/list_folder',{
-    method:'POST',
-    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({path:'',recursive:false}),
-  });
-  if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
-  const data=await resp.json();
-  return (data.entries||[])
-    .filter(e=>e['.tag']==='file'&&e.name.startsWith('receipt-db_')&&e.name.endsWith('.json'))
-    .sort((a,b)=>b.server_modified.localeCompare(a.server_modified));
-}
-
-// ── Dropbox에서 복원 ───────────────────────────────────────────
-async function _dbxRestore(path,name){
-  try{
-    const token=await _dbxToken();
-    const resp=await fetch('https://content.dropboxapi.com/2/files/download',{
-      method:'POST',
-      headers:{
-        'Authorization':'Bearer '+token,
-        'Dropbox-API-Arg':JSON.stringify({path}),
-      },
-    });
-    if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
-    const text=await resp.text();
-    const data=JSON.parse(text);
-    if(!data||data.app!=='receipt-db'||!Array.isArray(data.receipts)){
-      throw new Error('올바른 백업 파일이 아니에요');
-    }
-    if(!confirm(`'${name}'\n\n영수증 ${data.receipts.length}건을 복원할까요?\n같은 ID의 영수증은 덮어쓰여요.`))return;
-    let added=0,imgN=0;
-    for(const r of data.receipts){await dbPut('receipts',r);added++;}
-    if(Array.isArray(data.images)){
-      for(const im of data.images){
-        const blob=await base64ToBlob(im.data);
-        await dbPut('images',{id:im.id,blob,mime:im.mime||'image/jpeg'});imgN++;
-      }
-    }
-    if(data.storeCatMap&&typeof data.storeCatMap==='object'){
-      storeCatMap={...storeCatMap,...data.storeCatMap};
-      await saveStoreCatMap();
-    }
-    _dbxCloseModal();
-    toast(`복원 완료 — ${added}건, 사진 ${imgN}장`,{type:'success'});
-    await loadAll();renderDetail();
-  }catch(e){
-    if(e.message!=='DBX_TOKEN_EXPIRED'&&e.message!=='DBX_NO_TOKEN'){
-      console.error('dbx restore',e);
-      toast('복원 실패: '+(e.message||e),{type:'error'});
-    }
-  }
-}
-
-// ── 연결 해제 ──────────────────────────────────────────────────
-function dbxDisconnect(){
-  if(!confirm('Dropbox 연결을 해제할까요?\nDropbox의 백업 파일은 삭제되지 않아요.'))return;
-  [_K.ACCESS_TOKEN,_K.REFRESH_TOKEN,_K.EXPIRES_AT,
-   _K.ACCOUNT,_K.LAST_BACKUP,_K.CODE_VERIFIER,_K.STATE].forEach(_lsDel);
-  // App key는 보존 — 재연결 시 다시 입력 안 해도 되게
-  toast('Dropbox 연결이 해제됐어요');
-  renderDbxSettings();
-}
-
-// ════════════════════════════════════════════════════════════════
-// DROPBOX 자동 동기화 (v1.19)
-// ════════════════════════════════════════════════════════════════
-// 전략: 사진 제외 경량 JSON(receipt-db_sync.json) 하나를 Dropbox에 유지.
-// 저장·수정·삭제 시 자동 업로드(백그라운드), 앱 시작 시 자동 다운로드+머지.
-// 사진은 기존 수동 풀백업(JSON export)으로 별도 관리.
-// ────────────────────────────────────────────────────────────────
-
-const _SYNC_PATH='/receipt-db_sync.json';
-
-// 삭제 추적: 삭제된 영수증 ID를 localStorage에 보관
-function _dbxMarkDeleted(id){
-  const ids=new Set(JSON.parse(_ls(_K.DELETED_IDS)||'[]'));
-  ids.add(id);
-  // 최대 2000개 유지 (오래된 것부터 정리)
-  const arr=[...ids];
-  if(arr.length>2000)arr.splice(0,arr.length-2000);
-  _lsSet(_K.DELETED_IDS,JSON.stringify(arr));
-}
-
-// 자동 업로드 — 사진 없이 영수증 메타데이터만 (빠름, 수십 KB)
-async function dbxSyncUpload(){
-  if(!dbxIsConnected())return;
-  try{
-    const token=await _dbxToken();
-    const recs=await dbAll('receipts');
-    const deletedIds=JSON.parse(_ls(_K.DELETED_IDS)||'[]');
-    const payload=JSON.stringify({
-      app:'receipt-db',
-      syncVersion:1,
-      exportedAt:nowISO(),
-      receipts:recs,
-      storeCatMap,
-      deletedIds,
-    });
-    const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{
-      method:'POST',
-      headers:{
-        'Authorization':'Bearer '+token,
-        'Dropbox-API-Arg':JSON.stringify({path:_SYNC_PATH,mode:'overwrite',mute:true}),
-        'Content-Type':'application/octet-stream',
-      },
-      body:payload,
-    });
-    if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
-    _lsSet(_K.LAST_SYNC,nowISO());
-    _dbxUpdateSyncBadge();
-  }catch(e){
-    // DBX_TOKEN_EXPIRED / DBX_NO_TOKEN은 이미 toast 처리됨, 나머지만 콘솔
-    if(e.message!=='DBX_TOKEN_EXPIRED'&&e.message!=='DBX_NO_TOKEN'){
-      console.warn('dbx auto-sync upload:',e.message||e);
-    }
-  }
-}
-
-// 자동 다운로드 + 머지 — 앱 시작 시 호출
-async function dbxSyncDownload(){
-  if(!dbxIsConnected())return;
-  try{
-    const token=await _dbxToken();
-    const resp=await fetch('https://content.dropboxapi.com/2/files/download',{
-      method:'POST',
-      headers:{
-        'Authorization':'Bearer '+token,
-        'Dropbox-API-Arg':JSON.stringify({path:_SYNC_PATH}),
-      },
-    });
-    if(resp.status===409||resp.status===404)return;  // 파일 없음 = 첫 사용, 정상
-    if(!resp.ok)return;
-    const data=JSON.parse(await resp.text());
-    if(!data||data.app!=='receipt-db'||!Array.isArray(data.receipts))return;
-    await _dbxMerge(data);
-  }catch(e){
-    if(e.message!=='DBX_TOKEN_EXPIRED'&&e.message!=='DBX_NO_TOKEN'){
-      console.warn('dbx auto-sync download:',e.message||e);
-    }
-  }
-}
-
-// 머지 로직: 원격 + 로컬 → 최신 updatedAt 우선, 삭제 항목 적용
-async function _dbxMerge(remoteData){
-  const remoteRecs=remoteData.receipts||[];
-  const remoteDeletedIds=new Set(remoteData.deletedIds||[]);
-  const localDeletedIds=new Set(JSON.parse(_ls(_K.DELETED_IDS)||'[]'));
-  let changed=0;
-
-  // ① 원격에서 삭제된 항목을 로컬에서도 삭제
-  for(const id of remoteDeletedIds){
-    if(!localDeletedIds.has(id)&&receipts.find(r=>r.id===id)){
-      await dbDel('receipts',id);
-      _revokeImgUrl(id.replace('rec_','img_'));  // 이미지 캐시 정리 (있으면)
-      localDeletedIds.add(id);
-      changed++;
-    }
-  }
-  // 머지된 deletedIds 저장
-  const mergedDel=[...new Set([...localDeletedIds,...remoteDeletedIds])];
-  if(mergedDel.length>2000)mergedDel.splice(0,mergedDel.length-2000);
-  _lsSet(_K.DELETED_IDS,JSON.stringify(mergedDel));
-
-  // ② 원격 영수증 머지 (로컬에서 삭제한 것은 건너뜀)
-  for(const remote of remoteRecs){
-    if(localDeletedIds.has(remote.id))continue;
-    const local=receipts.find(r=>r.id===remote.id);
-    if(!local){
-      // 새 영수증 — 추가
-      await dbPut('receipts',remote);
-      changed++;
-    }else{
-      // 같은 ID — updatedAt 최신 것 사용
-      const lt=new Date(local.updatedAt||local.createdAt||0).getTime();
-      const rt=new Date(remote.updatedAt||remote.createdAt||0).getTime();
-      if(rt>lt){await dbPut('receipts',remote);changed++;}
-    }
-  }
-
-  // ③ storeCatMap 머지 (로컬에 없는 것만 추가)
-  if(remoteData.storeCatMap&&typeof remoteData.storeCatMap==='object'){
-    let catChanged=false;
-    for(const[k,v]of Object.entries(remoteData.storeCatMap)){
-      if(v&&!storeCatMap[k]){storeCatMap[k]=v;catChanged=true;}
-    }
-    if(catChanged)await saveStoreCatMap();
-  }
-
-  if(changed>0){
-    await loadAll();
-    renderDetail();
-    toast(`☁ ${changed}건 동기화됨`,{duration:2200});
-  }
-}
-
-// 사이드바 하단 동기화 뱃지 갱신
-function _dbxUpdateSyncBadge(){
-  const el=document.getElementById('dbxSyncBadge');
-  if(!el)return;
-  if(!dbxIsConnected()){el.style.display='none';return;}
-  const iso=_ls(_K.LAST_SYNC);
-  if(!iso){el.style.display='none';return;}
-  const diff=Math.round((Date.now()-new Date(iso).getTime())/60000);
-  let label;
-  if(diff<1)label='방금 동기화';
-  else if(diff<60)label=`${diff}분 전 동기화`;
-  else if(diff<1440)label=`${Math.round(diff/60)}시간 전 동기화`;
-  else label=new Date(iso).toLocaleDateString('ko-KR',{month:'short',day:'numeric'})+' 동기화';
-  el.textContent='☁ '+label;
-  el.style.display='block';
-}
-
-// ── UI 상태 렌더링 ─────────────────────────────────────────────
-function renderDbxSettings(){
-  const notConn=document.getElementById('dbxNotConnected');
-  const conn=document.getElementById('dbxConnected');
-  if(!notConn||!conn)return;
-
-  // redirect URI 힌트 갱신
-  const hint=document.getElementById('dbxRedirectUriHint');
-  if(hint)hint.textContent=_dbxRedirectUri();
-
-  if(dbxIsConnected()){
-    notConn.style.display='none';
-    conn.style.display='block';
-    const acStr=_ls(_K.ACCOUNT);
-    const ac=acStr?JSON.parse(acStr):null;
-    const lb=_ls(_K.LAST_BACKUP);
-    const ls=_ls(_K.LAST_SYNC);
-    const statusEl=document.getElementById('dbxStatus');
-    if(statusEl){
-      const fmtTime=iso=>{
-        if(!iso)return null;
-        const d=new Date(iso);
-        return d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-      };
-      statusEl.innerHTML=`
-        <div style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--green-txt);margin-bottom:6px;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          연결됨${ac&&ac.email?' · '+escapeHtml(ac.email):''}
-        </div>
-        <div style="font-size:11px;color:var(--label3);margin-bottom:4px;">
-          자동 동기화: ${fmtTime(ls)||'아직 동기화 전 — 영수증을 저장하면 자동 시작돼요'}
-        </div>
-        <div style="font-size:11px;color:var(--label3);margin-bottom:10px;">
-          전체 백업(사진 포함): ${lb?escapeHtml(lb):'아직 없음 — 아래 버튼으로 백업 권장'}
-        </div>
-      `;
-    }
-  }else{
-    conn.style.display='none';
-    notConn.style.display='block';
-    const appKeyInp=document.getElementById('dbxAppKey');
-    if(appKeyInp&&!appKeyInp.value){
-      const saved=_ls(_K.APP_KEY);
-      if(saved)appKeyInp.value=saved;
-    }
-  }
-}
-
-// ── 복원 모달 ──────────────────────────────────────────────────
-function _dbxOpenModal(){
-  const modal=document.getElementById('dbxModal');
-  if(modal)modal.style.display='block';
-  const listEl=document.getElementById('dbxBackupList');
-  if(listEl)listEl.innerHTML='<div class="empty-state">로딩 중...</div>';
-
-  _dbxListBackups().then(files=>{
-    if(!listEl)return;
-    if(!files.length){
-      listEl.innerHTML='<div class="empty-state">Dropbox에 백업 파일이 없어요</div>';
-      return;
-    }
-    listEl.innerHTML=files.map(f=>{
-      const dt=f.server_modified?new Date(f.server_modified).toLocaleString('ko-KR'):'';
-      const sz=_dbxFmtSize(f.size);
-      const path=f.path_lower||f.path_display||'/'+f.name;
-      return `<div class="bkp-item">
-        <div class="bkp-item-info">
-          <div class="bkp-item-name">${escapeHtml(f.name)}</div>
-          <div class="bkp-item-meta">${escapeHtml(dt)}${sz?' · '+sz:''}</div>
-        </div>
-        <button class="bkp-restore-btn"
-          data-path="${escapeHtml(path)}"
-          data-name="${escapeHtml(f.name)}">복원</button>
-      </div>`;
-    }).join('');
-    listEl.querySelectorAll('.bkp-restore-btn').forEach(btn=>{
-      btn.addEventListener('click',()=>_dbxRestore(btn.dataset.path,btn.dataset.name));
-    });
-  }).catch(e=>{
-    if(listEl)listEl.innerHTML=`<div class="alert err" style="margin:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg><div>목록 로딩 실패: ${escapeHtml(e.message||String(e))}</div></div>`;
-  });
-}
-function _dbxCloseModal(){
-  const m=document.getElementById('dbxModal');if(m)m.style.display='none';
-}
-function _dbxFmtSize(bytes){
-  if(!bytes||isNaN(bytes))return '';
-  if(bytes<1024)return bytes+'B';
-  if(bytes<1024*1024)return (bytes/1024).toFixed(0)+'KB';
-  return (bytes/1024/1024).toFixed(1)+'MB';
-}
-
-// ── 이벤트 바인딩 (init 에서 1회) ──────────────────────────────
-function _dbxBindEvents(){
-  const $=id=>document.getElementById(id);
-  $('dbxConnectBtn')?.addEventListener('click',dbxConnect);
-  $('dbxBackupBtn')?.addEventListener('click',dbxBackup);
-  $('dbxRestoreBtn')?.addEventListener('click',_dbxOpenModal);
-  $('dbxDisconnectBtn')?.addEventListener('click',dbxDisconnect);
-  $('dbxModalClose')?.addEventListener('click',_dbxCloseModal);
-  $('dbxModalOverlay')?.addEventListener('click',_dbxCloseModal);
-}
-
-// ════════════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════════════
 (async function init(){
   // 버전 표시 — DOM 두 곳에 모두 주입 (HTML 정적 텍스트가 stale해도 JS가 진실의 원천)
   const av=document.getElementById('appVersion');if(av)av.textContent=APP_VERSION;
   const avs=document.getElementById('appVersionStat');if(avs)avs.textContent=APP_VERSION;
-
-  // Dropbox 이벤트 바인딩 (1회)
-  _dbxBindEvents();
-
   try{
     await openDB();
     await loadStoreCatMap();
     await loadAll();
-    // 기기별 초기 탭: 데스크탑(비터치) → 추가, 모바일(터치) → 내역
-    if(!_isTouch) switchTab('input');
     renderDetail();
-    // Dropbox 자동 동기화 — 연결된 경우 시작 시 최신 데이터 내려받아 머지
-    if(dbxIsConnected()){
-      _dbxUpdateSyncBadge();        // 이전 동기화 시각 즉시 표시
-      dbxSyncDownload();            // 백그라운드 다운로드+머지 (await 없음 — UI 차단 안 함)
-    }
   }catch(e){
     console.error(e);
     toast('데이터베이스를 열 수 없어요. 브라우저 설정(시크릿 모드 등)을 확인해주세요.',{type:'error',duration:6000});
   }
-
-  // Dropbox OAuth 콜백 처리 — URL에 ?code= 있으면 토큰 교환
-  // (DB 로드 완료 후 실행 — 콜백 성공 시 settings 탭으로 이동)
-  await dbxHandleCallback();
 })();
 </script>
 
