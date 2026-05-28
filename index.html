@@ -119,6 +119,14 @@ svg{display:block;flex-shrink:0;}
 .guide-copy{border:1px solid var(--blue);background:var(--card);color:var(--blue-txt);border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:5px;margin-top:8px;}
 .guide-copy:hover{background:var(--blue);color:#fff;}
 
+/* ── 입력 모드 토글 ── */
+.input-mode-row{display:flex;gap:2px;background:var(--fill);border-radius:10px;padding:3px;margin-bottom:16px;}
+.input-mode-btn{flex:1;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--label2);padding:7px 0;border-radius:8px;cursor:pointer;transition:all .15s;}
+.input-mode-btn.on{background:var(--card);color:var(--label);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+/* ── 직접 입력 폼 그리드 ── */
+.direct-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:900px){.direct-grid{grid-template-columns:1fr;}}
+
 /* 새 레이아웃 — 위→아래 흐름. 미리보기가 전체 폭 사용 */
 .input-stack{display:flex;flex-direction:column;gap:20px;}
 .input-row.top{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;}
@@ -566,19 +574,23 @@ svg{display:block;flex-shrink:0;}
         <div class="main-top">
           <div>
             <div class="main-eye">새 영수증 추가</div>
-            <div class="main-title">영수증 텍스트 붙여넣기</div>
-            <div class="main-sub">사진을 ChatGPT·Claude·Gemini에 업로드 → 아래 프롬프트로 정리 → 결과를 붙여넣으세요.</div>
+            <div class="main-title" id="inputModeTitle">영수증 텍스트 붙여넣기</div>
+            <div class="main-sub" id="inputModeSub">사진을 ChatGPT·Claude·Gemini에 업로드 → 아래 프롬프트로 정리 → 결과를 붙여넣으세요.</div>
           </div>
         </div>
         <div class="main-body">
-          <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
-            <button class="guide-copy" id="promptCopyBtn">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              프롬프트 복사
-            </button>
+          <div class="input-mode-row">
+            <button class="input-mode-btn on" id="modeGptBtn" type="button">GPT 붙여넣기</button>
+            <button class="input-mode-btn" id="modeDirectBtn" type="button">✏️ 직접 입력</button>
           </div>
-
           <div class="input-stack">
+            <div id="gptModeArea">
+            <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+              <button class="guide-copy" id="promptCopyBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                프롬프트 복사
+              </button>
+            </div>
 
             <!-- ① 붙여넣기 + 사진 (위, 좌우) -->
             <div class="input-row top">
@@ -617,6 +629,32 @@ svg{display:block;flex-shrink:0;}
               </div>
             </div>
 
+            </div><!-- /gptModeArea -->
+            <div id="directModeArea" style="display:none;">
+              <div class="direct-grid">
+                <div class="field-g">
+                  <label class="field-lbl">상호명 / 내역 <span class="field-lbl-hint">*필수</span></label>
+                  <input id="directStore" class="field-inp" type="text" placeholder="예: 故 홍길동 부친상, GS마트 강남점"/>
+                </div>
+                <div class="field-g">
+                  <label class="field-lbl">날짜</label>
+                  <input id="directDate" class="field-inp" type="date"/>
+                </div>
+                <div class="field-g">
+                  <label class="field-lbl">금액 <span class="field-lbl-hint">*필수</span></label>
+                  <input id="directTotal" class="field-inp" type="text" inputmode="numeric" placeholder="0" style="text-align:right;font-size:16px;font-weight:700;"/>
+                </div>
+                <div class="field-g">
+                  <label class="field-lbl">참고 사진 <span class="field-lbl-hint">부고장·청첩장 등</span></label>
+                  <input id="directPhotoInp" type="file" accept="image/*" style="display:none;"/>
+                  <div class="photo-zone" id="directPhotoZone" style="min-height:80px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    <div class="photo-zone-text">사진 추가</div>
+                    <div class="photo-zone-hint">탭하여 추가</div>
+                  </div>
+                </div>
+              </div>
+            </div><!-- /directModeArea -->
             <!-- ③ 옵션 (2열 그리드, DOM 순서 = 탭 순서) -->
             <div class="input-row options">
               <div class="field-g">
@@ -903,7 +941,9 @@ svg{display:block;flex-shrink:0;}
 //         시 해당 카테고리 영수증만 사이드바에 필터링 (재클릭 or × 버튼으로 해제). ④ 가계부 우측
 //         패널 상단에 전체·연도·월별 시간 필터 pill (인물 패널과 동일한 UX).
 //         연도 pill 클릭 시 해당 연도의 월 pill 추가 표시. 검색어 변경 시 필터 자동 초기화.
-const APP_VERSION='v1.38';
+// v1.39 — 직접 입력 모드: "추가" 탭 상단에 모드 토글 추가. GPT 붙여넣기 없이 상호명·날짜·금액만
+//         입력하여 저장. 부고장·청첩장 등 참고 이미지 첨부 가능. 경조사 기본 카테고리 추가.
+const APP_VERSION='v1.39';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -999,7 +1039,7 @@ function _revokeImgUrl(imageId){
 // ════════════════════════════════════════════════════════════════
 // CATEGORIES — 자동 분류 (가게명 → 카테고리)
 // ════════════════════════════════════════════════════════════════
-const BASE_CATEGORIES=['마트','외식','술집','카페','배달','교통','쇼핑','병원·약국','문화'];
+const BASE_CATEGORIES=['마트','외식','술집','카페','배달','교통','쇼핑','병원·약국','문화','경조사'];
 const CAT_RULES=[
   {cat:'마트', kws:['마트','슈퍼','편의점','이마트','롯데마트','홈플러스','코스트코','하나로','농협','GS25','CU','세븐일레븐','이마트24','미니스톱','트레이더스']},
   {cat:'외식', kws:['식당','맛집','분식','김밥','국밥','돈까스','갈비','삼겹살','냉면','치킨','피자','버거','햄버거','떡볶이','우동','초밥','샤브','죽','파스타','스테이크','쌀국수','한식','중식','일식','양식','뷔페','족발','보쌈','국수','만두','곱창','전골','찌개','곰탕','설렁탕','순대','튀김','마라']},
@@ -2211,6 +2251,7 @@ document.getElementById('promptCopyBtn').addEventListener('click',async()=>{
 
 // ── SAVE ──
 saveBtn.addEventListener('click',async()=>{
+  if(_inputMode==='direct'){await _saveDirectEntry();return;}
   if(!_currentParsed)return;
   const p=_currentParsed;
   const v2=validateParsed(p);
@@ -2288,7 +2329,190 @@ function clearInputs(){
   _catAutoFilled=false;
   _updateCatHint();
   updatePreview();
+  // 직접 입력 모드 필드 초기화
+  const ds=document.getElementById('directStore');
+  const dd=document.getElementById('directDate');
+  const dt=document.getElementById('directTotal');
+  if(ds)ds.value='';
+  if(dd)dd.value=new Date().toISOString().slice(0,10);
+  if(dt)dt.value='';
+  _clearDirectPhoto();
+  if(_inputMode==='direct')saveBtn.disabled=true;
 }
+
+// ════════════════════════════════════════════════════════════════
+// 직접 입력 모드
+// ════════════════════════════════════════════════════════════════
+let _inputMode='gpt';
+let _directPhotoBlob=null,_directPhotoUrl=null;
+
+function _applyDirectPhoto(f){
+  if(!f||!f.type.startsWith('image/'))return;
+  if(_directPhotoUrl)URL.revokeObjectURL(_directPhotoUrl);
+  _directPhotoBlob=f;
+  _directPhotoUrl=URL.createObjectURL(f);
+  const zone=document.getElementById('directPhotoZone');
+  if(!zone)return;
+  zone.classList.add('has');
+  zone.innerHTML=`
+    <img src="${_directPhotoUrl}" class="photo-preview" alt="참고 사진"/>
+    <button class="photo-remove" type="button" aria-label="사진 제거">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+    </button>
+  `;
+  zone.querySelector('.photo-remove').addEventListener('click',e=>{
+    e.stopPropagation();_clearDirectPhoto();
+  });
+}
+
+function _clearDirectPhoto(){
+  if(_directPhotoUrl){URL.revokeObjectURL(_directPhotoUrl);_directPhotoUrl=null;}
+  _directPhotoBlob=null;
+  const inp=document.getElementById('directPhotoInp');
+  if(inp)inp.value='';
+  const zone=document.getElementById('directPhotoZone');
+  if(!zone)return;
+  zone.classList.remove('has');
+  zone.innerHTML=`
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    <div class="photo-zone-text">사진 추가</div>
+    <div class="photo-zone-hint">탭하여 추가</div>
+  `;
+  // 이벤트 재연결
+  zone.onclick=()=>document.getElementById('directPhotoInp').click();
+}
+
+function _updateDirectSaveBtn(){
+  if(_inputMode!=='direct')return;
+  const store=(document.getElementById('directStore').value||'').trim();
+  const total=(document.getElementById('directTotal').value||'').trim();
+  saveBtn.disabled=!(store&&total);
+}
+
+function _setInputMode(mode){
+  _inputMode=mode;
+  document.getElementById('modeGptBtn').classList.toggle('on',mode==='gpt');
+  document.getElementById('modeDirectBtn').classList.toggle('on',mode==='direct');
+  document.getElementById('gptModeArea').style.display=mode==='gpt'?'':'none';
+  document.getElementById('directModeArea').style.display=mode==='direct'?'':'none';
+  const titleEl=document.getElementById('inputModeTitle');
+  const subEl=document.getElementById('inputModeSub');
+  if(titleEl)titleEl.textContent=mode==='gpt'?'영수증 텍스트 붙여넣기':'금액 직접 입력';
+  if(subEl)subEl.textContent=mode==='gpt'
+    ?'사진을 ChatGPT·Claude·Gemini에 업로드 → 아래 프롬프트로 정리 → 결과를 붙여넣으세요.'
+    :'상호명과 금액만 입력하면 저장됩니다. 부고장·청첩장 등 참고 이미지를 첨부할 수 있어요.';
+  if(mode==='direct'){
+    _updateDirectSaveBtn();
+  } else {
+    saveBtn.disabled=!_currentParsed;
+  }
+}
+
+async function _saveDirectEntry(){
+  const store=(document.getElementById('directStore').value||'').trim();
+  const totalRaw=(document.getElementById('directTotal').value||'').trim();
+  const total=_parseN(totalRaw);
+  if(!store){toast('상호명/내역을 입력해주세요',{type:'error'});return;}
+  if(!total){toast('금액을 입력해주세요',{type:'error'});return;}
+  const dateVal=document.getElementById('directDate').value||new Date().toISOString().slice(0,10);
+  const id=_newId(dateVal);
+  let imageId=null;
+  if(_directPhotoBlob){
+    imageId='img_'+id.slice(4);
+    await dbPut('images',{id:imageId,blob:_directPhotoBlob,mime:_directPhotoBlob.type||'image/jpeg'});
+  }
+  const participants=(document.getElementById('participantsInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const tags=(document.getElementById('tagInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const finalCat=document.getElementById('catInp').value.trim();
+  const rec={
+    id,
+    date:dateVal,
+    time:'',
+    store,
+    category:finalCat,
+    paymentMethod:document.getElementById('payMethod').value,
+    paymentDetail:document.getElementById('payDetail').value.trim(),
+    paidBy:document.getElementById('payerInp').value.trim(),
+    total,
+    items:[],
+    imageId,
+    notes:document.getElementById('noteInp').value,
+    participants,
+    tags,
+    createdAt:nowISO(),updatedAt:nowISO(),
+  };
+  const dup=receipts.find(r=>r.date===rec.date&&(r.store||'').trim()===rec.store&&r.total===rec.total);
+  if(dup){const ok=await _confirmDup(rec.store,rec.date,rec.total);if(!ok)return;}
+  await dbPut('receipts',rec);
+  if(rec.store&&finalCat)await learnCategory(rec.store,finalCat);
+  toast(`'${rec.store}' 저장됨`,{type:'success'});
+  clearInputs();
+  await loadAll();
+  if(rec.date)viewMonth=rec.date.slice(0,7);
+  if(searchQuery){searchQuery='';document.getElementById('searchInp').value='';}
+  selectedId=rec.id;
+  switchTab('list');
+  renderSide();
+  renderDetail();
+  if(_isTouch){setTimeout(()=>{document.querySelector('.main').scrollIntoView({behavior:'smooth',block:'start'});},80);}
+  dbxSyncUpload();
+}
+
+// 직접 입력 모드 이벤트 연결
+(function _initDirectMode(){
+  document.getElementById('modeGptBtn').addEventListener('click',()=>_setInputMode('gpt'));
+  document.getElementById('modeDirectBtn').addEventListener('click',()=>_setInputMode('direct'));
+
+  const directPhotoZone=document.getElementById('directPhotoZone');
+  const directPhotoInp=document.getElementById('directPhotoInp');
+  directPhotoZone.addEventListener('click',()=>directPhotoInp.click());
+  directPhotoInp.addEventListener('change',e=>_applyDirectPhoto(e.target.files&&e.target.files[0]));
+
+  // 드래그&드롭 (데스크톱)
+  ['dragenter','dragover'].forEach(ev=>directPhotoZone.addEventListener(ev,e=>{
+    e.preventDefault();e.stopPropagation();directPhotoZone.classList.add('drag');
+  }));
+  ['dragleave','dragend'].forEach(ev=>directPhotoZone.addEventListener(ev,e=>{
+    if(!directPhotoZone.contains(e.relatedTarget))directPhotoZone.classList.remove('drag');
+  }));
+  directPhotoZone.addEventListener('drop',e=>{
+    e.preventDefault();e.stopPropagation();
+    directPhotoZone.classList.remove('drag');
+    _applyDirectPhoto(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]);
+  });
+
+  const directStore=document.getElementById('directStore');
+  const directDate=document.getElementById('directDate');
+  const directTotal=document.getElementById('directTotal');
+
+  // 날짜 기본값 = 오늘
+  directDate.value=new Date().toISOString().slice(0,10);
+
+  // 날짜 picker 즉시 열기
+  directDate.addEventListener('focus',()=>{
+    if(typeof directDate.showPicker==='function')try{directDate.showPicker();}catch(_){}
+  });
+
+  // 금액 입력 → 천단위 쉼표
+  directTotal.addEventListener('input',function(){
+    const raw=this.value.replace(/[^0-9]/g,'');
+    this.value=raw?parseInt(raw,10).toLocaleString('ko-KR'):'';
+    _updateDirectSaveBtn();
+  });
+
+  directStore.addEventListener('input',_updateDirectSaveBtn);
+
+  // 가게명 blur → 카테고리 자동 채움
+  directStore.addEventListener('blur',function(){
+    const s=this.value.trim();
+    if(!s)return;
+    const catInp=document.getElementById('catInp');
+    if(!catInp.value.trim()||_catAutoFilled){
+      const auto=autocategorize(s);
+      if(auto){catInp.value=auto;_catAutoFilled=true;_updateCatHint();}
+    }
+  });
+})();
 document.getElementById('clearBtn').addEventListener('click',()=>{
   if(pasteTa.value||pendingPhotoBlob){
     if(!confirm('입력 내용을 모두 비울까요?'))return;
