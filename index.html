@@ -862,7 +862,8 @@ svg{display:block;flex-shrink:0;}
 //         내역 화면 품목 드래그&드롭: ⠿ 핸들로 품목 순서 변경 (포인터 이벤트, 모바일+데스크톱).
 // v1.30 — 모바일 인물 검색 레이아웃: 결제자/참석자/통합 패널 검색 시 요약 패널이 영수증 목록 위에 표시.
 //         CSS display:contents + order 트릭으로 DOM 변경 없이 순서 전환.
-const APP_VERSION='v1.30';
+// v1.31 — 검색창 입력 시 selectedId 즉시 초기화: 영수증 선택 후 검색하면 상세 화면이 그대로 남던 버그 수정.
+const APP_VERSION='v1.31';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1591,8 +1592,8 @@ document.getElementById('monthLabel').addEventListener('click',()=>{
 const searchInp=document.getElementById('searchInp');
 let _searchComposing=false;
 searchInp.addEventListener('compositionstart',()=>{_searchComposing=true;});
-searchInp.addEventListener('compositionend',()=>{_searchComposing=false;searchQuery=searchInp.value;renderSide();renderDetail();});
-searchInp.addEventListener('input',()=>{if(!_searchComposing){searchQuery=searchInp.value;renderSide();renderDetail();}});
+searchInp.addEventListener('compositionend',()=>{_searchComposing=false;searchQuery=searchInp.value;if(searchQuery)selectedId=null;renderSide();renderDetail();});
+searchInp.addEventListener('input',()=>{if(!_searchComposing){searchQuery=searchInp.value;if(searchQuery)selectedId=null;renderSide();renderDetail();}});
 
 // ════════════════════════════════════════════════════════════════
 // INPUT VIEW — paste + photo + preview + save
