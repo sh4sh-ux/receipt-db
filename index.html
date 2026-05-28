@@ -196,8 +196,6 @@ svg{display:block;flex-shrink:0;}
 .prev-item-name::placeholder{color:var(--label3);}
 .prev-item-del{border:none;background:transparent;color:var(--label3);font-size:18px;line-height:1;padding:0;cursor:pointer;font-family:inherit;}
 .prev-item-del:hover{color:var(--red);}
-.sign-btn{width:20px;height:20px;border:1.5px solid var(--red);border-radius:50%;background:transparent;color:var(--red);font-size:11px;font-weight:700;line-height:1;padding:0;cursor:pointer;font-family:inherit;flex-shrink:0;margin-right:auto;opacity:.55;transition:opacity .12s,background .12s;}
-.sign-btn:hover{opacity:1;background:var(--red-bg);}
 .prev-empty-items{text-align:center;color:var(--label3);font-size:12px;padding:14px 0 10px;}
 
 .prev-foot{padding:9px 14px;border-top:1px solid var(--sep);display:flex;justify-content:space-between;align-items:center;font-size:12px;background:var(--fill2);}
@@ -834,7 +832,8 @@ svg{display:block;flex-shrink:0;}
 //         일별지출·참석자분담 섹션을 chevron 버튼으로 접고 펼치기. 열림/닫힘 상태 localStorage 저장.
 // v1.24 — 섹션 토글 버그 수정: SVG className → setAttribute 사용, section-body padding 구조 수정,
 //         closed 섹션 pointer-events:none 추가.
-const APP_VERSION='v1.24';
+// v1.25 — 품목 금액 셀 ± 부호 전환 버튼 제거.
+const APP_VERSION='v1.25';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1658,7 +1657,7 @@ function renderPreviewForm(){
           <input class="prev-item-name" data-f="name" placeholder="품목명" value="${escapeHtml(it.name||'')}" autocomplete="off"/>
           <input class="prev-item-qty" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||1}"/>
           <input class="prev-item-price" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/>
-          <div class="prev-item-amt readonly${negCls}" data-amt="${idx}"><button type="button" class="sign-btn" data-sign="${idx}" tabindex="-1" title="부호 전환 (+/−)" aria-label="부호 전환">±</button>${_fmtN(it.amount||0)}</div>
+          <div class="prev-item-amt readonly${negCls}" data-amt="${idx}">${_fmtN(it.amount||0)}</div>
           <button type="button" class="prev-item-del" tabindex="-1" data-del="${idx}" title="이 품목 삭제" aria-label="삭제">×</button>
         </div>`;
       }).join(''))
@@ -1882,17 +1881,6 @@ function bindPreviewFormEvents(){
       });
     }
 
-    // ± 부호 전환 버튼
-    const signBtn=row.querySelector('.sign-btn');
-    if(signBtn){
-      signBtn.addEventListener('click',()=>{
-        it.amount=-(it.amount||0);
-        // unitPrice도 함께 반전 → 수량·단가 변경 후에도 부호 유지
-        if(it.unitPrice)it.unitPrice=-it.unitPrice;
-        _recalcTotalIfAuto();
-        renderPreviewForm();
-      });
-    }
   });
 
   // ── + 추가 버튼 ──
