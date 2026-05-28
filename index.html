@@ -257,9 +257,9 @@ svg{display:block;flex-shrink:0;}
 
 .items-table{width:100%;border-collapse:collapse;margin-bottom:6px;}
 .items-table th{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;padding:8px 6px;text-align:left;border-bottom:1px solid var(--sep);background:var(--fill2);}
-.items-table th:nth-child(2),.items-table th:nth-child(3),.items-table th:nth-child(4){text-align:right;}
+.items-table th:nth-child(3),.items-table th:nth-child(4),.items-table th:nth-child(5){text-align:right;}
 .items-table td{padding:9px 6px;border-bottom:1px solid var(--sep);font-size:13px;vertical-align:top;}
-.items-table td:nth-child(2),.items-table td:nth-child(3),.items-table td:nth-child(4){text-align:right;white-space:nowrap;}
+.items-table td:nth-child(3),.items-table td:nth-child(4),.items-table td:nth-child(5){text-align:right;white-space:nowrap;}
 .items-table tr.total-row td{font-weight:700;background:var(--fill2);padding:11px 6px;border-bottom:none;}
 .items-table .item-name-inp{width:100%;border:1px solid var(--sep2);border-radius:5px;padding:5px 7px;font-size:13px;background:var(--card);outline:none;}
 .items-table .item-name-inp:focus{border-color:var(--blue);}
@@ -267,6 +267,12 @@ svg{display:block;flex-shrink:0;}
 .items-table .item-num-inp:focus{border-color:var(--blue);}
 .items-table .item-del{border:none;background:transparent;color:var(--label3);font-size:16px;padding:0 4px;line-height:1;}
 .items-table .item-del:hover{color:var(--red);}
+.items-table .item-drag{cursor:grab;color:var(--label3);background:none;border:none;padding:0 2px;font-size:13px;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;}
+.items-table .item-drag:active,.items-table .item-drag.grabbing{cursor:grabbing;color:var(--label2);}
+.items-table tr.dnd-active{opacity:.3;}
+.items-table tr.dnd-above td{box-shadow:inset 0 2px 0 var(--blue);}
+.items-table tr.dnd-below td{box-shadow:inset 0 -2px 0 var(--blue);}
+.detail-save-bar{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--sep);padding:12px 0 4px;display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:16px;z-index:5;}
 
 /* ── SEARCH SUMMARY ── */
 .srch-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
@@ -842,7 +848,10 @@ svg{display:block;flex-shrink:0;}
 // v1.27 — 결제자·참석자·통합 패널 테이블에서 카테고리 컬럼 제거 (막대 그래프로 충분).
 // v1.28 — 통합 대시보드 중복 계산 수정: 참석 내역에서 본인이 결제자인 영수증 제외.
 //         참석 분담 = "타인이 낸 경우만" 집계. 히어로 카드 라벨 개선.
-const APP_VERSION='v1.28';
+// v1.29 — 내역 화면 수정 확인 버튼: 품목·메모·참석자·태그 변경 후 "수정 확인" 버튼으로 한 번에 저장.
+//         blur 자동저장 제거 → 명시적 확인 UX. 되돌리기 버튼으로 변경 취소.
+//         내역 화면 품목 드래그&드롭: ⠿ 핸들로 품목 순서 변경 (포인터 이벤트, 모바일+데스크톱).
+const APP_VERSION='v1.29';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -2784,6 +2793,8 @@ async function renderDetail(){
   title.textContent=r.store||'(매장명 없음)';
   sub.textContent=`${fmtDateKor(r.date)} · ${fmtMoney(r.total)}원`;
   actions.style.display='flex';
+  _detailOrigItems=JSON.parse(JSON.stringify(r.items||[]));
+  _detailDirty=false;
 
   // 사진
   let photoHtml;
@@ -2810,16 +2821,17 @@ async function renderDetail(){
   body.innerHTML=`
     <div class="section-hd">품목 <button class="ghost-mini" id="addItemBtn">+ 품목 추가</button></div>
     <table class="items-table" id="itemsTable">
-      <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
+      <thead><tr><th style="width:22px;padding:8px 3px;"></th><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
       <tbody>
         ${(r.items||[]).map((it,idx)=>`<tr data-idx="${idx}">
+          <td style="padding:9px 3px;"><button class="item-drag" tabindex="-1" title="순서 변경">⠿</button></td>
           <td><input class="item-name-inp" data-f="name" value="${escapeHtml(it.name)}"/></td>
           <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||0}"/></td>
           <td><input class="item-num-inp" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/></td>
           <td><input class="item-num-inp" data-f="amount" type="text" inputmode="numeric" value="${_fmtN(it.amount||0)}" style="${(it.amount||0)<0?'color:var(--red);':''}"/></td>
           <td style="text-align:right;"><button class="item-del" data-del="${idx}" title="삭제">×</button></td>
         </tr>`).join('')}
-        <tr class="total-row"><td>총액</td><td></td><td></td><td class="${(r.total||0)<0?'amt-neg':''}" style="font-size:14px;">${fmtMoney(r.total)}원</td><td></td></tr>
+        <tr class="total-row"><td></td><td>총액</td><td></td><td></td><td class="detail-total-cell${(r.total||0)<0?' amt-neg':''}" style="font-size:14px;">${fmtMoney(r.total)}원</td><td></td></tr>
       </tbody>
     </table>
     ${mismatch?`<div class="alert warn" style="margin:10px 0 14px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><div>품목 합계 ${fmtMoney(sum)}원과 총액 ${fmtMoney(r.total)}원이 ${fmtMoney(Math.abs(sum-r.total))}원 달라요.</div></div>`:''}
@@ -2856,6 +2868,10 @@ async function renderDetail(){
     <div style="font-size:11px;color:var(--label3);margin-top:14px;">
       ID: ${r.id} · 생성 ${r.createdAt?r.createdAt.slice(0,16).replace('T',' '):'—'} · 수정 ${r.updatedAt?r.updatedAt.slice(0,16).replace('T',' '):'—'}
     </div>
+    <div class="detail-save-bar" id="detailSaveBar" style="display:none;">
+      <button class="ghost-btn" id="detailRevertBtn" style="font-size:13px;padding:7px 14px;">되돌리기</button>
+      <button class="btn" id="detailConfirmBtn" style="min-width:90px;padding:8px 18px;font-size:13px;">수정 확인</button>
+    </div>
   `;
 
   // 사진 lightbox
@@ -2889,38 +2905,12 @@ async function renderDetail(){
     });
   });
 
-  // 품목 편집
-  body.querySelectorAll('#itemsTable input').forEach(inp=>{
-    const f=inp.dataset.f;
-    inp.addEventListener('focus',()=>inp.select());
-    if(f==='unitPrice'||f==='amount'){
-      // 포커스 시 쉼표 제거해서 순수 숫자로, blur 시 쉼표 복원 후 저장
-      inp.addEventListener('focus',()=>{
-        inp.value=String(_parseN(inp.value));
-        inp.select();
-      });
-      inp.addEventListener('blur',()=>{
-        const n=_parseN(inp.value);
-        inp.value=_fmtN(n);
-        if(f==='amount')inp.style.color=n<0?'var(--red)':'';
-        persistItemChange(r);
-      });
-    }else{
-      inp.addEventListener('blur',()=>persistItemChange(r));
-      inp.addEventListener('change',()=>persistItemChange(r));
-    }
-  });
-  body.querySelectorAll('#itemsTable .item-del').forEach(btn=>{
-    btn.addEventListener('click',async()=>{
-      const idx=parseInt(btn.dataset.del,10);
-      if(!confirm(`'${r.items[idx].name}' 품목을 삭제할까요?`))return;
-      r.items.splice(idx,1);r.updatedAt=nowISO();
-      await dbPut('receipts',r);
-      await loadAll();await renderDetail();
-      dbxSyncUpload();
-    });
-  });
+  // ── 품목 편집 (input → dirty 표시, blur → 포맷 복원, 저장은 수정 확인 버튼) ──
+  _bindDetailItemTableEvents(r);
+  _initDetailItemDrag(r);
+
   document.getElementById('addItemBtn').addEventListener('click',async()=>{
+    _syncDetailFromInputs(r);
     r.items.push({name:'새 품목',quantity:1,unitPrice:0,amount:0,category:''});
     r.updatedAt=nowISO();
     await dbPut('receipts',r);
@@ -2952,43 +2942,33 @@ async function renderDetail(){
     });
   }
 
-  // 참석자
+  // ── 참석자·메모·태그 (input → dirty 표시, 저장은 수정 확인 버튼) ──
   const dp2=document.getElementById('dParticipants');
-  if(dp2){
-    dp2.addEventListener('blur',async()=>{
-      const participants=dp2.value.split(',').map(s=>s.trim()).filter(Boolean);
-      if(JSON.stringify(participants)===JSON.stringify(r.participants||[]))return;
-      r.participants=participants;r.updatedAt=nowISO();
-      await dbPut('receipts',r);
-      toast('참석자 저장됨');
-      await loadAll();await renderDetail();
-      dbxSyncUpload();
-    });
-  }
-
-  // 메모·태그
+  if(dp2) dp2.addEventListener('input',()=>_detailSetDirty(true));
   const dn=document.getElementById('dNotes');
-  let nComp=false;
-  dn.addEventListener('compositionstart',()=>{nComp=true;});
-  dn.addEventListener('compositionend',()=>{nComp=false;});
-  dn.addEventListener('blur',async()=>{
-    if(dn.value===r.notes)return;
-    r.notes=dn.value;r.updatedAt=nowISO();
+  if(dn) dn.addEventListener('input',()=>_detailSetDirty(true));
+  const dt=document.getElementById('dTags');
+  if(dt) dt.addEventListener('input',()=>_detailSetDirty(true));
+
+  // ── 수정 확인 / 되돌리기 ──
+  document.getElementById('detailConfirmBtn').addEventListener('click',async()=>{
+    _syncDetailFromInputs(r);
+    const _dn=document.getElementById('dNotes');
+    if(_dn) r.notes=_dn.value;
+    const _dp=document.getElementById('dParticipants');
+    if(_dp) r.participants=_dp.value.split(',').map(s=>s.trim()).filter(Boolean);
+    const _dt=document.getElementById('dTags');
+    if(_dt) r.tags=_dt.value.split(',').map(s=>s.trim()).filter(Boolean);
+    r.total=r.items.reduce((s,i)=>s+(i.amount||0),0);
+    r.updatedAt=nowISO();
     await dbPut('receipts',r);
-    toast('메모 저장됨');
+    toast('수정됨',{type:'success'});
+    await loadAll();await renderDetail();
     dbxSyncUpload();
   });
-  const dt=document.getElementById('dTags');
-  let tComp=false;
-  dt.addEventListener('compositionstart',()=>{tComp=true;});
-  dt.addEventListener('compositionend',()=>{tComp=false;});
-  dt.addEventListener('blur',async()=>{
-    const tags=dt.value.split(',').map(s=>s.trim()).filter(Boolean);
-    if(JSON.stringify(tags)===JSON.stringify(r.tags||[]))return;
-    r.tags=tags;r.updatedAt=nowISO();
-    await dbPut('receipts',r);
-    toast('태그 저장됨');
-    dbxSyncUpload();
+  document.getElementById('detailRevertBtn').addEventListener('click',async()=>{
+    r.items=JSON.parse(JSON.stringify(_detailOrigItems));
+    await renderDetail();
   });
 }
 
@@ -3057,31 +3037,112 @@ function startKvEdit(el,r){
   inp.addEventListener('blur',()=>{setTimeout(()=>{if(!composing&&!done)commit();},0);});
 }
 
-async function persistItemChange(r){
-  const rows=document.querySelectorAll('#itemsTable tbody tr[data-idx]');
-  let changed=false;
-  rows.forEach(tr=>{
+// v1.29: persistItemChange → dirty 표시만 (저장은 수정 확인 버튼)
+function persistItemChange(r){ _detailSetDirty(true); _liveUpdateDetailTotal(); }
+
+let _detailOrigItems=null;
+let _detailDirty=false;
+function _detailSetDirty(v){
+  _detailDirty=v;
+  const bar=document.getElementById('detailSaveBar');
+  if(bar) bar.style.display=v?'flex':'none';
+}
+function _syncDetailFromInputs(r){
+  document.querySelectorAll('#itemsTable tbody tr[data-idx]').forEach(tr=>{
     const idx=parseInt(tr.dataset.idx,10);
     const it=r.items[idx];if(!it)return;
     tr.querySelectorAll('input').forEach(inp=>{
       const f=inp.dataset.f;
-      if(f==='name'){if(it.name!==inp.value){it.name=inp.value;changed=true;}}
-      else{
-        // unitPrice·amount는 text+쉼표 포맷, _parseN으로 읽기; quantity는 정수
-        const nn=(f==='unitPrice'||f==='amount')
-          ? _parseN(inp.value)
-          : (parseInt(inp.value)||0);
-        if(it[f]!==nn){it[f]=nn;changed=true;}
-      }
+      if(f==='name'){it.name=inp.value;}
+      else{it[f]=(f==='unitPrice'||f==='amount')?_parseN(inp.value):(parseInt(inp.value)||0);}
     });
   });
-  if(changed){
-    r.total=r.items.reduce((s,i)=>s+(i.amount||0),0);
-    r.updatedAt=nowISO();
-    await dbPut('receipts',r);
-    await loadAll();await renderDetail();
-    dbxSyncUpload();
-  }
+}
+function _liveUpdateDetailTotal(){
+  let sum=0;
+  document.querySelectorAll('#itemsTable tbody tr[data-idx] input[data-f="amount"]').forEach(inp=>{sum+=_parseN(inp.value);});
+  const tc=document.querySelector('#itemsTable tr.total-row .detail-total-cell');
+  if(tc){tc.textContent=fmtMoney(sum)+'원';tc.className='detail-total-cell'+(sum<0?' amt-neg':'');tc.style.fontSize='14px';}
+}
+function _bindDetailItemTableEvents(r){
+  const tbl=document.getElementById('itemsTable');if(!tbl)return;
+  tbl.querySelectorAll('input').forEach(inp=>{
+    const f=inp.dataset.f;
+    inp.addEventListener('focus',()=>inp.select());
+    if(f==='unitPrice'||f==='amount'){
+      inp.addEventListener('focus',()=>{inp.value=String(_parseN(inp.value));inp.select();});
+      inp.addEventListener('blur',()=>{const n=_parseN(inp.value);inp.value=_fmtN(n);if(f==='amount')inp.style.color=n<0?'var(--red)':'';_liveUpdateDetailTotal();});
+      inp.addEventListener('input',()=>{_detailSetDirty(true);_liveUpdateDetailTotal();});
+    }else{
+      inp.addEventListener('input',()=>_detailSetDirty(true));
+    }
+  });
+  tbl.querySelectorAll('.item-del').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const idx=parseInt(btn.dataset.del,10);
+      if(!confirm(`'${r.items[idx].name}' 품목을 삭제할까요?`))return;
+      _syncDetailFromInputs(r);
+      r.items.splice(idx,1);r.updatedAt=nowISO();
+      await dbPut('receipts',r);
+      await loadAll();await renderDetail();
+      dbxSyncUpload();
+    });
+  });
+}
+function _reRenderDetailItems(r){
+  const tbl=document.getElementById('itemsTable');if(!tbl)return;
+  const tbody=tbl.querySelector('tbody');if(!tbody)return;
+  const sum=r.items.reduce((s,i)=>s+(i.amount||0),0);
+  tbody.innerHTML=r.items.map((it,idx)=>`<tr data-idx="${idx}">
+    <td style="padding:9px 3px;"><button class="item-drag" tabindex="-1" title="순서 변경">⠿</button></td>
+    <td><input class="item-name-inp" data-f="name" value="${escapeHtml(it.name)}"/></td>
+    <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||0}"/></td>
+    <td><input class="item-num-inp" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/></td>
+    <td><input class="item-num-inp" data-f="amount" type="text" inputmode="numeric" value="${_fmtN(it.amount||0)}" style="${(it.amount||0)<0?'color:var(--red);':''}"/></td>
+    <td style="text-align:right;"><button class="item-del" data-del="${idx}" title="삭제">×</button></td>
+  </tr>`).join('')+`<tr class="total-row"><td></td><td>총액</td><td></td><td></td><td class="detail-total-cell${sum<0?' amt-neg':''}" style="font-size:14px;">${fmtMoney(sum)}원</td><td></td></tr>`;
+  _bindDetailItemTableEvents(r);
+  _initDetailItemDrag(r);
+}
+function _initDetailItemDrag(r){
+  const tbl=document.getElementById('itemsTable');if(!tbl)return;
+  let _dndDState=null;
+  Array.from(tbl.querySelectorAll('tbody tr[data-idx]')).forEach((row,idx)=>{
+    const handle=row.querySelector('.item-drag');if(!handle)return;
+    let _pid=null;
+    handle.addEventListener('pointerdown',e=>{
+      e.preventDefault();handle.setPointerCapture(e.pointerId);_pid=e.pointerId;
+      _dndDState={srcIdx:idx,tgtIdx:null};
+      row.classList.add('dnd-active');handle.classList.add('grabbing');
+    });
+    handle.addEventListener('pointermove',e=>{
+      if(_pid===null||e.pointerId!==_pid||!_dndDState)return;
+      const allRows=Array.from(tbl.querySelectorAll('tbody tr[data-idx]'));
+      allRows.forEach(rr=>rr.classList.remove('dnd-above','dnd-below'));
+      const el=document.elementFromPoint(e.clientX,e.clientY);
+      const tRow=el&&el.closest('tr[data-idx]');
+      if(tRow&&tRow!==row&&tbl.contains(tRow)){
+        const tIdx=allRows.indexOf(tRow);
+        if(tIdx>=0){_dndDState.tgtIdx=tIdx;tRow.classList.add(tIdx>_dndDState.srcIdx?'dnd-below':'dnd-above');}
+      }else{_dndDState.tgtIdx=null;}
+    });
+    const _finish=e=>{
+      if(_pid===null||e.pointerId!==_pid)return;
+      _pid=null;handle.classList.remove('grabbing');
+      const allRows=Array.from(tbl.querySelectorAll('tbody tr[data-idx]'));
+      allRows.forEach(rr=>rr.classList.remove('dnd-active','dnd-above','dnd-below'));
+      if(_dndDState&&_dndDState.tgtIdx!==null&&_dndDState.tgtIdx!==_dndDState.srcIdx){
+        _syncDetailFromInputs(r);
+        const item=r.items.splice(_dndDState.srcIdx,1)[0];
+        r.items.splice(_dndDState.tgtIdx,0,item);
+        _dndDState=null;
+        _detailSetDirty(true);
+        _reRenderDetailItems(r);
+      }else{_dndDState=null;}
+    };
+    handle.addEventListener('pointerup',_finish);
+    handle.addEventListener('pointercancel',_finish);
+  });
 }
 
 // ── DELETE ──
