@@ -839,7 +839,8 @@ svg{display:block;flex-shrink:0;}
 //         closed 섹션 pointer-events:none 추가.
 // v1.25 — 품목 금액 셀 ± 부호 전환 버튼 제거.
 // v1.26 — 품목 드래그&드롭 순서 변경(포인터 이벤트, 모바일+데스크톱). 중복 영수증 감지(날짜·가게·금액 일치 시 저장 전 확인 다이얼로그). 결제자+참석자 이름 동시 검색 시 통합 대시보드 패널.
-const APP_VERSION='v1.26';
+// v1.27 — 결제자·참석자·통합 패널 테이블에서 카테고리 컬럼 제거 (막대 그래프로 충분).
+const APP_VERSION='v1.27';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -2356,12 +2357,11 @@ function renderPayerSummaryHtml(payerName, filtered){
   const listHtml=`<div class="budget-section">
     <div class="budget-section-hd">영수증 목록 <span class="hd-sub">${filtered.length}건</span></div>
     <table class="srch-table">
-      <thead><tr><th>일자</th><th>매장명</th><th>카테고리</th><th>총액</th></tr></thead>
+      <thead><tr><th>일자</th><th>매장명</th><th>총액</th></tr></thead>
       <tbody>${sorted.map(r=>`
         <tr class="srch-row" data-id="${r.id}">
           <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
           <td>${escapeHtml(r.store||'')}</td>
-          <td>${escapeHtml(r.category||'—')}</td>
           <td>${fmtMoney(r.total||0)}원</td>
         </tr>`).join('')}
       </tbody>
@@ -2465,14 +2465,13 @@ function renderParticipantSummaryHtml(name, filtered){
   const listHtml=`<div class="budget-section">
     <div class="budget-section-hd">참석 내역 <span class="hd-sub">${filtered.length}건</span></div>
     <table class="srch-table">
-      <thead><tr><th>일자</th><th>매장명</th><th>카테고리</th><th>인원</th><th>분담금</th></tr></thead>
+      <thead><tr><th>일자</th><th>매장명</th><th>인원</th><th>분담금</th></tr></thead>
       <tbody>${sorted.map(r=>{
         const cnt=(r.participants||[]).length||1;
         const share=Math.round((r.total||0)/cnt);
         return `<tr class="srch-row" data-id="${r.id}">
           <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
           <td>${escapeHtml(r.store||'')}</td>
-          <td>${escapeHtml(r.category||'—')}</td>
           <td style="text-align:right;">${cnt}명</td>
           <td>${fmtMoney(share)}원</td>
         </tr>`;
@@ -2522,7 +2521,6 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     const rows=sorted.map(r=>`<tr class="srch-row" data-id="${r.id}">
       <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
       <td>${escapeHtml(r.store||'')}</td>
-      <td>${escapeHtml(r.category||'—')}</td>
       <td>${fmtMoney(r.total||0)}원</td>
     </tr>`).join('');
     payerSection=`<div class="budget-section">
@@ -2530,7 +2528,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
       <div class="section-body open">
         <div class="cat-bars" style="padding-top:8px;">${catBars}</div>
         <table class="srch-table" style="margin-top:10px;">
-          <thead><tr><th>일자</th><th>매장명</th><th>카테고리</th><th>총액</th></tr></thead>
+          <thead><tr><th>일자</th><th>매장명</th><th>총액</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
@@ -2547,7 +2545,6 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
       return `<tr class="srch-row" data-id="${r.id}">
         <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
         <td>${escapeHtml(r.store||'')}</td>
-        <td>${escapeHtml(r.category||'—')}</td>
         <td style="text-align:right;">${cnt}명</td>
         <td>${fmtMoney(share)}원</td>
       </tr>`;
@@ -2556,7 +2553,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
       ${_sectionToggleHtml('참석 내역',`${partRecs.length}건 · 분담 ${fmtMoney(totalShare)}원`,'person_part',true)}
       <div class="section-body open">
         <table class="srch-table" style="margin-top:8px;">
-          <thead><tr><th>일자</th><th>매장명</th><th>카테고리</th><th>인원</th><th>분담금</th></tr></thead>
+          <thead><tr><th>일자</th><th>매장명</th><th>인원</th><th>분담금</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
