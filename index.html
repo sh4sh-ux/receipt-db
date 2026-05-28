@@ -407,6 +407,14 @@ svg{display:block;flex-shrink:0;}
 .cat-filter-bar{display:flex;align-items:center;justify-content:space-between;background:var(--blue-bg);border:1px solid var(--blue);border-radius:8px;padding:6px 12px;margin-bottom:10px;font-size:12px;color:var(--blue-txt);font-weight:500;}
 .cat-filter-bar-x{background:none;border:none;color:var(--blue-txt);cursor:pointer;font-size:15px;line-height:1;padding:0 2px;opacity:.7;}
 .cat-filter-bar-x:hover{opacity:1;}
+/* v1.43 — 카테고리 계층 그룹 */
+.cat-bar-group{display:flex;flex-direction:column;}
+.cat-bar-group-subs{display:flex;flex-direction:column;gap:8px;margin-top:8px;padding-left:12px;border-left:2px solid var(--sep2);}
+.cat-bar-sub .cat-bar-name{font-size:12px;font-weight:400;color:var(--label2);}
+.cat-bar-sub .cat-bar-amt{font-size:12px;font-weight:500;color:var(--label2);}
+.cat-bar-sub .cat-bar-track{height:5px;}
+.cat-bar-sub .cat-bar-fill{opacity:.65;}
+.cat-bar-group-label{font-size:10px;color:var(--label3);font-weight:500;margin-left:5px;vertical-align:middle;}
 
 .sparkline{background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:14px 16px;}
 .spark-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;font-size:11px;}
@@ -954,7 +962,7 @@ svg{display:block;flex-shrink:0;}
 // v1.42 — 상세 화면 총액 편집 가능: 총액 행을 editable input으로 변경.
 //         직접 입력 수정 버그 수정: "수정 확인" 시 items=[] 이면 dTotalAmt 값 사용.
 //         (기존: items 합계로 무조건 덮어써 0원이 되던 버그)
-const APP_VERSION='v1.42';
+const APP_VERSION='v1.43';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1050,7 +1058,11 @@ function _revokeImgUrl(imageId){
 // ════════════════════════════════════════════════════════════════
 // CATEGORIES — 자동 분류 (가게명 → 카테고리)
 // ════════════════════════════════════════════════════════════════
-const BASE_CATEGORIES=['마트','외식','술집','카페','배달','교통','쇼핑','병원·약국','문화','경조사'];
+const BASE_CATEGORIES=['마트','외식','술집','카페','배달','교통','쇼핑','병원·약국','문화','경조사','부의금','축의금'];
+// 카테고리 계층 그룹 (대분류 → 소분류)
+const CATEGORY_GROUPS=[
+  {group:'경조사', members:['경조사','부의금','축의금']},
+];
 const CAT_RULES=[
   {cat:'마트', kws:['마트','슈퍼','편의점','이마트','롯데마트','홈플러스','코스트코','하나로','농협','GS25','CU','세븐일레븐','이마트24','미니스톱','트레이더스']},
   {cat:'외식', kws:['식당','맛집','분식','김밥','국밥','돈까스','갈비','삼겹살','냉면','치킨','피자','버거','햄버거','떡볶이','우동','초밥','샤브','죽','파스타','스테이크','쌀국수','한식','중식','일식','양식','뷔페','족발','보쌈','국수','만두','곱창','전골','찌개','곰탕','설렁탕','순대','튀김','마라']},
@@ -1061,6 +1073,8 @@ const CAT_RULES=[
   {cat:'쇼핑', kws:['올리브영','다이소','유니클로','ABC마트','쿠팡','11번가','G마켓','옥션','무신사','지그재그','29CM','SSG','신세계','현대백화점','롯데백화점','갤러리아','AK플라자','이케아']},
   {cat:'병원·약국', kws:['병원','의원','약국','치과','한의원','내과','피부과','정형외과','이비인후과','안과','정신과','산부인과','소아과','클리닉','약방']},
   {cat:'문화', kws:['CGV','메가박스','롯데시네마','영화관','교보문고','영풍문고','예스24','알라딘','서점','전시','공연','콘서트','뮤지컬','연극','박물관','미술관']},
+  {cat:'부의금', kws:['부의','조문','문상','부고','장례식장','빈소','상가(喪家)','조의']},
+  {cat:'축의금', kws:['축의','청첩','결혼식','웨딩','돌잔치','돌상','화환(축)']},
 ];
 
 // 품목명 기반 카테고리 키워드 (가게명 매칭 실패 시 보조 추정)
@@ -1610,8 +1624,14 @@ function renderSide(){
   const list=document.getElementById('sideList');
   const _base=getFiltered();
   // 카테고리 필터 적용 (검색 없는 상태에서만)
+  // v1.43 — 그룹 선택 시 모든 멤버 카테고리 포함
   const filtered=(!searchQuery&&_monthCatFilter)
-    ?_base.filter(r=>(r.category||'(미분류)')===_monthCatFilter)
+    ?_base.filter(r=>{
+      const cat=r.category||'(미분류)';
+      if(cat===_monthCatFilter) return true;
+      const grp=CATEGORY_GROUPS.find(g=>g.group===_monthCatFilter);
+      return grp?grp.members.includes(cat):false;
+    })
     :_base;
   if(!filtered.length){
     const emptyMsg=searchQuery
@@ -2929,20 +2949,37 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
 
 function _catBarsHtml(cats){
   if(!cats.length) return '';
-  const maxC=Math.max(...cats.map(c=>c.amt));
+  const rows=_resolveGroupedRows(cats);
+  const maxC=rows.length?Math.max(...rows.map(r=>r.amt)):0;
+  const renderSub=(sub)=>{
+    const w=maxC>0?(sub.amt/maxC*100):0;
+    return `<div class="cat-bar-row cat-bar-sub">
+      <div class="cat-bar-top">
+        <span class="cat-bar-name">${escapeHtml(sub.cat)}<span class="cat-pct">${sub.pct.toFixed(0)}%</span></span>
+        <span class="cat-bar-amt">${fmtMoney(sub.amt)}원</span>
+      </div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
+    </div>`;
+  };
+  const renderRow=(row,i)=>{
+    const w=maxC>0?(row.amt/maxC*100):0;
+    const isUncat=row.cat==='(미분류)';
+    const barRow=`<div class="cat-bar-row${isUncat?' uncat':''}" data-rank="${Math.min(i,4)}">
+      <div class="cat-bar-top">
+        <span class="cat-bar-name">${escapeHtml(row.cat)}${row.isGroup?'<span class="cat-bar-group-label">대분류</span>':''}<span class="cat-pct">${row.pct.toFixed(0)}%</span></span>
+        <span class="cat-bar-amt">${fmtMoney(row.amt)}원</span>
+      </div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
+    </div>`;
+    if(row.isGroup&&row.subRows.length){
+      return `<div class="cat-bar-group">${barRow}<div class="cat-bar-group-subs">${row.subRows.map(s=>renderSub(s)).join('')}</div></div>`;
+    }
+    return barRow;
+  };
   return `<div class="budget-section">
     <div class="budget-section-hd">카테고리별 <span class="hd-sub">${cats.length}개</span></div>
     <div class="cat-bars">
-      ${cats.map((c,i)=>{
-        const w=maxC>0?(c.amt/maxC*100):0;
-        return `<div class="cat-bar-row${c.cat==='(미분류)'?' uncat':''}" data-rank="${Math.min(i,4)}">
-          <div class="cat-bar-top">
-            <span class="cat-bar-name">${escapeHtml(c.cat)}<span class="cat-pct">${c.pct.toFixed(0)}%</span></span>
-            <span class="cat-bar-amt">${fmtMoney(c.amt)}원</span>
-          </div>
-          <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
-        </div>`;
-      }).join('')}
+      ${rows.map((r,i)=>renderRow(r,i)).join('')}
     </div>
   </div>`;
 }
@@ -2959,6 +2996,26 @@ function _calcCats(recs){
     .map(([cat,amt])=>({cat,amt,pct:t>0?amt/t*100:0}))
     .filter(x=>x.amt>0)
     .sort((a,b)=>b.amt-a.amt);
+}
+
+// v1.43 — 카테고리 계층 그룹 행 생성
+// 반환: [{cat,amt,pct,isGroup,subRows|null}] sorted by amt desc
+// 그룹 멤버가 2개 이상 있을 때만 묶음; 1개 이하면 개별 행 그대로 표시
+function _resolveGroupedRows(cats){
+  const total=cats.reduce((s,c)=>s+c.amt,0);
+  const handled=new Set();
+  const groupRows=[];
+  for(const grp of CATEGORY_GROUPS){
+    const memberCats=cats.filter(c=>grp.members.includes(c.cat));
+    if(memberCats.length>=2){
+      const groupAmt=memberCats.reduce((s,c)=>s+c.amt,0);
+      const groupPct=total>0?groupAmt/total*100:0;
+      groupRows.push({cat:grp.group,amt:groupAmt,pct:groupPct,isGroup:true,subRows:memberCats.slice().sort((a,b)=>b.amt-a.amt)});
+      for(const c of memberCats) handled.add(c.cat);
+    }
+  }
+  const plain=cats.filter(c=>!handled.has(c.cat)).map(c=>({...c,isGroup:false,subRows:null}));
+  return [...groupRows,...plain].sort((a,b)=>b.amt-a.amt);
 }
 
 function renderAllSummaryHtml(recs){
@@ -3240,30 +3297,49 @@ function renderMonthSummaryHtml(ym){
     </div>
   `;
 
-  // 카테고리별 막대
+  // 카테고리별 막대 (v1.43 — 그룹 계층 지원)
   let catHtml='';
   if(cats.breakdown.length){
-    const max=Math.max(...cats.breakdown.map(c=>c.amt));
+    const rows=_resolveGroupedRows(cats.breakdown);
+    const maxRow=rows.length?Math.max(...rows.map(r=>r.amt)):0;
     const filterBarHtml=_monthCatFilter
       ?`<div class="cat-filter-bar"><span>📂 ${escapeHtml(_monthCatFilter)} 필터 중</span><button class="cat-filter-bar-x" id="catFilterClearBtn" title="필터 해제">×</button></div>`
       :'';
+    const renderMonthSub=(sub)=>{
+      const w=maxRow>0?(sub.amt/maxRow*100):0;
+      const isSubActive=_monthCatFilter===sub.cat;
+      return `<div class="cat-bar-row cat-bar-sub clickable${isSubActive?' cat-active':''}" data-cat="${escapeHtml(sub.cat)}">
+        <div class="cat-bar-top">
+          <span class="cat-bar-name">${escapeHtml(sub.cat)}<span class="cat-pct">${sub.pct.toFixed(0)}%</span></span>
+          <span class="cat-bar-amt">${fmtMoney(sub.amt)}원</span>
+        </div>
+        <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
+      </div>`;
+    };
+    const renderMonthRow=(row,i)=>{
+      const w=maxRow>0?(row.amt/maxRow*100):0;
+      const isUncat=row.cat==='(미분류)';
+      // 그룹이 선택된 경우 그룹행 + 모든 소분류 행을 active로 표시
+      const isGrpActive=row.isGroup&&_monthCatFilter===row.cat;
+      const isRowActive=isGrpActive||(!row.isGroup&&_monthCatFilter===row.cat);
+      const barRow=`<div class="cat-bar-row clickable${isUncat?' uncat':''}${isRowActive?' cat-active':''}" data-rank="${Math.min(i,4)}" data-cat="${escapeHtml(row.cat)}">
+        <div class="cat-bar-top">
+          <span class="cat-bar-name">${escapeHtml(row.cat)}${row.isGroup?'<span class="cat-bar-group-label">대분류</span>':''}<span class="cat-pct">${row.pct.toFixed(0)}%</span></span>
+          <span class="cat-bar-amt">${fmtMoney(row.amt)}원</span>
+        </div>
+        <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
+      </div>`;
+      if(row.isGroup&&row.subRows.length){
+        return `<div class="cat-bar-group">${barRow}<div class="cat-bar-group-subs">${row.subRows.map(s=>renderMonthSub(s)).join('')}</div></div>`;
+      }
+      return barRow;
+    };
     catHtml=`
       <div class="budget-section">
         <div class="budget-section-hd">카테고리별 <span class="hd-sub">${cats.breakdown.length}개</span></div>
         ${filterBarHtml}
         <div class="cat-bars">
-          ${cats.breakdown.map((c,i)=>{
-            const w=max>0?(c.amt/max*100):0;
-            const isUncat=c.cat==='(미분류)';
-            const isActive=_monthCatFilter===c.cat;
-            return `<div class="cat-bar-row clickable${isUncat?' uncat':''}${isActive?' cat-active':''}" data-rank="${Math.min(i,4)}" data-cat="${escapeHtml(c.cat)}">
-              <div class="cat-bar-top">
-                <span class="cat-bar-name">${escapeHtml(c.cat)}<span class="cat-pct">${c.pct.toFixed(0)}%</span></span>
-                <span class="cat-bar-amt">${fmtMoney(c.amt)}원</span>
-              </div>
-              <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
-            </div>`;
-          }).join('')}
+          ${rows.map((r,i)=>renderMonthRow(r,i)).join('')}
         </div>
       </div>
     `;
