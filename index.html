@@ -2930,8 +2930,8 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
       ${_sectionToggleHtml('결제 내역',`${payerRecs.length}건 · ${fmtMoney(totalPaid)}원`,'person_payer',true)}
       <div class="section-body open">
         <div class="cat-bars" style="padding-top:8px;">${catBars}</div>
-        <table class="srch-table" style="margin-top:10px;">
-          <thead><tr><th>일자</th><th>매장명</th><th>총액</th></tr></thead>
+        <table class="srch-table" style="margin-top:10px;table-layout:fixed;">
+          <thead><tr><th style="width:100px;">일자</th><th>매장명</th><th style="width:140px;">총액</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
@@ -2955,8 +2955,8 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     partSection=`<div class="budget-section">
       ${_sectionToggleHtml('참석 내역',`${partRecs.length}건 · 분담 ${fmtMoney(totalShare)}원`,'person_part',true)}
       <div class="section-body open">
-        <table class="srch-table" style="margin-top:8px;">
-          <thead><tr><th>일자</th><th>매장명</th><th>인원</th><th>분담금</th></tr></thead>
+        <table class="srch-table" style="margin-top:8px;table-layout:fixed;">
+          <thead><tr><th style="width:100px;">일자</th><th>매장명</th><th style="width:50px;">인원</th><th style="width:90px;">분담금</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
