@@ -261,7 +261,8 @@ svg{display:block;flex-shrink:0;}
 .kv-inp{width:100%;border:none;background:transparent;font-size:14px;font-weight:500;color:var(--label);outline:none;font-family:inherit;padding:0;line-height:1.4;text-align:left;}
 .kv-inp::placeholder{color:var(--label3);font-weight:400;}
 .kv-inp:is(select){cursor:pointer;-webkit-appearance:none;appearance:none;}
-.kv-inp[type="date"]{-webkit-appearance:none;appearance:none;}
+.kv-inp[type="date"]{-webkit-appearance:none;appearance:none;text-align:left;}
+.kv-inp[type="date"]::-webkit-date-and-time-value{text-align:left;}
 
 .items-table{width:100%;border-collapse:collapse;margin-bottom:6px;table-layout:fixed;}
 .items-table th{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;padding:8px 6px;text-align:left;border-bottom:1px solid var(--sep);background:var(--fill2);}
