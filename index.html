@@ -2902,7 +2902,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
       <div class="payer-stat-sub">${payerRecs.length}건 · 카드/현금 지출</div>
     </div>
     <div class="payer-stat">
-      <div class="payer-stat-lbl">남에게 갚을 금액</div>
+      <div class="payer-stat-lbl">1/N 정산금액</div>
       <div class="payer-stat-val">${fmtMoney(totalShare)}원</div>
       <div class="payer-stat-sub">${partRecs.length}건 · 타인 결제 참석분</div>
     </div>
@@ -2923,7 +2923,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     const sorted=[...payerRecs].sort((a,b)=>b.date.localeCompare(a.date));
     const rows=sorted.map(r=>`<tr class="srch-row" data-id="${r.id}">
       <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
-      <td>${escapeHtml(r.store||'')}</td>
+      <td style="text-align:left;">${escapeHtml(r.store||'')}</td>
       <td>${fmtMoney(r.total||0)}원</td>
     </tr>`).join('');
     payerSection=`<div class="budget-section">
