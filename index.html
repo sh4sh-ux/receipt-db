@@ -455,18 +455,20 @@ svg{display:block;flex-shrink:0;}
 @media(max-width:780px){
   .shell{padding:0;}
   .app{grid-template-columns:1fr;border-radius:0;border:none;box-shadow:none;min-height:100vh;}
-  .side{border-right:none;border-bottom:1px solid var(--sep);min-height:auto;position:static;max-height:none;overflow:visible;}
-  .main{min-height:auto;}
+  .side{border-right:none;border-bottom:none;border-top:1px solid var(--sep);min-height:auto;position:static;max-height:none;overflow:visible;}
+  .main{min-height:auto;order:-1;border-bottom:1px solid var(--sep);}
   .side-top{padding:max(18px,calc(env(safe-area-inset-top,0px) + 12px)) 18px 14px;}
   .side-search,.side-list,.side-foot{padding-left:18px;padding-right:18px;}
   .side-search{padding-bottom:10px;}
-  .side-list{max-height:42vh;overflow-y:auto;}
+  .side-list{max-height:45vh;overflow-y:auto;}
   .main-top{padding:18px 18px 14px;}
-  .main-body{padding:18px 18px 60px;}
+  .main-body{padding:18px 18px 24px;}
   :root{--pad-x:18px;}
   .input-grid{grid-template-columns:1fr;gap:14px;}
   .row-3{grid-template-columns:1fr;}
-
+  /* 모바일 컴팩트 요약 — 부가 섹션 접기 */
+  #detailBody.mob-compact .mob-secondary{display:none;}
+  .mob-expand-btn{display:flex;}
   /* 모바일 인물 검색: 요약 패널을 영수증 목록 위로 */
   .app.mob-person-view aside.side{display:contents;}
   .app.mob-person-view .side-top{order:1;}
@@ -476,6 +478,9 @@ svg{display:block;flex-shrink:0;}
   .app.mob-person-view .side-list{order:5;border-top:1px solid var(--sep);}
   .app.mob-person-view .side-foot{order:6;}
 }
+/* 더 보기 / 접기 버튼 — 모바일에서만 표시 */
+.mob-expand-btn{display:none;width:100%;background:none;border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 12px;font-size:12px;color:var(--label3);cursor:pointer;align-items:center;justify-content:center;gap:4px;margin-top:8px;font-family:inherit;transition:color .12s;}
+.mob-expand-btn:hover{color:var(--label2);}
 
 /* ── HIDDEN VIEWS ── */
 .view{display:none;}
@@ -991,7 +996,9 @@ svg{display:block;flex-shrink:0;}
 //         주별 스파크라인 제거(일별만 유지), 입력 폼 고급 옵션(참석자·결제자·태그) 접기/펼치기.
 // v1.46 — 경조사 컨텍스트 필드: 카테고리가 부의금·축의금일 때 관계자+관계 입력 → 매장명 자동 조합,
 //         관계자 이름 태그 자동 추가. 직접 입력 모드에서도 동작.
-const APP_VERSION='v1.46';
+// v1.47 — 모바일 레이아웃 개선: 가계부 요약 상단 / 영수증 목록 하단 재배치.
+//         월 요약 기본 컴팩트 표시(총액+카테고리만) — "자세히 보기" 버튼으로 스파크라인·인사이트 토글.
+const APP_VERSION='v1.47';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -3398,7 +3405,12 @@ function renderMonthSummaryHtml(ym){
     `;
   }
 
-  return summaryHtml+catHtml+participantHtml+sparkHtml+insightHtml;
+  const secondaryHtml=participantHtml+sparkHtml+insightHtml;
+  const wrappedSecondary=secondaryHtml.trim()
+    ?`<div class="mob-secondary">${secondaryHtml}</div>
+       <button class="mob-expand-btn" id="mobExpandBtn">▾&ensp;자세히 보기</button>`
+    :secondaryHtml;
+  return summaryHtml+catHtml+wrappedSecondary;
 }
 
 function _setMobPersonView(v){
@@ -3493,6 +3505,7 @@ function _ledgerFilterPillsHtml(f){
 
 async function renderDetail(){
   const body=document.getElementById('detailBody');
+  body.classList.remove('mob-compact');
   const eye=document.getElementById('mainEye');
   const title=document.getElementById('mainTitle');
   const sub=document.getElementById('mainSub');
@@ -3620,10 +3633,19 @@ async function renderDetail(){
       }else{
         eye.textContent='가계부';
         title.textContent=ymLabel(viewMonth);
-        sub.textContent='왼쪽 목록에서 영수증을 선택하면 상세가 표시됩니다.';
+        sub.textContent='목록에서 영수증을 선택하면 상세가 표시됩니다.';
         body.innerHTML=pillsHtml+renderMonthSummaryHtml(viewMonth);
+        if(_isTouch) body.classList.add('mob-compact');
       }
       _bindSectionToggles(body);
+      // 모바일 컴팩트 토글
+      const _mobBtn=body.querySelector('#mobExpandBtn');
+      if(_mobBtn){
+        _mobBtn.addEventListener('click',()=>{
+          const compact=body.classList.toggle('mob-compact');
+          _mobBtn.innerHTML=compact?'▾&ensp;자세히 보기':'▴&ensp;접기';
+        });
+      }
       // 가계부 기간 드롭다운 change
       const _lfSel=body.querySelector('#ledgerFilterSel');
       if(_lfSel){
