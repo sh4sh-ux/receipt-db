@@ -1846,7 +1846,7 @@ function renderPreviewForm(){
         const negCls=(it.amount||0)<0?' neg':'';
         return `<div class="prev-item-row" data-idx="${idx}">
           <input class="prev-item-name" data-f="name" placeholder="품목명" value="${escapeHtml(it.name||'')}" autocomplete="off"/>
-          <input class="prev-item-qty" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||1}"/>
+          <input class="prev-item-qty" data-f="quantity" type="text" inputmode="numeric" maxlength="3" value="${it.quantity||1}"/>
           <input class="prev-item-price" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/>
           <div class="prev-item-amt readonly${negCls}" data-amt="${idx}">${_fmtN(it.amount||0)}</div>
           <button type="button" class="prev-item-del" tabindex="-1" data-del="${idx}" title="이 품목 삭제" aria-label="삭제">×</button>
@@ -2035,8 +2035,8 @@ function bindPreviewFormEvents(){
         inp.addEventListener('blur',()=>{assign();_refreshPreviewSummary();});
       }else if(f==='quantity'){
         inp.addEventListener('input',()=>{
-          // 숫자만 허용
-          const cleaned=inp.value.replace(/[^0-9]/g,'');
+          // 숫자만, 최대 3자리
+          const cleaned=inp.value.replace(/[^0-9]/g,'').slice(0,3);
           if(inp.value!==cleaned)inp.value=cleaned;
           assign();afterChange();
         });
@@ -3722,7 +3722,7 @@ async function renderDetail(){
       <tbody>
         ${(r.items||[]).map((it,idx)=>`<tr data-idx="${idx}">
           <td><input class="item-name-inp" data-f="name" value="${escapeHtml(it.name)}"/></td>
-          <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||0}"/></td>
+          <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" maxlength="3" value="${it.quantity||0}"/></td>
           <td><input class="item-num-inp" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/></td>
           <td><input class="item-num-inp" data-f="amount" type="text" inputmode="numeric" value="${_fmtN(it.amount||0)}" style="${(it.amount||0)<0?'color:var(--red);':''}"/></td>
           <td style="text-align:right;"><button class="item-del" data-del="${idx}" title="삭제">×</button></td>
@@ -3942,7 +3942,7 @@ function _bindDetailItemTableEvents(r){
       if(f==='quantity'){
         inp.addEventListener('focus',()=>inp.select());
         inp.addEventListener('input',()=>{
-          inp.value=inp.value.replace(/[^0-9]/g,'');
+          inp.value=inp.value.replace(/[^0-9]/g,'').slice(0,3);
           _calcRowAmt(tr);_detailSetDirty(true);
         });
         inp.addEventListener('blur',()=>{
@@ -3989,7 +3989,7 @@ function _reRenderDetailItems(r){
   const sum=r.items.reduce((s,i)=>s+(i.amount||0),0);
   tbody.innerHTML=r.items.map((it,idx)=>`<tr data-idx="${idx}">
     <td><input class="item-name-inp" data-f="name" value="${escapeHtml(it.name)}"/></td>
-    <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" value="${it.quantity||0}"/></td>
+    <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" maxlength="3" value="${it.quantity||0}"/></td>
     <td><input class="item-num-inp" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/></td>
     <td><input class="item-num-inp" data-f="amount" type="text" inputmode="numeric" value="${_fmtN(it.amount||0)}" style="${(it.amount||0)<0?'color:var(--red);':''}"/></td>
     <td style="text-align:right;"><button class="item-del" data-del="${idx}" title="삭제">×</button></td>
