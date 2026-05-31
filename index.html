@@ -4824,6 +4824,22 @@ function _dbxBindEvents(){
     // 기기별 초기 탭: 데스크탑(비터치) → 추가, 모바일(터치) → 내역
     if(!_isTouch) switchTab('input');
     renderDetail();
+    // 모바일 스와이프 백: 오른쪽으로 스와이프 → 상세에서 목록으로
+    if(_isTouch){
+      const mainEl=document.querySelector('main.main');
+      let _swipeX=0,_swipeY=0;
+      mainEl.addEventListener('touchstart',e=>{
+        _swipeX=e.touches[0].clientX;
+        _swipeY=e.touches[0].clientY;
+      },{passive:true});
+      mainEl.addEventListener('touchend',e=>{
+        const dx=e.changedTouches[0].clientX-_swipeX;
+        const dy=e.changedTouches[0].clientY-_swipeY;
+        if(selectedId&&dx>70&&Math.abs(dx)>Math.abs(dy)*1.5){
+          selectedId=null;renderSide();renderDetail();
+        }
+      },{passive:true});
+    }
     // Dropbox 자동 동기화 — 연결된 경우 시작 시 양방향 머지 (await 없음 — UI 차단 안 함)
     if(dbxIsConnected()){
       _dbxUpdateSyncBadge();   // 이전 동기화 시각 즉시 표시
