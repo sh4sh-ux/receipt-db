@@ -4139,8 +4139,10 @@ document.getElementById('importInp').addEventListener('change',async e=>{
     }
     if(Array.isArray(data.images)){
       for(const im of data.images){
-        const blob=await base64ToBlob(im.data);
-        await dbPut('images',{id:im.id,blob,mime:im.mime||'image/jpeg'});imgN++;
+        try{
+          const blob=await base64ToBlob(im.data);
+          await dbPut('images',{id:im.id,blob,mime:im.mime||'image/jpeg'});imgN++;
+        }catch(e){console.warn('이미지 복원 건너뜀:',im.id,e);}
       }
     }
     // 카테고리 학습 사전도 복원 (있으면 머지, 없으면 그대로)
@@ -4362,8 +4364,10 @@ async function dbxBackup(){
     const imgs=await dbAll('images');
     const imgsOut=[];
     for(const im of imgs){
-      const b64=await blobToBase64(im.blob);
-      imgsOut.push({id:im.id,mime:im.mime||'image/jpeg',data:b64});
+      try{
+        const b64=await blobToBase64(im.blob);
+        if(b64)imgsOut.push({id:im.id,mime:im.mime||'image/jpeg',data:b64});
+      }catch(e){console.warn('이미지 백업 건너뜀:',im.id,e);}
     }
     const payload={
       app:'receipt-db',appVersion:APP_VERSION,version:2,
@@ -4384,7 +4388,7 @@ async function dbxBackup(){
     if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
     const now=new Date().toLocaleString('ko-KR');
     _lsSet(_K.LAST_BACKUP,now);
-    toast(`Dropbox 백업 완료 — ${recs.length}건, 사진 ${imgs.length}장`,{type:'success'});
+    toast(`Dropbox 백업 완료 — ${recs.length}건, 사진 ${imgsOut.length}장`,{type:'success'});
     renderDbxSettings();
   }catch(e){
     if(lt)lt.dismiss();
@@ -4432,8 +4436,10 @@ async function _dbxRestore(path,name){
     for(const r of data.receipts){await dbPut('receipts',r);added++;}
     if(Array.isArray(data.images)){
       for(const im of data.images){
-        const blob=await base64ToBlob(im.data);
-        await dbPut('images',{id:im.id,blob,mime:im.mime||'image/jpeg'});imgN++;
+        try{
+          const blob=await base64ToBlob(im.data);
+          await dbPut('images',{id:im.id,blob,mime:im.mime||'image/jpeg'});imgN++;
+        }catch(e){console.warn('이미지 복원 건너뜀:',im.id,e);}
       }
     }
     if(data.storeCatMap&&typeof data.storeCatMap==='object'){
