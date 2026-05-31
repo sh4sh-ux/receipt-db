@@ -2309,8 +2309,8 @@ saveBtn.addEventListener('click',async()=>{
       document.querySelector('.main').scrollIntoView({behavior:'smooth',block:'start'});
     },80);
   }
-  // 자동 동기화 (백그라운드 — UI 차단 없음)
-  dbxSyncUpload();
+  // 양방향 동기화 (다운로드→머지→업로드, 백그라운드)
+  dbxSyncNow(true);
 });
 
 function clearInputs(){
@@ -2459,7 +2459,7 @@ async function _saveDirectEntry(){
   renderSide();
   renderDetail();
   if(_isTouch){setTimeout(()=>{document.querySelector('.main').scrollIntoView({behavior:'smooth',block:'start'});},80);}
-  dbxSyncUpload();
+  dbxSyncNow(true);
 }
 
 // 직접 입력 모드 이벤트 연결
@@ -3821,7 +3821,7 @@ async function renderDetail(){
     r.updatedAt=nowISO();
     await dbPut('receipts',r);
     await loadAll();await renderDetail();
-    dbxSyncUpload();
+    dbxSyncNow(true);
   });
 
   // 상세 화면 드래그&드롭 (사진 교체/추가)
@@ -3844,7 +3844,7 @@ async function renderDetail(){
       _revokeImgUrl(imgId);
       toast('사진이 업데이트됐어요',{type:'success'});
       await loadAll();await renderDetail();
-      dbxSyncUpload();
+      dbxSyncNow(true);
     });
   }
 
@@ -3880,7 +3880,7 @@ async function renderDetail(){
     await dbPut('receipts',r);
     toast('수정됨',{type:'success'});
     await loadAll();await renderDetail();
-    dbxSyncUpload();
+    dbxSyncNow(true);
   });
   document.getElementById('detailRevertBtn').addEventListener('click',async()=>{
     r.items=JSON.parse(JSON.stringify(_detailOrigItems));
@@ -3983,7 +3983,7 @@ function _bindDetailItemTableEvents(r){
       r.items.splice(idx,1);r.updatedAt=nowISO();
       await dbPut('receipts',r);
       await loadAll();await renderDetail();
-      dbxSyncUpload();
+      dbxSyncNow(true);
     });
   });
   // 총액 input 직접 편집 이벤트 (직접 입력 영수증 or 수동 조정)
@@ -4021,7 +4021,7 @@ document.getElementById('detailDeleteBtn').addEventListener('click',async()=>{
   selectedId=null;
   await loadAll();
   renderDetail();
-  dbxSyncUpload();  // 백그라운드 자동 동기화
+  dbxSyncNow(true);  // 양방향 동기화
 });
 
 // ── LIGHTBOX ──
