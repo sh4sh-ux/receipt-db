@@ -3737,6 +3737,7 @@ async function renderDetail(){
   const mismatch=(r.items||[]).length>0 && sum!==r.total;
 
   body.innerHTML=`
+    <input type="file" id="detailPhotoFile" accept="image/*" style="display:none;"/>
     <div class="section-hd">품목 <button class="ghost-mini" id="addItemBtn">+ 품목 추가</button></div>
     <table class="items-table" id="itemsTable">
       <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
@@ -3797,28 +3798,27 @@ async function renderDetail(){
   if(dpImg){dpImg.addEventListener('click',()=>openLightbox(_imgUrlFor(r.imageId)));}
   else if(dp){dp.addEventListener('click',()=>openLightbox(_imgUrlFor(r.imageId)));}
 
-  // 사진 추가·교체 (addPhotoBtn — 없음/실패/교체 공통)
+  // 사진 추가·교체 공통 — 영구 hidden input 사용 (iOS 호환)
+  const detailPhotoFile=document.getElementById('detailPhotoFile');
   const addPb=document.getElementById('addPhotoBtn');
-  if(addPb){
-    addPb.addEventListener('click',e=>{
-      e.stopPropagation();
-      const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
-      inp.addEventListener('change',async()=>{
-        const f=inp.files&&inp.files[0];if(!f)return;
-        const imgId='img_'+r.id.slice(4);
-        await dbPut('images',{id:imgId,blob:f,mime:f.type||'image/jpeg'});
-        r.imageId=imgId;r.updatedAt=nowISO();
-        await dbPut('receipts',r);
-        _revokeImgUrl(imgId);
-        toast('사진이 업데이트됐어요',{type:'success'});
-        await loadAll();await renderDetail();
-        dbxSyncNow(true);
-      });
-      inp.click();
+  if(addPb&&detailPhotoFile){
+    addPb.addEventListener('click',e=>{e.stopPropagation();detailPhotoFile.click();});
+    detailPhotoFile.addEventListener('change',async()=>{
+      const f=detailPhotoFile.files&&detailPhotoFile.files[0];
+      detailPhotoFile.value='';
+      if(!f)return;
+      const imgId='img_'+r.id.slice(4);
+      await dbPut('images',{id:imgId,blob:f,mime:f.type||'image/jpeg'});
+      r.imageId=imgId;r.updatedAt=nowISO();
+      await dbPut('receipts',r);
+      _revokeImgUrl(imgId);
+      toast('사진이 업데이트됐어요',{type:'success'});
+      await loadAll();await renderDetail();
+      dbxSyncNow(true);
     });
   }
 
-  // 사진 삭제 (delPhotoBtn)
+  // 사진 삭제
   const delPb=document.getElementById('delPhotoBtn');
   if(delPb){
     delPb.addEventListener('click',async e=>{
