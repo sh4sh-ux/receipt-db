@@ -1020,7 +1020,8 @@ svg{display:block;flex-shrink:0;}
 // v1.49 — Dropbox 정리 후 백업/동기화 저장 위치를 /01_Personal/영수증/Receipt_DB로 이동.
 //         삭제된 SVG 아이콘 대신 PNG 아이콘 링크 명시.
 // v1.50 — Dropbox 동기화 실패 수정: 중첩 폴더를 부모부터 생성하고 Full Dropbox 권한 안내.
-const APP_VERSION='v1.50';
+// v1.51 — Dropbox 한글 경로 오류 수정: Dropbox-API-Arg 헤더 값을 ASCII-safe JSON으로 변환.
+const APP_VERSION='v1.51';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -4422,7 +4423,7 @@ async function dbxBackup(){
       method:'POST',
       headers:{
         'Authorization':'Bearer '+token,
-        'Dropbox-API-Arg':JSON.stringify({path:_DBX_BACKUP_DIR+'/'+filename,mode:'add',autorename:true,mute:false}),
+        'Dropbox-API-Arg':_dbxApiArg({path:_DBX_BACKUP_DIR+'/'+filename,mode:'add',autorename:true,mute:false}),
         'Content-Type':'application/octet-stream',
       },
       body:json,
@@ -4466,7 +4467,7 @@ async function _dbxRestore(path,name){
       method:'POST',
       headers:{
         'Authorization':'Bearer '+token,
-        'Dropbox-API-Arg':JSON.stringify({path}),
+        'Dropbox-API-Arg':_dbxApiArg({path}),
       },
     });
     if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
@@ -4522,6 +4523,12 @@ function dbxDisconnect(){
 const _DBX_DATA_DIR='/01_Personal/영수증/Receipt_DB';
 const _DBX_BACKUP_DIR=_DBX_DATA_DIR+'/backups';
 const _SYNC_PATH=_DBX_DATA_DIR+'/receipt-db_sync.json';
+
+function _dbxApiArg(obj){
+  return JSON.stringify(obj).replace(/[\u007f-\uffff]/g,ch=>
+    '\\u'+ch.charCodeAt(0).toString(16).padStart(4,'0')
+  );
+}
 
 async function _dbxEnsureFolder(path){
   const clean=String(path||'').replace(/\/+$/,'');
@@ -4591,7 +4598,7 @@ async function dbxSyncUpload(){
       method:'POST',
       headers:{
         'Authorization':'Bearer '+token,
-        'Dropbox-API-Arg':JSON.stringify({path:_SYNC_PATH,mode:'overwrite',mute:true}),
+        'Dropbox-API-Arg':_dbxApiArg({path:_SYNC_PATH,mode:'overwrite',mute:true}),
         'Content-Type':'application/octet-stream',
       },
       body:payload,
@@ -4617,7 +4624,7 @@ async function dbxSyncDownload(){
       method:'POST',
       headers:{
         'Authorization':'Bearer '+token,
-        'Dropbox-API-Arg':JSON.stringify({path:_SYNC_PATH}),
+        'Dropbox-API-Arg':_dbxApiArg({path:_SYNC_PATH}),
       },
     });
     if(resp.status===409||resp.status===404)return;  // 파일 없음 = 첫 사용, 정상
