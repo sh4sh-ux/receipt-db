@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="mobile-web-app-capable" content="yes"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -1015,7 +1017,9 @@ svg{display:block;flex-shrink:0;}
 //         저장·수정·삭제 시 양방향 동기화(dbxSyncNow) 전환. 백업·복원 이미지 오류 내성 강화.
 //         총액 칸 colspan 확장(단가+금액). 결제·참석 내역 매장명 컬럼 위치 통일.
 //         1/N 정산금액 레이블. 모바일 스와이프 백. 일자 왼쪽 정렬(iOS).
-const APP_VERSION='v1.48';
+// v1.49 — Dropbox 정리 후 백업/동기화 저장 위치를 /01_Personal/영수증/Receipt_DB로 이동.
+//         삭제된 SVG 아이콘 대신 PNG 아이콘 링크 명시.
+const APP_VERSION='v1.49';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -4395,6 +4399,8 @@ async function dbxBackup(){
   let lt;
   try{
     const token=await _dbxToken();
+    await _dbxEnsureFolder(_DBX_DATA_DIR);
+    await _dbxEnsureFolder(_DBX_BACKUP_DIR);
     lt=toast('Dropbox에 백업 중... (사진 포함 시 수 초 소요)',{duration:60000});
     const recs=await dbAll('receipts');
     const imgs=await dbAll('images');
@@ -4415,7 +4421,7 @@ async function dbxBackup(){
       method:'POST',
       headers:{
         'Authorization':'Bearer '+token,
-        'Dropbox-API-Arg':JSON.stringify({path:'/'+filename,mode:'add',autorename:true,mute:false}),
+        'Dropbox-API-Arg':JSON.stringify({path:_DBX_BACKUP_DIR+'/'+filename,mode:'add',autorename:true,mute:false}),
         'Content-Type':'application/octet-stream',
       },
       body:json,
@@ -4441,8 +4447,9 @@ async function _dbxListBackups(){
   const resp=await fetch('https://api.dropboxapi.com/2/files/list_folder',{
     method:'POST',
     headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({path:'',recursive:false}),
+    body:JSON.stringify({path:_DBX_BACKUP_DIR,recursive:false}),
   });
+  if(resp.status===409||resp.status===404)return [];
   if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
   const data=await resp.json();
   return (data.entries||[])
@@ -4511,7 +4518,22 @@ function dbxDisconnect(){
 // 사진은 기존 수동 풀백업(JSON export)으로 별도 관리.
 // ────────────────────────────────────────────────────────────────
 
-const _SYNC_PATH='/receipt-db_sync.json';
+const _DBX_DATA_DIR='/01_Personal/영수증/Receipt_DB';
+const _DBX_BACKUP_DIR=_DBX_DATA_DIR+'/backups';
+const _SYNC_PATH=_DBX_DATA_DIR+'/receipt-db_sync.json';
+
+async function _dbxEnsureFolder(path){
+  const token=await _dbxToken();
+  const resp=await fetch('https://api.dropboxapi.com/2/files/create_folder_v2',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({path,autorename:false}),
+  });
+  if(resp.ok)return true;
+  const txt=await resp.text();
+  if(resp.status===409&&txt.includes('folder'))return true;
+  throw new Error(txt);
+}
 
 // 삭제 추적: 삭제된 영수증 ID를 localStorage에 보관
 function _dbxMarkDeleted(id){
@@ -4533,6 +4555,7 @@ async function dbxSyncUpload(){
   if(!dbxIsConnected())return;
   try{
     const token=await _dbxToken();
+    await _dbxEnsureFolder(_DBX_DATA_DIR);
     const recs=await dbAll('receipts');
     const deletedIds=JSON.parse(_ls(_K.DELETED_IDS)||'[]');
     const payload=JSON.stringify({
