@@ -1,4 +1,4 @@
-# 영수증 보관함 (Receipt DB) · v1.49
+# 영수증 보관함 (Receipt DB) · v1.50
 
 GPT로 정리한 영수증 텍스트를 영구 보관하고, 가계부처럼 들여다볼 수 있는
 **단일 HTML 앱**. 외부 의존성 없음, 오프라인 동작 가능.
@@ -13,7 +13,7 @@ GPT로 정리한 영수증 텍스트를 영구 보관하고, 가계부처럼 들
 - **모바일·데스크톱 반응형**, 한국어 UI, 깔끔한 화이트 톤 디자인
 - **IndexedDB**에 영수증 + 사진 함께 영구 저장
 - **JSON 백업** 다운로드/복원 (사진까지 포함)
-- **Dropbox 자동 백업** — OAuth 연결 후 `/01_Personal/영수증/Receipt_DB`에 자동 동기화·백업
+- **Dropbox 자동 백업** — Full Dropbox 권한으로 OAuth 연결 후 `/01_Personal/영수증/Receipt_DB`에 자동 동기화·백업
 
 ## 사용 방법
 
@@ -30,6 +30,7 @@ GPT로 정리한 영수증 텍스트를 영구 보관하고, 가계부처럼 들
 
 Dropbox 연결 시 자동 동기화 파일은 `/01_Personal/영수증/Receipt_DB/receipt-db_sync.json`,
 수동 백업 파일은 `/01_Personal/영수증/Receipt_DB/backups/` 아래에 저장됩니다.
+Dropbox 앱은 `Full Dropbox` 접근 유형으로 만들어야 이 경로에 쓸 수 있습니다.
 
 ## 기술
 

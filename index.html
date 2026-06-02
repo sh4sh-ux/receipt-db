@@ -783,7 +783,7 @@ svg{display:block;flex-shrink:0;}
               <div class="dbx-guide">
                 <b>Dropbox 앱 설정 방법 (1회만)</b><br>
                 1. <a href="https://www.dropbox.com/developers/apps/create" target="_blank" rel="noopener" style="color:var(--blue-txt);">Dropbox 개발자 콘솔</a>에서 새 앱 생성<br>
-                &nbsp;&nbsp;→ Choose an API: <b>Scoped access</b> · 접근 유형: <b>App folder</b><br>
+                &nbsp;&nbsp;→ Choose an API: <b>Scoped access</b> · 접근 유형: <b>Full Dropbox</b><br>
                 2. 앱 생성 후 <b>Permissions</b> 탭에서 체크:<br>
                 &nbsp;&nbsp;<code>files.content.write</code> · <code>files.content.read</code> · <code>account_info.read</code> → Submit<br>
                 3. <b>Settings</b> 탭 → Redirect URIs에 아래 주소 추가:<br>
@@ -1019,7 +1019,8 @@ svg{display:block;flex-shrink:0;}
 //         1/N 정산금액 레이블. 모바일 스와이프 백. 일자 왼쪽 정렬(iOS).
 // v1.49 — Dropbox 정리 후 백업/동기화 저장 위치를 /01_Personal/영수증/Receipt_DB로 이동.
 //         삭제된 SVG 아이콘 대신 PNG 아이콘 링크 명시.
-const APP_VERSION='v1.49';
+// v1.50 — Dropbox 동기화 실패 수정: 중첩 폴더를 부모부터 생성하고 Full Dropbox 권한 안내.
+const APP_VERSION='v1.50';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -4523,6 +4524,18 @@ const _DBX_BACKUP_DIR=_DBX_DATA_DIR+'/backups';
 const _SYNC_PATH=_DBX_DATA_DIR+'/receipt-db_sync.json';
 
 async function _dbxEnsureFolder(path){
+  const clean=String(path||'').replace(/\/+$/,'');
+  if(!clean||clean==='/')return true;
+  const parts=clean.split('/').filter(Boolean);
+  let current='';
+  for(const part of parts){
+    current+='/'+part;
+    await _dbxCreateFolder(current);
+  }
+  return true;
+}
+
+async function _dbxCreateFolder(path){
   const token=await _dbxToken();
   const resp=await fetch('https://api.dropboxapi.com/2/files/create_folder_v2',{
     method:'POST',
@@ -4531,7 +4544,15 @@ async function _dbxEnsureFolder(path){
   });
   if(resp.ok)return true;
   const txt=await resp.text();
-  if(resp.status===409&&txt.includes('folder'))return true;
+  if(resp.status===409){
+    try{
+      const err=JSON.parse(txt);
+      const pathErr=err?.error?.path;
+      const conflict=pathErr?.conflict;
+      if(pathErr?.['.tag']==='conflict'&&conflict?.['.tag']==='folder')return true;
+    }catch(_){}
+    if(txt.includes('folder'))return true;
+  }
   throw new Error(txt);
 }
 
