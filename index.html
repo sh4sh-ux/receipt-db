@@ -1021,7 +1021,8 @@ svg{display:block;flex-shrink:0;}
 //         삭제된 SVG 아이콘 대신 PNG 아이콘 링크 명시.
 // v1.50 — Dropbox 동기화 실패 수정: 중첩 폴더를 부모부터 생성하고 Full Dropbox 권한 안내.
 // v1.51 — Dropbox 한글 경로 오류 수정: Dropbox-API-Arg 헤더 값을 ASCII-safe JSON으로 변환.
-const APP_VERSION='v1.51';
+// v1.52 — 모바일 사진 동기화: 자동 동기화 JSON에 사진을 포함하고, 없는 사진만 내려받아 복원.
+const APP_VERSION='v1.52';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -4515,9 +4516,9 @@ function dbxDisconnect(){
 // ════════════════════════════════════════════════════════════════
 // DROPBOX 자동 동기화 (v1.19)
 // ════════════════════════════════════════════════════════════════
-// 전략: 사진 제외 경량 JSON(receipt-db_sync.json) 하나를 Dropbox에 유지.
+// 전략: 영수증 + 사진 JSON(receipt-db_sync.json) 하나를 Dropbox에 유지.
 // 저장·수정·삭제 시 자동 업로드(백그라운드), 앱 시작 시 자동 다운로드+머지.
-// 사진은 기존 수동 풀백업(JSON export)으로 별도 관리.
+// 모바일에서는 IndexedDB 사진 blob이 없을 수 있으므로 누락된 사진만 내려받아 채움.
 // ────────────────────────────────────────────────────────────────
 
 const _DBX_DATA_DIR='/01_Personal/영수증/Receipt_DB';
@@ -4563,6 +4564,37 @@ async function _dbxCreateFolder(path){
   throw new Error(txt);
 }
 
+async function _dbxCollectSyncImages(recs){
+  const ids=[...new Set((recs||[]).map(r=>r.imageId).filter(Boolean))];
+  const out=[];
+  for(const id of ids){
+    try{
+      const im=await dbGet('images',id);
+      if(!im||!im.blob)continue;
+      const data=await blobToBase64(im.blob);
+      if(data)out.push({id,mime:im.mime||im.blob.type||'image/jpeg',data});
+    }catch(e){console.warn('dbx image export skip:',id,e);}
+  }
+  return out;
+}
+
+async function _dbxImportSyncImages(images){
+  if(!Array.isArray(images))return 0;
+  let imgN=0;
+  for(const im of images){
+    try{
+      if(!im||!im.id||!im.data)continue;
+      const exists=await dbGet('images',im.id);
+      if(exists&&exists.blob)continue;
+      const blob=await base64ToBlob(im.data);
+      await dbPut('images',{id:im.id,blob,mime:im.mime||blob.type||'image/jpeg'});
+      _revokeImgUrl(im.id);
+      imgN++;
+    }catch(e){console.warn('dbx image import skip:',im&&im.id,e);}
+  }
+  return imgN;
+}
+
 // 삭제 추적: 삭제된 영수증 ID를 localStorage에 보관
 function _dbxMarkDeleted(id){
   const ids=new Set(JSON.parse(_ls(_K.DELETED_IDS)||'[]'));
@@ -4573,7 +4605,7 @@ function _dbxMarkDeleted(id){
   _lsSet(_K.DELETED_IDS,JSON.stringify(arr));
 }
 
-// 자동 업로드 — 사진 없이 영수증 메타데이터만 (빠름, 수십 KB)
+// 자동 업로드 — 영수증 메타데이터 + 사진
 // 동기화 오류 상태 (뱃지 표시용)
 let _dbxSyncErr=false;
 // 마지막 자동 다운로드 시각 (폴링 throttle)
@@ -4585,12 +4617,14 @@ async function dbxSyncUpload(){
     const token=await _dbxToken();
     await _dbxEnsureFolder(_DBX_DATA_DIR);
     const recs=await dbAll('receipts');
+    const images=await _dbxCollectSyncImages(recs);
     const deletedIds=JSON.parse(_ls(_K.DELETED_IDS)||'[]');
     const payload=JSON.stringify({
       app:'receipt-db',
-      syncVersion:1,
+      syncVersion:2,
       exportedAt:nowISO(),
       receipts:recs,
+      images,
       storeCatMap,
       deletedIds,
     });
@@ -4617,7 +4651,7 @@ async function dbxSyncUpload(){
 
 // 자동 다운로드 + 머지 (앱 시작, visibilitychange, 폴링 시 호출)
 async function dbxSyncDownload(){
-  if(!dbxIsConnected())return;
+  if(!dbxIsConnected())return true;
   try{
     const token=await _dbxToken();
     const resp=await fetch('https://content.dropboxapi.com/2/files/download',{
@@ -4627,15 +4661,22 @@ async function dbxSyncDownload(){
         'Dropbox-API-Arg':_dbxApiArg({path:_SYNC_PATH}),
       },
     });
-    if(resp.status===409||resp.status===404)return;  // 파일 없음 = 첫 사용, 정상
-    if(!resp.ok)return;
+    if(resp.status===409||resp.status===404)return true;  // 파일 없음 = 첫 사용, 정상
+    if(!resp.ok){const txt=await resp.text();console.warn('dbx download:',txt);return false;}
     const data=JSON.parse(await resp.text());
-    if(!data||data.app!=='receipt-db'||!Array.isArray(data.receipts))return;
-    await _dbxMerge(data);
+    if(!data||data.app!=='receipt-db'||!Array.isArray(data.receipts))return true;
+    const changed=await _dbxMerge(data);
+    const imgN=await _dbxImportSyncImages(data.images);
+    if(imgN>0){
+      renderDetail();
+      if(!changed)toast(`☁ 사진 ${imgN}장 동기화됨`,{duration:2200});
+    }
+    return true;
   }catch(e){
     if(e.message!=='DBX_TOKEN_EXPIRED'&&e.message!=='DBX_NO_TOKEN'){
       console.warn('dbx download:',e.message||e);
     }
+    return false;
   }
 }
 
@@ -4650,8 +4691,8 @@ async function dbxSyncNow(force=false){
   _lastAutoSyncAt=now;
   _dbxUpdateSyncBadge('syncing');
   try{
-    await dbxSyncDownload();   // 원격 변경 내려받기
-    await dbxSyncUpload();     // 로컬 최신본 올리기 (오류 재시도 포함)
+    const downloadOk=await dbxSyncDownload();   // 원격 변경 내려받기
+    if(downloadOk!==false)await dbxSyncUpload(); // 로컬 최신본 올리기 (오류 재시도 포함)
   }finally{
     _dbxSyncing=false;
     _dbxUpdateSyncBadge();
@@ -4719,6 +4760,7 @@ async function _dbxMerge(remoteData){
     renderDetail();
     toast(`☁ ${changed}건 동기화됨`,{duration:2200});
   }
+  return changed;
 }
 
 // 사이드바 하단 동기화 뱃지 갱신
