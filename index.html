@@ -257,6 +257,29 @@ svg{display:block;flex-shrink:0;}
   .detail-two-col{grid-template-columns:1fr;}
 }
 
+/* ── 모바일 상단 컴팩트 사진 띠 ── */
+.mob-photo-strip{display:none;}
+.mob-photo-empty-strip{display:none;}
+.mob-collapse-wrap{display:none;}
+@media(max-width:780px){
+  .mob-photo-strip{display:block;height:96px;position:relative;cursor:zoom-in;background:var(--fill);border-bottom:1px solid var(--sep);overflow:hidden;}
+  .mob-photo-strip img{width:100%;height:100%;object-fit:cover;object-position:top;}
+  .mob-photo-hint{position:absolute;right:9px;bottom:7px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;font-weight:500;padding:2px 9px;border-radius:8px;pointer-events:none;}
+  .mob-strip-btns{position:absolute;top:8px;right:8px;display:flex;gap:6px;}
+  .mob-strip-btn{border:none;border-radius:7px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;backdrop-filter:blur(4px);}
+  .mob-photo-empty-strip{display:block;border-bottom:1px solid var(--sep);}
+  .mob-photo-empty-strip button{width:100%;border:none;background:var(--fill2);padding:13px;font-size:12.5px;color:var(--label3);cursor:pointer;font-family:inherit;text-align:center;}
+  .mob-collapse-wrap{display:block;border-top:1px solid var(--sep);margin-top:14px;}
+  .mob-collapse-hd{width:100%;border:none;background:transparent;padding:10px 0 8px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;}
+  .mob-collapse-label{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;}
+  .mob-collapse-arrow{font-size:11px;color:var(--label3);transition:transform .18s;display:inline-block;}
+  .mob-collapse-arrow.open{transform:rotate(180deg);}
+  .mob-collapse-body{overflow:hidden;transition:max-height .25s ease,opacity .18s;}
+  .mob-collapse-body.closed{max-height:0!important;opacity:0;pointer-events:none;}
+  .detail-two-col{display:none;}
+  .detail-memo-desktop{display:none;}
+}
+
 .kv{padding:10px 12px;background:var(--fill2);border-radius:var(--rm);border:1px solid var(--sep);transition:border-color .15s;}
 .kv:focus-within{border-color:var(--blue);}
 .kv-lbl{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}
@@ -1023,7 +1046,8 @@ svg{display:block;flex-shrink:0;}
 // v1.51 — Dropbox 한글 경로 오류 수정: Dropbox-API-Arg 헤더 값을 ASCII-safe JSON으로 변환.
 // v1.52 — 모바일 사진 동기화: 자동 동기화 JSON에 사진을 포함하고, 없는 사진만 내려받아 복원.
 // v1.54 — 모바일 지출내역 카드 두 번 탭 버그 수정: touch-action:manipulation 추가.
-const APP_VERSION='v1.54';
+// v1.55 — 모바일 상세 화면: 상단 사진 띠 + 정보·메모·태그 접기/펼치기. "품목"→"상세내역".
+const APP_VERSION='v1.55';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -3728,8 +3752,10 @@ async function renderDetail(){
 
   // 사진
   let photoHtml;
+  let _detailPhotoUrl = null;
   if(r.imageId){
     const url=await _ensureImgUrl(r.imageId);
+    _detailPhotoUrl = url;
     if(url){
       photoHtml=`<div class="detail-photo" id="detailPhoto" style="position:relative;cursor:default;">
         <img src="${url}" alt="영수증 사진" style="cursor:zoom-in;" id="detailPhotoImg"/>
@@ -3753,15 +3779,50 @@ async function renderDetail(){
     </div></div>`;
   }
 
-  const tagsHtml=(r.tags||[]).map(t=>`<span style="display:inline-block;background:var(--fill);border:1px solid var(--sep);border-radius:12px;padding:3px 10px;font-size:11px;margin-right:4px;">${escapeHtml(t)}</span>`).join('');
-  const payLabel={card:'카드',cash:'현금',transfer:'계좌이체',other:'기타'}[r.paymentMethod]||r.paymentMethod;
   const sum=(r.items||[]).reduce((s,i)=>s+(i.amount||0),0);
-  // 품목이 하나라도 있을 때만 불일치 경고 (직접 입력은 items=[] → 경고 없음)
   const mismatch=(r.items||[]).length>0 && sum!==r.total;
+
+  // 공통 서브 HTML 조각
+  const infoKvHtml=`
+    <div class="detail-kv-stack">
+      ${kvHtml('매장명','store',r.store||'')}
+      ${kvHtml('일자','date',r.date||'','date')}
+      ${kvHtml('카테고리','category',r.category||'')}
+      ${kvHtml('결제수단','paymentMethod',r.paymentMethod||'card','select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
+      ${kvHtml('결제자','paidBy',r.paidBy||'')}
+    </div>`;
+  const memoFieldsHtml=`
+    <div class="field-g">
+      <label class="field-lbl">메모</label>
+      <textarea id="dNotes" class="field-ta" style="min-height:60px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="메모">${escapeHtml(r.notes||'')}</textarea>
+    </div>
+    <div class="field-g">
+      <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분</span></label>
+      <input id="dParticipants" class="field-inp" type="text" value="${escapeHtml((r.participants||[]).join(', '))}" placeholder="예: 철수, 영희, 민준"/>
+      ${(r.participants||[]).length>1?`<div class="field-sub">1인당 약 ${fmtMoney(Math.round((r.total||0)/(r.participants||[]).length))}원</div>`:''}
+    </div>
+    <div class="field-g">
+      <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
+      <input id="dTags" class="field-inp" type="text" value="${escapeHtml((r.tags||[]).join(', '))}"/>
+    </div>`;
+
+  // 모바일 상단 사진 띠
+  const mobPhotoHtml=_isTouch?(r.imageId&&_detailPhotoUrl
+    ?`<div class="mob-photo-strip" id="detailPhoto">
+        <img id="detailPhotoImg" src="${_detailPhotoUrl}" alt="영수증 사진"/>
+        <span class="mob-photo-hint">탭하여 확대</span>
+        <div class="mob-strip-btns">
+          <button id="addPhotoBtn" class="mob-strip-btn" style="background:rgba(255,255,255,.88);color:#111;">교체</button>
+          <button id="delPhotoBtn" class="mob-strip-btn" style="background:rgba(255,255,255,.88);color:var(--red);">삭제</button>
+        </div>
+      </div>`
+    :`<div class="mob-photo-empty-strip"><button id="addPhotoBtn">📷 영수증 사진 추가</button></div>`)
+    :'';
 
   body.innerHTML=`
     <input type="file" id="detailPhotoFile" accept="image/*" style="display:none;"/>
-    <div class="section-hd">품목 <button class="ghost-mini" id="addItemBtn">+ 품목 추가</button></div>
+    ${mobPhotoHtml}
+    <div class="section-hd">상세내역 <button class="ghost-mini" id="addItemBtn">+ 추가</button></div>
     <table class="items-table" id="itemsTable">
       <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
       <tbody>
@@ -3775,36 +3836,37 @@ async function renderDetail(){
         <tr class="total-row"><td>총액</td><td></td><td colspan="2" class="detail-total-cell"><input id="dTotalAmt" class="item-num-inp" type="text" inputmode="numeric" value="${_fmtN(r.total||0)}" style="font-weight:700;font-size:14px;text-align:right;${(r.total||0)<0?'color:var(--red);':''}"/></td><td></td></tr>
       </tbody>
     </table>
-    ${mismatch?`<div class="alert warn" style="margin:10px 0 14px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><div>품목 합계 ${fmtMoney(sum)}원과 총액 ${fmtMoney(r.total)}원이 ${fmtMoney(Math.abs(sum-r.total))}원 달라요.</div></div>`:''}
+    ${mismatch?`<div class="alert warn" style="margin:10px 0 14px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><div>상세내역 합계 ${fmtMoney(sum)}원과 총액 ${fmtMoney(r.total)}원이 ${fmtMoney(Math.abs(sum-r.total))}원 달라요.</div></div>`:''}
 
-    <div class="detail-two-col">
-      <div>${photoHtml}</div>
-      <div>
-        <div class="section-hd" style="margin-top:0;">정보</div>
-        <div class="detail-kv-stack">
-          ${kvHtml('매장명','store',r.store||'')}
-          ${kvHtml('일자','date',r.date||'','date')}
-          ${kvHtml('카테고리','category',r.category||'')}
-          ${kvHtml('결제수단','paymentMethod',r.paymentMethod||'card','select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
-          ${kvHtml('결제자','paidBy',r.paidBy||'')}
+    ${_isTouch?`
+      <div class="mob-collapse-wrap">
+        <button class="mob-collapse-hd" id="mobInfoHd">
+          <span class="mob-collapse-label">정보</span>
+          <span class="mob-collapse-arrow open" id="mobInfoArrow">▾</span>
+        </button>
+        <div class="mob-collapse-body" id="mobInfoBody" style="max-height:700px;">
+          ${infoKvHtml}
         </div>
       </div>
-    </div>
+      <div class="mob-collapse-wrap">
+        <button class="mob-collapse-hd" id="mobMemoHd">
+          <span class="mob-collapse-label">메모·태그</span>
+          <span class="mob-collapse-arrow open" id="mobMemoArrow">▾</span>
+        </button>
+        <div class="mob-collapse-body" id="mobMemoBody" style="max-height:600px;">
+          ${memoFieldsHtml}
+        </div>
+      </div>`
+    :`<div class="detail-two-col">
+        <div>${photoHtml}</div>
+        <div>
+          <div class="section-hd" style="margin-top:0;">정보</div>
+          ${infoKvHtml}
+        </div>
+      </div>
+      <div class="section-hd detail-memo-desktop">메모·태그</div>
+      ${memoFieldsHtml}`}
 
-    <div class="section-hd">메모·태그</div>
-    <div class="field-g">
-      <label class="field-lbl">메모</label>
-      <textarea id="dNotes" class="field-ta" style="min-height:60px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="메모">${escapeHtml(r.notes||'')}</textarea>
-    </div>
-    <div class="field-g">
-      <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분</span></label>
-      <input id="dParticipants" class="field-inp" type="text" value="${escapeHtml((r.participants||[]).join(', '))}" placeholder="예: 철수, 영희, 민준"/>
-      ${(r.participants||[]).length>1?`<div class="field-sub">1인당 약 ${fmtMoney(Math.round((r.total||0)/(r.participants||[]).length))}원</div>`:''}
-    </div>
-    <div class="field-g">
-      <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
-      <input id="dTags" class="field-inp" type="text" value="${escapeHtml((r.tags||[]).join(', '))}"/>
-    </div>
     <div style="font-size:11px;color:var(--label3);margin-top:14px;">
       ID: ${r.id} · 생성 ${r.createdAt?r.createdAt.slice(0,16).replace('T',' '):'—'} · 수정 ${r.updatedAt?r.updatedAt.slice(0,16).replace('T',' '):'—'}
     </div>
@@ -3813,6 +3875,23 @@ async function renderDetail(){
       <button class="btn" id="detailConfirmBtn" style="min-width:90px;padding:8px 18px;font-size:13px;">수정 확인</button>
     </div>
   `;
+
+  // 모바일 접기/펼치기 바인딩
+  if(_isTouch){
+    const _bindCollapse=(hdId,arrowId,bodyId)=>{
+      const hd=document.getElementById(hdId);
+      const arrow=document.getElementById(arrowId);
+      const bd=document.getElementById(bodyId);
+      if(!hd||!arrow||!bd)return;
+      hd.addEventListener('click',()=>{
+        const closing=!bd.classList.contains('closed');
+        bd.classList.toggle('closed',closing);
+        arrow.classList.toggle('open',!closing);
+      });
+    };
+    _bindCollapse('mobInfoHd','mobInfoArrow','mobInfoBody');
+    _bindCollapse('mobMemoHd','mobMemoArrow','mobMemoBody');
+  }
 
   // 사진 lightbox
   const dp=document.getElementById('detailPhoto');
