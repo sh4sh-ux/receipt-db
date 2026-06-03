@@ -75,7 +75,7 @@ svg{display:block;flex-shrink:0;}
 
 .list-group{padding:8px 0 0;}
 .list-group-hd{padding:8px var(--pad-x) 4px;font-size:11px;font-weight:600;color:var(--label2);letter-spacing:.3px;text-transform:uppercase;}
-.r-card{padding:11px var(--pad-x);border-bottom:1px solid var(--sep);cursor:pointer;transition:background .12s;display:flex;align-items:flex-start;gap:10px;animation:rowIn .25s ease;}
+.r-card{padding:11px var(--pad-x);border-bottom:1px solid var(--sep);cursor:pointer;transition:background .12s;display:flex;align-items:flex-start;gap:10px;animation:rowIn .25s ease;touch-action:manipulation;}
 @keyframes rowIn{from{opacity:0;transform:translateY(-3px);}to{opacity:1;transform:translateY(0);}}
 .r-card:hover{background:var(--fill);}
 .r-card.sel{background:var(--blue-bg);}
@@ -1022,7 +1022,8 @@ svg{display:block;flex-shrink:0;}
 // v1.50 — Dropbox 동기화 실패 수정: 중첩 폴더를 부모부터 생성하고 Full Dropbox 권한 안내.
 // v1.51 — Dropbox 한글 경로 오류 수정: Dropbox-API-Arg 헤더 값을 ASCII-safe JSON으로 변환.
 // v1.52 — 모바일 사진 동기화: 자동 동기화 JSON에 사진을 포함하고, 없는 사진만 내려받아 복원.
-const APP_VERSION='v1.52';
+// v1.54 — 모바일 지출내역 카드 두 번 탭 버그 수정: touch-action:manipulation 추가.
+const APP_VERSION='v1.54';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1105,14 +1106,23 @@ async function _ensureImgUrl(imageId){
   if(!imageId)return null;
   if(_imgUrlCache.has(imageId))return _imgUrlCache.get(imageId);
   const rec=await dbGet('images',imageId);
-  if(!rec||!rec.blob)return null;
+  if(!rec)return null;
+  // 새 포맷: base64 data URL 문자열 (iOS Safari blob 유실 버그 대응)
+  if(rec.data){
+    _imgUrlCache.set(imageId,rec.data);
+    return rec.data;
+  }
+  // 구 포맷: blob (레거시 호환)
+  if(!rec.blob)return null;
   const url=URL.createObjectURL(rec.blob);
   _imgUrlCache.set(imageId,url);
   return url;
 }
 function _revokeImgUrl(imageId){
   const u=_imgUrlCache.get(imageId);
-  if(u){URL.revokeObjectURL(u);_imgUrlCache.delete(imageId);}
+  // data URL은 revoke 불필요, blob URL만 revoke
+  if(u&&u.startsWith('blob:'))URL.revokeObjectURL(u);
+  _imgUrlCache.delete(imageId);
 }
 
 // ════════════════════════════════════════════════════════════════
