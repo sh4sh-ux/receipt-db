@@ -27,6 +27,7 @@
 - `v1.49` — Dropbox 폴더 정리 반영: 자동 동기화 파일을 `/01_Personal/영수증/Receipt_DB/receipt-db_sync.json`, 수동 백업을 `/01_Personal/영수증/Receipt_DB/backups/`에 저장. 삭제된 SVG 아이콘 대신 PNG 아이콘 링크 명시.
 - `v1.50` — Dropbox 동기화 실패 수정: 중첩 폴더를 부모부터 생성하도록 `_dbxEnsureFolder`를 보강하고, 새 저장 경로에 맞게 Dropbox 앱 접근 유형을 `Full Dropbox`로 안내.
 - `v1.51` — Dropbox 한글 경로 오류 수정: `Dropbox-API-Arg` 헤더 안의 한글 경로를 ASCII-safe JSON으로 변환해 백업/복원/자동 동기화 fetch 실패를 방지.
+- `v1.57` — 사진 입력 `capture="environment"` 제거: 아이폰에서 카메라 강제 실행 대신 사진 보관함 선택도 가능하도록 수정.
 - `v1.52` — 모바일 사진 동기화: 자동 동기화 JSON에 사진 base64를 포함하고, 모바일/다른 기기에서 누락된 사진 blob만 IndexedDB에 복원.
 - `v1.00` — Phase 1 MVP: 영수증 추가/목록/상세/검색/JSON 백업
 - `v1.01` — Phase 1.5 가계부 화면: 월 네비, 요약 카드 3장, 카테고리 막대, 일별 sparkline, 전월 대비
