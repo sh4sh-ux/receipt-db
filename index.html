@@ -1048,7 +1048,9 @@ svg{display:block;flex-shrink:0;}
 // v1.54 — 모바일 지출내역 카드 두 번 탭 버그 수정: touch-action:manipulation 추가.
 // v1.55 — 모바일 상세 화면: 상단 사진 띠 + 정보·메모·태그 접기/펼치기. "품목"→"상세내역".
 // v1.56 — 정보·메모·태그 섹션 기본 접힌 상태로 변경.
-const APP_VERSION='v1.57';
+// v1.57 — 사진 입력 capture="environment" 제거 (아이폰 사진 보관함 선택 허용).
+// v1.58 — 단가 입력 시 음수(-) 입력 가능 (할인 행 지원).
+const APP_VERSION='v1.58';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -2188,17 +2190,21 @@ function _parseN(s){
   return isNaN(n)?0:n;
 }
 // v1.44 — 숫자 input 실시간 천단위 쉼표 (커서 위치 보정 포함)
+// v1.57 — 음수(-) 부호 보존
 function _liveCommaFmt(inp){
   const sel=inp.selectionStart;
   const oldVal=inp.value;
+  const neg=oldVal.trimStart().startsWith('-');
   const digitsBeforeCursor=oldVal.slice(0,sel).replace(/[^0-9]/g,'').length;
   const digits=oldVal.replace(/[^0-9]/g,'');
-  const formatted=digits?Number(digits).toLocaleString('ko-KR'):'';
+  const numFormatted=digits?Number(digits).toLocaleString('ko-KR'):'';
+  const formatted=neg?(numFormatted?'-'+numFormatted:'-'):numFormatted;
   if(oldVal===formatted) return; // 변경 없으면 스킵
   inp.value=formatted;
-  // 쉼표 삽입 후 커서 위치 복원
+  // 쉼표 삽입 후 커서 위치 복원 (음수 부호 offset 처리)
+  const negOffset=neg&&numFormatted?1:0;
   let newPos=formatted.length, dc=0;
-  for(let i=0;i<formatted.length;i++){
+  for(let i=negOffset;i<formatted.length;i++){
     if(/[0-9]/.test(formatted[i])) dc++;
     if(dc>=digitsBeforeCursor){newPos=i+1;break;}
   }
@@ -4096,7 +4102,7 @@ function _bindDetailItemTableEvents(r){
       }else if(f==='unitPrice'){
         inp.addEventListener('focus',()=>{inp.value=String(_parseN(inp.value));inp.select();});
         inp.addEventListener('input',()=>{_liveCommaFmt(inp);_calcRowAmt(tr);_detailSetDirty(true);});
-        inp.addEventListener('blur',()=>{inp.value=_fmtN(_parseN(inp.value));_calcRowAmt(tr);});
+        inp.addEventListener('blur',()=>{const n=_parseN(inp.value);inp.value=_fmtN(n);inp.style.color=n<0?'var(--red)':'';_calcRowAmt(tr);});
       }else if(f==='amount'){
         inp.addEventListener('focus',()=>{inp.value=String(_parseN(inp.value));inp.select();});
         inp.addEventListener('input',()=>{_liveCommaFmt(inp);_detailSetDirty(true);_liveUpdateDetailTotal();});
