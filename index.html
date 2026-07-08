@@ -1050,7 +1050,8 @@ svg{display:block;flex-shrink:0;}
 // v1.56 — 정보·메모·태그 섹션 기본 접힌 상태로 변경.
 // v1.57 — 사진 입력 capture="environment" 제거 (아이폰 사진 보관함 선택 허용).
 // v1.58 — 단가 입력 시 음수(-) 입력 가능 (할인 행 지원).
-const APP_VERSION='v1.58';
+// v1.59 — 스캔 자동화 수신함(inbox) 머지: 동기화 시 receipt-db_inbox.json을 읽어 새 레코드·사진 머지 (앱은 inbox에 쓰지 않음).
+const APP_VERSION='v1.59';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -4620,6 +4621,7 @@ function dbxDisconnect(){
 const _DBX_DATA_DIR='/01_Personal/영수증/Receipt_DB';
 const _DBX_BACKUP_DIR=_DBX_DATA_DIR+'/backups';
 const _SYNC_PATH=_DBX_DATA_DIR+'/receipt-db_sync.json';
+const _INBOX_PATH=_DBX_DATA_DIR+'/receipt-db_inbox.json';  // 스캔 자동화 수신함 (읽기 전용)
 
 function _dbxApiArg(obj){
   return JSON.stringify(obj).replace(/[\u007f-\uffff]/g,ch=>
@@ -4745,6 +4747,30 @@ async function dbxSyncUpload(){
   }
 }
 
+// 자동 등록함(inbox) 머지 — 스캔 자동화 스크립트가 쓰는 파일. 앱은 읽기만 하고
+// 절대 쓰지 않는다 (쓰기 주체를 파일마다 하나로 유지해 동기화 경합 방지).
+// 이미 머지된 레코드는 ID 중복으로 무시되고, 사용자가 삭제한 레코드는
+// deletedIds 가드가 부활을 막는다. 오래된 항목 정리는 스크립트 쪽 책임.
+async function _dbxMergeInbox(token){
+  try{
+    const resp=await fetch('https://content.dropboxapi.com/2/files/download',{
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+token,
+        'Dropbox-API-Arg':_dbxApiArg({path:_INBOX_PATH}),
+      },
+    });
+    if(resp.status===409||resp.status===404)return;  // inbox 없음 = 정상
+    if(!resp.ok)return;
+    const data=JSON.parse(await resp.text());
+    if(!data||data.app!=='receipt-db'||!Array.isArray(data.receipts))return;
+    const changed=await _dbxMerge(data);
+    const imgN=await _dbxImportSyncImages(data.images);
+    if(imgN>0)renderDetail();
+    if(changed>0)console.log('inbox 머지:',changed,'건');
+  }catch(e){console.warn('dbx inbox:',e.message||e);}
+}
+
 // 자동 다운로드 + 머지 (앱 시작, visibilitychange, 폴링 시 호출)
 async function dbxSyncDownload(){
   if(!dbxIsConnected())return true;
@@ -4757,16 +4783,17 @@ async function dbxSyncDownload(){
         'Dropbox-API-Arg':_dbxApiArg({path:_SYNC_PATH}),
       },
     });
-    if(resp.status===409||resp.status===404)return true;  // 파일 없음 = 첫 사용, 정상
+    if(resp.status===409||resp.status===404){await _dbxMergeInbox(token);return true;}  // 파일 없음 = 첫 사용, 정상
     if(!resp.ok){const txt=await resp.text();console.warn('dbx download:',txt);return false;}
     const data=JSON.parse(await resp.text());
-    if(!data||data.app!=='receipt-db'||!Array.isArray(data.receipts))return true;
+    if(!data||data.app!=='receipt-db'||!Array.isArray(data.receipts)){await _dbxMergeInbox(token);return true;}
     const changed=await _dbxMerge(data);
     const imgN=await _dbxImportSyncImages(data.images);
     if(imgN>0){
       renderDetail();
       if(!changed)toast(`☁ 사진 ${imgN}장 동기화됨`,{duration:2200});
     }
+    await _dbxMergeInbox(token);
     return true;
   }catch(e){
     if(e.message!=='DBX_TOKEN_EXPIRED'&&e.message!=='DBX_NO_TOKEN'){
