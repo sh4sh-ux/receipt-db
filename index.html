@@ -1051,7 +1051,8 @@ svg{display:block;flex-shrink:0;}
 // v1.57 — 사진 입력 capture="environment" 제거 (아이폰 사진 보관함 선택 허용).
 // v1.58 — 단가 입력 시 음수(-) 입력 가능 (할인 행 지원).
 // v1.59 — 스캔 자동화 수신함(inbox) 머지: 동기화 시 receipt-db_inbox.json을 읽어 새 레코드·사진 머지 (앱은 inbox에 쓰지 않음).
-const APP_VERSION='v1.59';
+// v1.60 — 상세 화면 품목 붙여넣기: 상세내역에 "붙여넣기" 버튼 — GPT 품목 표를 한 번에 적용 (자동등록 영수증 품목 채우기용).
+const APP_VERSION='v1.60';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -3830,7 +3831,14 @@ async function renderDetail(){
   body.innerHTML=`
     <input type="file" id="detailPhotoFile" accept="image/*" style="display:none;"/>
     ${mobPhotoHtml}
-    <div class="section-hd">상세내역 <button class="ghost-mini" id="addItemBtn">+ 추가</button></div>
+    <div class="section-hd">상세내역 <span style="display:inline-flex;gap:6px;"><button class="ghost-mini" id="pasteItemsBtn">붙여넣기</button><button class="ghost-mini" id="addItemBtn">+ 추가</button></span></div>
+    <div id="pasteItemsPanel" style="display:none;margin:6px 0 12px;">
+      <textarea id="pasteItemsTa" rows="6" style="width:100%;min-height:110px;padding:10px 12px;border:1px solid var(--sep2);border-radius:var(--rm);background:var(--fill2);font:inherit;font-size:13px;line-height:1.5;resize:vertical;box-sizing:border-box;" placeholder="품목명 | 수량 | 단가 | 금액&#10;테라 4.6%(캔) 453ml*8 | 2 | 12,720 | 25,440&#10;...&#10;(GPT 응답 전체를 붙여넣어도 품목만 추출돼요)"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+        <button class="ghost-btn" id="pasteItemsCancel" style="font-size:13px;padding:7px 14px;">취소</button>
+        <button class="btn" id="pasteItemsApply" style="font-size:13px;padding:7px 16px;">품목 적용</button>
+      </div>
+    </div>
     <table class="items-table" id="itemsTable">
       <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
       <tbody>
@@ -3963,6 +3971,37 @@ async function renderDetail(){
     await loadAll();await renderDetail();
     dbxSyncNow(true);
   });
+
+  // v1.60: 품목 표 붙여넣기 — 자동등록(품목 없음) 영수증에 GPT 품목을 한 번에 적용
+  const pasteItemsBtn=document.getElementById('pasteItemsBtn');
+  const pasteItemsPanel=document.getElementById('pasteItemsPanel');
+  if(pasteItemsBtn&&pasteItemsPanel){
+    pasteItemsBtn.addEventListener('click',()=>{
+      const show=pasteItemsPanel.style.display==='none';
+      pasteItemsPanel.style.display=show?'block':'none';
+      if(show)document.getElementById('pasteItemsTa').focus();
+    });
+    document.getElementById('pasteItemsCancel').addEventListener('click',()=>{
+      pasteItemsPanel.style.display='none';
+    });
+    document.getElementById('pasteItemsApply').addEventListener('click',async()=>{
+      const raw=document.getElementById('pasteItemsTa').value;
+      const parsed=parseReceiptText(raw);
+      const items=((parsed&&parsed.items)||[]).filter(it=>(it.name||'').trim()||it.amount||it.unitPrice);
+      if(!items.length){
+        toast('품목을 찾지 못했어요 — "품목명 | 수량 | 단가 | 금액" 형식으로 붙여넣어주세요',{type:'error'});
+        return;
+      }
+      const existing=(r.items||[]).filter(it=>(it.name||'').trim()||it.amount);
+      if(existing.length&&!confirm(`기존 품목 ${existing.length}개를 붙여넣은 품목 ${items.length}개로 교체할까요?`))return;
+      r.items=items;
+      r.updatedAt=nowISO();
+      await dbPut('receipts',r);
+      toast(`품목 ${items.length}개 적용됨`,{type:'success'});
+      await loadAll();await renderDetail();
+      dbxSyncNow(true);
+    });
+  }
 
   // 상세 화면 드래그&드롭 (사진 교체/추가)
   const dpArea=body.querySelector('.detail-photo');

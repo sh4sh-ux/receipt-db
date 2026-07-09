@@ -32,6 +32,7 @@
 - 스캔 자동화(inbox 쓰기)는 위 라이브 로컬 미러 경로를 사용한다 (receipt_pdf_to_jpg.py)
 
 ### Changelog
+- `v1.60` — **상세 화면 품목 붙여넣기**: 상세내역 헤더에 '붙여넣기' 버튼 추가 — GPT 품목 표(또는 응답 전체)를 붙여넣으면 parseReceiptText로 품목만 추출해 한 번에 적용. 기존 품목이 있으면 교체 확인. 총액은 유지(불일치 시 기존 경고 표시). 자동등록(품목 없음) 영수증 채우기용.
 - `v1.59` — **스캔 자동화 수신함(inbox) 머지**: 동기화 다운로드 시 `Receipt_DB/receipt-db_inbox.json`을 추가로 읽어 새 레코드·사진을 머지. inbox는 맥의 영수증 스캔 자동화 스크립트(receipt_pdf_to_jpg.py --receipt-db)만 쓰고 앱은 읽기 전용 — 파일별 단일 쓰기 주체로 동기화 경합 제거. 오래된 inbox 항목 정리는 스크립트 책임(14일).
 - `v1.49` — Dropbox 폴더 정리 반영: 자동 동기화 파일을 `/01_Personal/영수증/Receipt_DB/receipt-db_sync.json`, 수동 백업을 `/01_Personal/영수증/Receipt_DB/backups/`에 저장. 삭제된 SVG 아이콘 대신 PNG 아이콘 링크 명시.
 - `v1.50` — Dropbox 동기화 실패 수정: 중첩 폴더를 부모부터 생성하도록 `_dbxEnsureFolder`를 보강하고, 새 저장 경로에 맞게 Dropbox 앱 접근 유형을 `Full Dropbox`로 안내.
