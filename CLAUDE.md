@@ -23,6 +23,14 @@
 - IndexedDB 스키마 버전(`DB_VER=2`)과 JSON 백업 포맷 버전(`version:2`)은 앱 버전과 **독립적**.
   세 가지 모두 다른 의미라 헷갈리지 말 것.
 
+
+## ⚠️ Dropbox 실제 데이터 경로 (App folder 스코프)
+앱의 Dropbox 연동은 **App folder 타입** — API 경로 `/01_Personal/영수증/Receipt_DB/...`는
+실제 Dropbox의 `01_Personal/Apps/앱/Receipt_DB_v1/01_Personal/영수증/Receipt_DB/...`로 매핑된다.
+- 로컬 미러: `~/Library/CloudStorage/Dropbox/01_Personal/Apps/앱/Receipt_DB_v1/01_Personal/영수증/Receipt_DB/`
+- `~/CloudStorage/Dropbox/01_Personal/영수증/Receipt_DB/`는 2026-06-02에 멈춘 화석 사본 — 앱이 보지 않음
+- 스캔 자동화(inbox 쓰기)는 위 라이브 로컬 미러 경로를 사용한다 (receipt_pdf_to_jpg.py)
+
 ### Changelog
 - `v1.59` — **스캔 자동화 수신함(inbox) 머지**: 동기화 다운로드 시 `Receipt_DB/receipt-db_inbox.json`을 추가로 읽어 새 레코드·사진을 머지. inbox는 맥의 영수증 스캔 자동화 스크립트(receipt_pdf_to_jpg.py --receipt-db)만 쓰고 앱은 읽기 전용 — 파일별 단일 쓰기 주체로 동기화 경합 제거. 오래된 inbox 항목 정리는 스크립트 책임(14일).
 - `v1.49` — Dropbox 폴더 정리 반영: 자동 동기화 파일을 `/01_Personal/영수증/Receipt_DB/receipt-db_sync.json`, 수동 백업을 `/01_Personal/영수증/Receipt_DB/backups/`에 저장. 삭제된 SVG 아이콘 대신 PNG 아이콘 링크 명시.
