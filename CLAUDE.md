@@ -14,6 +14,7 @@
 - `index.html` — 앱 전체 (HTML/CSS/JS 통합)
 - `README.md` — GitHub repo 첫 페이지용 한글 설명
 - `CLAUDE.md` — 이 파일
+- `scripts/receipt_png_to_receipt_db.py` — PNG/JPG 영수증 스크린샷 자동 등록 (맥에서 실행)
 
 ## 버전 관리
 - 단일 상수 `APP_VERSION` (JS 상단)이 진실의 원천. DOM 두 군데(좌측 상단 칩, 설정 탭 앱 정보 카드)에 init 시 주입
@@ -30,6 +31,10 @@
 - 로컬 미러: `~/Library/CloudStorage/Dropbox/01_Personal/Apps/앱/Receipt_DB_v1/01_Personal/영수증/Receipt_DB/`
 - `~/CloudStorage/Dropbox/01_Personal/영수증/Receipt_DB/`는 2026-06-02에 멈춘 화석 사본 — 앱이 보지 않음
 - 스캔 자동화(inbox 쓰기)는 위 라이브 로컬 미러 경로를 사용한다 (receipt_pdf_to_jpg.py)
+- **PNG/JPG 스크린샷**(토스 전자영수증 등)은 `scripts/receipt_png_to_receipt_db.py`가 처리 —
+  감시 폴더에서 날짜 추출·리네임 후 `등록완료/YYYY-MM/`으로 이동, inbox에 레코드+사진 등록.
+  ID는 `rec_YYYYMMDD_p해시6` 형식이라 앱·PDF 스크립트와 충돌 없음. PDF 스크립트와 동시 실행 금지
+  (inbox 단일 쓰기 원칙 — 순차 실행은 안전). receipt_pdf_to_jpg.py 원본은 맥에만 있음(repo 밖)
 
 ### Changelog
 - `v1.60` — **상세 화면 품목 붙여넣기**: 상세내역 헤더에 '붙여넣기' 버튼 추가 — GPT 품목 표(또는 응답 전체)를 붙여넣으면 parseReceiptText로 품목만 추출해 한 번에 적용. 기존 품목이 있으면 교체 확인. 총액은 유지(불일치 시 기존 경고 표시). 자동등록(품목 없음) 영수증 채우기용.
