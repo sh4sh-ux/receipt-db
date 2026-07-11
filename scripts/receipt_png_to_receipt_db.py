@@ -91,7 +91,9 @@ def file_date(path):
 
 
 def encode_image(path):
-    """(base64문자열, mime) 반환. Pillow 있으면 JPEG로 축소, 없으면 원본 그대로."""
+    """(data URL, mime) 반환. Pillow 있으면 JPEG로 축소, 없으면 원본 그대로.
+    앱의 base64ToBlob()은 fetch(dataUrl) 방식이라 반드시
+    'data:<mime>;base64,...' 형식이어야 사진이 복원된다."""
     raw = path.read_bytes()
     if HAS_PIL:
         try:
@@ -103,11 +105,13 @@ def encode_image(path):
                 img = img.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
             buf = io.BytesIO()
             img.save(buf, "JPEG", quality=JPEG_QUALITY, optimize=True)
-            return base64.b64encode(buf.getvalue()).decode("ascii"), "image/jpeg"
+            b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+            return "data:image/jpeg;base64," + b64, "image/jpeg"
         except Exception as e:
             print(f"  ! Pillow 변환 실패({e}) — 원본 그대로 등록")
     mime = "image/png" if path.suffix.lower() == ".png" else "image/jpeg"
-    return base64.b64encode(raw).decode("ascii"), mime
+    b64 = base64.b64encode(raw).decode("ascii")
+    return f"data:{mime};base64,{b64}", mime
 
 
 def load_inbox():
@@ -139,7 +143,7 @@ def make_record(path, date_str):
     digest = hashlib.sha1(path.read_bytes()).hexdigest()[:6]
     rec_id = f"rec_{date_str.replace('-', '')}_p{digest}"
     img_id = "img_" + rec_id[4:]  # 앱의 imageId 규칙: 'img_' + id의 'rec_' 뒷부분
-    b64, mime = encode_image(path)
+    data_url, mime = encode_image(path)
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     receipt = {
         "id": rec_id,
@@ -157,7 +161,7 @@ def make_record(path, date_str):
         "createdAt": now,
         "updatedAt": now,
     }
-    image = {"id": img_id, "mime": mime, "data": b64}
+    image = {"id": img_id, "mime": mime, "data": data_url}
     return receipt, image
 
 
