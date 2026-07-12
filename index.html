@@ -86,6 +86,16 @@ svg{display:block;flex-shrink:0;}
 .r-card-store{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .r-card-meta{font-size:11px;color:var(--label3);margin-top:2px;display:flex;gap:6px;align-items:center;}
 .r-card-amt{font-size:13px;font-weight:700;text-align:right;flex-shrink:0;white-space:nowrap;}
+/* v1.61 — 카테고리 아이콘 */
+.r-cat-thumb{width:32px;height:32px;border-radius:50%;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.r-cat-thumb svg{width:15px;height:15px;}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px;}
+.cat-opt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px 6px;border:1px solid var(--sep2);border-radius:var(--rm);background:var(--fill2);cursor:pointer;color:var(--label2);font:inherit;transition:all .12s;}
+.cat-opt svg{width:17px;height:17px;}
+.cat-opt span{font-size:11px;line-height:1;}
+.cat-opt:hover{background:var(--fill);}
+.cat-opt.on{background:var(--blue-bg);border-color:var(--blue-txt);color:var(--blue-txt);font-weight:600;}
+.cat-bar-name svg{width:12px;height:12px;vertical-align:-1.5px;margin-right:4px;opacity:.65;}
 
 .empty-state{padding:40px 24px;text-align:center;color:var(--label3);font-size:13px;}
 .empty-state svg{margin:0 auto 12px;color:var(--sep2);}
@@ -717,9 +727,10 @@ svg{display:block;flex-shrink:0;}
                   <option value="other">기타</option>
                 </select>
               </div>
-              <div class="field-g">
+              <div class="field-g" style="grid-column:1/-1;">
                 <label class="field-lbl">카테고리 <span class="field-lbl-hint" id="catAutoHint">자동 분류돼요</span></label>
-                <input id="catInp" class="field-inp" type="text" placeholder="예: 마트, 외식, 카페..." list="catList"/>
+                <div class="cat-grid" id="catGrid"></div>
+                <input id="catInp" class="field-inp" type="text" placeholder="카테고리 직접 입력..." list="catList" style="display:none;margin-top:6px;"/>
                 <datalist id="catList"></datalist>
               </div>
               <!-- 경조사 컨텍스트 필드 (부의금·축의금 선택 시 표시) -->
@@ -1053,7 +1064,8 @@ svg{display:block;flex-shrink:0;}
 // v1.59 — 스캔 자동화 수신함(inbox) 머지: 동기화 시 receipt-db_inbox.json을 읽어 새 레코드·사진 머지 (앱은 inbox에 쓰지 않음).
 // v1.60 — 상세 화면 품목 붙여넣기: 상세내역에 "붙여넣기" 버튼 — GPT 품목 표를 한 번에 적용 (자동등록 영수증 품목 채우기용).
 // v1.61 — Dropbox 스캔함: Receipt_DB/스캔함/ 폴더의 PNG/JPG를 동기화 때 자동 등록(사진+날짜), 파일은 등록완료/로 이동. 맥 스크립트 없이 모바일에서도 자동 등록.
-const APP_VERSION='v1.61';
+// v1.62 — 카테고리 아이콘 세트 (dutch-pay 통일): 고정 19종 + 직접 입력, 입력 폼 아이콘 그리드, 사이드바 카드·가계부 막대 아이콘, 구 카테고리(외식→밥집 등) 자동 마이그레이션.
+const APP_VERSION='v1.62';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1158,20 +1170,53 @@ function _revokeImgUrl(imageId){
 // ════════════════════════════════════════════════════════════════
 // CATEGORIES — 자동 분류 (가게명 → 카테고리)
 // ════════════════════════════════════════════════════════════════
-const BASE_CATEGORIES=['마트','외식','술집','카페','배달','교통','쇼핑','병원·약국','문화','경조사','부의금','축의금'];
+// ── v1.61: 카테고리 아이콘 세트 (dutch-pay와 통일된 스타일) ──
+const svgCatAuto='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>';
+const svgCatFood='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><line x1="7" y1="2" x2="7" y2="22"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>';
+const svgCatCafe='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>';
+const svgCatBeer='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 0 1 0-5c.78 0 1.57.5 2.5.5C9.44 3.5 10 3 11 3s1.44.5 3 .5 2.5-1 4-1 1.5 2.5 0 5-2.5.5-4 .5z"/><path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/></svg>';
+const svgCatCart='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
+const svgCatShop='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
+const svgCatCar='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>';
+const svgCatMic='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>';
+const svgCatHealth='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>';
+const svgCatMovie='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>';
+const svgCatSpa='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2S4 10 4 16a8 8 0 0 0 16 0c0-6-8-14-8-14z"/></svg>';
+const svgCatGym='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="12" x2="16" y2="12"/><rect x="3" y="9" width="5" height="6" rx="1"/><rect x="16" y="9" width="5" height="6" rx="1"/></svg>';
+const svgCatGolf='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M12 2l8 4-8 4z"/><ellipse cx="7" cy="22" rx="4" ry="1.5"/></svg>';
+const svgCatPlane='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>';
+const svgCatBed='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M2 18h20"/></svg>';
+const svgCatGift='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>';
+const svgCatFlower='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M12 11.5V22"/><path d="M12 22c0-4.5-3.5-7-7-7"/><path d="M12 22c0-4.5 3.5-7 7-7"/></svg>';
+const svgCatHeart='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+const svgCatCake='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><line x1="7" y1="4" x2="7" y2="5"/><line x1="12" y1="4" x2="12" y2="5"/><line x1="17" y1="4" x2="17" y2="5"/></svg>';
+const svgCatEtc='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>';
+
+const CATEGORIES=[
+  ['밥집',svgCatFood],['카페',svgCatCafe],['술집',svgCatBeer],['마트',svgCatCart],['쇼핑',svgCatShop],
+  ['교통',svgCatCar],['노래방',svgCatMic],['병원',svgCatHealth],['문화',svgCatMovie],['스파',svgCatSpa],
+  ['운동',svgCatGym],['골프',svgCatGolf],['여행',svgCatPlane],['숙박',svgCatBed],['선물',svgCatGift],
+  ['경조사',svgCatCake],['부의금',svgCatFlower],['축의금',svgCatHeart],['기타',svgCatEtc],
+];
+const CAT_ICON_MAP=Object.fromEntries(CATEGORIES);
+function catIcon(cat){return CAT_ICON_MAP[cat]||svgCatEtc;}
+// 구 카테고리명 → 새 이름 (v1.61 마이그레이션 + 자동분류 결과 정규화)
+const LEGACY_CAT_MAP={'외식':'밥집','배달':'밥집','병원·약국':'병원'};
+function normalizeCat(c){return LEGACY_CAT_MAP[c]||c||'';}
+const BASE_CATEGORIES=CATEGORIES.map(x=>x[0]);
 // 카테고리 계층 그룹 (대분류 → 소분류)
 const CATEGORY_GROUPS=[
   {group:'경조사', members:['경조사','부의금','축의금']},
 ];
 const CAT_RULES=[
   {cat:'마트', kws:['마트','슈퍼','편의점','이마트','롯데마트','홈플러스','코스트코','하나로','농협','GS25','CU','세븐일레븐','이마트24','미니스톱','트레이더스']},
-  {cat:'외식', kws:['식당','맛집','분식','김밥','국밥','돈까스','갈비','삼겹살','냉면','치킨','피자','버거','햄버거','떡볶이','우동','초밥','샤브','죽','파스타','스테이크','쌀국수','한식','중식','일식','양식','뷔페','족발','보쌈','국수','만두','곱창','전골','찌개','곰탕','설렁탕','순대','튀김','마라']},
+  {cat:'밥집', kws:['식당','맛집','분식','김밥','국밥','돈까스','갈비','삼겹살','냉면','치킨','피자','버거','햄버거','떡볶이','우동','초밥','샤브','죽','파스타','스테이크','쌀국수','한식','중식','일식','양식','뷔페','족발','보쌈','국수','만두','곱창','전골','찌개','곰탕','설렁탕','순대','튀김','마라']},
   {cat:'술집', kws:['술집','포차','호프','주점','이자카야','와인바','맥주','막걸리','선술집','펍','BAR ','BAR(','퇴근길','한잔','대포','소주','진로','하이트','카스','테라','클라우드','켈리','새로','처음처럼','필라이트','오비맥주','청하','참이슬','제주맥주','와인','위스키','칵테일','생맥주']},
   {cat:'카페', kws:['카페','커피','스타벅스','투썸','이디야','컴포즈','메가커피','빽다방','폴바셋','할리스','파스쿠찌','앤제리너스','블루보틀','테라로사','커피빈','탐앤탐스','공차','요거트','베이커리','파리바게뜨','뚜레쥬르','던킨']},
-  {cat:'배달', kws:['배달의민족','배민','요기요','쿠팡이츠','땡겨요']},
+  {cat:'밥집', kws:['배달의민족','배민','요기요','쿠팡이츠','땡겨요']},
   {cat:'교통', kws:['주유','GS칼텍스','SK에너지','S-OIL','현대오일뱅크','택시','카카오T','우버','버스','지하철','코레일','KTX','SRT','하이패스','주차장','쏘카','그린카']},
   {cat:'쇼핑', kws:['올리브영','다이소','유니클로','ABC마트','쿠팡','11번가','G마켓','옥션','무신사','지그재그','29CM','SSG','신세계','현대백화점','롯데백화점','갤러리아','AK플라자','이케아']},
-  {cat:'병원·약국', kws:['병원','의원','약국','치과','한의원','내과','피부과','정형외과','이비인후과','안과','정신과','산부인과','소아과','클리닉','약방']},
+  {cat:'병원', kws:['병원','의원','약국','치과','한의원','내과','피부과','정형외과','이비인후과','안과','정신과','산부인과','소아과','클리닉','약방']},
   {cat:'문화', kws:['CGV','메가박스','롯데시네마','영화관','교보문고','영풍문고','예스24','알라딘','서점','전시','공연','콘서트','뮤지컬','연극','박물관','미술관']},
   {cat:'부의금', kws:['부의','조문','문상','부고','장례식장','빈소','상가(喪家)','조의']},
   {cat:'축의금', kws:['축의','청첩','결혼식','웨딩','돌잔치','돌상','화환(축)']},
@@ -1194,13 +1239,13 @@ async function saveStoreCatMap(){
 function autocategorize(storeName){
   const s=(storeName||'').trim();
   // 1. 사용자 사전 — 정확 일치 우선
-  if(s&&storeCatMap[s])return storeCatMap[s];
+  if(s&&storeCatMap[s])return normalizeCat(storeCatMap[s]);
   // 2. 사용자 사전 — 부분 일치
   if(s){
     const sLower=s.toLowerCase();
     for(const[key,cat]of Object.entries(storeCatMap)){
       if(!key)continue;
-      if(s.includes(key)||key.includes(s)||sLower.includes(key.toLowerCase()))return cat;
+      if(s.includes(key)||key.includes(s)||sLower.includes(key.toLowerCase()))return normalizeCat(cat);
     }
   }
   // 3. 가게명 규칙 사전
@@ -1224,6 +1269,25 @@ async function learnCategory(storeName,newCat){
   if(storeCatMap[s]===c)return;  // 같으면 무시
   storeCatMap[s]=c;
   await saveStoreCatMap();
+}
+
+// v1.61: 구 카테고리명(외식·배달·병원·약국)을 새 이름으로 1회성 정규화 (멱등 — 매 시작 시 실행해도 무해)
+async function migrateLegacyCategories(){
+  let changed=0;
+  for(const r of receipts){
+    const nc=normalizeCat(r.category);
+    if(nc!==(r.category||'')){
+      r.category=nc;r.updatedAt=nowISO();
+      await dbPut('receipts',r);changed++;
+    }
+  }
+  let mapChanged=false;
+  for(const key of Object.keys(storeCatMap)){
+    const nc=normalizeCat(storeCatMap[key]);
+    if(nc!==storeCatMap[key]){storeCatMap[key]=nc;mapChanged=true;}
+  }
+  if(mapChanged)await saveStoreCatMap();
+  if(changed){console.log('카테고리 마이그레이션:',changed,'건');await loadAll();}
 }
 
 function getAllCategoriesUnion(){
@@ -1672,6 +1736,7 @@ function _cardHtml(r){
   if(r.paidBy)meta.push(escapeHtml(r.paidBy));
   if((r.participants||[]).length>0)meta.push(`👥 ${r.participants.length}명`);
   return `<div class="r-card${sel}" data-id="${r.id}">
+    <div class="r-cat-thumb">${catIcon(r.category)}</div>
     <div class="r-card-info">
       <div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div>
       <div class="r-card-meta">${meta.join(' · ')}</div>
@@ -1849,6 +1914,38 @@ catInpEl.addEventListener('compositionstart',()=>{_catComposing=true;});
 catInpEl.addEventListener('compositionend',()=>{_catComposing=false;_catAutoFilled=false;_updateCatHint();});
 catInpEl.addEventListener('input',()=>{if(!_catComposing){_catAutoFilled=false;_updateCatHint();}});
 
+// v1.61 — 카테고리 아이콘 그리드
+const svgCatEdit='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
+let _catCustomMode=false;
+function renderCatGrid(){
+  const grid=document.getElementById('catGrid');
+  if(!grid)return;
+  const cur=catInpEl.value.trim();
+  const isCustom=_catCustomMode||(cur&&!CAT_ICON_MAP[cur]);
+  grid.innerHTML=
+    `<button type="button" class="cat-opt${!isCustom&&cur===''?' on':''}" data-cat="">${svgCatAuto}<span>자동</span></button>`
+    +CATEGORIES.map(([c,svg])=>`<button type="button" class="cat-opt${!isCustom&&cur===c?' on':''}" data-cat="${c}">${svg}<span>${c}</span></button>`).join('')
+    +`<button type="button" class="cat-opt${isCustom?' on':''}" data-cat="__custom">${svgCatEdit}<span>직접</span></button>`;
+}
+document.getElementById('catGrid').addEventListener('click',e=>{
+  const btn=e.target.closest('.cat-opt');
+  if(!btn)return;
+  const key=btn.dataset.cat;
+  if(key==='__custom'){
+    _catCustomMode=true;
+    catInpEl.style.display='';
+    catInpEl.focus();
+  }else{
+    _catCustomMode=false;
+    catInpEl.style.display='none';
+    catInpEl.value=key;
+    _catAutoFilled=false;
+    _updateCatHint();
+  }
+  renderCatGrid();
+});
+renderCatGrid();
+
 function _updateCatHint(){
   const hint=document.getElementById('catAutoHint');
   if(!hint)return;
@@ -1858,6 +1955,8 @@ function _updateCatHint(){
   }else{
     hint.textContent='자동 분류돼요';
     hint.style.color='';
+  }
+  if(typeof renderCatGrid==='function'){renderCatGrid();
   }
 }
 
@@ -3380,7 +3479,7 @@ function renderMonthSummaryHtml(ym){
       const isSubActive=_monthCatFilter===sub.cat;
       return `<div class="cat-bar-row cat-bar-sub clickable${isSubActive?' cat-active':''}" data-cat="${escapeHtml(sub.cat)}">
         <div class="cat-bar-top">
-          <span class="cat-bar-name">${escapeHtml(sub.cat)}<span class="cat-pct">${sub.pct.toFixed(0)}%</span></span>
+          <span class="cat-bar-name">${catIcon(sub.cat)}${escapeHtml(sub.cat)}<span class="cat-pct">${sub.pct.toFixed(0)}%</span></span>
           <span class="cat-bar-amt">${fmtMoney(sub.amt)}원</span>
         </div>
         <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
@@ -3394,7 +3493,7 @@ function renderMonthSummaryHtml(ym){
       const isRowActive=isGrpActive||(!row.isGroup&&_monthCatFilter===row.cat);
       const barRow=`<div class="cat-bar-row clickable${isUncat?' uncat':''}${isRowActive?' cat-active':''}" data-rank="${Math.min(i,4)}" data-cat="${escapeHtml(row.cat)}">
         <div class="cat-bar-top">
-          <span class="cat-bar-name">${escapeHtml(row.cat)}${row.isGroup?'<span class="cat-bar-group-label">대분류</span>':''}<span class="cat-pct">${row.pct.toFixed(0)}%</span></span>
+          <span class="cat-bar-name">${row.isGroup?'':catIcon(row.cat)}${escapeHtml(row.cat)}${row.isGroup?'<span class="cat-bar-group-label">대분류</span>':''}<span class="cat-pct">${row.pct.toFixed(0)}%</span></span>
           <span class="cat-bar-amt">${fmtMoney(row.amt)}원</span>
         </div>
         <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
@@ -3797,7 +3896,7 @@ async function renderDetail(){
     <div class="detail-kv-stack">
       ${kvHtml('매장명','store',r.store||'')}
       ${kvHtml('일자','date',r.date||'','date')}
-      ${kvHtml('카테고리','category',r.category||'')}
+      ${kvHtml('카테고리','category',r.category||'','select',[['','— 없음'],...CATEGORIES.map(([c])=>[c,c]),...((r.category&&!CAT_ICON_MAP[r.category])?[[r.category,r.category]]:[])])}
       ${kvHtml('결제수단','paymentMethod',r.paymentMethod||'card','select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
       ${kvHtml('결제자','paidBy',r.paidBy||'')}
     </div>`;
@@ -5169,6 +5268,7 @@ function _dbxBindEvents(){
     await openDB();
     await loadStoreCatMap();
     await loadAll();
+    await migrateLegacyCategories();
     // 기기별 초기 탭: 데스크탑(비터치) → 추가, 모바일(터치) → 내역
     if(!_isTouch) switchTab('input');
     renderDetail();

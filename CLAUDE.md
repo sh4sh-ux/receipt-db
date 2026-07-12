@@ -37,6 +37,7 @@
   (inbox 단일 쓰기 원칙 — 순차 실행은 안전). receipt_pdf_to_jpg.py 원본은 맥에만 있음(repo 밖)
 
 ### Changelog
+- `v1.62` — **카테고리 아이콘 세트 (dutch-pay 통일)**: 고정 19종(밥집·카페·술집·마트·쇼핑·교통·노래방·병원·문화·스파·운동·골프·여행·숙박·선물·경조사·부의금·축의금·기타) + 직접 입력. 입력 폼은 아이콘 그리드(catGrid, 기본 '자동'), 사이드바 카드에 카테고리 아이콘 원(r-cat-thumb), 가계부 막대에도 아이콘. 상세 화면 카테고리는 select. 구 카테고리 자동 마이그레이션(외식·배달→밥집, 병원·약국→병원, migrateLegacyCategories — 멱등, init 시 실행). BASE_CATEGORIES는 CATEGORIES에서 파생.
 - `v1.61` — **Dropbox 스캔함**: `Receipt_DB/스캔함/` 폴더에 PNG/JPG를 넣으면 동기화 때 앱이 자동 등록(사진 첨부, 파일명→날짜 추출), 처리된 파일은 `스캔함/등록완료/`로 이동. ID `rec_YYYYMMDD_s+content_hash6` — 기기 간 결정적이라 중복 등록 없음. 맥 스크립트 없이 모바일에서도 동작. 실제 Dropbox 경로: `01_Personal/Apps/앱/Receipt_DB_v1/01_Personal/영수증/Receipt_DB/스캔함/` (App folder 스코프 매핑 주의).
 - `v1.60` — **상세 화면 품목 붙여넣기**: 상세내역 헤더에 '붙여넣기' 버튼 추가 — GPT 품목 표(또는 응답 전체)를 붙여넣으면 parseReceiptText로 품목만 추출해 한 번에 적용. 기존 품목이 있으면 교체 확인. 총액은 유지(불일치 시 기존 경고 표시). 자동등록(품목 없음) 영수증 채우기용.
 - `v1.59` — **스캔 자동화 수신함(inbox) 머지**: 동기화 다운로드 시 `Receipt_DB/receipt-db_inbox.json`을 추가로 읽어 새 레코드·사진을 머지. inbox는 맥의 영수증 스캔 자동화 스크립트(receipt_pdf_to_jpg.py --receipt-db)만 쓰고 앱은 읽기 전용 — 파일별 단일 쓰기 주체로 동기화 경합 제거. 오래된 inbox 항목 정리는 스크립트 책임(14일).
