@@ -1059,7 +1059,8 @@ svg{display:block;flex-shrink:0;}
 // v1.58 — 단가 입력 시 음수(-) 입력 가능 (할인 행 지원).
 // v1.59 — 품목별 비고 칸 추가, 금액 수동 입력 허용 (qty×price 자동계산 override).
 // v1.60 — 자동 동기화 sync.json에서 이미지 제외 (50MB 파일 크기 문제 해결). 이미지는 별도 백업으로 관리.
-const APP_VERSION='v1.60';
+// v1.61 — inbox.json 지원: LaunchAgent가 쓴 receipt-db_inbox.json을 동기화 시 자동 머지.
+const APP_VERSION='v1.61';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -4647,6 +4648,7 @@ function dbxDisconnect(){
 const _DBX_DATA_DIR='/01_Personal/영수증/Receipt_DB';
 const _DBX_BACKUP_DIR=_DBX_DATA_DIR+'/backups';
 const _SYNC_PATH=_DBX_DATA_DIR+'/receipt-db_sync.json';
+const _INBOX_PATH=_DBX_DATA_DIR+'/receipt-db_inbox.json';
 
 function _dbxApiArg(obj){
   return JSON.stringify(obj).replace(/[\u007f-\uffff]/g,ch=>
@@ -4776,6 +4778,7 @@ async function dbxSyncDownload(){
   if(!dbxIsConnected())return true;
   try{
     const token=await _dbxToken();
+    // ── 메인 sync.json ──
     const resp=await fetch('https://content.dropboxapi.com/2/files/download',{
       method:'POST',
       headers:{
@@ -4783,7 +4786,7 @@ async function dbxSyncDownload(){
         'Dropbox-API-Arg':_dbxApiArg({path:_SYNC_PATH}),
       },
     });
-    if(resp.status===409||resp.status===404)return true;  // 파일 없음 = 첫 사용, 정상
+    if(resp.status===409||resp.status===404)return true;
     if(!resp.ok){const txt=await resp.text();console.warn('dbx download:',txt);return false;}
     const data=JSON.parse(await resp.text());
     if(!data||data.app!=='receipt-db'||!Array.isArray(data.receipts))return true;
@@ -4793,6 +4796,25 @@ async function dbxSyncDownload(){
       renderDetail();
       if(!changed)toast(`☁ 사진 ${imgN}장 동기화됨`,{duration:2200});
     }
+    // ── inbox.json (LaunchAgent가 쓰는 파일, 앱은 읽기만) ──
+    try{
+      const ir=await fetch('https://content.dropboxapi.com/2/files/download',{
+        method:'POST',
+        headers:{
+          'Authorization':'Bearer '+token,
+          'Dropbox-API-Arg':_dbxApiArg({path:_INBOX_PATH}),
+        },
+      });
+      if(ir.ok){
+        const inbox=JSON.parse(await ir.text());
+        if(inbox&&inbox.app==='receipt-db'&&Array.isArray(inbox.receipts)&&inbox.receipts.length){
+          const inboxChanged=await _dbxMerge(inbox);
+          const inboxImgN=await _dbxImportSyncImages(inbox.images);
+          if(inboxChanged>0||inboxImgN>0)renderDetail();
+          if(inboxChanged>0)toast(`☁ inbox ${inboxChanged}건 추가됨`,{duration:2500});
+        }
+      }
+    }catch(ie){console.warn('dbx inbox:',ie.message||ie);}
     return true;
   }catch(e){
     if(e.message!=='DBX_TOKEN_EXPIRED'&&e.message!=='DBX_NO_TOKEN'){
