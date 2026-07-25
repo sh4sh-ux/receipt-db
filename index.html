@@ -1061,7 +1061,8 @@ svg{display:block;flex-shrink:0;}
 // v1.60 — 자동 동기화 sync.json에서 이미지 제외 (50MB 파일 크기 문제 해결). 이미지는 별도 백업으로 관리.
 // v1.61 — inbox.json 지원: LaunchAgent가 쓴 receipt-db_inbox.json을 동기화 시 자동 머지.
 // v1.62 — 폴더 생성 API 세션당 1회로 캐시 (매 동기화마다 409 에러 반복 방지).
-const APP_VERSION='v1.62';
+// v1.63 — 타이머/포그라운드 복귀 자동 동기화를 다운로드 전용으로 변경 (외부 inbox 쓰기 경쟁 조건 방지).
+const APP_VERSION='v1.63';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -4829,8 +4830,9 @@ async function dbxSyncDownload(){
 }
 
 // 양방향 수동/자동 동기화 (다운로드 → 업로드)
+// upload=false 이면 다운로드 전용 (타이머/포그라운드 복귀 시 사용 — 외부 inbox 쓰기 경쟁 조건 방지)
 let _dbxSyncing=false;
-async function dbxSyncNow(force=false){
+async function dbxSyncNow(force=false,upload=true){
   if(!dbxIsConnected())return;
   const now=Date.now();
   if(!force&&now-_lastAutoSyncAt<60000)return;  // throttle: 60초
@@ -4840,22 +4842,22 @@ async function dbxSyncNow(force=false){
   _dbxUpdateSyncBadge('syncing');
   try{
     const downloadOk=await dbxSyncDownload();   // 원격 변경 내려받기
-    if(downloadOk!==false)await dbxSyncUpload(); // 로컬 최신본 올리기 (오류 재시도 포함)
+    if(upload&&downloadOk!==false)await dbxSyncUpload(); // 로컬 최신본 올리기 (오류 재시도 포함)
   }finally{
     _dbxSyncing=false;
     _dbxUpdateSyncBadge();
   }
 }
 
-// ── 포그라운드 복귀 시 즉시 동기화 ──
+// ── 포그라운드 복귀 시 즉시 동기화 (다운로드 전용) ──
 let _hiddenAt=0;
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){_hiddenAt=Date.now();}
-  else if(Date.now()-_hiddenAt>30000){dbxSyncNow();}  // 30초 이상 숨겨진 뒤 복귀
+  else if(Date.now()-_hiddenAt>30000){dbxSyncNow(false,false);}  // 30초 이상 숨겨진 뒤 복귀
 });
 
-// ── 3분마다 폴링 ──
-setInterval(()=>dbxSyncNow(),3*60*1000);
+// ── 3분마다 폴링 (다운로드 전용) ──
+setInterval(()=>dbxSyncNow(false,false),3*60*1000);
 
 // 머지 로직: 원격 + 로컬 → 최신 updatedAt 우선, 삭제 항목 적용
 async function _dbxMerge(remoteData){
