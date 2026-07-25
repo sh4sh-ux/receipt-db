@@ -1060,7 +1060,8 @@ svg{display:block;flex-shrink:0;}
 // v1.59 — 품목별 비고 칸 추가, 금액 수동 입력 허용 (qty×price 자동계산 override).
 // v1.60 — 자동 동기화 sync.json에서 이미지 제외 (50MB 파일 크기 문제 해결). 이미지는 별도 백업으로 관리.
 // v1.61 — inbox.json 지원: LaunchAgent가 쓴 receipt-db_inbox.json을 동기화 시 자동 머지.
-const APP_VERSION='v1.61';
+// v1.62 — 폴더 생성 API 세션당 1회로 캐시 (매 동기화마다 409 에러 반복 방지).
+const APP_VERSION='v1.62';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -4656,15 +4657,18 @@ function _dbxApiArg(obj){
   );
 }
 
+const _dbxFolderCache=new Set();
 async function _dbxEnsureFolder(path){
   const clean=String(path||'').replace(/\/+$/,'');
   if(!clean||clean==='/')return true;
+  if(_dbxFolderCache.has(clean))return true;
   const parts=clean.split('/').filter(Boolean);
   let current='';
   for(const part of parts){
     current+='/'+part;
     await _dbxCreateFolder(current);
   }
+  _dbxFolderCache.add(clean);
   return true;
 }
 
