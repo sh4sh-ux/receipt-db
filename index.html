@@ -1058,7 +1058,8 @@ svg{display:block;flex-shrink:0;}
 // v1.57 — 사진 입력 capture="environment" 제거 (아이폰 사진 보관함 선택 허용).
 // v1.58 — 단가 입력 시 음수(-) 입력 가능 (할인 행 지원).
 // v1.59 — 품목별 비고 칸 추가, 금액 수동 입력 허용 (qty×price 자동계산 override).
-const APP_VERSION='v1.59';
+// v1.60 — 자동 동기화 sync.json에서 이미지 제외 (50MB 파일 크기 문제 해결). 이미지는 별도 백업으로 관리.
+const APP_VERSION='v1.60';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -4739,14 +4740,13 @@ async function dbxSyncUpload(){
     const token=await _dbxToken();
     await _dbxEnsureFolder(_DBX_DATA_DIR);
     const recs=await dbAll('receipts');
-    const images=await _dbxCollectSyncImages(recs);
     const deletedIds=JSON.parse(_ls(_K.DELETED_IDS)||'[]');
     const payload=JSON.stringify({
       app:'receipt-db',
       syncVersion:2,
       exportedAt:nowISO(),
       receipts:recs,
-      images,
+      images:[],
       storeCatMap,
       deletedIds,
     });
