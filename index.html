@@ -5057,11 +5057,18 @@ async function _showDiag(){
   const deleted=JSON.parse(_ls('dbx_deleted_ids')||'[]');
   const recentDel=deleted.filter(id=>id>='rec_202607').join('\n')||'없음';
   const lastSync=_ls(_K.LAST_SYNC)||'없음';
+  const memSorted=receipts.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const memTop=memSorted.slice(0,5).map(r=>`${r.date} ${r.store}`).join('\n');
   alert([
-    `DB 영수증: ${all.length}건`,
+    `DB(IndexedDB): ${all.length}건`,
+    `메모리(receipts): ${receipts.length}건`,
+    `viewMonth: ${viewMonth}`,
     ``,
-    `최신 7건:`,
+    `DB 최신 7건:`,
     top,
+    ``,
+    `메모리 최신 5건:`,
+    memTop,
     ``,
     `7월 이후 deletedIds:`,
     recentDel,
