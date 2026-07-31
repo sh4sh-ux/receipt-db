@@ -1073,7 +1073,8 @@ svg{display:block;flex-shrink:0;}
 // v1.64 — inbox 이미지 항상 덮어쓰기 (_dbxImportSyncImages).
 // v1.65 — 동기화 완료 후 설정 탭 즉시 갱신 + 버튼 진행 피드백.
 // v1.66 — 진단 버튼: 로컬 DB 상태·deletedIds 확인.
-const APP_VERSION='v1.66';
+// v1.67 — 이미지 Dropbox 개별 파일 저장·자동 다운로드 (inbox.json 이미지 제거).
+const APP_VERSION='v1.67';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1147,6 +1148,7 @@ function _todayYMD(){const d=new Date();return d.getFullYear()+'-'+String(d.getM
 
 // 사진 URL 풀 — 한 번 만들면 selectedId 바뀌기 전까지 재사용
 const _imgUrlCache=new Map();      // imageId → object URL
+const _imgDownloading=new Set();   // 다운로드 진행 중인 imageId (중복 방지)
 function _imgUrlFor(imageId){
   if(!imageId)return null;
   if(_imgUrlCache.has(imageId))return _imgUrlCache.get(imageId);
@@ -1156,7 +1158,17 @@ async function _ensureImgUrl(imageId){
   if(!imageId)return null;
   if(_imgUrlCache.has(imageId))return _imgUrlCache.get(imageId);
   const rec=await dbGet('images',imageId);
-  if(!rec)return null;
+  if(!rec){
+    // IndexedDB에 없으면 Dropbox에서 자동 다운로드 (중복 요청 방지)
+    if(dbxIsConnected()&&!_imgDownloading.has(imageId)){
+      _imgDownloading.add(imageId);
+      _dbxDownloadImage(imageId).then(url=>{
+        _imgDownloading.delete(imageId);
+        if(url)renderDetail();  // 완료 후 화면 갱신
+      });
+    }
+    return null;
+  }
   // 새 포맷: base64 data URL 문자열 (iOS Safari blob 유실 버그 대응)
   if(rec.data){
     _imgUrlCache.set(imageId,rec.data);
@@ -2334,6 +2346,7 @@ saveBtn.addEventListener('click',async()=>{
   if(pendingPhotoBlob){
     imageId='img_'+id.slice(4);  // img_YYYYMMDD_NNN
     await dbPut('images',{id:imageId,blob:pendingPhotoBlob,mime:pendingPhotoBlob.type||'image/jpeg'});
+    _dbxUploadImage(imageId);
   }
   const participants=(document.getElementById('participantsInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const tags=(document.getElementById('tagInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
@@ -2501,6 +2514,7 @@ async function _saveDirectEntry(){
   if(_directPhotoBlob){
     imageId='img_'+id.slice(4);
     await dbPut('images',{id:imageId,blob:_directPhotoBlob,mime:_directPhotoBlob.type||'image/jpeg'});
+    _dbxUploadImage(imageId);
   }
   const participants=(document.getElementById('participantsInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const tags=(document.getElementById('tagInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
@@ -3942,6 +3956,7 @@ async function renderDetail(){
       if(!f)return;
       const imgId='img_'+r.id.slice(4);
       await dbPut('images',{id:imgId,blob:f,mime:f.type||'image/jpeg'});
+      _dbxUploadImage(imgId);
       r.imageId=imgId;r.updatedAt=nowISO();
       await dbPut('receipts',r);
       _revokeImgUrl(imgId);
@@ -4002,6 +4017,7 @@ async function renderDetail(){
       if(!f||!f.type.startsWith('image/'))return;
       const imgId='img_'+r.id.slice(4);
       await dbPut('images',{id:imgId,blob:f,mime:f.type||'image/jpeg'});
+      _dbxUploadImage(imgId);
       r.imageId=imgId;r.updatedAt=nowISO();
       await dbPut('receipts',r);
       _revokeImgUrl(imgId);
@@ -4372,6 +4388,7 @@ const _K={  // localStorage 키 모음
   LAST_BACKUP:   'dbx_last_backup',
   LAST_SYNC:     'dbx_last_sync',      // 자동 동기화 마지막 시각 (ISO)
   DELETED_IDS:   'dbx_deleted_ids',    // 삭제된 영수증 ID 목록 (JSON array)
+  UPLOADED_IMGS: 'dbx_uploaded_imgs',  // Dropbox에 업로드된 imageId 목록 (JSON array)
   CODE_VERIFIER: 'dbx_code_verifier',
   STATE:         'dbx_oauth_state',
 };
@@ -4660,6 +4677,7 @@ function dbxDisconnect(){
 
 const _DBX_DATA_DIR='/01_Personal/영수증/Receipt_DB';
 const _DBX_BACKUP_DIR=_DBX_DATA_DIR+'/backups';
+const _DBX_IMAGES_DIR=_DBX_DATA_DIR+'/images';  // 이미지 개별 파일 저장 폴더
 const _SYNC_PATH=_DBX_DATA_DIR+'/receipt-db_sync.json';
 const _INBOX_PATH=_DBX_DATA_DIR+'/receipt-db_inbox.json';
 
@@ -4992,6 +5010,9 @@ function renderDbxSettings(){
         <button id="dbxSyncNowBtn" class="bkp-restore-btn" style="margin-bottom:8px;">
           ↻ 지금 동기화 (양방향)
         </button>
+        <button id="dbxImgUploadAllBtn" class="bkp-restore-btn" style="margin-bottom:8px;">
+          ↑ 이미지 Dropbox 전체 업로드
+        </button>
       `;
     }
   }else{
@@ -5049,6 +5070,107 @@ function _dbxFmtSize(bytes){
   return (bytes/1024/1024).toFixed(1)+'MB';
 }
 
+// ── 이미지 Dropbox 개별 파일 저장·다운로드 (v1.67) ─────────────
+let _imgsFolderReady=false;
+async function _dbxEnsureImagesFolder(){
+  if(_imgsFolderReady)return;
+  try{
+    const token=await _dbxToken();
+    await fetch('https://api.dropboxapi.com/2/files/create_folder_v2',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({path:_DBX_IMAGES_DIR,autorename:false}),
+    });
+  }catch(e){/* 이미 존재하면 409 — 무시 */}
+  _imgsFolderReady=true;
+}
+
+// IndexedDB 이미지 → Dropbox images/{imgId}.jpg 업로드
+async function _dbxUploadImage(imgId){
+  if(!dbxIsConnected()||!imgId)return false;
+  const uploaded=new Set(JSON.parse(_ls(_K.UPLOADED_IMGS)||'[]'));
+  if(uploaded.has(imgId))return true;
+  try{
+    const rec=await dbGet('images',imgId);
+    if(!rec)return false;
+    let body;
+    if(rec.data){
+      const b64=rec.data.replace(/^data:[^;]+;base64,/,'');
+      const bin=atob(b64);const bytes=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+      body=bytes;
+    }else if(rec.blob){body=rec.blob;}
+    else return false;
+    await _dbxEnsureImagesFolder();
+    const token=await _dbxToken();
+    const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+token,
+        'Content-Type':'application/octet-stream',
+        'Dropbox-API-Arg':_dbxApiArg({path:_DBX_IMAGES_DIR+'/'+imgId+'.jpg',mode:'overwrite',mute:true}),
+      },
+      body,
+    });
+    if(!resp.ok){console.warn('img upload err:',await resp.text());return false;}
+    uploaded.add(imgId);
+    _lsSet(_K.UPLOADED_IMGS,JSON.stringify([...uploaded].slice(-5000)));
+    return true;
+  }catch(e){console.warn('_dbxUploadImage:',e);return false;}
+}
+
+// Dropbox images/{imgId}.jpg → IndexedDB 저장
+async function _dbxDownloadImage(imgId){
+  if(!dbxIsConnected()||!imgId)return null;
+  try{
+    const token=await _dbxToken();
+    const resp=await fetch('https://content.dropboxapi.com/2/files/download',{
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+token,
+        'Dropbox-API-Arg':_dbxApiArg({path:_DBX_IMAGES_DIR+'/'+imgId+'.jpg'}),
+      },
+    });
+    if(resp.status===404||resp.status===409)return null;
+    if(!resp.ok)return null;
+    const blob=await resp.blob();
+    await dbPut('images',{id:imgId,blob,mime:blob.type||'image/jpeg'});
+    const url=URL.createObjectURL(blob);
+    _imgUrlCache.set(imgId,url);
+    return url;
+  }catch(e){return null;}
+}
+
+// IndexedDB 전체 이미지 → Dropbox 일괄 업로드
+async function dbxUploadAllImages(){
+  if(!dbxIsConnected()){toast('Dropbox에 연결되지 않았어요',{type:'error'});return;}
+  const btn=document.getElementById('dbxImgUploadAllBtn');
+  if(btn){btn.textContent='업로드 중...';btn.disabled=true;}
+  try{
+    const uploaded=new Set(JSON.parse(_ls(_K.UPLOADED_IMGS)||'[]'));
+    const allImgs=await new Promise((res,rej)=>{
+      const tx=_db.transaction('images','readonly');
+      const req=tx.objectStore('images').getAll();
+      req.onsuccess=()=>res(req.result||[]);
+      req.onerror=()=>rej(req.error);
+    });
+    const pending=allImgs.filter(im=>!uploaded.has(im.id));
+    let ok=0,fail=0;
+    for(const im of pending){
+      const r=await _dbxUploadImage(im.id);
+      if(r)ok++;else fail++;
+    }
+    const msg=`업로드 완료: ${ok}개${fail?` (실패 ${fail}개)`:''}`;
+    toast(msg,{type:'success'});
+    if(btn)btn.textContent=msg;
+  }catch(e){
+    toast('업로드 중 오류: '+e.message,{type:'error'});
+    if(btn)btn.textContent='↑ 이미지 Dropbox 전체 업로드';
+  }finally{
+    if(btn)btn.disabled=false;
+  }
+}
+
 // ── 진단 (동기화 문제 파악용) ───────────────────────────────────
 async function _showDiag(){
   const all=await dbAll('receipts');
@@ -5087,13 +5209,16 @@ function _dbxBindEvents(){
   $('diagBtn')?.addEventListener('click',_showDiag);
   $('dbxModalClose')?.addEventListener('click',_dbxCloseModal);
   $('dbxModalOverlay')?.addEventListener('click',_dbxCloseModal);
-  // 설정 탭 내 "지금 동기화" 버튼 — renderDbxSettings 후 렌더됨, 이벤트 위임
+  // 설정 탭 내 동적 버튼들 — renderDbxSettings 후 렌더됨, 이벤트 위임
   document.getElementById('viewSettings')?.addEventListener('click',e=>{
     if(e.target.closest('#dbxSyncNowBtn')){
       const btn=e.target.closest('#dbxSyncNowBtn');
       btn.textContent='↻ 동기화 중...';
       btn.disabled=true;
       dbxSyncNow(true);
+    }
+    if(e.target.closest('#dbxImgUploadAllBtn')){
+      dbxUploadAllImages();
     }
   });
   // 사이드바 뱃지 클릭 → 수동 동기화
