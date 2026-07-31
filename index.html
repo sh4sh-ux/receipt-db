@@ -1062,7 +1062,7 @@ svg{display:block;flex-shrink:0;}
 // v1.61 — inbox.json 지원: LaunchAgent가 쓴 receipt-db_inbox.json을 동기화 시 자동 머지.
 // v1.62 — 폴더 생성 API 세션당 1회로 캐시 (매 동기화마다 409 에러 반복 방지).
 // v1.63 — 타이머/포그라운드 복귀 자동 동기화를 다운로드 전용으로 변경 (외부 inbox 쓰기 경쟁 조건 방지).
-const APP_VERSION='v1.63';
+const APP_VERSION='v1.64';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -4714,8 +4714,7 @@ async function _dbxImportSyncImages(images){
   for(const im of images){
     try{
       if(!im||!im.id||!im.data)continue;
-      const exists=await dbGet('images',im.id);
-      if(exists&&exists.blob)continue;
+      // inbox 이미지는 항상 덮어쓰기 (이미지 교정 지원)
       const blob=await base64ToBlob(im.data);
       await dbPut('images',{id:im.id,blob,mime:im.mime||blob.type||'image/jpeg'});
       _revokeImgUrl(im.id);
