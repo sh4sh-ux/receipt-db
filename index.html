@@ -914,6 +914,14 @@ svg{display:block;flex-shrink:0;}
             </div>
           </div>
 
+          <div class="setting-card">
+            <h3>진단</h3>
+            <p>동기화 문제 파악용 — 현재 기기 DB 상태를 확인합니다.</p>
+            <div class="setting-btn-row">
+              <button id="diagBtn">진단 정보 보기</button>
+            </div>
+          </div>
+
         </div>
       </section>
     </main>
@@ -1064,7 +1072,8 @@ svg{display:block;flex-shrink:0;}
 // v1.63 — 타이머/포그라운드 복귀 자동 동기화를 다운로드 전용으로 변경 (외부 inbox 쓰기 경쟁 조건 방지).
 // v1.64 — inbox 이미지 항상 덮어쓰기 (_dbxImportSyncImages).
 // v1.65 — 동기화 완료 후 설정 탭 즉시 갱신 + 버튼 진행 피드백.
-const APP_VERSION='v1.65';
+// v1.66 — 진단 버튼: 로컬 DB 상태·deletedIds 확인.
+const APP_VERSION='v1.66';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -5040,6 +5049,27 @@ function _dbxFmtSize(bytes){
   return (bytes/1024/1024).toFixed(1)+'MB';
 }
 
+// ── 진단 (동기화 문제 파악용) ───────────────────────────────────
+async function _showDiag(){
+  const all=await dbAll('receipts');
+  const sorted=all.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const top=sorted.slice(0,7).map(r=>`${r.date} ${r.id}\n  ${r.store} ${(r.total||0).toLocaleString()}원`).join('\n');
+  const deleted=JSON.parse(_ls('dbx_deleted_ids')||'[]');
+  const recentDel=deleted.filter(id=>id>='rec_202607').join('\n')||'없음';
+  const lastSync=_ls(_K.LAST_SYNC)||'없음';
+  alert([
+    `DB 영수증: ${all.length}건`,
+    ``,
+    `최신 7건:`,
+    top,
+    ``,
+    `7월 이후 deletedIds:`,
+    recentDel,
+    ``,
+    `마지막 동기화: ${lastSync}`,
+  ].join('\n'));
+}
+
 // ── 이벤트 바인딩 (init 에서 1회) ──────────────────────────────
 function _dbxBindEvents(){
   const $=id=>document.getElementById(id);
@@ -5047,6 +5077,7 @@ function _dbxBindEvents(){
   $('dbxBackupBtn')?.addEventListener('click',dbxBackup);
   $('dbxRestoreBtn')?.addEventListener('click',_dbxOpenModal);
   $('dbxDisconnectBtn')?.addEventListener('click',dbxDisconnect);
+  $('diagBtn')?.addEventListener('click',_showDiag);
   $('dbxModalClose')?.addEventListener('click',_dbxCloseModal);
   $('dbxModalOverlay')?.addEventListener('click',_dbxCloseModal);
   // 설정 탭 내 "지금 동기화" 버튼 — renderDbxSettings 후 렌더됨, 이벤트 위임
