@@ -1074,7 +1074,8 @@ svg{display:block;flex-shrink:0;}
 // v1.65 — 동기화 완료 후 설정 탭 즉시 갱신 + 버튼 진행 피드백.
 // v1.66 — 진단 버튼: 로컬 DB 상태·deletedIds 확인.
 // v1.67 — 이미지 Dropbox 개별 파일 저장·자동 다운로드 (inbox.json 이미지 제거).
-const APP_VERSION='v1.67';
+// v1.68 — 상세내역 '프롬프트 복사' 버튼: 품목명|수량|단가|금액 형식으로 클립보드 복사.
+const APP_VERSION='v1.68';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -3866,7 +3867,7 @@ async function renderDetail(){
   body.innerHTML=`
     <input type="file" id="detailPhotoFile" accept="image/*" style="display:none;"/>
     ${mobPhotoHtml}
-    <div class="section-hd">상세내역 <button class="ghost-mini" id="addItemBtn">+ 추가</button></div>
+    <div class="section-hd">상세내역 <button class="ghost-mini" id="copyPromptBtn">프롬프트 복사</button><button class="ghost-mini" id="addItemBtn">+ 추가</button></div>
     <table class="items-table" id="itemsTable">
       <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th>비고</th><th></th></tr></thead>
       <tbody>
@@ -4000,6 +4001,15 @@ async function renderDetail(){
     await dbPut('receipts',r);
     await loadAll();await renderDetail();
     dbxSyncNow(true);
+  });
+
+  document.getElementById('copyPromptBtn').addEventListener('click',()=>{
+    _syncDetailFromInputs(r);
+    const lines=(r.items||[]).map(it=>`${it.name||''} | ${it.quantity||0} | ${_fmtN(it.unitPrice||0)} | ${_fmtN(it.amount||0)}`);
+    const text='품목명 | 수량 | 단가 | 금액\n'+lines.join('\n');
+    navigator.clipboard.writeText(text)
+      .then(()=>toast('프롬프트 복사됐어요',{type:'success'}))
+      .catch(()=>toast('복사 실패',{type:'error'}));
   });
 
   // 상세 화면 드래그&드롭 (사진 교체/추가)
