@@ -1075,7 +1075,8 @@ svg{display:block;flex-shrink:0;}
 // v1.66 — 진단 버튼: 로컬 DB 상태·deletedIds 확인.
 // v1.67 — 이미지 Dropbox 개별 파일 저장·자동 다운로드 (inbox.json 이미지 제거).
 // v1.68 — 상세내역 '프롬프트 복사' 버튼: 품목명|수량|단가|금액 형식으로 클립보드 복사.
-const APP_VERSION='v1.68';
+// v1.69 — 프롬프트 복사 헤더 행 제거.
+const APP_VERSION='v1.69';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -4006,7 +4007,7 @@ async function renderDetail(){
   document.getElementById('copyPromptBtn').addEventListener('click',()=>{
     _syncDetailFromInputs(r);
     const lines=(r.items||[]).map(it=>`${it.name||''} | ${it.quantity||0} | ${_fmtN(it.unitPrice||0)} | ${_fmtN(it.amount||0)}`);
-    const text='품목명 | 수량 | 단가 | 금액\n'+lines.join('\n');
+    const text=lines.join('\n');
     navigator.clipboard.writeText(text)
       .then(()=>toast('프롬프트 복사됐어요',{type:'success'}))
       .catch(()=>toast('복사 실패',{type:'error'}));
