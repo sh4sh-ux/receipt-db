@@ -360,16 +360,24 @@ svg{display:block;flex-shrink:0;}
 .detail-info-card{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:14px 0 18px;padding:18px;background:var(--fill);border:1px solid var(--sep);border-radius:var(--rm);align-items:stretch;}
 .detail-info-copy{min-width:0;}
 .detail-info-copy .section-hd{margin-top:0;}
-.detail-info-photo{min-width:0;align-self:stretch;display:flex;align-items:stretch;justify-content:center;}
+.detail-info-photo{min-width:0;min-height:0;align-self:stretch;position:relative;}
 .detail-kv-stack{display:flex;flex-direction:column;gap:8px;}
-.det-photo-thumb{width:100%;height:100%;min-height:320px;flex-shrink:0;border-radius:var(--rm);overflow:hidden;border:1px solid var(--sep);background:var(--card);display:flex;flex-direction:column;}
-.det-photo-thumb img{width:100%;height:0;min-height:270px;flex:1;object-fit:contain;object-position:center top;display:block;cursor:zoom-in;background:var(--card);}
-.det-photo-thumb-empty{width:100%;height:100%;min-height:320px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--label3);font-size:11px;cursor:pointer;border-radius:var(--rm);border:1px dashed var(--sep2);background:var(--card);}
+.det-photo-thumb{position:absolute;inset:0;width:100%;height:100%;min-height:0;border-radius:var(--rm);overflow:hidden;border:1px solid var(--sep);background:var(--card);display:flex;flex-direction:column;}
+.det-photo-thumb img{width:100%;height:0;min-height:0;flex:1;object-fit:contain;object-position:center top;display:block;cursor:zoom-in;background:var(--card);}
+.det-photo-thumb-empty{position:absolute;inset:0;width:100%;height:100%;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--label3);font-size:11px;cursor:pointer;border-radius:var(--rm);border:1px dashed var(--sep2);background:var(--card);}
 .det-photo-thumb-empty svg{color:var(--sep2);}
+.detail-category-kv{position:relative;z-index:24;}
+.detail-cat-trigger{width:100%;min-height:28px;border:0;background:transparent;color:var(--label);display:flex;align-items:center;gap:9px;padding:0;text-align:left;font:inherit;}
+.detail-cat-trigger-icon{width:25px;height:25px;flex:0 0 25px;border-radius:7px;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;}
+.detail-cat-trigger-icon svg{width:16px;height:16px;}
+.detail-cat-trigger-label{flex:1;font-size:14px;font-weight:600;}
+.detail-cat-trigger-chevron{color:var(--label3);transition:transform .15s;}
+.detail-cat-trigger[aria-expanded="true"] .detail-cat-trigger-chevron{transform:rotate(180deg);}
+.detail-cat-popover{top:calc(100% + 8px);}
 @media(max-width:780px){
   .detail-info-card{grid-template-columns:1fr;gap:16px;padding:14px;}
-  .detail-info-photo{width:100%;}
-  .det-photo-thumb,.det-photo-thumb-empty{width:100%;height:auto;min-height:0;}
+  .detail-info-photo{width:100%;height:auto;min-height:160px;position:static;}
+  .det-photo-thumb,.det-photo-thumb-empty{position:static;width:100%;height:auto;min-height:0;}
   .det-photo-thumb img{height:auto;min-height:0;max-height:320px;flex:none;object-fit:contain;background:var(--card);}
   .det-photo-thumb-empty{height:160px;}
 }
@@ -1364,7 +1372,8 @@ svg{display:block;flex-shrink:0;}
 // v1.73 — 가계부 아이콘 추가, app-title null 에러 수정.
 // v1.83 — 붙여넣기·미리보기·결제수단 구간의 수직 간격 통일.
 // v1.84 — 15개 SVG 카테고리와 사용자 지정 자동분류 키워드 적용.
-const APP_VERSION='v1.84';
+// v1.85 — 상세 정보 SVG 카테고리 선택기와 정보·사진 동일 높이 적용.
+const APP_VERSION='v1.85';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const _themeMedia=window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -4241,7 +4250,7 @@ async function renderDetail(){
     <div class="detail-kv-stack">
       ${kvHtml('매장명','store',r.store||'')}
       ${kvHtml('일자','date',r.date||'','date')}
-      ${kvHtml('카테고리','category',r.category||'')}
+      ${detailCategoryKvHtml(r.category||'')}
       ${kvHtml('결제수단','paymentMethod',r.paymentMethod||'card','select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
       ${kvHtml('결제자','paidBy',r.paidBy||'')}
     </div>`;
@@ -4423,6 +4432,45 @@ async function renderDetail(){
     }
   });
 
+  // 상세 정보 카테고리 — 입력 화면과 동일한 SVG 선택기
+  const detailCatTrigger=body.querySelector('.detail-cat-trigger');
+  const detailCatPopover=body.querySelector('.detail-cat-popover');
+  const detailCatValue=body.querySelector('.detail-cat-value');
+  if(detailCatTrigger&&detailCatPopover&&detailCatValue){
+    const closeDetailCategory=()=>{
+      detailCatPopover.hidden=true;
+      detailCatTrigger.setAttribute('aria-expanded','false');
+      document.removeEventListener('click',closeDetailCategory);
+    };
+    detailCatTrigger.addEventListener('click',e=>{
+      e.stopPropagation();
+      const open=detailCatPopover.hidden;
+      if(!open){closeDetailCategory();return;}
+      detailCatPopover.hidden=false;
+      detailCatTrigger.setAttribute('aria-expanded','true');
+      setTimeout(()=>document.addEventListener('click',closeDetailCategory,{once:true}),0);
+    });
+    detailCatPopover.addEventListener('click',e=>e.stopPropagation());
+    detailCatPopover.querySelectorAll('.detail-cat-option').forEach(option=>{
+      option.addEventListener('click',()=>{
+        const cat=option.dataset.category||'기타';
+        detailCatValue.value=cat;
+        detailCatValue.dispatchEvent(new Event('input',{bubbles:true}));
+        detailCatValue.dispatchEvent(new Event('change',{bubbles:true}));
+        detailCatTrigger.querySelector('.detail-cat-trigger-icon').innerHTML=getCatSvg(cat);
+        detailCatTrigger.querySelector('.detail-cat-trigger-label').textContent=cat;
+        body.querySelector('.det-cat-box').innerHTML=getCatSvg(cat);
+        detailCatPopover.querySelectorAll('.detail-cat-option').forEach(btn=>{
+          const selected=btn===option;
+          btn.classList.toggle('on',selected);
+          btn.setAttribute('aria-selected',String(selected));
+        });
+        closeDetailCategory();
+      });
+    });
+    detailCatTrigger.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetailCategory();});
+  }
+
   // ── 품목 편집 (input → dirty 표시, blur → 포맷 복원, 저장은 수정 확인 버튼) ──
   _bindDetailItemTableEvents(r);
 
@@ -4520,6 +4568,23 @@ function kvHtml(label,field,rawValue,type,options){
   }else{
     return `<div class="kv"><div class="kv-lbl">${escapeHtml(label)}</div><input class="kv-inp" type="text" data-field="${field}" value="${rv}" placeholder="—"/></div>`;
   }
+}
+
+function detailCategoryKvHtml(rawValue){
+  const cat=normalizeCategory(rawValue)||'기타';
+  const options=BASE_CATEGORIES.map(name=>`<button class="cat-picker-option detail-cat-option" type="button" role="option" data-category="${escapeHtml(name)}" aria-selected="${name===cat?'true':'false'}">${getCatSvg(name)}<span>${escapeHtml(name)}</span></button>`).join('');
+  return `<div class="kv detail-category-kv">
+    <div class="kv-lbl">카테고리</div>
+    <input class="kv-inp detail-cat-value" type="hidden" data-field="category" value="${escapeHtml(cat)}"/>
+    <button class="detail-cat-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+      <span class="detail-cat-trigger-icon">${getCatSvg(cat)}</span>
+      <span class="detail-cat-trigger-label">${escapeHtml(cat)}</span>
+      <svg class="detail-cat-trigger-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="cat-picker-popover detail-cat-popover" role="listbox" aria-label="상세 카테고리 선택" hidden>
+      <div class="cat-picker-title">카테고리 선택</div>${options}
+    </div>
+  </div>`;
 }
 
 // v1.29: persistItemChange → dirty 표시만 (저장은 수정 확인 버튼)
