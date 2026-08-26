@@ -271,9 +271,10 @@ svg{display:block;flex-shrink:0;}
 .cat-picker-trigger-label.empty{color:var(--label3);font-weight:400;}
 .cat-picker-trigger-chevron{color:var(--label3);transition:transform .15s;}
 .cat-picker-trigger[aria-expanded="true"] .cat-picker-trigger-chevron{transform:rotate(180deg);}
-.cat-picker-popover{position:absolute;z-index:40;top:calc(100% - 8px);left:0;width:100%;padding:12px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:var(--app-shadow);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;}
+.cat-picker-popover{position:absolute;z-index:40;top:calc(100% + 8px);left:0;width:100%;padding:0 12px 12px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:var(--app-shadow);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px 5px;overflow:hidden;}
 .cat-picker-popover[hidden]{display:none;}
-.cat-picker-option{min-height:70px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--label2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-size:11.5px;font-weight:600;transition:background .12s,border-color .12s,color .12s;}
+.cat-picker-title{grid-column:1/-1;margin:0 -12px 4px;padding:13px 16px;border-bottom:1px solid var(--sep);color:var(--label2);font-size:12px;font-weight:700;letter-spacing:-.1px;}
+.cat-picker-option{min-height:72px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--label2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-size:11.5px;font-weight:600;transition:background .12s,border-color .12s,color .12s;}
 .cat-picker-option svg{width:22px;height:22px;}
 .cat-picker-option:hover{background:var(--fill);color:var(--label);}
 .cat-picker-option.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue-txt);}
@@ -1362,7 +1363,8 @@ svg{display:block;flex-shrink:0;}
 // v1.72 — 아이콘 네브 컬럼, 사진 썸네일 오른쪽 배치.
 // v1.73 — 가계부 아이콘 추가, app-title null 에러 수정.
 // v1.83 — 붙여넣기·미리보기·결제수단 구간의 수직 간격 통일.
-const APP_VERSION='v1.83';
+// v1.84 — 15개 SVG 카테고리와 사용자 지정 자동분류 키워드 적용.
+const APP_VERSION='v1.84';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const _themeMedia=window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -1509,42 +1511,53 @@ function _revokeImgUrl(imageId){
 // ════════════════════════════════════════════════════════════════
 // CATEGORIES — 자동 분류 (가게명 → 카테고리)
 // ════════════════════════════════════════════════════════════════
-const BASE_CATEGORIES=['마트','외식','술집','카페','배달','교통','쇼핑','병원·약국','문화','경조사'];
+const BASE_CATEGORIES=['외식','카페','술집','케이크','노래방','쇼핑','영화','숙박','골프','스파','운동','여행','기타','경조사','병원·약국'];
 // 카테고리 계층 그룹 (대분류 → 소분류)
 const CATEGORY_GROUPS=[
   {group:'경조사', members:['경조사','부의금','축의금']},
 ];
 const CAT_RULES=[
-  {cat:'마트', kws:['마트','슈퍼','편의점','이마트','롯데마트','홈플러스','코스트코','하나로','농협','GS25','CU','세븐일레븐','이마트24','미니스톱','트레이더스']},
-  {cat:'외식', kws:['식당','맛집','분식','김밥','국밥','돈까스','갈비','삼겹살','냉면','치킨','피자','버거','햄버거','떡볶이','우동','초밥','샤브','죽','파스타','스테이크','쌀국수','한식','중식','일식','양식','뷔페','족발','보쌈','국수','만두','곱창','전골','찌개','곰탕','설렁탕','순대','튀김','마라']},
-  {cat:'술집', kws:['술집','포차','호프','주점','이자카야','와인바','맥주','막걸리','선술집','펍','BAR ','BAR(','퇴근길','한잔','대포','소주','진로','하이트','카스','테라','클라우드','켈리','새로','처음처럼','필라이트','오비맥주','청하','참이슬','제주맥주','와인','위스키','칵테일','생맥주']},
-  {cat:'카페', kws:['카페','커피','스타벅스','투썸','이디야','컴포즈','메가커피','빽다방','폴바셋','할리스','파스쿠찌','앤제리너스','블루보틀','테라로사','커피빈','탐앤탐스','공차','요거트','베이커리','파리바게뜨','뚜레쥬르','던킨']},
-  {cat:'배달', kws:['배달의민족','배민','요기요','쿠팡이츠','땡겨요']},
-  {cat:'교통', kws:['주유','GS칼텍스','SK에너지','S-OIL','현대오일뱅크','택시','카카오T','우버','버스','지하철','코레일','KTX','SRT','하이패스','주차장','쏘카','그린카']},
-  {cat:'쇼핑', kws:['올리브영','다이소','유니클로','ABC마트','쿠팡','11번가','G마켓','옥션','무신사','지그재그','29CM','SSG','신세계','현대백화점','롯데백화점','갤러리아','AK플라자','이케아']},
-  {cat:'병원·약국', kws:['병원','의원','약국','치과','한의원','내과','피부과','정형외과','이비인후과','안과','정신과','산부인과','소아과','클리닉','약방']},
-  {cat:'문화', kws:['CGV','메가박스','롯데시네마','영화관','교보문고','영풍문고','예스24','알라딘','서점','전시','공연','콘서트','뮤지컬','연극','박물관','미술관']},
-  {cat:'경조사', kws:['부의','조문','문상','부고','장례식장','빈소','상가(喪家)','조의','축의','청첩','결혼식','웨딩','돌잔치','돌상','화환(축)']},
+  {cat:'외식', kws:['식당','한식','중식','일식']},
+  {cat:'카페', kws:['카페','커피','음료']},
+  {cat:'술집', kws:['술집','소주','맥주','양주','이자카야','바']},
+  {cat:'케이크', kws:['케이크','생일','기념일']},
+  {cat:'노래방', kws:['노래방','가라오케','코노']},
+  {cat:'쇼핑', kws:['쇼핑','백화점','마트','편의점']},
+  {cat:'영화', kws:['영화','CGV','메가박스']},
+  {cat:'숙박', kws:['숙박','호텔','풀빌라','펜션','숙소']},
+  {cat:'골프', kws:['골프','라운드','그린피']},
+  {cat:'스파', kws:['스파','찜질방','사우나','마사지']},
+  {cat:'운동', kws:['운동','헬스','볼링','수영','스포츠']},
+  {cat:'여행', kws:['여행','비행기','항공']},
+  {cat:'기타', kws:['기타','분류없음']},
+  {cat:'경조사', kws:['경조사','축의','부의']},
+  {cat:'병원·약국', kws:['병원','약국','의원','치과','한의원','클리닉']},
 ];
 
 
 // 카테고리 SVG 아이콘 (line-art, stroke-width 1.8)
 const CAT_SVGS={
-  '마트':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
   '외식':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>`,
   '술집':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14l-2 7H7L5 3z"/><path d="M7.5 10l-.5 9h10l-.5-9"/><line x1="9.5" y1="15" x2="14.5" y2="15"/></svg>`,
   '카페':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>`,
-  '배달':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12H3v7h7v-2H5v-5z"/><path d="M21 5H11v7h10V5z"/><path d="M8 19a2 2 0 1 0 4 0 2 2 0 0 0-4 0z"/><path d="M18 19a2 2 0 1 0 4 0 2 2 0 0 0-4 0z"/><path d="M11 12l4 7h6"/></svg>`,
-  '교통':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+  '케이크':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16v9H4z"/><path d="M4 15c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2"/><path d="M8 11V7m4 4V6m4 5V7"/><path d="M8 5h.01M12 4h.01M16 5h.01"/></svg>`,
+  '노래방':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></svg>`,
   '쇼핑':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
+  '영화':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4m10 0h4M3 16h4m10 0h4"/></svg>`,
+  '숙박':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20v-8h18v8M3 16h18M6 12V7h6a4 4 0 0 1 4 4v1M3 20v2m18-2v2"/></svg>`,
+  '골프':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V3l10 4-10 4"/><ellipse cx="13" cy="21" rx="7" ry="2"/></svg>`,
+  '스파':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10c-2-2 2-3 0-6M12 10c-2-2 2-3 0-7M18 10c-2-2 2-3 0-6"/><path d="M3 13h18c0 5-4 8-9 8s-9-3-9-8Z"/></svg>`,
+  '운동':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8v8M3 10v4m6-3h6m3-3v8m3-6v4"/></svg>`,
+  '여행':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 9 15M22 2l-7 20-4-9-9-4 20-7Z"/></svg>`,
+  '기타':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M8 17h5"/></svg>`,
   '병원·약국':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3Z"/></svg>`,
-  '문화':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>`,
   '경조사':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v16H5V5a2 2 0 0 1 2-2Z"/><path d="M5 7h14M12 7v14"/><path d="M5 18c1.2-1 2.6-1.5 4.2-1.5h5.6c1.6 0 3 .5 4.2 1.5"/></svg>`,
   '부의금':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v16H5V5a2 2 0 0 1 2-2Z"/><path d="M5 7h14M12 7v14"/><path d="M5 18c1.2-1 2.6-1.5 4.2-1.5h5.6c1.6 0 3 .5 4.2 1.5"/></svg>`,
   '축의금':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v16H5V5a2 2 0 0 1 2-2Z"/><path d="M5 7h14M12 7v14"/><path d="M5 18c1.2-1 2.6-1.5 4.2-1.5h5.6c1.6 0 3 .5 4.2 1.5"/></svg>`,
 };
 function normalizeCategory(cat){
-  return cat==='부의금'||cat==='축의금'?'경조사':(cat||'');
+  const aliases={'부의금':'경조사','축의금':'경조사','마트':'쇼핑','문화':'영화','배달':'외식','교통':'여행','병원':'병원·약국','약국':'병원·약국'};
+  return aliases[cat]||cat||'';
 }
 function getCatSvg(cat){
   return CAT_SVGS[normalizeCategory(cat)]||`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
@@ -1599,11 +1612,8 @@ async function learnCategory(storeName,newCat){
 }
 
 function getAllCategoriesUnion(){
-  // 기본 9개 + 사용자 사전에 나온 적 있는 카테고리 + 실제 영수증의 카테고리
-  const s=new Set(BASE_CATEGORIES);
-  for(const c of Object.values(storeCatMap)){const normalized=normalizeCategory(c);if(normalized)s.add(normalized);}
-  for(const r of receipts){const normalized=normalizeCategory(r.category);if(normalized)s.add(normalized);}
-  return [...s];
+  // 선택기는 요청된 15개 표준 카테고리만 노출한다. 기존 저장 데이터는 변경하지 않는다.
+  return [...BASE_CATEGORIES];
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -2247,7 +2257,7 @@ function _syncCategoryPicker(){
 function _renderCategoryPicker(){
   if(!catPickerPopover)return;
   const cats=getAllCategoriesUnion();
-  catPickerPopover.innerHTML=cats.map(cat=>`<button class="cat-picker-option" type="button" role="option" data-category="${escapeHtml(cat)}" aria-selected="false">${getCatSvg(cat)}<span>${escapeHtml(cat)}</span></button>`).join('');
+  catPickerPopover.innerHTML=`<div class="cat-picker-title">카테고리 선택</div>`+cats.map(cat=>`<button class="cat-picker-option" type="button" role="option" data-category="${escapeHtml(cat)}" aria-selected="false">${getCatSvg(cat)}<span>${escapeHtml(cat)}</span></button>`).join('');
   catPickerPopover.querySelectorAll('.cat-picker-option').forEach(btn=>{
     btn.addEventListener('click',()=>{
       _setCategoryValue(btn.dataset.category,{auto:false});
