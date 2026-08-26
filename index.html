@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
 <title>영수증 보관함</title>
-<meta name="theme-color" content="#ffffff"/>
+<meta name="theme-color" content="#111213"/>
 <meta name="apple-mobile-web-app-title" content="영수증"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -14,26 +14,26 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#F7F7F8;
-  --card:#fff;
-  --left-bg:#FAFAFA;
-  --label:#111;
-  --label2:#666;
-  --label3:#B0B0B8;
-  --sep:#EBEBED;
-  --sep2:#D4D4D8;
-  --fill:#F3F3F5;
-  --fill2:#F8F8FA;
-  --blue:#0071E3;
-  --blue-bg:#EBF3FF;
-  --blue-txt:#0055B8;
-  --green:#1DAD53;
-  --green-bg:#EDFAF3;
-  --green-txt:#13823D;
-  --red:#E53E3E;
-  --red-bg:#FFF0F0;
-  --amber:#B7791F;
-  --amber-bg:#FEF6E4;
+  --bg:#111213;
+  --card:#1e2022;
+  --left-bg:#161718;
+  --label:#e4e6ec;
+  --label2:#7c7f90;
+  --label3:#4c4f60;
+  --sep:#222426;
+  --sep2:#2a2d30;
+  --fill:#252729;
+  --fill2:#2d3033;
+  --blue:#6264ee;
+  --blue-bg:rgba(98,100,238,.15);
+  --blue-txt:#7c7ef5;
+  --green:#34c97d;
+  --green-bg:rgba(52,201,125,.12);
+  --green-txt:#34c97d;
+  --red:#ff5252;
+  --red-bg:rgba(255,82,82,.1);
+  --amber:#f6ad55;
+  --amber-bg:rgba(246,173,85,.12);
   --r:16px;--rm:10px;--rs:9px;
   --pad-x:28px;
 }
@@ -93,7 +93,7 @@ svg{display:block;flex-shrink:0;}
 .side-foot{border-top:1px solid var(--sep);padding:12px var(--pad-x);display:flex;justify-content:space-between;align-items:center;}
 .foot-stat{font-size:12px;color:var(--label2);}
 .foot-stat b{color:var(--label);font-weight:700;}
-.foot-add{border:none;background:var(--label);color:#fff;border-radius:var(--rs);padding:8px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;}
+.foot-add{border:none;background:var(--blue);color:#fff;border-radius:var(--rs);padding:8px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;}
 .foot-add:hover{opacity:.9;}
 
 /* ── RIGHT PANEL ── */
@@ -160,7 +160,7 @@ svg{display:block;flex-shrink:0;}
 .chips{display:flex;flex-wrap:wrap;gap:6px;}
 .chip{border:1px solid var(--sep2);border-radius:20px;padding:6px 13px;font-size:13px;font-weight:500;cursor:pointer;background:var(--card);color:var(--label2);transition:all .12s;}
 .chip:hover{border-color:var(--label3);}
-.chip.on{border-color:var(--label);background:var(--label);color:#fff;}
+.chip.on{border-color:var(--blue);background:var(--blue);color:#fff;}
 
 .photo-zone{border:1.5px dashed var(--sep2);border-radius:var(--rm);padding:18px;text-align:center;color:var(--label3);background:var(--fill2);cursor:pointer;transition:all .15s;position:relative;}
 .photo-zone:hover{border-color:var(--blue);color:var(--blue-txt);background:var(--blue-bg);}
@@ -229,7 +229,7 @@ svg{display:block;flex-shrink:0;}
 .alert.err{background:var(--red-bg);color:var(--red);}
 .alert.ok{background:var(--green-bg);color:var(--green-txt);}
 
-.primary-btn{width:100%;border:none;border-radius:var(--rs);padding:13px;font-size:14px;font-weight:600;background:var(--label);color:#fff;margin-top:18px;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.primary-btn{width:100%;border:none;border-radius:var(--rs);padding:13px;font-size:14px;font-weight:600;background:var(--blue);color:#fff;margin-top:18px;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:6px;}
 .primary-btn:hover{opacity:.88;}
 .primary-btn:disabled{background:var(--sep2);color:var(--label3);cursor:not-allowed;opacity:1;}
 .ghost-btn{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:11px;font-size:13px;font-weight:500;background:var(--card);color:var(--label);margin-top:8px;}
@@ -361,8 +361,8 @@ svg{display:block;flex-shrink:0;}
 .setting-btn-row button:hover{background:var(--fill);}
 .setting-btn-row button.danger{color:var(--red);}
 .setting-btn-row button.danger:hover{background:var(--red-bg);border-color:var(--red);}
-.setting-btn-row button.primary{background:var(--label);color:#fff;border-color:var(--label);}
-.setting-btn-row button.primary:hover{opacity:.88;background:var(--label);}
+.setting-btn-row button.primary{background:var(--blue);color:#fff;border-color:var(--blue);}
+.setting-btn-row button.primary:hover{opacity:.88;background:var(--blue);}
 
 /* ── PHOTO LIGHTBOX ── */
 .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;}
@@ -460,8 +460,8 @@ svg{display:block;flex-shrink:0;}
 .spark-bar.has{background:var(--blue);opacity:.85;}
 .spark-bar.today{background:var(--green);opacity:1;}
 .spark-bar:hover{opacity:1;}
-.spark-bar[data-day]:hover::after{content:attr(data-day)'일 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--label);color:#fff;font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:5;}
-.spark-bar[data-lbl]:hover::after{content:attr(data-lbl)' 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--label);color:#fff;font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:5;}
+.spark-bar[data-day]:hover::after{content:attr(data-day)'일 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#2d3033;color:var(--label);font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:5;}
+.spark-bar[data-lbl]:hover::after{content:attr(data-lbl)' 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#2d3033;color:var(--label);font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:5;}
 .spark-axis{display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--label3);}
 /* v1.45 — 고급 옵션 토글 */
 .adv-toggle-btn{background:none;border:none;color:var(--label3);font-size:12px;font-weight:500;cursor:pointer;padding:2px 0 8px;display:flex;align-items:center;gap:5px;transition:color .12s;letter-spacing:.1px;}
@@ -479,7 +479,7 @@ svg{display:block;flex-shrink:0;}
 
 .budget-empty-state{padding:48px 24px;text-align:center;color:var(--label3);font-size:13px;background:var(--fill2);border:1px dashed var(--sep2);border-radius:var(--rm);}
 .budget-empty-state svg{margin:0 auto 12px;color:var(--sep2);}
-.budget-empty-cta{margin-top:14px;background:var(--label);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;}
+.budget-empty-cta{margin-top:14px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;}
 .budget-empty-cta:hover{opacity:.88;}
 
 @media(max-width:780px){
@@ -489,7 +489,7 @@ svg{display:block;flex-shrink:0;}
 
 /* ── TOAST ── */
 .toast-container{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:calc(100% - 32px);max-width:420px;}
-.toast{background:var(--label);color:#fff;padding:12px 16px;border-radius:10px;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.18);pointer-events:auto;display:flex;align-items:center;gap:12px;opacity:0;transform:translateY(20px);transition:opacity .25s,transform .25s;max-width:100%;line-height:1.4;}
+.toast{background:#252729;color:var(--label);border:1px solid var(--sep2);padding:12px 16px;border-radius:10px;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.18);pointer-events:auto;display:flex;align-items:center;gap:12px;opacity:0;transform:translateY(20px);transition:opacity .25s,transform .25s;max-width:100%;line-height:1.4;}
 .toast.show{opacity:1;transform:translateY(0);}
 .toast-msg{flex:1;}
 .toast-action{background:transparent;color:#5BB0FF;border:none;font-size:14px;font-weight:700;cursor:pointer;padding:0 4px;font-family:inherit;}
@@ -546,6 +546,21 @@ svg{display:block;flex-shrink:0;}
 .dbx-guide{background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:12px 14px;margin-bottom:12px;font-size:12px;color:var(--label2);line-height:1.8;}
 .dbx-guide b{color:var(--label);}
 .dbx-guide code{background:var(--fill);border:1px solid var(--sep);border-radius:3px;padding:1px 4px;font-size:11px;font-family:ui-monospace,'SF Mono','Menlo',monospace;}
+
+/* ── DETAIL DUTCH PAY HEADER ── */
+.det-hd-card{background:var(--fill);border-radius:var(--rm);padding:16px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;}
+.det-cat-box{width:48px;height:48px;border-radius:12px;background:var(--blue-bg);border:1px solid rgba(98,100,238,.25);display:flex;align-items:center;justify-content:center;color:var(--blue-txt);flex-shrink:0;}
+.det-cat-box svg{width:24px;height:24px;}
+.det-hd-info{flex:1;min-width:0;}
+.det-hd-store{font-size:15px;font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.det-payer-badge{font-size:11px;font-weight:600;background:var(--blue-bg);color:var(--blue-txt);border-radius:20px;padding:2px 9px;flex-shrink:0;}
+.det-hd-people{font-size:12px;color:var(--label2);margin-top:3px;}
+.det-hd-amt{font-size:18px;font-weight:800;flex-shrink:0;letter-spacing:-.3px;font-variant-numeric:tabular-nums;}
+
+/* ── CATEGORY ICON IN CARD LIST ── */
+.r-cat-icon{width:30px;height:30px;border-radius:8px;background:var(--fill);display:flex;align-items:center;justify-content:center;color:var(--label3);flex-shrink:0;}
+.r-cat-icon svg{width:16px;height:16px;}
+.r-card.sel .r-cat-icon{background:var(--blue-bg);color:var(--blue-txt);}
 </style>
 </head>
 <body>
@@ -1077,7 +1092,8 @@ svg{display:block;flex-shrink:0;}
 // v1.68 — 상세내역 '프롬프트 복사' 버튼: 품목명|수량|단가|금액 형식으로 클립보드 복사.
 // v1.69 — 프롬프트 복사 헤더 행 제거.
 // v1.70 — 프롬프트 복사 금액 0원 → '증정품' 표기.
-const APP_VERSION='v1.70';
+// v1.71 — 다크 테마 적용, 카테고리 SVG 아이콘, Dutch Pay식 상세 헤더.
+const APP_VERSION='v1.71';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1212,6 +1228,25 @@ const CAT_RULES=[
   {cat:'축의금', kws:['축의','청첩','결혼식','웨딩','돌잔치','돌상','화환(축)']},
 ];
 
+
+// 카테고리 SVG 아이콘 (line-art, stroke-width 1.8)
+const CAT_SVGS={
+  '마트':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
+  '외식':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>`,
+  '술집':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14l-2 7H7L5 3z"/><path d="M7.5 10l-.5 9h10l-.5-9"/><line x1="9.5" y1="15" x2="14.5" y2="15"/></svg>`,
+  '카페':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>`,
+  '배달':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12H3v7h7v-2H5v-5z"/><path d="M21 5H11v7h10V5z"/><path d="M8 19a2 2 0 1 0 4 0 2 2 0 0 0-4 0z"/><path d="M18 19a2 2 0 1 0 4 0 2 2 0 0 0-4 0z"/><path d="M11 12l4 7h6"/></svg>`,
+  '교통':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+  '쇼핑':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
+  '병원·약국':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`,
+  '문화':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>`,
+  '경조사':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>`,
+  '부의금':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/></svg>`,
+  '축의금':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>`,
+};
+function getCatSvg(cat){
+  return CAT_SVGS[cat]||`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+}
 
 // 사용자 학습 사전 — 가게명 → 카테고리
 let storeCatMap={};  // { "하나로마트 청담점": "마트", ... }
@@ -1703,10 +1738,10 @@ function getFiltered(){
 function _cardHtml(r){
   const sel=(r.id===selectedId)?' sel':'';
   const meta=[fmtDateKor(r.date)];
-  if(r.category)meta.push(escapeHtml(r.category));
   if(r.paidBy)meta.push(escapeHtml(r.paidBy));
-  if((r.participants||[]).length>0)meta.push(`👥 ${r.participants.length}명`);
+  if((r.participants||[]).length>0)meta.push(`${r.participants.length}명`);
   return `<div class="r-card${sel}" data-id="${r.id}">
+    <div class="r-cat-icon">${getCatSvg(r.category)}</div>
     <div class="r-card-info">
       <div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div>
       <div class="r-card-meta">${meta.join(' · ')}</div>
@@ -3866,9 +3901,19 @@ async function renderDetail(){
     :`<div class="mob-photo-empty-strip"><button id="addPhotoBtn">📷 영수증 사진 추가</button></div>`)
     :'';
 
+  const _detPax=(r.participants||[]).join(', ');
+  const _detPaidBy=r.paidBy?`${escapeHtml(r.paidBy)} 결제`:'';
   body.innerHTML=`
     <input type="file" id="detailPhotoFile" accept="image/*" style="display:none;"/>
     ${mobPhotoHtml}
+    <div class="det-hd-card">
+      <div class="det-cat-box">${getCatSvg(r.category)}</div>
+      <div class="det-hd-info">
+        <div class="det-hd-store">${escapeHtml(r.store||'(매장명 없음)')}${_detPaidBy?`<span class="det-payer-badge">${_detPaidBy}</span>`:''}</div>
+        ${_detPax?`<div class="det-hd-people">${escapeHtml(_detPax)}</div>`:''}
+      </div>
+      <div class="det-hd-amt">${fmtMoney(r.total)}원</div>
+    </div>
     <div class="section-hd">상세내역 <button class="ghost-mini" id="copyPromptBtn">프롬프트 복사</button><button class="ghost-mini" id="addItemBtn">+ 추가</button></div>
     <table class="items-table" id="itemsTable">
       <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th>비고</th><th></th></tr></thead>
