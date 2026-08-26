@@ -419,28 +419,22 @@ svg{display:block;flex-shrink:0;}
 .items-table th:nth-child(2){width:52px;text-align:right;}
 .items-table th:nth-child(3){width:82px;text-align:right;}
 .items-table th:nth-child(4){width:82px;text-align:right;}
-.items-table th:nth-child(5){text-align:left;}
-.items-table th:nth-child(6){width:28px;}
+.items-table th:nth-child(5){width:28px;}
 .items-table td{padding:9px 6px;border-bottom:1px solid var(--sep);font-size:13px;vertical-align:top;}
 .items-table td:nth-child(2),.items-table td:nth-child(3),.items-table td:nth-child(4){text-align:right;white-space:nowrap;}
-.items-table td:nth-child(6){text-align:right;white-space:nowrap;}
+.items-table td:nth-child(5){text-align:right;white-space:nowrap;}
 .items-table tr.total-row td{font-weight:700;background:var(--fill2);padding:11px 6px;border-bottom:none;}
 .items-table .item-name-inp{width:100%;box-sizing:border-box;border:1px solid var(--sep2);border-radius:5px;padding:5px 7px;font-size:13px;background:var(--card);outline:none;}
 .items-table .item-name-inp:focus{border-color:var(--blue);}
 .items-table .item-num-inp{width:100%;box-sizing:border-box;border:1px solid var(--sep2);border-radius:5px;padding:5px 7px;font-size:13px;background:var(--card);outline:none;text-align:right;}
 .items-table .item-num-inp:focus{border-color:var(--blue);}
-.items-table .item-note-inp{width:100%;min-width:60px;box-sizing:border-box;border:1px solid var(--sep2);border-radius:5px;padding:5px 7px;font-size:12px;background:var(--card);outline:none;color:var(--label2);}
-.items-table .item-note-inp:focus{border-color:var(--blue);color:var(--label);}
-.items-table .item-note-inp::placeholder{color:var(--label3);}
 @media(max-width:780px){
   .items-table th:nth-child(2){width:40px;}
   .items-table th:nth-child(3){width:62px;}
   .items-table th:nth-child(4){width:62px;}
-  .items-table th:nth-child(5){width:70px;}
-  .items-table th:nth-child(6){width:22px;}
+  .items-table th:nth-child(5){width:22px;}
   .items-table .item-num-inp{font-size:11px;padding:4px 5px;}
   .items-table .item-num-inp#dTotalAmt{font-size:11px!important;}
-  .items-table .item-note-inp{font-size:11px;padding:4px 5px;}
 }
 .items-table .item-del{border:none;background:transparent;color:var(--label3);font-size:16px;padding:0 4px;line-height:1;}
 .items-table .item-del:hover{color:var(--red);}
@@ -700,18 +694,20 @@ svg{display:block;flex-shrink:0;}
 .detail-items-tools{padding:8px 14px;display:flex;align-items:center;justify-content:flex-end;gap:6px;border-bottom:1px solid var(--sep);}
 .detail-items-tools .ghost-mini{border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;}
 .detail-items-tools .ghost-mini:hover{background:var(--fill2);color:var(--label);}
-.detail-items-panel .items-table{margin:0;background:var(--fill);}
+.detail-items-panel .items-table{margin:0;background:var(--fill);--items-left:14px;}
 .detail-items-panel .items-table th{padding:7px 10px;background:transparent;color:var(--label3);border-bottom:1px solid var(--sep2);}
 .detail-items-panel .items-table td{padding:7px 10px;background:transparent;border-bottom:1px solid var(--sep);}
+.detail-items-panel .items-table th:first-child,.detail-items-panel .items-table td:first-child{padding-left:var(--items-left);}
 .detail-items-panel .items-table tbody tr:last-child td{border-bottom:none;}
 .detail-items-panel .items-table .item-name-inp,
-.detail-items-panel .items-table .item-num-inp,
-.detail-items-panel .items-table .item-note-inp{border:1px solid transparent;background:transparent;border-radius:5px;padding:5px 4px;}
+.detail-items-panel .items-table .item-num-inp{border:1px solid transparent;background:transparent;border-radius:5px;padding:5px 4px;}
+.detail-items-panel .items-table .item-name-inp{padding-left:0;}
 .detail-items-panel .items-table input:hover{background:var(--fill2);}
 .detail-items-panel .items-table input:focus{border-color:var(--blue);background:var(--card);}
 .detail-items-panel .items-table tr.total-row td{background:transparent;border-top:2px solid var(--sep2);border-bottom:none;padding-top:9px;padding-bottom:9px;}
 .detail-items-panel .alert{margin:10px 14px 14px!important;}
 @media(max-width:780px){
+  .detail-items-panel .items-table{--items-left:6px;}
   .det-hd-card{padding:12px 14px;gap:10px;}
   .det-cat-box{width:42px;height:42px;}
   .det-hd-amt{font-size:16px;}
@@ -720,17 +716,10 @@ svg{display:block;flex-shrink:0;}
   .detail-items-panel .items-table th:nth-child(2){width:34px;}
   .detail-items-panel .items-table th:nth-child(3){width:58px;}
   .detail-items-panel .items-table th:nth-child(4){width:62px;}
-  .detail-items-panel .items-table th:nth-child(5),
-  .detail-items-panel .items-table td:nth-child(5){display:none;}
-  .detail-items-panel .items-table th:nth-child(6){width:20px;}
+  .detail-items-panel .items-table th:nth-child(5){width:20px;}
   .detail-items-panel .items-table .item-name-inp,
   .detail-items-panel .items-table .item-num-inp{padding:4px 2px;font-size:11px;}
 }
-
-/* ── CATEGORY ICON IN CARD LIST ── */
-.r-cat-icon{width:30px;height:30px;border-radius:8px;background:var(--fill);display:flex;align-items:center;justify-content:center;color:var(--label3);flex-shrink:0;}
-.r-cat-icon svg{width:16px;height:16px;}
-.r-card.sel .r-cat-icon{background:var(--blue-bg);color:var(--blue-txt);}
 
 /* ── v1.78 DESIGN POLISH ── */
 .icon-nav{padding-top:22px;padding-bottom:22px;}
@@ -1373,7 +1362,8 @@ svg{display:block;flex-shrink:0;}
 // v1.83 — 붙여넣기·미리보기·결제수단 구간의 수직 간격 통일.
 // v1.84 — 15개 SVG 카테고리와 사용자 지정 자동분류 키워드 적용.
 // v1.85 — 상세 정보 SVG 카테고리 선택기와 정보·사진 동일 높이 적용.
-const APP_VERSION='v1.85';
+// v1.86 — 목록 아이콘 제거, 상세내역 첫 열 정렬 및 비고 열 정리.
+const APP_VERSION='v1.86';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const _themeMedia=window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -2062,7 +2052,6 @@ function _cardHtml(r){
   if(r.paidBy)meta.push(escapeHtml(r.paidBy));
   if((r.participants||[]).length>0)meta.push(`${r.participants.length}명`);
   return `<div class="r-card${sel}" data-id="${r.id}">
-    <div class="r-cat-icon">${getCatSvg(r.category)}</div>
     <div class="r-card-info">
       <div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div>
       <div class="r-card-meta">${meta.join(' · ')}</div>
@@ -4304,17 +4293,16 @@ async function renderDetail(){
           <button class="ghost-mini" id="addItemBtn">+ 추가</button>
         </div>
         <table class="items-table" id="itemsTable">
-          <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th>비고</th><th></th></tr></thead>
+          <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
           <tbody>
             ${(r.items||[]).map((it,idx)=>{const _ca=(it.quantity||0)!==0&&(it.unitPrice||0)!==0?Math.round((it.quantity||0)*(it.unitPrice||0)):null;const _m=_ca!==null&&_ca!==(it.amount||0);return`<tr data-idx="${idx}">
               <td><input class="item-name-inp" data-f="name" value="${escapeHtml(it.name)}"/></td>
               <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" maxlength="3" value="${it.quantity||0}"/></td>
               <td><input class="item-num-inp" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/></td>
               <td><input class="item-num-inp" data-f="amount" type="text" inputmode="numeric" value="${_fmtN(it.amount||0)}" style="${(it.amount||0)<0?'color:var(--red);':''}" ${_m?'data-manual="1"':''}></td>
-              <td><input class="item-note-inp" data-f="note" type="text" placeholder="비고" value="${escapeHtml(it.note||'')}"/></td>
               <td style="text-align:right;"><button class="item-del" data-del="${idx}" title="삭제">×</button></td>
             </tr>`;}).join('')}
-            <tr class="total-row"><td>합계</td><td></td><td colspan="2" class="detail-total-cell"><input id="dTotalAmt" class="item-num-inp" type="text" inputmode="numeric" value="${_fmtN(r.total||0)}" style="font-weight:700;font-size:14px;text-align:right;${(r.total||0)<0?'color:var(--red);':''}"/></td><td></td><td></td></tr>
+            <tr class="total-row"><td>합계</td><td></td><td colspan="2" class="detail-total-cell"><input id="dTotalAmt" class="item-num-inp" type="text" inputmode="numeric" value="${_fmtN(r.total||0)}" style="font-weight:700;font-size:14px;text-align:right;${(r.total||0)<0?'color:var(--red);':''}"/></td><td></td></tr>
           </tbody>
         </table>
         ${mismatch?`<div class="alert warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><div>상세내역 합계 ${fmtMoney(sum)}원과 총액 ${fmtMoney(r.total)}원이 ${fmtMoney(Math.abs(sum-r.total))}원 달라요.</div></div>`:''}
@@ -4705,9 +4693,8 @@ function _reRenderDetailItems(r){
     <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" maxlength="3" value="${it.quantity||0}"/></td>
     <td><input class="item-num-inp" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/></td>
     <td><input class="item-num-inp" data-f="amount" type="text" inputmode="numeric" value="${_fmtN(it.amount||0)}" style="${(it.amount||0)<0?'color:var(--red);':''}" ${_m?'data-manual="1"':''}></td>
-    <td><input class="item-note-inp" data-f="note" type="text" placeholder="비고" value="${escapeHtml(it.note||'')}"/></td>
     <td style="text-align:right;"><button class="item-del" data-del="${idx}" title="삭제">×</button></td>
-  </tr>`;}).join('')+`<tr class="total-row"><td>총액</td><td></td><td colspan="2" class="detail-total-cell"><input id="dTotalAmt" class="item-num-inp" type="text" inputmode="numeric" value="${_fmtN(sum)}" style="font-weight:700;font-size:14px;text-align:right;${sum<0?'color:var(--red);':''}"/></td><td></td><td></td></tr>`;
+  </tr>`;}).join('')+`<tr class="total-row"><td>합계</td><td></td><td colspan="2" class="detail-total-cell"><input id="dTotalAmt" class="item-num-inp" type="text" inputmode="numeric" value="${_fmtN(sum)}" style="font-weight:700;font-size:14px;text-align:right;${sum<0?'color:var(--red);':''}"/></td><td></td></tr>`;
   _bindDetailItemTableEvents(r);
 }
 
