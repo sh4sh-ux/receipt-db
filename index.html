@@ -582,6 +582,9 @@ svg{display:block;flex-shrink:0;}
 
     <!-- ── ICON NAV ── -->
     <nav class="icon-nav" id="iconNav">
+      <button class="nav-btn" id="navLedgerBtn" title="가계부">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </button>
       <button class="nav-btn on tab" data-tab="list" data-nav="list" title="내역">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h12a2 2 0 0 1 2 2v15l-3-2-3 2-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2z"/><line x1="8" y1="9" x2="14" y2="9"/><line x1="8" y1="13" x2="12" y2="13"/></svg>
       </button>
@@ -602,7 +605,7 @@ svg{display:block;flex-shrink:0;}
           <span class="app-version" id="appVersion" title="앱 버전">v1.08</span>
         </div>
         <div class="side-title-row">
-          <div class="side-title">영수증</div>
+          <div class="side-title app-title">영수증</div>
           <button class="foot-add" id="footAdd">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             추가
@@ -1122,7 +1125,8 @@ svg{display:block;flex-shrink:0;}
 // v1.70 — 프롬프트 복사 금액 0원 → '증정품' 표기.
 // v1.71 — 다크 테마 적용, 카테고리 SVG 아이콘, Dutch Pay식 상세 헤더.
 // v1.72 — 아이콘 네브 컬럼, 사진 썸네일 오른쪽 배치.
-const APP_VERSION='v1.72';
+// v1.73 — 가계부 아이콘 추가, app-title null 에러 수정.
+const APP_VERSION='v1.73';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1875,6 +1879,15 @@ function switchTab(name){
 }
 document.querySelectorAll('.tab').forEach(t=>{
   t.addEventListener('click',()=>switchTab(t.dataset.tab));
+});
+// 가계부(통계) 버튼 — 내역 탭으로 이동 후 선택 해제 → 가계부 뷰
+const _navLedgerBtn=document.getElementById('navLedgerBtn');
+if(_navLedgerBtn)_navLedgerBtn.addEventListener('click',()=>{
+  switchTab('list');
+  selectedId=null;_monthCatFilter=null;_ledgerTimeFilter={type:'month'};
+  renderSide();renderDetail();
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+  _navLedgerBtn.classList.add('on');
 });
 document.getElementById('footAdd').addEventListener('click',()=>switchTab('input'));
 
