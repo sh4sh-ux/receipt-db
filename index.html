@@ -45,10 +45,20 @@ svg{display:block;flex-shrink:0;}
 
 /* ── SHELL ── */
 .shell{max-width:1100px;margin:0 auto;padding:32px 24px 80px;}
-.app{background:var(--card);border-radius:var(--r);border:1px solid var(--sep);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04),0 8px 32px rgba(0,0,0,.06);min-height:700px;display:grid;grid-template-columns:320px minmax(0,1fr);}
+.app{background:var(--card);border-radius:var(--r);border:1px solid var(--sep);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.3),0 12px 40px rgba(0,0,0,.4);min-height:700px;display:grid;grid-template-columns:56px 300px minmax(0,1fr);}
+
+/* ── ICON NAV ── */
+.icon-nav{background:var(--bg);border-right:1px solid var(--sep);display:flex;flex-direction:column;align-items:center;padding:18px 0;gap:4px;}
+.nav-btn{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--label3);cursor:pointer;transition:all .15s;border:none;background:transparent;flex-shrink:0;}
+.nav-btn:hover{background:var(--fill2);color:var(--label2);}
+.nav-btn.on{background:var(--blue-bg);color:var(--blue-txt);}
+.nav-btn svg{width:20px;height:20px;}
+.nav-spacer{flex:1;}
 
 /* ── LEFT SIDEBAR ── */
 .side{border-right:1px solid var(--sep);background:var(--left-bg);display:flex;flex-direction:column;min-height:700px;position:sticky;top:0;max-height:100vh;overflow:hidden;}
+.side-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.side-title{font-size:20px;font-weight:700;letter-spacing:-.3px;}
 .side-top{padding:26px var(--pad-x) 18px;}
 .app-eye-row{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
 .app-eye{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.5px;text-transform:uppercase;}
@@ -247,14 +257,16 @@ svg{display:block;flex-shrink:0;}
 @media(max-width:900px){.detail-grid{grid-template-columns:1fr;}}
 
 /* ── 상세 화면 재구성 레이아웃 ── */
-.detail-two-col{display:grid;grid-template-columns:1fr 1.15fr;gap:20px;margin:14px 0 18px;align-items:start;}
+.detail-two-col{display:flex;gap:20px;margin:14px 0 18px;align-items:flex-start;}
+.detail-two-col > .detail-kv-stack-wrap{flex:1;min-width:0;}
 .detail-kv-stack{display:flex;flex-direction:column;gap:8px;}
-/* 두 컬럼 안에서 photo의 bottom margin 제거 */
-.detail-two-col .detail-photo{margin-bottom:0;}
-/* photo empty 상태 — 컬럼 안에서 패딩 축소 */
-.detail-two-col .detail-photo-empty{padding:28px 16px;}
+.det-photo-thumb{width:120px;flex-shrink:0;border-radius:var(--rm);overflow:hidden;border:1px solid var(--sep);background:var(--fill);}
+.det-photo-thumb img{width:100%;height:170px;object-fit:cover;display:block;cursor:zoom-in;}
+.det-photo-thumb-empty{width:120px;height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--label3);font-size:11px;cursor:pointer;border-radius:var(--rm);border:1px dashed var(--sep2);background:var(--fill);}
+.det-photo-thumb-empty svg{color:var(--sep2);}
 @media(max-width:780px){
-  .detail-two-col{grid-template-columns:1fr;}
+  .detail-two-col{flex-direction:column;}
+  .det-photo-thumb,.det-photo-thumb-empty{width:100%;height:auto;}
 }
 
 /* ── 모바일 상단 컴팩트 사진 띠 ── */
@@ -568,6 +580,20 @@ svg{display:block;flex-shrink:0;}
 <div class="shell">
   <div class="app">
 
+    <!-- ── ICON NAV ── -->
+    <nav class="icon-nav" id="iconNav">
+      <button class="nav-btn on tab" data-tab="list" data-nav="list" title="내역">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h12a2 2 0 0 1 2 2v15l-3-2-3 2-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2z"/><line x1="8" y1="9" x2="14" y2="9"/><line x1="8" y1="13" x2="12" y2="13"/></svg>
+      </button>
+      <button class="nav-btn tab" data-tab="input" data-nav="input" title="추가">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <div class="nav-spacer"></div>
+      <button class="nav-btn tab" data-tab="settings" data-nav="settings" title="설정">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </nav>
+
     <!-- ── LEFT SIDEBAR ── -->
     <aside class="side">
       <div class="side-top">
@@ -575,8 +601,14 @@ svg{display:block;flex-shrink:0;}
           <span class="app-eye">Receipt DB</span>
           <span class="app-version" id="appVersion" title="앱 버전">v1.08</span>
         </div>
-        <div class="app-title">영수증 보관함</div>
-        <div class="tab-row">
+        <div class="side-title-row">
+          <div class="side-title">영수증</div>
+          <button class="foot-add" id="footAdd">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            추가
+          </button>
+        </div>
+        <div class="tab-row" style="display:none;">
           <button class="tab" data-tab="input">추가</button>
           <button class="tab on" data-tab="list">내역</button>
           <button class="tab" data-tab="settings">설정</button>
@@ -609,10 +641,6 @@ svg{display:block;flex-shrink:0;}
           <div class="foot-stat" id="footStat">0건</div>
           <span id="dbxSyncBadge" style="display:none;font-size:10px;color:var(--green-txt);font-weight:500;margin-top:1px;"></span>
         </div>
-        <button class="foot-add" id="footAdd">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          추가
-        </button>
       </div>
     </aside>
 
@@ -1093,7 +1121,8 @@ svg{display:block;flex-shrink:0;}
 // v1.69 — 프롬프트 복사 헤더 행 제거.
 // v1.70 — 프롬프트 복사 금액 0원 → '증정품' 표기.
 // v1.71 — 다크 테마 적용, 카테고리 SVG 아이콘, Dutch Pay식 상세 헤더.
-const APP_VERSION='v1.71';
+// v1.72 — 아이콘 네브 컬럼, 사진 썸네일 오른쪽 배치.
+const APP_VERSION='v1.72';
 
 // ════════════════════════════════════════════════════════════════
 // TOAST
@@ -1834,6 +1863,7 @@ function updateCatList(){
 // ════════════════════════════════════════════════════════════════
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===name));
+  document.querySelectorAll('.nav-btn[data-nav]').forEach(b=>b.classList.toggle('on',b.dataset.nav===name));
   document.getElementById('viewList').classList.toggle('on',name==='list');
   document.getElementById('viewInput').classList.toggle('on',name==='input');
   document.getElementById('viewSettings').classList.toggle('on',name==='settings');
@@ -3951,11 +3981,13 @@ async function renderDetail(){
         </div>
       </div>`
     :`<div class="detail-two-col">
-        <div>${photoHtml}</div>
-        <div>
+        <div class="detail-kv-stack-wrap">
           <div class="section-hd" style="margin-top:0;">정보</div>
           ${infoKvHtml}
         </div>
+        ${_detailPhotoUrl
+          ?`<div class="det-photo-thumb" id="detailPhoto"><img src="${_detailPhotoUrl}" alt="영수증" id="detailPhotoImg"/><div style="display:flex;gap:4px;padding:5px 6px;"><button id="addPhotoBtn" class="ghost-mini" style="flex:1;font-size:11px;">교체</button><button id="delPhotoBtn" class="ghost-mini" style="font-size:11px;color:var(--red);">삭제</button></div></div>`
+          :`<div class="det-photo-thumb-empty" id="addPhotoBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg><div>${r.imageId?'불러오기 실패':'사진 추가'}</div></div>`}
       </div>
       <div class="section-hd detail-memo-desktop">메모·태그</div>
       ${memoFieldsHtml}`}
