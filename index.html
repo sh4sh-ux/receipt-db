@@ -701,7 +701,8 @@ svg{display:block;flex-shrink:0;}
 
 /* ── DETAIL DUTCH PAY HEADER ── */
 .detail-expense-block{margin-bottom:18px;border:1px solid var(--sep);border-radius:var(--rm);overflow:hidden;background:var(--card);}
-.det-hd-card{background:var(--card);padding:14px 18px;display:grid;grid-template-columns:minmax(0,1fr) auto 30px;align-items:center;column-gap:14px;row-gap:5px;border-bottom:1px solid var(--sep);}
+.det-hd-card{background:var(--card);padding:14px 18px;display:grid;grid-template-columns:minmax(0,1fr) auto 30px;align-items:center;column-gap:14px;row-gap:5px;border-bottom:1px solid var(--sep);cursor:pointer;transition:background .15s;}
+.det-hd-card:hover{background:var(--fill2);}
 .det-cat-box{width:48px;height:48px;border-radius:12px;background:var(--blue-bg);border:1px solid rgba(98,100,238,.25);display:flex;align-items:center;justify-content:center;color:var(--blue-txt);flex-shrink:0;}
 .det-cat-box svg{width:24px;height:24px;}
 .det-hd-info{min-width:0;grid-column:1;}
@@ -718,7 +719,7 @@ svg{display:block;flex-shrink:0;}
 .det-expense-toggle[aria-expanded="false"] svg{transform:rotate(-90deg);}
 .detail-items-panel{background:var(--fill);}
 .detail-items-panel.closed{display:none;}
-.detail-items-tools{padding:8px 14px;display:flex;align-items:center;justify-content:flex-end;gap:6px;border-bottom:1px solid var(--sep);}
+.detail-items-tools{padding:8px 14px;display:flex;align-items:center;justify-content:flex-end;gap:6px;}
 .detail-items-tools .ghost-mini{border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;}
 .detail-items-tools .ghost-mini:hover{background:var(--fill2);color:var(--label);}
 .detail-items-panel .items-table{width:calc(100% - 28px);margin:0 14px;background:var(--fill);--items-left:0;}
@@ -800,7 +801,8 @@ svg{display:block;flex-shrink:0;}
 .field-inp:focus,.field-sel:focus,.field-ta:focus,.kv:focus-within{box-shadow:0 0 0 3px var(--blue-bg);}
 .detail-expense-block,.detail-info-card,.setting-card,.sum-card{border-radius:14px;box-shadow:var(--soft-shadow);}
 .detail-expense-block{margin-bottom:20px;}
-.det-hd-card{min-height:76px;}
+.det-hd-card{min-height:98px;box-sizing:border-box;grid-template-rows:auto 20px;}
+.det-hd-people.is-empty{visibility:hidden;}
 .det-cat-box{border-radius:13px;}
 .detail-info-card{padding:20px;gap:28px;}
 .setting-card{padding:18px 20px;margin-bottom:14px;}
@@ -832,6 +834,26 @@ svg{display:block;flex-shrink:0;}
   .main-body{padding:18px 18px 28px;}
   .detail-info-card{padding:15px;gap:16px;}
   .r-card{min-height:58px;}
+}
+
+/* 모바일도 상·하단 틀은 고정하고 각 화면의 내용만 독립 스크롤 */
+@media(max-width:780px){
+  html,body{height:100%;overflow:hidden;}
+  .shell{height:100dvh;min-height:100dvh;box-sizing:border-box;overflow:hidden;padding-bottom:calc(68px + env(safe-area-inset-bottom,0px));}
+  .app{height:calc(100dvh - 68px - env(safe-area-inset-bottom,0px));min-height:0;overflow:hidden;}
+  .side,.main{height:100%;min-height:0;overflow:hidden;}
+  .app.mobile-stats-view .main,
+  .app.mobile-content-view .main,
+  .app.mobile-detail-view .main{display:flex;flex-direction:column;}
+  .side-top,.month-nav,.side-search,.main-top{flex:0 0 auto;}
+  .side-list{flex:1;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;padding-bottom:22px;}
+  .side-foot{display:none;}
+  .view.on{height:100%;min-height:0;display:flex;flex-direction:column;}
+  .main-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+  .side-top{height:auto;min-height:108px;box-sizing:border-box;}
+  .main-top{min-height:108px;box-sizing:border-box;}
+  .app-eye,.main-eye{font-size:11px;letter-spacing:.9px;}
+  .app-title,.main-title{line-height:1.18;}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
@@ -1443,7 +1465,9 @@ svg{display:block;flex-shrink:0;}
 //         결제자·참석자 순서 및 직접 입력 연필 SVG 개선, 카테고리 아이콘 크기 통일.
 // v1.95 — 모바일 참석자 5명 줄바꿈·더치페이 아이콘 정렬, 고급 옵션 토글 제거,
 //         상세 사진 드롭 수정, 죽은 코드 정리, Dropbox 오류 처리와 GPT 검증 보강.
-const APP_VERSION='v1.95';
+// v1.96 — 상세 요약 카드 전체 클릭·펼침 상태 보존, 카드 높이 안정화, 모바일 독립 스크롤,
+//         편집 중 자동 동기화 재렌더 방지, 교체 이미지 Dropbox 강제 덮어쓰기.
+const APP_VERSION='v1.96';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -1594,7 +1618,7 @@ async function _ensureImgUrl(imageId){
       _imgDownloading.add(imageId);
       _dbxDownloadImage(imageId).then(url=>{
         _imgDownloading.delete(imageId);
-        if(url)renderDetail();  // 완료 후 화면 갱신
+        if(url&&!_isDetailEditing())renderDetail();  // 편집 중인 입력·포커스는 보존
       });
     }
     return null;
@@ -4433,20 +4457,21 @@ async function renderDetail(){
   const _detPeople=(r.participants||[]).map(v=>(v||'').trim()).filter(Boolean);
   const _detPaxHtml=_detPeople.map((name,index)=>`<span class="det-hd-person">${escapeHtml(name)}</span>${index===4&&_detPeople.length>5?'<span class="det-hd-person-break" aria-hidden="true"></span>':''}`).join('');
   const _detPaidBy=r.paidBy?`${escapeHtml(r.paidBy)} 결제`:'';
+  const _detailItemsExpanded=_expandedDetailReceiptId===r.id;
   body.innerHTML=`
     <input type="file" id="detailPhotoFile" accept="image/*" style="display:none;"/>
     <div class="detail-expense-block" aria-label="상세내역">
-      <div class="det-hd-card">
+      <div class="det-hd-card" id="detailItemsHeader">
         <div class="det-hd-info">
           <div class="det-hd-store">${escapeHtml(r.store||'(매장명 없음)')}${_detPaidBy?`<span class="det-payer-badge">${_detPaidBy}</span>`:''}</div>
         </div>
         <div class="det-hd-amt">${fmtMoney(r.total)}원</div>
-        <button class="det-expense-toggle" id="detailItemsToggle" type="button" aria-expanded="false" aria-controls="detailItemsPanel" aria-label="품목 내역 펼치기">
+        <button class="det-expense-toggle" id="detailItemsToggle" type="button" aria-expanded="${_detailItemsExpanded}" aria-controls="detailItemsPanel" aria-label="품목 내역 ${_detailItemsExpanded?'접기':'펼치기'}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
         </button>
-        ${_detPaxHtml?`<div class="det-hd-people">${_detPaxHtml}</div>`:''}
+        <div class="det-hd-people${_detPaxHtml?'':' is-empty'}">${_detPaxHtml||'참석자 없음'}</div>
       </div>
-      <div class="detail-items-panel closed" id="detailItemsPanel">
+      <div class="detail-items-panel${_detailItemsExpanded?'':' closed'}" id="detailItemsPanel">
         <div class="detail-items-tools">
           <button class="ghost-mini" id="copyPromptBtn">프롬프트 복사</button>
           <button class="ghost-mini" id="addItemBtn">+ 추가</button>
@@ -4496,14 +4521,18 @@ async function renderDetail(){
 
   // Dutch Pay 지출 상세처럼 요약 행에서 품목 표를 바로 접고 펼친다.
   const detailItemsToggle=document.getElementById('detailItemsToggle');
+  const detailItemsHeader=document.getElementById('detailItemsHeader');
   const detailItemsPanel=document.getElementById('detailItemsPanel');
   if(detailItemsToggle&&detailItemsPanel){
-    detailItemsToggle.addEventListener('click',()=>{
+    const toggleDetailItems=()=>{
       const expanded=detailItemsToggle.getAttribute('aria-expanded')==='true';
+      _expandedDetailReceiptId=expanded?null:r.id;
       detailItemsToggle.setAttribute('aria-expanded',String(!expanded));
       detailItemsToggle.setAttribute('aria-label',expanded?'품목 내역 펼치기':'품목 내역 접기');
       detailItemsPanel.classList.toggle('closed',expanded);
-    });
+    };
+    detailItemsToggle.addEventListener('click',e=>{e.stopPropagation();toggleDetailItems();});
+    detailItemsHeader?.addEventListener('click',toggleDetailItems);
   }
 
   // 모바일 접기/펼치기 바인딩
@@ -4540,7 +4569,7 @@ async function renderDetail(){
       if(!f)return;
       const imgId='img_'+r.id.slice(4);
       await dbPut('images',{id:imgId,blob:f,mime:f.type||'image/jpeg'});
-      _dbxUploadImage(imgId);
+      await _dbxUploadImage(imgId,{force:true});
       r.imageId=imgId;r.updatedAt=nowISO();
       await dbPut('receipts',r);
       _revokeImgUrl(imgId);
@@ -4648,7 +4677,7 @@ async function renderDetail(){
       if(!f||!f.type.startsWith('image/'))return;
       const imgId='img_'+r.id.slice(4);
       await dbPut('images',{id:imgId,blob:f,mime:f.type||'image/jpeg'});
-      _dbxUploadImage(imgId);
+      await _dbxUploadImage(imgId,{force:true});
       r.imageId=imgId;r.updatedAt=nowISO();
       await dbPut('receipts',r);
       _revokeImgUrl(imgId);
@@ -4735,6 +4764,13 @@ function persistItemChange(r){ _detailSetDirty(true); _liveUpdateDetailTotal(); 
 
 let _detailOrigItems=null;
 let _detailDirty=false;
+let _expandedDetailReceiptId=null;
+function _isDetailEditing(){
+  if(_detailDirty)return true;
+  const body=document.getElementById('detailBody');
+  const active=document.activeElement;
+  return !!(body&&active&&body.contains(active)&&/^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName));
+}
 function _detailSetDirty(v){
   _detailDirty=v;
   const bar=document.getElementById('detailSaveBar');
@@ -5476,7 +5512,7 @@ async function dbxSyncDownload(){
     const changed=await _dbxMerge(data);
     const imgN=await _dbxImportSyncImages(data.images);
     if(imgN>0){
-      renderDetail();
+      if(!_isDetailEditing())renderDetail();
       if(!changed)toast(`☁ 사진 ${imgN}장 동기화됨`,{duration:2200});
     }
     // ── inbox.json (LaunchAgent가 쓰는 파일, 앱은 읽기만) ──
@@ -5493,7 +5529,7 @@ async function dbxSyncDownload(){
         if(inbox&&inbox.app==='receipt-db'&&Array.isArray(inbox.receipts)&&inbox.receipts.length){
           const inboxChanged=await _dbxMerge(inbox);
           const inboxImgN=await _dbxImportSyncImages(inbox.images);
-          if(inboxChanged>0||inboxImgN>0)renderDetail();
+          if((inboxChanged>0||inboxImgN>0)&&!_isDetailEditing())renderDetail();
           if(inboxChanged>0)toast(`☁ inbox ${inboxChanged}건 추가됨`,{duration:2500});
         }
       }
@@ -5586,7 +5622,7 @@ async function _dbxMerge(remoteData){
 
   if(changed>0){
     await loadAll();
-    renderDetail();
+    if(!_isDetailEditing())renderDetail();
     toast(`☁ ${changed}건 동기화됨`,{duration:2200});
   }
   return changed;
@@ -5739,10 +5775,10 @@ async function _dbxEnsureImagesFolder(){
 }
 
 // IndexedDB 이미지 → Dropbox images/{imgId}.jpg 업로드
-async function _dbxUploadImage(imgId){
+async function _dbxUploadImage(imgId,{force=false}={}){
   if(!dbxIsConnected()||!imgId)return false;
   const uploaded=new Set(JSON.parse(_ls(_K.UPLOADED_IMGS)||'[]'));
-  if(uploaded.has(imgId))return true;
+  if(uploaded.has(imgId)&&!force)return true;
   try{
     const rec=await dbGet('images',imgId);
     if(!rec)return false;
