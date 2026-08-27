@@ -1473,7 +1473,7 @@ svg{display:block;flex-shrink:0;}
 // v1.97 — 참고 이미지의 실루엣을 반영한 SVG 카테고리 아이콘과 4×4 선택 배열.
 // v1.98 — 카테고리 실루엣 정교화, 모바일 선택창 8×2 압축 배열.
 // v1.99 — 사진 교체마다 새 이미지 ID를 발급해 로컬·Dropbox 캐시 충돌 방지.
-const APP_VERSION='v2.00';
+const APP_VERSION='v2.01';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -1724,7 +1724,7 @@ const CAT_SVGS={
   '영화':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>`,
   '숙박':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M2 18h20"/></svg>`,
   '골프':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V3l10 4-10 4"/><ellipse cx="13" cy="21" rx="7" ry="2"/></svg>`,
-  '스파':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2S4 10 4 16a8 8 0 0 0 16 0c0-6-8-14-8-14z"/></svg>`,
+  '스파':`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><text x="12" y="13" text-anchor="middle" dominant-baseline="middle" font-size="28" fill="currentColor">♨</text></svg>`,
   '운동':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h3v2h12V9h3v6h-3v-2H6v2H3V9Z"/><path d="M6 7h3v10H6zM15 7h3v10h-3z"/></svg>`,
   '여행':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c.9 0 1.4 1 1.4 2.1v4.2l6.6 4v2l-6.6-2v4.1l2.6 2V20L12 18.8 8 20v-1.1l2.6-2v-4.1l-6.6 2v-2l6.6-4V4.6c0-1.1.5-2.1 1.4-2.1Z"/></svg>`,
   '기타':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M8 17h5"/></svg>`,
