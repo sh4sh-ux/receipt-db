@@ -110,7 +110,7 @@ svg{display:block;flex-shrink:0;}
 .amt-neg{color:var(--red);}
 
 /* ── SHELL ── */
-.shell{max-width:1420px;margin:0 auto;padding:30px 28px 84px;}
+.shell{max-width:1540px;margin:0 auto;padding:30px 28px 84px;}
 .app{background:var(--card);border-radius:22px;border:1px solid var(--sep);overflow:clip;box-shadow:var(--app-shadow);min-height:780px;display:grid;grid-template-columns:76px 360px minmax(0,1fr);}
 
 /* ── ICON NAV ── */
@@ -368,7 +368,7 @@ svg{display:block;flex-shrink:0;}
 .detail-info-card{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:14px 0 18px;padding:18px;background:var(--fill);border:1px solid var(--sep);border-radius:var(--rm);align-items:stretch;}
 .detail-info-copy{min-width:0;}
 .detail-info-copy .section-hd{margin-top:0;}
-.detail-info-photo{min-width:0;min-height:0;align-self:stretch;position:relative;}
+.detail-info-photo{min-width:0;min-height:0;align-self:stretch;position:relative;margin-top:21px;}
 .detail-kv-stack{display:flex;flex-direction:column;gap:8px;}
 .detail-kv-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
 .detail-kv-grid>.full{grid-column:1/-1;}
@@ -380,7 +380,7 @@ svg{display:block;flex-shrink:0;}
 .det-photo-action:active{transform:scale(.97);}
 .det-photo-action.danger{color:var(--red);}
 .det-photo-action.danger:hover{background:var(--red-bg);}
-.det-photo-action svg{width:15px;height:15px;}
+.det-photo-action svg{width:15px;height:15px;transform:translateY(-1px);}
 .det-photo-thumb-empty{position:absolute;inset:0;width:100%;height:100%;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--label3);font-size:11px;cursor:pointer;border-radius:var(--rm);border:1px dashed var(--sep2);background:var(--card);}
 .det-photo-thumb-empty svg{color:var(--sep2);}
 .detail-category-kv{position:relative;z-index:24;}
@@ -393,7 +393,7 @@ svg{display:block;flex-shrink:0;}
 .detail-cat-popover{top:calc(100% + 8px);}
 @media(max-width:780px){
   .detail-info-card{grid-template-columns:1fr;gap:16px;padding:14px;}
-  .detail-info-photo{width:100%;height:auto;min-height:160px;position:static;}
+  .detail-info-photo{width:100%;height:auto;min-height:160px;position:static;margin-top:0;}
   .det-photo-thumb{position:relative;width:100%;height:220px;min-height:0;}
   .det-photo-thumb-empty{position:static;width:100%;height:auto;min-height:0;}
   .det-photo-thumb img{height:100%;max-height:none;object-fit:cover;object-position:center top;background:var(--card);}
@@ -1431,7 +1431,8 @@ svg{display:block;flex-shrink:0;}
 // v1.87 — 영수증 상단 크롭 미리보기와 통일된 사진 관리 액션 바.
 // v1.88 — 고정 편집 액션, 내 이름 기본값, 정보 4행 구성과 더치페이 연결.
 // v1.89 — 모바일 내역·통계 화면 분리, 라벨형 하단 네비와 입력 박스 컴팩트화.
-const APP_VERSION='v1.89';
+// v1.90 — 상세 사진 정렬, 두 글자 카테고리 표기, 오른쪽 작업 패널 확장.
+const APP_VERSION='v1.90';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -1654,6 +1655,11 @@ const CAT_SVGS={
 function normalizeCategory(cat){
   const aliases={'부의금':'경조사','축의금':'경조사','마트':'쇼핑','문화':'영화','배달':'외식','교통':'여행','병원':'병원·약국','약국':'병원·약국'};
   return aliases[cat]||cat||'';
+}
+const CATEGORY_LABELS={'케이크':'기념','노래방':'노래','병원·약국':'의료','경조사':'경조'};
+function getCategoryLabel(cat){
+  const normalized=normalizeCategory(cat);
+  return CATEGORY_LABELS[normalized]||normalized||'';
 }
 function getCatSvg(cat){
   return CAT_SVGS[normalizeCategory(cat)]||`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
@@ -2163,7 +2169,7 @@ function getFiltered(){
   // 검색 있으면 전체에서
   return receipts.filter(r=>{
     if((r.store||'').toLowerCase().includes(q))return true;
-    if((r.category||'').toLowerCase().includes(q))return true;
+    if((r.category||'').toLowerCase().includes(q)||getCategoryLabel(r.category).toLowerCase().includes(q))return true;
     if((r.date||'').includes(q))return true;
     if((r.paidBy||'').toLowerCase().includes(q))return true;
     if((r.notes||'').toLowerCase().includes(q))return true;
@@ -2400,7 +2406,7 @@ function _syncCategoryPicker(){
   if(!catInpEl||!catPickerIcon||!catPickerLabel)return;
   const cat=catInpEl.value.trim();
   catPickerIcon.innerHTML=cat?getCatSvg(cat):`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`;
-  catPickerLabel.textContent=cat||'카테고리 선택';
+  catPickerLabel.textContent=getCategoryLabel(cat)||'카테고리 선택';
   catPickerLabel.classList.toggle('empty',!cat);
   catPickerPopover?.querySelectorAll('.cat-picker-option').forEach(btn=>{
     const on=btn.dataset.category===cat;
@@ -2412,7 +2418,7 @@ function _syncCategoryPicker(){
 function _renderCategoryPicker(){
   if(!catPickerPopover)return;
   const cats=getAllCategoriesUnion();
-  catPickerPopover.innerHTML=`<div class="cat-picker-title">카테고리 선택</div>`+cats.map(cat=>`<button class="cat-picker-option" type="button" role="option" data-category="${escapeHtml(cat)}" aria-selected="false">${getCatSvg(cat)}<span>${escapeHtml(cat)}</span></button>`).join('');
+  catPickerPopover.innerHTML=`<div class="cat-picker-title">카테고리 선택</div>`+cats.map(cat=>`<button class="cat-picker-option" type="button" role="option" data-category="${escapeHtml(cat)}" aria-selected="false">${getCatSvg(cat)}<span>${escapeHtml(getCategoryLabel(cat))}</span></button>`).join('');
   catPickerPopover.querySelectorAll('.cat-picker-option').forEach(btn=>{
     btn.addEventListener('click',()=>{
       _setCategoryValue(btn.dataset.category,{auto:false});
@@ -3342,7 +3348,7 @@ function renderSearchSummaryHtml(q, filtered){
         <tr class="srch-row" data-id="${r.id}">
           <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
           <td>${escapeHtml(r.store||'')}</td>
-          <td>${escapeHtml(r.category||'—')}</td>
+          <td>${escapeHtml(getCategoryLabel(r.category)||'—')}</td>
           ${hasPayer?`<td>${escapeHtml(r.paidBy||'—')}</td>`:''}
           <td>${fmtMoney(r.total||0)}원</td>
         </tr>`).join('')}
@@ -3401,7 +3407,7 @@ function renderPayerSummaryHtml(payerName, filtered){
           const isUncat=cat==='미분류';
           return `<div class="cat-bar-row${isUncat?' uncat':''}" data-rank="${Math.min(i,4)}">
             <div class="cat-bar-top">
-              <span class="cat-bar-name">${escapeHtml(cat)}<span class="cat-pct">${pct.toFixed(0)}%</span></span>
+              <span class="cat-bar-name">${escapeHtml(getCategoryLabel(cat))}<span class="cat-pct">${pct.toFixed(0)}%</span></span>
               <span class="cat-bar-amt">${fmtMoney(amt)}원</span>
             </div>
             <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%"></div></div>
@@ -3483,7 +3489,7 @@ function renderParticipantSummaryHtml(name, filtered){
           const isUncat=cat==='미분류';
           return `<div class="cat-bar-row${isUncat?' uncat':''}" data-rank="${Math.min(i,4)}">
             <div class="cat-bar-top">
-              <span class="cat-bar-name">${escapeHtml(cat)}<span class="cat-pct">${pct.toFixed(0)}%</span></span>
+              <span class="cat-bar-name">${escapeHtml(getCategoryLabel(cat))}<span class="cat-pct">${pct.toFixed(0)}%</span></span>
               <span class="cat-bar-amt">${fmtMoney(amt)}원</span>
             </div>
             <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
@@ -3572,7 +3578,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     const catEntries=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
     const maxCat=catEntries[0]?.[1]||1;
     const catBars=catEntries.map(([c,amt])=>`<div class="cat-bar-row">
-      <div class="cat-bar-top"><span class="cat-bar-name">${escapeHtml(c)}</span><span class="cat-bar-amt">${fmtMoney(amt)}원</span></div>
+      <div class="cat-bar-top"><span class="cat-bar-name">${escapeHtml(getCategoryLabel(c))}</span><span class="cat-bar-amt">${fmtMoney(amt)}원</span></div>
       <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${amt/maxCat*100}%;background:var(--blue);"></div></div>
     </div>`).join('');
     const sorted=[...payerRecs].sort((a,b)=>b.date.localeCompare(a.date));
@@ -3631,7 +3637,7 @@ function _catBarsHtml(cats){
     const w=maxC>0?(sub.amt/maxC*100):0;
     return `<div class="cat-bar-row cat-bar-sub">
       <div class="cat-bar-top">
-        <span class="cat-bar-name">${escapeHtml(sub.cat)}<span class="cat-pct">${sub.pct.toFixed(0)}%</span></span>
+        <span class="cat-bar-name">${escapeHtml(getCategoryLabel(sub.cat))}<span class="cat-pct">${sub.pct.toFixed(0)}%</span></span>
         <span class="cat-bar-amt">${fmtMoney(sub.amt)}원</span>
       </div>
       <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
@@ -3642,7 +3648,7 @@ function _catBarsHtml(cats){
     const isUncat=row.cat==='(미분류)';
     const barRow=`<div class="cat-bar-row${isUncat?' uncat':''}" data-rank="${Math.min(i,4)}">
       <div class="cat-bar-top">
-        <span class="cat-bar-name">${escapeHtml(row.cat)}${row.isGroup?'<span class="cat-bar-group-label">대분류</span>':''}<span class="cat-pct">${row.pct.toFixed(0)}%</span></span>
+        <span class="cat-bar-name">${escapeHtml(getCategoryLabel(row.cat))}${row.isGroup?'<span class="cat-bar-group-label">대분류</span>':''}<span class="cat-pct">${row.pct.toFixed(0)}%</span></span>
         <span class="cat-bar-amt">${fmtMoney(row.amt)}원</span>
       </div>
       <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
@@ -3978,7 +3984,7 @@ function renderMonthSummaryHtml(ym){
       const isSubActive=_monthCatFilter===sub.cat;
       return `<div class="cat-bar-row cat-bar-sub clickable${isSubActive?' cat-active':''}" data-cat="${escapeHtml(sub.cat)}">
         <div class="cat-bar-top">
-          <span class="cat-bar-name">${escapeHtml(sub.cat)}<span class="cat-pct">${sub.pct.toFixed(0)}%</span></span>
+          <span class="cat-bar-name">${escapeHtml(getCategoryLabel(sub.cat))}<span class="cat-pct">${sub.pct.toFixed(0)}%</span></span>
           <span class="cat-bar-amt">${fmtMoney(sub.amt)}원</span>
         </div>
         <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
@@ -3992,7 +3998,7 @@ function renderMonthSummaryHtml(ym){
       const isRowActive=isGrpActive||(!row.isGroup&&_monthCatFilter===row.cat);
       const barRow=`<div class="cat-bar-row clickable${isUncat?' uncat':''}${isRowActive?' cat-active':''}" data-rank="${Math.min(i,4)}" data-cat="${escapeHtml(row.cat)}">
         <div class="cat-bar-top">
-          <span class="cat-bar-name">${escapeHtml(row.cat)}${row.isGroup?'<span class="cat-bar-group-label">대분류</span>':''}<span class="cat-pct">${row.pct.toFixed(0)}%</span></span>
+          <span class="cat-bar-name">${escapeHtml(getCategoryLabel(row.cat))}${row.isGroup?'<span class="cat-bar-group-label">대분류</span>':''}<span class="cat-pct">${row.pct.toFixed(0)}%</span></span>
           <span class="cat-bar-amt">${fmtMoney(row.amt)}원</span>
         </div>
         <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
@@ -4605,7 +4611,7 @@ async function renderDetail(){
         detailCatValue.dispatchEvent(new Event('input',{bubbles:true}));
         detailCatValue.dispatchEvent(new Event('change',{bubbles:true}));
         detailCatTrigger.querySelector('.detail-cat-trigger-icon').innerHTML=getCatSvg(cat);
-        detailCatTrigger.querySelector('.detail-cat-trigger-label').textContent=cat;
+        detailCatTrigger.querySelector('.detail-cat-trigger-label').textContent=getCategoryLabel(cat);
         detailCatPopover.querySelectorAll('.detail-cat-option').forEach(btn=>{
           const selected=btn===option;
           btn.classList.toggle('on',selected);
@@ -4720,13 +4726,13 @@ function kvHtml(label,field,rawValue,type,options,extraClass=''){
 
 function detailCategoryKvHtml(rawValue){
   const cat=normalizeCategory(rawValue)||'기타';
-  const options=BASE_CATEGORIES.map(name=>`<button class="cat-picker-option detail-cat-option" type="button" role="option" data-category="${escapeHtml(name)}" aria-selected="${name===cat?'true':'false'}">${getCatSvg(name)}<span>${escapeHtml(name)}</span></button>`).join('');
+  const options=BASE_CATEGORIES.map(name=>`<button class="cat-picker-option detail-cat-option" type="button" role="option" data-category="${escapeHtml(name)}" aria-selected="${name===cat?'true':'false'}">${getCatSvg(name)}<span>${escapeHtml(getCategoryLabel(name))}</span></button>`).join('');
   return `<div class="kv detail-category-kv">
     <div class="kv-lbl">카테고리</div>
     <input class="kv-inp detail-cat-value" type="hidden" data-field="category" value="${escapeHtml(cat)}"/>
     <button class="detail-cat-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
       <span class="detail-cat-trigger-icon">${getCatSvg(cat)}</span>
-      <span class="detail-cat-trigger-label">${escapeHtml(cat)}</span>
+      <span class="detail-cat-trigger-label">${escapeHtml(getCategoryLabel(cat))}</span>
       <svg class="detail-cat-trigger-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
     </button>
     <div class="cat-picker-popover detail-cat-popover" role="listbox" aria-label="상세 카테고리 선택" hidden>
