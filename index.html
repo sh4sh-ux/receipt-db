@@ -738,11 +738,11 @@ svg{display:block;flex-shrink:0;}
 .detail-items-panel .items-table tr.total-row td{background:transparent;border-top:2px solid var(--sep2);border-bottom:none;padding-top:9px;padding-bottom:9px;}
 .detail-items-panel .alert{margin:10px 14px 14px!important;}
 @media(max-width:780px){
-  .det-hd-people{flex-wrap:nowrap;overflow:hidden;white-space:nowrap;}
+  .det-hd-people{flex-wrap:nowrap;overflow:hidden;white-space:nowrap;transform:translateY(-4px);}
   .det-hd-person{flex:0 0 auto;}
   .det-hd-person-break{display:none;}
   .detail-items-panel .items-table{width:calc(100% - 16px);margin:0 8px;--items-left:0;}
-  .det-hd-card{padding:12px 14px;gap:10px;}
+  .det-hd-card{padding:12px 14px;gap:10px;grid-template-rows:20px 20px;align-content:center;}
   .det-cat-box{width:42px;height:42px;}
   .det-hd-amt{font-size:16px;}
   .detail-items-panel .items-table th,
@@ -866,10 +866,11 @@ svg{display:block;flex-shrink:0;}
     min-height:var(--mobile-main-head-h);
     flex:0 0 var(--mobile-main-head-h);
     box-sizing:border-box;
-    padding-top:max(22px,calc(env(safe-area-inset-top,0px) + 15px));
+    padding-top:max(18px,calc(env(safe-area-inset-top,0px) + 12px));
   }
-  .app-eye,.main-eye{font-size:11px;line-height:1.25;letter-spacing:.9px;margin-bottom:7px;}
-  .app-eye-row{align-items:baseline;}
+  .app-eye,.main-eye{font-size:11px;line-height:1.25;letter-spacing:.9px;margin-bottom:0;}
+  .app-eye-row{align-items:baseline;margin-bottom:11px;}
+  .main-eye{margin-bottom:11px;}
   .app-version{padding-top:0;padding-bottom:0;border-top-width:0;border-bottom-width:0;line-height:1.375;}
   .app-title,.main-title{font-size:23px;line-height:1.18;letter-spacing:-.55px;}
   .main-sub{font-size:13px;line-height:1.5;margin-top:6px;}
@@ -1519,7 +1520,8 @@ svg{display:block;flex-shrink:0;}
 // v2.04 — 모바일 화면 제목 좌표 통일, 더치페이 아이콘 크기와 시각 중심 보정.
 // v2.05 — 모바일 RECEIPT DB와 버전 표시의 글자 기준선 정렬.
 // v2.06 — 모바일 더치페이 아이콘을 절대 중앙 고정하고 요약 참석자를 한 줄로 표시.
-const APP_VERSION='v2.06';
+// v2.07 — 모바일 요약 카드의 상하 여백과 네 화면의 상단 제목 계층을 통일.
+const APP_VERSION='v2.07';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
