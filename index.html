@@ -842,6 +842,11 @@ svg{display:block;flex-shrink:0;}
 /* 모바일도 상·하단 틀은 고정하고 각 화면의 내용만 독립 스크롤 */
 @media(max-width:780px){
   html,body{height:100%;overflow:hidden;}
+  :root{
+    --mobile-brand-head-h:108px;
+    --mobile-month-head-h:56px;
+    --mobile-main-head-h:calc(var(--mobile-brand-head-h) + var(--mobile-month-head-h));
+  }
   .shell{height:100dvh;min-height:100dvh;box-sizing:border-box;overflow:hidden;padding-bottom:calc(68px + env(safe-area-inset-bottom,0px));}
   .app{height:calc(100dvh - 68px - env(safe-area-inset-bottom,0px));min-height:0;overflow:hidden;}
   .side,.main{height:100%;min-height:0;overflow:hidden;}
@@ -853,10 +858,31 @@ svg{display:block;flex-shrink:0;}
   .side-foot{display:none;}
   .view.on{height:100%;min-height:0;display:flex;flex-direction:column;}
   .main-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
-  .side-top{height:auto;min-height:108px;box-sizing:border-box;}
-  .main-top{min-height:108px;box-sizing:border-box;}
-  .app-eye,.main-eye{font-size:11px;letter-spacing:.9px;}
-  .app-title,.main-title{line-height:1.18;}
+  .side-top{height:var(--mobile-brand-head-h);min-height:var(--mobile-brand-head-h);box-sizing:border-box;}
+  .month-nav{height:var(--mobile-month-head-h);box-sizing:border-box;}
+  .main-top{
+    height:var(--mobile-main-head-h);
+    min-height:var(--mobile-main-head-h);
+    flex:0 0 var(--mobile-main-head-h);
+    box-sizing:border-box;
+    padding-top:max(19px,calc(env(safe-area-inset-top,0px) + 12px));
+  }
+  .app-eye,.main-eye{font-size:11px;line-height:1.25;letter-spacing:.9px;margin-bottom:7px;}
+  .app-title,.main-title{font-size:23px;line-height:1.18;letter-spacing:-.55px;}
+  .main-sub{font-size:13px;line-height:1.5;margin-top:6px;}
+  #viewList>.main-top{align-content:flex-start;}
+  #viewList .main-actions{align-items:center;}
+  #viewList .main-actions>.icon-btn,
+  .detail-header-btn.dutch{width:40px;height:40px;min-width:40px;min-height:40px;}
+  .detail-header-btn.dutch{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    line-height:0;
+  }
+  .detail-header-btn.dutch svg,
+  #detailDeleteBtn svg{width:18px;height:18px;display:block;}
+  .detail-header-btn.dutch svg{margin:0;transform:none;flex:0 0 18px;}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
@@ -1473,7 +1499,10 @@ svg{display:block;flex-shrink:0;}
 // v1.97 — 참고 이미지의 실루엣을 반영한 SVG 카테고리 아이콘과 4×4 선택 배열.
 // v1.98 — 카테고리 실루엣 정교화, 모바일 선택창 8×2 압축 배열.
 // v1.99 — 사진 교체마다 새 이미지 ID를 발급해 로컬·Dropbox 캐시 충돌 방지.
-const APP_VERSION='v2.01';
+// v2.00 — 술집·기념·교통·영화·숙박·스파 카테고리 아이콘 정교화.
+// v2.01 — 스파 카테고리 아이콘을 더치페이 앱과 같은 형태로 통일.
+// v2.02 — 모바일 네 화면의 제목 계층·헤더 기준선 통일, 더치페이 아이콘 정중앙 보정.
+const APP_VERSION='v2.02';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
