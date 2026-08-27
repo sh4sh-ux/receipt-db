@@ -738,8 +738,9 @@ svg{display:block;flex-shrink:0;}
 .detail-items-panel .items-table tr.total-row td{background:transparent;border-top:2px solid var(--sep2);border-bottom:none;padding-top:9px;padding-bottom:9px;}
 .detail-items-panel .alert{margin:10px 14px 14px!important;}
 @media(max-width:780px){
-  .det-hd-people{flex-wrap:wrap;}
-  .det-hd-person-break{display:block;flex-basis:100%;height:0;}
+  .det-hd-people{flex-wrap:nowrap;overflow:hidden;white-space:nowrap;}
+  .det-hd-person{flex:0 0 auto;}
+  .det-hd-person-break{display:none;}
   .detail-items-panel .items-table{width:calc(100% - 16px);margin:0 8px;--items-left:0;}
   .det-hd-card{padding:12px 14px;gap:10px;}
   .det-cat-box{width:42px;height:42px;}
@@ -877,14 +878,24 @@ svg{display:block;flex-shrink:0;}
   #viewList .main-actions>.icon-btn,
   .detail-header-btn.dutch{width:40px;height:40px;min-width:40px;min-height:40px;}
   .detail-header-btn.dutch{
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    position:relative;
+    display:block;
     line-height:0;
+    overflow:hidden;
   }
+  .detail-header-btn.dutch .dutch-label{display:none;}
   .detail-header-btn.dutch svg,
   #detailDeleteBtn svg{width:18px;height:18px;display:block;}
-  .detail-header-btn.dutch svg{width:21px;height:21px;margin:0;transform:translateX(1px);flex:0 0 21px;}
+  .detail-header-btn.dutch svg{
+    position:absolute!important;
+    left:50%;
+    top:50%;
+    width:21px;
+    height:21px;
+    margin:0!important;
+    transform:translate(-50%,-50%)!important;
+    flex:none;
+  }
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
@@ -978,7 +989,7 @@ svg{display:block;flex-shrink:0;}
           <div class="main-actions" id="detailActions" style="display:none;">
             <button class="detail-header-btn dutch" id="sendDutchPayBtn" type="button" title="이 영수증을 더치페이로 보내기">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10M7 12h7M7 17h4"/><path d="m16 15 3 3 3-3M19 18V9"/></svg>
-              더치페이
+              <span class="dutch-label">더치페이</span>
             </button>
             <div class="detail-header-save" id="detailSaveBar" style="display:none;">
               <button class="detail-header-btn" id="detailRevertBtn" type="button">되돌리기</button>
@@ -1507,7 +1518,8 @@ svg{display:block;flex-shrink:0;}
 // v2.03 — 스파 이모지를 테마 색상을 따르는 단색 SVG 아이콘으로 교체.
 // v2.04 — 모바일 화면 제목 좌표 통일, 더치페이 아이콘 크기와 시각 중심 보정.
 // v2.05 — 모바일 RECEIPT DB와 버전 표시의 글자 기준선 정렬.
-const APP_VERSION='v2.05';
+// v2.06 — 모바일 더치페이 아이콘을 절대 중앙 고정하고 요약 참석자를 한 줄로 표시.
+const APP_VERSION='v2.06';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
