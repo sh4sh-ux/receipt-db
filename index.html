@@ -143,7 +143,7 @@ svg{display:block;flex-shrink:0;}
 .tab{flex:1;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--label2);padding:7px 0;border-radius:8px;cursor:pointer;transition:all .15s;}
 .tab.on{background:var(--card);color:var(--label);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08);}
 
-.side-search{padding:0 var(--pad-x) 12px;}
+.side-search{padding:12px var(--pad-x) 14px;}
 .search-wrap{position:relative;}
 .search-wrap input{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 30px 8px 32px;font-size:13px;background:var(--card);color:var(--label);outline:none;}
 .search-wrap input:focus{border-color:var(--blue);}
@@ -211,8 +211,9 @@ svg{display:block;flex-shrink:0;}
 
 /* ── 입력 모드 토글 ── */
 .input-mode-row{display:flex;gap:2px;background:var(--fill);border-radius:10px;padding:3px;margin-bottom:16px;}
-.input-mode-btn{flex:1;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--label2);padding:7px 0;border-radius:8px;cursor:pointer;transition:all .15s;}
+.input-mode-btn{flex:1;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--label2);padding:7px 0;border-radius:8px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
 .input-mode-btn.on{background:var(--card);color:var(--label);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.input-mode-pencil{width:15px;height:15px;flex:0 0 15px;}
 /* ── 직접 입력 폼 그리드 ── */
 .direct-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 @media(max-width:900px){.direct-grid{grid-template-columns:1fr;}}
@@ -283,7 +284,7 @@ svg{display:block;flex-shrink:0;}
 .cat-picker-popover[hidden]{display:none;}
 .cat-picker-title{grid-column:1/-1;margin:0 -12px 4px;padding:13px 16px;border-bottom:1px solid var(--sep);color:var(--label2);font-size:12px;font-weight:700;letter-spacing:-.1px;}
 .cat-picker-option{min-height:72px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--label2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-size:11.5px;font-weight:600;transition:background .12s,border-color .12s,color .12s;}
-.cat-picker-option svg{width:22px;height:22px;}
+.cat-picker-option svg{width:24px;height:24px;}
 .cat-picker-option:hover{background:var(--fill);color:var(--label);}
 .cat-picker-option.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue-txt);}
 @media(max-width:520px){
@@ -520,8 +521,8 @@ svg{display:block;flex-shrink:0;}
 .month-nav-btn{width:30px;height:30px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);color:var(--label2);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;padding:0;flex-shrink:0;}
 .month-nav-btn:hover{background:var(--fill);color:var(--label);}
 .month-nav-btn:disabled{opacity:.3;cursor:not-allowed;}
-.month-nav-center{flex:1;text-align:center;min-width:0;}
-.month-nav-label{font-size:14px;font-weight:700;color:var(--label);letter-spacing:-.2px;cursor:pointer;border-radius:6px;padding:2px 6px;transition:background .12s;}
+.month-nav-center{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:7px;height:30px;}
+.month-nav-label{font-size:14px;font-weight:700;color:var(--label);letter-spacing:-.2px;cursor:pointer;border-radius:6px;padding:3px 6px;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .12s;}
 .month-nav-label:hover{background:var(--fill);}
 .month-nav-label.has-sel{color:var(--blue-txt);}
 .back-to-summary{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:var(--label3);background:transparent;border:none;padding:0;cursor:pointer;margin-bottom:4px;border-radius:4px;line-height:1.4;}
@@ -537,9 +538,10 @@ svg{display:block;flex-shrink:0;}
 .section-body{overflow:hidden;transition:max-height .25s ease,opacity .2s ease;}
 .section-body.open{max-height:2000px;opacity:1;}
 .section-body.closed{max-height:0;opacity:0;pointer-events:none;}
-.month-nav-today{font-size:11px;color:var(--blue-txt);background:transparent;border:none;padding:2px 4px 0;font-weight:500;margin-top:1px;}
-.month-nav-today:hover{text-decoration:underline;}
-.month-nav-today.hidden{visibility:hidden;}
+.month-nav-today{height:24px;font-size:10.5px;color:var(--blue-txt);background:var(--blue-bg);border:1px solid color-mix(in srgb,var(--blue) 24%,transparent);border-radius:7px;padding:0 7px;font-weight:650;line-height:1;display:flex;align-items:center;justify-content:center;white-space:nowrap;}
+.month-nav-today:hover{border-color:var(--blue);}
+.month-nav-today.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+.month-nav.context-spacer{display:none;}
 
 /* 인물 검색 시간 필터 */
 .person-filter-wrap{display:flex;flex-direction:column;gap:6px;padding-bottom:16px;}
@@ -776,6 +778,9 @@ svg{display:block;flex-shrink:0;}
   .side{position:relative;top:auto;height:100%;min-height:0;max-height:none;}
   .side-top{height:88px;box-sizing:border-box;padding-top:24px;padding-bottom:8px;}
   .month-nav{height:56px;box-sizing:border-box;padding-top:10px;padding-bottom:10px;}
+  .month-nav.context-spacer{display:flex;pointer-events:none;}
+  .month-nav.context-spacer>*{visibility:hidden;}
+  .side.non-list-context .side-list{padding-top:12px;}
   .main{height:100%;min-height:0;overflow:hidden;}
   .view.on{height:100%;min-height:0;display:flex;flex-direction:column;}
   .main-top{height:144px;box-sizing:border-box;flex:0 0 144px;}
@@ -898,7 +903,7 @@ svg{display:block;flex-shrink:0;}
         <button class="month-nav-btn" id="monthPrev" aria-label="이전 달">‹</button>
         <div class="month-nav-center">
           <div class="month-nav-label" id="monthLabel">—</div>
-          <button class="month-nav-today" id="monthToday">오늘</button>
+          <button class="month-nav-today" id="monthToday" aria-pressed="false">전체</button>
         </div>
         <button class="month-nav-btn" id="monthNext" aria-label="다음 달">›</button>
       </div>
@@ -969,7 +974,10 @@ svg{display:block;flex-shrink:0;}
         <div class="main-body">
           <div class="input-mode-row">
             <button class="input-mode-btn on" id="modeGptBtn" type="button">AI 붙여넣기</button>
-            <button class="input-mode-btn" id="modeDirectBtn" type="button">✏️ 직접 입력</button>
+            <button class="input-mode-btn" id="modeDirectBtn" type="button">
+              <svg class="input-mode-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16.5 16.5 3l4.5 4.5L7.5 21 3 21z"/><path d="m14.5 5 4.5 4.5M3 16.5 7.5 21"/><path d="m16.5 3 1.4-1.4a1.4 1.4 0 0 1 2 0l2.5 2.5a1.4 1.4 0 0 1 0 2L21 7.5"/></svg>
+              <span>직접 입력</span>
+            </button>
           </div>
           <div class="input-stack">
             <div id="gptModeArea">
@@ -1096,12 +1104,12 @@ svg{display:block;flex-shrink:0;}
               <div id="advFields" style="grid-column:1/-1;display:none;">
                 <div class="input-row options" style="padding:0;margin:0;gap:16px;">
                   <div class="field-g">
-                    <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분</span></label>
-                    <input id="participantsInp" class="field-inp" type="text" placeholder="예: 철수, 영희, 민준"/>
-                  </div>
-                  <div class="field-g">
                     <label class="field-lbl">결제자 <span class="field-lbl-hint">선택</span></label>
                     <input id="payerInp" class="field-inp" type="text" placeholder="예: 홍길동, 나, 회사"/>
+                  </div>
+                  <div class="field-g">
+                    <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분</span></label>
+                    <input id="participantsInp" class="field-inp" type="text" placeholder="예: 철수, 영희, 민준"/>
                   </div>
                   <div class="field-g" style="grid-column:1/-1;">
                     <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
@@ -1454,7 +1462,9 @@ svg{display:block;flex-shrink:0;}
 // v1.91 — 모바일 하단 네비 위치 복구, 상세 정보 2열 행 구성.
 // v1.92 — 고정 데스크탑 틀, 기본 접힌 상세내역, 교통 카테고리와 금액 열 개선.
 // v1.93 — 사진 교체 아이콘을 대칭형 SVG로 변경하고 텍스트 중심선 정렬.
-const APP_VERSION='v1.93';
+// v1.94 — 입력 화면 좌우 기준선 정렬, 전체/월 목록 전환, 검색 여백과 월 라벨 정렬,
+//         결제자·참석자 순서 및 직접 입력 연필 SVG 개선, 카테고리 아이콘 크기 통일.
+const APP_VERSION='v1.94';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -1583,6 +1593,7 @@ let searchQuery='';
 let pendingPhotoBlob=null;
 let pendingPhotoUrl=null;
 let viewMonth=_currentYM();  // 'YYYY-MM' — 가계부에서 보고 있는 월
+let _sideAllMonths=false;    // 왼쪽 목록만 전체 기간으로 전환
 function _currentYM(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 function _todayYMD(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
@@ -2155,8 +2166,8 @@ function _parseDateQ(raw){
 function getFiltered(){
   const q=searchQuery.trim().toLowerCase();
   if(!q){
-    // 검색 없으면 현재 보고 있는 월의 영수증만
-    return receiptsForMonth(viewMonth);
+    // 검색이 없을 때는 선택한 달 또는 전체 기간
+    return _sideAllMonths?[...receipts]:receiptsForMonth(viewMonth);
   }
 
   // ── 날짜 검색 ──
@@ -2232,12 +2243,16 @@ function renderSide(){
   // 월 네비 라벨 갱신 — 영수증 선택 중이면 파란색 힌트 표시
   const monthLabelEl=document.getElementById('monthLabel');
   if(monthLabelEl){
-    monthLabelEl.textContent=ymLabel(viewMonth);
+    monthLabelEl.textContent=_sideAllMonths?'전체 내역':ymLabel(viewMonth);
     monthLabelEl.title=selectedId?'클릭하면 가계부 요약으로 돌아가요':'';
     monthLabelEl.classList.toggle('has-sel',!!selectedId);
   }
   const monthTodayEl=document.getElementById('monthToday');
-  if(monthTodayEl)monthTodayEl.classList.toggle('hidden',viewMonth===_currentYM());
+  if(monthTodayEl){
+    monthTodayEl.textContent=_sideAllMonths?'이번 달':'전체';
+    monthTodayEl.classList.toggle('on',_sideAllMonths);
+    monthTodayEl.setAttribute('aria-pressed',String(_sideAllMonths));
+  }
 
   const list=document.getElementById('sideList');
   const _base=getFiltered();
@@ -2255,8 +2270,8 @@ function renderSide(){
     const emptyMsg=searchQuery
       ? `검색 결과가 없어요`
       : _monthCatFilter
-        ? `${ymLabel(viewMonth)} <b>${escapeHtml(_monthCatFilter)}</b> 영수증이 없어요`
-        : `${ymLabel(viewMonth)}에<br/>저장된 영수증이 없어요`;
+        ? `${_sideAllMonths?'전체 기간':ymLabel(viewMonth)} <b>${escapeHtml(_monthCatFilter)}</b> 영수증이 없어요`
+        : `${_sideAllMonths?'전체 기간에':ymLabel(viewMonth)+'에'}<br/>저장된 영수증이 없어요`;
     list.innerHTML=`<div class="empty-state">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h12a2 2 0 0 1 2 2v15l-3-2-3 2-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2z"/></svg>
       <div>${emptyMsg}</div>
@@ -2264,7 +2279,7 @@ function renderSide(){
     return;
   }
   const html=[];
-  if(searchQuery){
+  if(searchQuery||_sideAllMonths){
     // 검색 시엔 월별 그룹핑 (전체 대상이라 의미 있음)
     const groups=new Map();
     for(const r of filtered){
@@ -2325,8 +2340,9 @@ function switchTab(name){
   document.getElementById('viewList').classList.toggle('on',name==='list');
   document.getElementById('viewInput').classList.toggle('on',name==='input');
   document.getElementById('viewSettings').classList.toggle('on',name==='settings');
-  // 월 네비 + 검색은 '내역' 탭일 때만 보이게
-  document.getElementById('monthNav').style.display=(name==='list')?'flex':'none';
+  // 데스크탑에서는 오른쪽 제목 하단선과 같은 높이를 유지하는 기준선으로 남긴다.
+  document.getElementById('monthNav').classList.toggle('context-spacer',name!=='list');
+  document.querySelector('.side').classList.toggle('non-list-context',name!=='list');
   document.querySelector('.side-search').style.display=(name==='list')?'block':'none';
   _syncMobileSurface(name);
   if(name==='input'){setTimeout(()=>document.getElementById('pasteTa').focus(),50);}
@@ -2353,6 +2369,7 @@ if(_navLedgerBtn)_navLedgerBtn.addEventListener('click',()=>{
 
 // ── 월 네비게이션 ──
 function changeMonth(offset){
+  _sideAllMonths=false;
   if(offset===0){viewMonth=_currentYM();}
   else{viewMonth=ymOffset(viewMonth,offset);}
   selectedId=null;
@@ -2365,7 +2382,14 @@ function changeMonth(offset){
 }
 document.getElementById('monthPrev').addEventListener('click',()=>changeMonth(-1));
 document.getElementById('monthNext').addEventListener('click',()=>changeMonth(1));
-document.getElementById('monthToday').addEventListener('click',()=>changeMonth(0));
+document.getElementById('monthToday').addEventListener('click',()=>{
+  _sideAllMonths=!_sideAllMonths;
+  selectedId=null;
+  _monthCatFilter=null;
+  _ledgerTimeFilter=_sideAllMonths?{type:'all'}:{type:'month'};
+  if(searchQuery){searchQuery='';document.getElementById('searchInp').value='';_updateSearchClear();}
+  renderSide();renderDetail();
+});
 // 월 레이블 클릭 → 영수증 선택 해제, 가계부 요약으로 복귀
 document.getElementById('monthLabel').addEventListener('click',()=>{
   if(selectedId){selectedId=null;renderSide();renderDetail();}
@@ -2984,6 +3008,7 @@ saveBtn.addEventListener('click',async()=>{
   await loadAll();
   // 저장한 영수증의 월로 viewMonth 이동 + 검색 클리어
   if(rec.date)viewMonth=rec.date.slice(0,7);
+  _sideAllMonths=false;
   if(searchQuery){searchQuery='';document.getElementById('searchInp').value='';}
   selectedId=rec.id;
   switchTab('list');
@@ -3140,6 +3165,7 @@ async function _saveDirectEntry(){
   clearInputs();
   await loadAll();
   if(rec.date)viewMonth=rec.date.slice(0,7);
+  _sideAllMonths=false;
   if(searchQuery){searchQuery='';document.getElementById('searchInp').value='';}
   selectedId=rec.id;
   switchTab('list');
