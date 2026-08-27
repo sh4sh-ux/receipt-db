@@ -124,6 +124,7 @@ svg{display:block;flex-shrink:0;}
 .nav-btn:active{transform:scale(.94);}
 .nav-btn:focus-visible{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg);}
 .nav-btn svg{width:22px;height:22px;}
+.nav-mobile-label{display:none;}
 .icon-nav .nav-btn.tab{flex:0 0 48px;padding:0;}
 .nav-spacer{flex:1;min-height:28px;}
 
@@ -641,17 +642,27 @@ svg{display:block;flex-shrink:0;}
 
 /* ── MOBILE ── */
 @media(max-width:780px){
-  .shell{padding:0 0 calc(68px + env(safe-area-inset-bottom,0px));}
+  .shell{padding:0 0 calc(76px + env(safe-area-inset-bottom,0px));}
   .app{grid-template-columns:1fr;border-radius:0;border:none;box-shadow:none;min-height:100vh;}
-  .icon-nav{position:fixed;z-index:120;left:0;right:0;bottom:0;height:calc(60px + env(safe-area-inset-bottom,0px));padding:8px 24px max(8px,env(safe-area-inset-bottom,0px));border-right:none;border-top:1px solid var(--sep);background:var(--bg);background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);flex-direction:row;justify-content:space-around;gap:0;}
-  .icon-nav .nav-btn,.icon-nav .nav-btn.tab{width:44px;height:44px;flex:0 0 44px;border-radius:12px;}
+  .icon-nav{position:fixed;z-index:120;left:0;right:0;bottom:0;height:calc(68px + env(safe-area-inset-bottom,0px));padding:6px 18px max(6px,env(safe-area-inset-bottom,0px));border-right:none;border-top:1px solid var(--sep);background:var(--bg);background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);flex-direction:row;justify-content:space-around;gap:0;}
+  .icon-nav .nav-btn,.icon-nav .nav-btn.tab{width:64px;height:52px;flex:0 0 64px;border-radius:12px;flex-direction:column;gap:3px;}
+  .icon-nav .nav-btn svg{width:20px;height:20px;}
+  .nav-mobile-label{display:block;font-size:10px;font-weight:650;line-height:1;letter-spacing:-.1px;}
   .icon-nav .nav-spacer{display:none;}
   .side{border-right:none;border-bottom:none;border-top:1px solid var(--sep);min-height:auto;position:static;max-height:none;overflow:visible;}
-  .main{min-height:auto;order:-1;border-bottom:1px solid var(--sep);}
+  .main{min-height:auto;order:0;border-bottom:1px solid var(--sep);}
+  .app.mobile-list-view .main{display:none;}
+  .app.mobile-list-view .side{display:flex;order:0;border-top:none;}
+  .app.mobile-stats-view .side,
+  .app.mobile-content-view .side,
+  .app.mobile-detail-view .side{display:none;}
+  .app.mobile-stats-view .main,
+  .app.mobile-content-view .main,
+  .app.mobile-detail-view .main{display:block;order:0;}
   .side-top{padding:max(18px,calc(env(safe-area-inset-top,0px) + 12px)) 18px 14px;}
   .side-search,.side-list,.side-foot{padding-left:18px;padding-right:18px;}
   .side-search{padding-bottom:10px;}
-  .side-list{max-height:45vh;overflow-y:auto;}
+  .side-list{max-height:none;overflow:visible;padding-bottom:18px;}
   .main-top{padding:18px 18px 14px;}
   #viewList>.main-top{flex-wrap:wrap;}
   #viewList>.main-top>div:first-child{min-width:0;flex:1 1 120px;}
@@ -659,6 +670,14 @@ svg{display:block;flex-shrink:0;}
   .main-body{padding:18px 18px 24px;}
   :root{--pad-x:18px;}
   .input-grid{grid-template-columns:1fr;gap:14px;}
+  .input-stack,#gptModeArea{gap:14px;}
+  .input-row.top{gap:12px;}
+  .input-row.top .field-ta,.input-row.top .photo-zone{height:156px;min-height:156px;}
+  .input-row.top .photo-preview{object-fit:cover;object-position:center top;}
+  #viewInput .main-top{padding-bottom:12px;}
+  #viewInput .main-body{padding-top:14px;}
+  #viewInput .input-mode-row{margin-bottom:12px;}
+  #viewInput .prompt-tools-row{margin-bottom:-2px;}
   .row-3{grid-template-columns:1fr;}
   /* 모바일 컴팩트 요약 — 부가 섹션 접기 */
   #detailBody.mob-compact .mob-secondary{display:none;}
@@ -820,18 +839,22 @@ svg{display:block;flex-shrink:0;}
     <!-- ── ICON NAV ── -->
     <nav class="icon-nav" id="iconNav">
       <button class="nav-brand" id="navBrandBtn" type="button" title="Receipt DB 처음으로" aria-label="Receipt DB 처음으로">R</button>
-      <button class="nav-btn" id="navLedgerBtn" title="가계부">
+      <button class="nav-btn" id="navLedgerBtn" title="통계" aria-label="통계">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span class="nav-mobile-label">통계</span>
       </button>
-      <button class="nav-btn on tab" data-tab="list" data-nav="list" title="내역">
+      <button class="nav-btn on tab" data-tab="list" data-nav="list" title="내역" aria-label="내역">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1.5 1.5 0 0 1 1.5 1.5V21l-2.5-1.8-2.5 1.8-2.5-1.8L9.5 21 7 19.2 4.5 21V4.5A1.5 1.5 0 0 1 6 3Z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+        <span class="nav-mobile-label">내역</span>
       </button>
-      <button class="nav-btn tab" data-tab="input" data-nav="input" title="추가">
+      <button class="nav-btn tab" data-tab="input" data-nav="input" title="추가" aria-label="추가">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/></svg>
+        <span class="nav-mobile-label">추가</span>
       </button>
       <div class="nav-spacer"></div>
-      <button class="nav-btn tab" data-tab="settings" data-nav="settings" title="설정">
+      <button class="nav-btn tab" data-tab="settings" data-nav="settings" title="설정" aria-label="설정">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="nav-mobile-label">설정</span>
       </button>
     </nav>
 
@@ -1407,7 +1430,8 @@ svg{display:block;flex-shrink:0;}
 // v1.86 — 목록 아이콘 제거, 상세내역 첫 열 정렬 및 비고 열 정리.
 // v1.87 — 영수증 상단 크롭 미리보기와 통일된 사진 관리 액션 바.
 // v1.88 — 고정 편집 액션, 내 이름 기본값, 정보 4행 구성과 더치페이 연결.
-const APP_VERSION='v1.88';
+// v1.89 — 모바일 내역·통계 화면 분리, 라벨형 하단 네비와 입력 박스 컴팩트화.
+const APP_VERSION='v1.89';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -2253,6 +2277,17 @@ function updateCatList(){
 // ════════════════════════════════════════════════════════════════
 // TAB SWITCH
 // ════════════════════════════════════════════════════════════════
+let _mobileListMode='list';
+function _isMobileLayout(){return window.matchMedia('(max-width:780px)').matches;}
+function _syncMobileSurface(name){
+  const app=document.querySelector('.app');if(!app)return;
+  app.classList.remove('mobile-list-view','mobile-stats-view','mobile-content-view','mobile-detail-view');
+  if(!_isMobileLayout())return;
+  if(name==='input'||name==='settings')app.classList.add('mobile-content-view');
+  else if(selectedId||_mobileListMode==='detail')app.classList.add('mobile-detail-view');
+  else if(_mobileListMode==='stats')app.classList.add('mobile-stats-view');
+  else app.classList.add('mobile-list-view');
+}
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===name));
   document.querySelectorAll('.nav-btn[data-nav]').forEach(b=>b.classList.toggle('on',b.dataset.nav===name));
@@ -2262,17 +2297,24 @@ function switchTab(name){
   // 월 네비 + 검색은 '내역' 탭일 때만 보이게
   document.getElementById('monthNav').style.display=(name==='list')?'flex':'none';
   document.querySelector('.side-search').style.display=(name==='list')?'block':'none';
+  _syncMobileSurface(name);
   if(name==='input'){setTimeout(()=>document.getElementById('pasteTa').focus(),50);}
   if(name==='settings'){renderDbxSettings();}
 }
 document.querySelectorAll('.tab').forEach(t=>{
-  t.addEventListener('click',()=>switchTab(t.dataset.tab));
+  t.addEventListener('click',()=>{
+    if(_isMobileLayout()&&t.dataset.tab==='list'){
+      _mobileListMode='list';selectedId=null;renderSide();renderDetail();
+    }
+    switchTab(t.dataset.tab);
+  });
 });
 // 가계부(통계) 버튼 — 내역 탭으로 이동 후 선택 해제 → 가계부 뷰
 const _navLedgerBtn=document.getElementById('navLedgerBtn');
 if(_navLedgerBtn)_navLedgerBtn.addEventListener('click',()=>{
+  _mobileListMode='stats';selectedId=null;
   switchTab('list');
-  selectedId=null;_monthCatFilter=null;_ledgerTimeFilter={type:'month'};
+  _monthCatFilter=null;_ledgerTimeFilter={type:'month'};
   renderSide();renderDetail();
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
   _navLedgerBtn.classList.add('on');
@@ -2319,6 +2361,7 @@ searchInp.addEventListener('input',()=>{if(!_searchComposing){searchQuery=search
 
 // 앱 제목 클릭 → 초기 화면으로 리셋
 document.querySelector('.app-title').addEventListener('click',()=>{
+  _mobileListMode='list';
   selectedId=null;_monthCatFilter=null;_ledgerTimeFilter={type:'month'};
   if(searchQuery){searchQuery='';searchInp.value='';_updateSearchClear();}
   _personTimeFilter={type:'all',value:''};
@@ -3190,10 +3233,9 @@ document.getElementById('clearBtn').addEventListener('click',()=>{
 // ════════════════════════════════════════════════════════════════
 async function selectReceipt(id){
   selectedId=id;
+  _mobileListMode='detail';
   // 다른 탭에서 카드 클릭했을 수 있으니 '내역' 탭으로 전환
-  if(!document.querySelector('.tab[data-tab="list"]').classList.contains('on')){
-    switchTab('list');
-  }
+  switchTab('list');
   renderSide();
   await renderDetail();
   // 모바일: 상세 패널로 부드럽게 스크롤
@@ -4038,7 +4080,7 @@ function renderMonthSummaryHtml(ym){
 }
 
 function _setMobPersonView(v){
-  document.querySelector('.app').classList.toggle('mob-person-view',v);
+  document.querySelector('.app').classList.toggle('mob-person-view',v&&!_isMobileLayout());
 }
 
 // 인물 검색 시간 필터 상태
@@ -4308,7 +4350,9 @@ async function renderDetail(){
     ${ymLabel(viewMonth)} 가계부
   </button>`;
   document.getElementById('backToSummaryBtn').addEventListener('click',()=>{
-    selectedId=null;renderSide();renderDetail();
+    selectedId=null;
+    if(_isMobileLayout())_mobileListMode='list';
+    switchTab('list');renderSide();renderDetail();
   });
   title.textContent=r.store||'(매장명 없음)';
   sub.textContent=`${fmtDateKor(r.date)} · ${fmtMoney(r.total)}원`;
@@ -4825,8 +4869,9 @@ document.getElementById('detailDeleteBtn').addEventListener('click',async()=>{
   await dbDel('receipts',r.id);
   toast(`'${r.store||'영수증'}' 삭제됨`,{type:'success'});
   selectedId=null;
+  if(_isMobileLayout())_mobileListMode='list';
   await loadAll();
-  renderDetail();
+  switchTab('list');renderDetail();
   dbxSyncNow(true);  // 양방향 동기화
 });
 
@@ -5854,8 +5899,9 @@ function _dbxBindEvents(){
     await openDB();
     await loadStoreCatMap();
     await loadAll();
-    // 기기별 초기 탭: 데스크탑(비터치) → 추가, 모바일(터치) → 내역
-    if(!_isTouch) switchTab('input');
+    // 화면 폭 기준 초기 탭: 데스크탑 → 추가, 모바일 → 내역 목록
+    if(!_isMobileLayout()) switchTab('input');
+    else{_mobileListMode='list';switchTab('list');}
     renderDetail();
     // 모바일 스와이프 백: 오른쪽으로 스와이프 → 상세에서 목록으로
     if(_isTouch){
@@ -5869,7 +5915,7 @@ function _dbxBindEvents(){
         const dx=e.changedTouches[0].clientX-_swipeX;
         const dy=e.changedTouches[0].clientY-_swipeY;
         if(selectedId&&dx>70&&Math.abs(dx)>Math.abs(dy)*1.5){
-          selectedId=null;renderSide();renderDetail();
+          selectedId=null;_mobileListMode='list';switchTab('list');renderSide();renderDetail();
         }
       },{passive:true});
     }
