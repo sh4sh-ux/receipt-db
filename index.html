@@ -868,6 +868,8 @@ svg{display:block;flex-shrink:0;}
     padding-top:max(22px,calc(env(safe-area-inset-top,0px) + 15px));
   }
   .app-eye,.main-eye{font-size:11px;line-height:1.25;letter-spacing:.9px;margin-bottom:7px;}
+  .app-eye-row{align-items:baseline;}
+  .app-version{padding-top:0;padding-bottom:0;border-top-width:0;border-bottom-width:0;line-height:1.375;}
   .app-title,.main-title{font-size:23px;line-height:1.18;letter-spacing:-.55px;}
   .main-sub{font-size:13px;line-height:1.5;margin-top:6px;}
   #viewList>.main-top{align-content:flex-start;}
@@ -1504,7 +1506,8 @@ svg{display:block;flex-shrink:0;}
 // v2.02 — 모바일 네 화면의 제목 계층·헤더 기준선 통일, 더치페이 아이콘 정중앙 보정.
 // v2.03 — 스파 이모지를 테마 색상을 따르는 단색 SVG 아이콘으로 교체.
 // v2.04 — 모바일 화면 제목 좌표 통일, 더치페이 아이콘 크기와 시각 중심 보정.
-const APP_VERSION='v2.04';
+// v2.05 — 모바일 RECEIPT DB와 버전 표시의 글자 기준선 정렬.
+const APP_VERSION='v2.05';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
