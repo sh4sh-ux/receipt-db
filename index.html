@@ -111,10 +111,10 @@ svg{display:block;flex-shrink:0;}
 
 /* ── SHELL ── */
 .shell{max-width:1420px;margin:0 auto;padding:30px 28px 84px;}
-.app{background:var(--card);border-radius:22px;border:1px solid var(--sep);overflow:hidden;box-shadow:var(--app-shadow);min-height:780px;display:grid;grid-template-columns:76px 360px minmax(0,1fr);}
+.app{background:var(--card);border-radius:22px;border:1px solid var(--sep);overflow:clip;box-shadow:var(--app-shadow);min-height:780px;display:grid;grid-template-columns:76px 360px minmax(0,1fr);}
 
 /* ── ICON NAV ── */
-.icon-nav{background:var(--nav-bg);border-right:1px solid var(--sep);display:flex;flex-direction:column;align-items:center;padding:20px 10px;gap:10px;}
+.icon-nav{background:var(--nav-bg);border-right:1px solid var(--sep);display:flex;flex-direction:column;align-items:center;padding:20px 10px;gap:10px;position:sticky;top:0;height:calc(100vh - 30px);max-height:100vh;align-self:start;}
 .nav-brand{width:48px;height:48px;border:none;border-radius:15px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;letter-spacing:-.4px;margin-bottom:12px;box-shadow:0 8px 24px color-mix(in srgb,var(--blue) 28%,transparent);transition:transform .15s,filter .15s;flex-shrink:0;}
 .nav-brand:hover{filter:brightness(1.06);transform:translateY(-1px);}
 .nav-brand:active{transform:scale(.95);}
@@ -179,10 +179,17 @@ svg{display:block;flex-shrink:0;}
 /* ── RIGHT PANEL ── */
 .main{background:var(--card);display:flex;flex-direction:column;min-height:700px;}
 .main-top{padding:24px 32px 18px;border-bottom:1px solid var(--sep);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+#viewList>.main-top{position:sticky;top:0;z-index:70;background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}
 .main-eye{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px;}
 .main-title{font-size:22px;font-weight:700;letter-spacing:-.4px;}
 .main-sub{font-size:13px;color:var(--label2);margin-top:4px;line-height:1.5;}
 .main-actions{display:flex;gap:6px;flex-shrink:0;}
+.detail-header-save{display:flex;align-items:center;gap:6px;}
+.detail-header-btn{height:36px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);color:var(--label2);padding:0 12px;font-size:12px;font-weight:650;white-space:nowrap;}
+.detail-header-btn:hover{background:var(--fill);color:var(--label);}
+.detail-header-btn.primary{border-color:var(--blue);background:var(--blue);color:#fff;}
+.detail-header-btn.primary:hover{filter:brightness(1.05);}
+.detail-header-btn.dutch{display:flex;align-items:center;gap:6px;color:var(--blue-txt);}
 .icon-btn{width:36px;height:36px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);color:var(--label2);display:flex;align-items:center;justify-content:center;transition:all .12s;}
 .icon-btn:hover{background:var(--fill);color:var(--label);}
 .icon-btn.danger:hover{background:var(--red-bg);color:var(--red);border-color:var(--red);}
@@ -362,8 +369,17 @@ svg{display:block;flex-shrink:0;}
 .detail-info-copy .section-hd{margin-top:0;}
 .detail-info-photo{min-width:0;min-height:0;align-self:stretch;position:relative;}
 .detail-kv-stack{display:flex;flex-direction:column;gap:8px;}
-.det-photo-thumb{position:absolute;inset:0;width:100%;height:100%;min-height:0;border-radius:var(--rm);overflow:hidden;border:1px solid var(--sep);background:var(--card);display:flex;flex-direction:column;}
-.det-photo-thumb img{width:100%;height:0;min-height:0;flex:1;object-fit:contain;object-position:center top;display:block;cursor:zoom-in;background:var(--card);}
+.detail-kv-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.detail-kv-grid>.full{grid-column:1/-1;}
+.det-photo-thumb{position:absolute;inset:0;width:100%;height:100%;min-height:0;border-radius:var(--rm);overflow:hidden;border:1px solid var(--sep);background:var(--card);}
+.det-photo-thumb img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block;cursor:zoom-in;background:var(--card);}
+.det-photo-actions{position:absolute;left:12px;right:12px;bottom:12px;height:54px;padding:6px;display:grid;grid-template-columns:1fr 1fr;gap:6px;border:1px solid color-mix(in srgb,var(--sep2) 84%,transparent);border-radius:13px;background:color-mix(in srgb,var(--card) 86%,transparent);box-shadow:0 8px 24px rgba(0,0,0,.18);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);}
+.det-photo-action{min-width:0;border:0;border-radius:9px;background:transparent;color:var(--label2);display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:650;transition:background .15s,color .15s,transform .12s;}
+.det-photo-action:hover{background:var(--fill);color:var(--label);}
+.det-photo-action:active{transform:scale(.97);}
+.det-photo-action.danger{color:var(--red);}
+.det-photo-action.danger:hover{background:var(--red-bg);}
+.det-photo-action svg{width:15px;height:15px;}
 .det-photo-thumb-empty{position:absolute;inset:0;width:100%;height:100%;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--label3);font-size:11px;cursor:pointer;border-radius:var(--rm);border:1px dashed var(--sep2);background:var(--card);}
 .det-photo-thumb-empty svg{color:var(--sep2);}
 .detail-category-kv{position:relative;z-index:24;}
@@ -377,9 +393,12 @@ svg{display:block;flex-shrink:0;}
 @media(max-width:780px){
   .detail-info-card{grid-template-columns:1fr;gap:16px;padding:14px;}
   .detail-info-photo{width:100%;height:auto;min-height:160px;position:static;}
-  .det-photo-thumb,.det-photo-thumb-empty{position:static;width:100%;height:auto;min-height:0;}
-  .det-photo-thumb img{height:auto;min-height:0;max-height:320px;flex:none;object-fit:contain;background:var(--card);}
+  .det-photo-thumb{position:relative;width:100%;height:220px;min-height:0;}
+  .det-photo-thumb-empty{position:static;width:100%;height:auto;min-height:0;}
+  .det-photo-thumb img{height:100%;max-height:none;object-fit:cover;object-position:center top;background:var(--card);}
   .det-photo-thumb-empty{height:160px;}
+  .detail-kv-grid{grid-template-columns:1fr;}
+  .detail-kv-grid>.full{grid-column:auto;}
 }
 
 /* ── 모바일 상단 컴팩트 사진 띠 ── */
@@ -438,7 +457,6 @@ svg{display:block;flex-shrink:0;}
 }
 .items-table .item-del{border:none;background:transparent;color:var(--label3);font-size:16px;padding:0 4px;line-height:1;}
 .items-table .item-del:hover{color:var(--red);}
-.detail-save-bar{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--sep);padding:12px 0 4px;display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:16px;z-index:5;}
 
 /* ── SEARCH SUMMARY ── */
 .srch-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
@@ -635,6 +653,9 @@ svg{display:block;flex-shrink:0;}
   .side-search{padding-bottom:10px;}
   .side-list{max-height:45vh;overflow-y:auto;}
   .main-top{padding:18px 18px 14px;}
+  #viewList>.main-top{flex-wrap:wrap;}
+  #viewList>.main-top>div:first-child{min-width:0;flex:1 1 120px;}
+  #viewList .main-actions{margin-left:auto;flex-wrap:wrap;justify-content:flex-end;}
   .main-body{padding:18px 18px 24px;}
   :root{--pad-x:18px;}
   .input-grid{grid-template-columns:1fr;gap:14px;}
@@ -694,7 +715,7 @@ svg{display:block;flex-shrink:0;}
 .detail-items-tools{padding:8px 14px;display:flex;align-items:center;justify-content:flex-end;gap:6px;border-bottom:1px solid var(--sep);}
 .detail-items-tools .ghost-mini{border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;}
 .detail-items-tools .ghost-mini:hover{background:var(--fill2);color:var(--label);}
-.detail-items-panel .items-table{margin:0;background:var(--fill);--items-left:14px;}
+.detail-items-panel .items-table{width:calc(100% - 28px);margin:0 14px;background:var(--fill);--items-left:0;}
 .detail-items-panel .items-table th{padding:7px 10px;background:transparent;color:var(--label3);border-bottom:1px solid var(--sep2);}
 .detail-items-panel .items-table td{padding:7px 10px;background:transparent;border-bottom:1px solid var(--sep);}
 .detail-items-panel .items-table th:first-child,.detail-items-panel .items-table td:first-child{padding-left:var(--items-left);}
@@ -707,7 +728,7 @@ svg{display:block;flex-shrink:0;}
 .detail-items-panel .items-table tr.total-row td{background:transparent;border-top:2px solid var(--sep2);border-bottom:none;padding-top:9px;padding-bottom:9px;}
 .detail-items-panel .alert{margin:10px 14px 14px!important;}
 @media(max-width:780px){
-  .detail-items-panel .items-table{--items-left:6px;}
+  .detail-items-panel .items-table{width:calc(100% - 16px);margin:0 8px;--items-left:0;}
   .det-hd-card{padding:12px 14px;gap:10px;}
   .det-cat-box{width:42px;height:42px;}
   .det-hd-amt{font-size:16px;}
@@ -719,6 +740,8 @@ svg{display:block;flex-shrink:0;}
   .detail-items-panel .items-table th:nth-child(5){width:20px;}
   .detail-items-panel .items-table .item-name-inp,
   .detail-items-panel .items-table .item-num-inp{padding:4px 2px;font-size:11px;}
+  .detail-header-btn{padding:0 9px;}
+  .detail-header-btn.dutch{font-size:0;width:36px;padding:0;justify-content:center;}
 }
 
 /* ── v1.78 DESIGN POLISH ── */
@@ -770,6 +793,8 @@ svg{display:block;flex-shrink:0;}
   .icon-nav .nav-btn.tab{flex-basis:44px;}
   .main-top{padding-left:28px;padding-right:28px;}
   .main-body{padding-left:28px;padding-right:28px;}
+  .detail-kv-grid{grid-template-columns:1fr;}
+  .detail-kv-grid>.full{grid-column:auto;}
 }
 @media(max-width:780px){
   .icon-nav{padding-top:8px;padding-bottom:max(8px,env(safe-area-inset-bottom,0px));}
@@ -868,6 +893,14 @@ svg{display:block;flex-shrink:0;}
             <div class="main-sub" id="mainSub">왼쪽 목록에서 영수증을 선택하면 상세 정보가 표시됩니다.</div>
           </div>
           <div class="main-actions" id="detailActions" style="display:none;">
+            <button class="detail-header-btn dutch" id="sendDutchPayBtn" type="button" title="이 영수증을 더치페이로 보내기">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10M7 12h7M7 17h4"/><path d="m16 15 3 3 3-3M19 18V9"/></svg>
+              더치페이
+            </button>
+            <div class="detail-header-save" id="detailSaveBar" style="display:none;">
+              <button class="detail-header-btn" id="detailRevertBtn" type="button">되돌리기</button>
+              <button class="detail-header-btn primary" id="detailConfirmBtn" type="button">수정 확인</button>
+            </div>
             <button class="icon-btn danger" id="detailDeleteBtn" title="삭제">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
             </button>
@@ -1062,6 +1095,15 @@ svg{display:block;flex-shrink:0;}
           </div>
         </div>
         <div class="main-body">
+
+          <div class="setting-card">
+            <h3>내 정보</h3>
+            <p>영수증을 새로 저장할 때 결제자 기본값으로 사용하며, 더치페이의 ‘내 이름’과도 함께 맞춰집니다.</p>
+            <div class="field-g" style="margin-bottom:0;">
+              <label class="field-lbl" for="myNameInp">내 이름</label>
+              <input id="myNameInp" class="field-inp" type="text" placeholder="예: 조상현" autocomplete="name"/>
+            </div>
+          </div>
 
           <div class="setting-card">
             <h3>화면 테마</h3>
@@ -1363,9 +1405,26 @@ svg{display:block;flex-shrink:0;}
 // v1.84 — 15개 SVG 카테고리와 사용자 지정 자동분류 키워드 적용.
 // v1.85 — 상세 정보 SVG 카테고리 선택기와 정보·사진 동일 높이 적용.
 // v1.86 — 목록 아이콘 제거, 상세내역 첫 열 정렬 및 비고 열 정리.
-const APP_VERSION='v1.86';
+// v1.87 — 영수증 상단 크롭 미리보기와 통일된 사진 관리 액션 바.
+// v1.88 — 고정 편집 액션, 내 이름 기본값, 정보 4행 구성과 더치페이 연결.
+const APP_VERSION='v1.88';
 const THEME_STORAGE_KEY='receiptDbTheme';
+const MY_NAME_STORAGE_KEY='receiptDbMyName';
+const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
 const _themeMedia=window.matchMedia('(prefers-color-scheme: dark)');
+
+function getMyName(){
+  try{return (localStorage.getItem(MY_NAME_STORAGE_KEY)||localStorage.getItem(DUTCH_PAY_NAME_KEY)||'').trim();}
+  catch(e){return '';}
+}
+function setMyName(value){
+  const name=(value||'').trim();
+  try{
+    if(name){localStorage.setItem(MY_NAME_STORAGE_KEY,name);localStorage.setItem(DUTCH_PAY_NAME_KEY,name);}
+    else{localStorage.removeItem(MY_NAME_STORAGE_KEY);}
+  }catch(e){}
+  return name;
+}
 
 function getThemePreference(){
   try{return localStorage.getItem(THEME_STORAGE_KEY)||'system';}catch(e){return 'system';}
@@ -1394,6 +1453,20 @@ function bindThemeSettings(){
   const onSystemThemeChange=()=>{if(getThemePreference()==='system')applyTheme('system');};
   if(_themeMedia.addEventListener)_themeMedia.addEventListener('change',onSystemThemeChange);
   else if(_themeMedia.addListener)_themeMedia.addListener(onSystemThemeChange);
+}
+function bindMyNameSettings(){
+  const input=document.getElementById('myNameInp');
+  const payer=document.getElementById('payerInp');
+  const initial=getMyName();
+  if(input)input.value=initial;
+  if(payer&&!payer.value)payer.value=initial;
+  if(!input)return;
+  input.addEventListener('input',()=>{
+    const previous=getMyName();
+    const next=setMyName(input.value);
+    if(payer&&(!payer.value.trim()||payer.value.trim()===previous))payer.value=next;
+  });
+  input.addEventListener('change',()=>toast(input.value.trim()?'내 이름을 기본 결제자로 저장했어요':'내 이름 설정을 해제했어요',{type:'success'}));
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1510,7 +1583,7 @@ function _revokeImgUrl(imageId){
 // ════════════════════════════════════════════════════════════════
 // CATEGORIES — 자동 분류 (가게명 → 카테고리)
 // ════════════════════════════════════════════════════════════════
-const BASE_CATEGORIES=['외식','카페','술집','케이크','노래방','쇼핑','영화','숙박','골프','스파','운동','여행','기타','경조사','병원·약국'];
+const BASE_CATEGORIES=['외식','카페','술집','케이크','노래방','쇼핑','영화','숙박','골프','스파','운동','여행','병원·약국','경조사','기타'];
 // 카테고리 계층 그룹 (대분류 → 소분류)
 const CATEGORY_GROUPS=[
   {group:'경조사', members:['경조사','부의금','축의금']},
@@ -1537,17 +1610,17 @@ const CAT_RULES=[
 // 카테고리 SVG 아이콘 (line-art, stroke-width 1.8)
 const CAT_SVGS={
   '외식':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>`,
-  '술집':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14l-2 7H7L5 3z"/><path d="M7.5 10l-.5 9h10l-.5-9"/><line x1="9.5" y1="15" x2="14.5" y2="15"/></svg>`,
+  '술집':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v12H7a2 2 0 0 1-2-2V8Z"/><path d="M16 10h2a3 3 0 0 1 0 6h-2"/><path d="M7 8V6a2 2 0 0 1 3-1.7A2.5 2.5 0 0 1 14 6v2"/><path d="M8 11v5M12 11v5"/></svg>`,
   '카페':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>`,
-  '케이크':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16v9H4z"/><path d="M4 15c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2"/><path d="M8 11V7m4 4V6m4 5V7"/><path d="M8 5h.01M12 4h.01M16 5h.01"/></svg>`,
+  '케이크':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16v8H4z"/><path d="M4 16c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2"/><path d="M7 12V8m5 4V7m5 5V8"/><path d="M7 6c1-1 1-2 0-3M12 5c1-1 1-2 0-3M17 6c1-1 1-2 0-3"/></svg>`,
   '노래방':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></svg>`,
   '쇼핑':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
   '영화':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4m10 0h4M3 16h4m10 0h4"/></svg>`,
-  '숙박':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20v-8h18v8M3 16h18M6 12V7h6a4 4 0 0 1 4 4v1M3 20v2m18-2v2"/></svg>`,
+  '숙박':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20v-9h18v9M3 16h18"/><path d="M6 11V7h5a3 3 0 0 1 3 3v1"/><path d="M14 11V9h4a3 3 0 0 1 3 3"/><path d="M3 20v2M21 20v2"/></svg>`,
   '골프':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V3l10 4-10 4"/><ellipse cx="13" cy="21" rx="7" ry="2"/></svg>`,
-  '스파':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10c-2-2 2-3 0-6M12 10c-2-2 2-3 0-7M18 10c-2-2 2-3 0-6"/><path d="M3 13h18c0 5-4 8-9 8s-9-3-9-8Z"/></svg>`,
+  '스파':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10c-2-2 2-3 0-6M12 10c-2-2 2-4 0-7M17 10c-2-2 2-3 0-6"/><path d="M3 13h18c-.6 5.1-4.1 8-9 8s-8.4-2.9-9-8Z"/><path d="M5 17h14"/></svg>`,
   '운동':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8v8M3 10v4m6-3h6m3-3v8m3-6v4"/></svg>`,
-  '여행':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 9 15M22 2l-7 20-4-9-9-4 20-7Z"/></svg>`,
+  '여행':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M12 7 4 12v3l8-2M12 7l8 5v3l-8-2M9 20l3-2 3 2"/></svg>`,
   '기타':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M8 17h5"/></svg>`,
   '병원·약국':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3Z"/></svg>`,
   '경조사':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v16H5V5a2 2 0 0 1 2-2Z"/><path d="M5 7h14M12 7v14"/><path d="M5 18c1.2-1 2.6-1.5 4.2-1.5h5.6c1.6 0 3 .5 4.2 1.5"/></svg>`,
@@ -1560,6 +1633,47 @@ function normalizeCategory(cat){
 }
 function getCatSvg(cat){
   return CAT_SVGS[normalizeCategory(cat)]||`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+}
+
+// 같은 GitHub Pages 출처의 더치페이 저장소에 선택 영수증을 새 모임으로 전달한다.
+function sendReceiptToDutchPay(r){
+  const storageKey='dutchpay_v1';
+  const now=new Date().toISOString();
+  const payer=(r.paidBy||getMyName()||'').trim();
+  const people=[...(r.participants||[]),payer].map(v=>(v||'').trim()).filter((v,i,a)=>v&&a.indexOf(v)===i);
+  if(!people.length){toast('먼저 내 이름 또는 참석자를 입력해주세요',{type:'error'});return;}
+  try{
+    const raw=localStorage.getItem(storageKey);
+    let state;
+    if(!raw){state={version:3,savedAt:now,groups:[],currentGroupId:null,deletedGroups:{}};}
+    else{
+      const parsed=JSON.parse(raw);
+      if((parsed.version===2||parsed.version===3)&&Array.isArray(parsed.groups)) state=parsed;
+      else if(Array.isArray(parsed.people)||Array.isArray(parsed.items)){
+        const legacyId='g'+Date.now()+'0';
+        state={version:3,savedAt:now,groups:[{id:legacyId,name:(parsed.people||[]).join(', ')||'기존 모임',nameAuto:true,createdAt:now,updatedAt:now,data:{people:parsed.people||[],items:parsed.items||[],idc:parsed.idc||0,settleDateStart:parsed.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:parsed.settleDateEnd||null,itemSort:'default',itemSearch:'',payments:parsed.payments||{}}}],currentGroupId:legacyId,deletedGroups:{}};
+      }else throw new Error('unsupported dutch-pay data');
+    }
+    state.version=3;
+    state.deletedGroups=state.deletedGroups||{};
+    const receiptText=(r.items||[]).map(it=>`${it.name||''} | ${it.quantity||1} | ${it.unitPrice||0} | ${it.amount||0}`).join('\n');
+    const existing=state.groups.find(g=>g.receiptSourceId===r.id);
+    const groupId=existing?.id||('g'+Date.now()+Math.floor(Math.random()*1000));
+    const itemId=1;
+    const group={
+      ...(existing||{}),id:groupId,receiptSourceId:r.id,name:r.store||'영수증',nameAuto:false,
+      createdAt:existing?.createdAt||now,updatedAt:now,
+      data:{people,items:[{id:itemId,name:r.store||'영수증',amount:r.total||0,payer:payer||people[0],members:people.slice(),watchers:[],isTreat:false,receiptText}],idc:itemId,settleDateStart:r.date||new Date().toISOString().slice(0,10),settleDateEnd:null,itemSort:'default',itemSearch:'',payments:{}}
+    };
+    if(existing) state.groups[state.groups.indexOf(existing)]=group; else state.groups.push(group);
+    state.currentGroupId=groupId;state.savedAt=now;
+    localStorage.setItem(storageKey,JSON.stringify(state));
+    if(getMyName())localStorage.setItem(DUTCH_PAY_NAME_KEY,getMyName());
+    window.open('/dutch-pay/?from=receipt-db','_blank','noopener');
+    toast(existing?'더치페이 기록을 업데이트했어요':'더치페이에 새 모임으로 보냈어요',{type:'success'});
+  }catch(e){
+    toast('더치페이 연결에 실패했어요. 더치페이 데이터 백업 후 다시 시도해주세요',{type:'error'});
+  }
 }
 
 // 사용자 학습 사전 — 가게명 → 카테고리
@@ -2774,7 +2888,7 @@ saveBtn.addEventListener('click',async()=>{
     store:(p.store||'').trim(),
     category:finalCat,
     paymentMethod:document.getElementById('payMethod').value,
-    paidBy:document.getElementById('payerInp').value.trim(),
+    paidBy:document.getElementById('payerInp').value.trim()||getMyName(),
     total:p.total||0,
     items:cleanItems,
     imageId,
@@ -2814,7 +2928,7 @@ saveBtn.addEventListener('click',async()=>{
 function clearInputs(){
   pasteTa.value='';
   document.getElementById('payMethod').value='card';
-  document.getElementById('payerInp').value='';
+  document.getElementById('payerInp').value=getMyName();
   _setCategoryValue('',{auto:false});
   document.getElementById('participantsInp').value='';
   document.getElementById('tagInp').value='';
@@ -2935,7 +3049,7 @@ async function _saveDirectEntry(){
     store:finalStore,
     category:finalCat,
     paymentMethod:document.getElementById('payMethod').value,
-    paidBy:document.getElementById('payerInp').value.trim(),
+    paidBy:document.getElementById('payerInp').value.trim()||getMyName(),
     total,
     items:[],
     imageId,
@@ -4200,7 +4314,7 @@ async function renderDetail(){
   sub.textContent=`${fmtDateKor(r.date)} · ${fmtMoney(r.total)}원`;
   actions.style.display='flex';
   _detailOrigItems=JSON.parse(JSON.stringify(r.items||[]));
-  _detailDirty=false;
+  _detailSetDirty(false);
 
   // 사진
   let photoHtml;
@@ -4236,22 +4350,22 @@ async function renderDetail(){
 
   // 공통 서브 HTML 조각
   const infoKvHtml=`
-    <div class="detail-kv-stack">
-      ${kvHtml('매장명','store',r.store||'')}
+    <div class="detail-kv-grid">
+      ${kvHtml('매장명','store',r.store||'','','','full')}
       ${kvHtml('일자','date',r.date||'','date')}
       ${detailCategoryKvHtml(r.category||'')}
-      ${kvHtml('결제수단','paymentMethod',r.paymentMethod||'card','select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
       ${kvHtml('결제자','paidBy',r.paidBy||'')}
+      ${kvHtml('결제수단','paymentMethod',r.paymentMethod||'card','select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
+      <div class="kv full">
+        <div class="kv-lbl">참석자</div>
+        <input id="dParticipants" class="kv-inp" type="text" value="${escapeHtml((r.participants||[]).join(', '))}" placeholder="예: 철수, 영희, 민준"/>
+        ${(r.participants||[]).length>1?`<div class="field-sub">1인당 약 ${fmtMoney(Math.round((r.total||0)/(r.participants||[]).length))}원</div>`:''}
+      </div>
     </div>`;
   const memoFieldsHtml=`
     <div class="field-g">
       <label class="field-lbl">메모</label>
       <textarea id="dNotes" class="field-ta" style="min-height:60px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="메모">${escapeHtml(r.notes||'')}</textarea>
-    </div>
-    <div class="field-g">
-      <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분</span></label>
-      <input id="dParticipants" class="field-inp" type="text" value="${escapeHtml((r.participants||[]).join(', '))}" placeholder="예: 철수, 영희, 민준"/>
-      ${(r.participants||[]).length>1?`<div class="field-sub">1인당 약 ${fmtMoney(Math.round((r.total||0)/(r.participants||[]).length))}원</div>`:''}
     </div>
     <div class="field-g">
       <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
@@ -4261,9 +4375,15 @@ async function renderDetail(){
   const detailPhotoCardHtml=_detailPhotoUrl
     ?`<div class="det-photo-thumb" id="detailPhoto">
         <img src="${_detailPhotoUrl}" alt="영수증" id="detailPhotoImg"/>
-        <div style="display:flex;gap:4px;padding:6px;">
-          <button id="addPhotoBtn" class="ghost-mini" style="flex:1;font-size:11px;">교체</button>
-          <button id="delPhotoBtn" class="ghost-mini" style="font-size:11px;color:var(--red);">삭제</button>
+        <div class="det-photo-actions" aria-label="사진 관리">
+          <button id="addPhotoBtn" class="det-photo-action" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8.1 8.1 0 1 0 2 5.5"/><path d="M20 4v7h-7"/></svg>
+            교체
+          </button>
+          <button id="delPhotoBtn" class="det-photo-action danger" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5"/></svg>
+            삭제
+          </button>
         </div>
       </div>`
     :`<div class="det-photo-thumb-empty" id="addPhotoBtn">
@@ -4277,7 +4397,6 @@ async function renderDetail(){
     <input type="file" id="detailPhotoFile" accept="image/*" style="display:none;"/>
     <div class="detail-expense-block" aria-label="상세내역">
       <div class="det-hd-card">
-        <div class="det-cat-box">${getCatSvg(r.category)}</div>
         <div class="det-hd-info">
           <div class="det-hd-store">${escapeHtml(r.store||'(매장명 없음)')}${_detPaidBy?`<span class="det-payer-badge">${_detPaidBy}</span>`:''}</div>
           ${_detPax?`<div class="det-hd-people">${escapeHtml(_detPax)}</div>`:''}
@@ -4332,10 +4451,6 @@ async function renderDetail(){
 
     <div style="font-size:11px;color:var(--label3);margin-top:14px;">
       ID: ${r.id} · 생성 ${r.createdAt?r.createdAt.slice(0,16).replace('T',' '):'—'} · 수정 ${r.updatedAt?r.updatedAt.slice(0,16).replace('T',' '):'—'}
-    </div>
-    <div class="detail-save-bar" id="detailSaveBar" style="display:none;">
-      <button class="ghost-btn" id="detailRevertBtn" style="font-size:13px;padding:7px 14px;">되돌리기</button>
-      <button class="btn" id="detailConfirmBtn" style="min-width:90px;padding:8px 18px;font-size:13px;">수정 확인</button>
     </div>
   `;
 
@@ -4447,7 +4562,6 @@ async function renderDetail(){
         detailCatValue.dispatchEvent(new Event('change',{bubbles:true}));
         detailCatTrigger.querySelector('.detail-cat-trigger-icon').innerHTML=getCatSvg(cat);
         detailCatTrigger.querySelector('.detail-cat-trigger-label').textContent=cat;
-        body.querySelector('.det-cat-box').innerHTML=getCatSvg(cat);
         detailCatPopover.querySelectorAll('.detail-cat-option').forEach(btn=>{
           const selected=btn===option;
           btn.classList.toggle('on',selected);
@@ -4514,7 +4628,7 @@ async function renderDetail(){
   if(dt) dt.addEventListener('input',()=>_detailSetDirty(true));
 
   // ── 수정 확인 / 되돌리기 ──
-  document.getElementById('detailConfirmBtn').addEventListener('click',async()=>{
+  document.getElementById('detailConfirmBtn').onclick=async()=>{
     _syncDetailFromInputs(r);
     // 정보 필드 수집
     body.querySelectorAll('.kv .kv-inp').forEach(inp=>{const f=inp.dataset.field;if(f)r[f]=inp.value;});
@@ -4538,23 +4652,25 @@ async function renderDetail(){
     toast('수정됨',{type:'success'});
     await loadAll();await renderDetail();
     dbxSyncNow(true);
-  });
-  document.getElementById('detailRevertBtn').addEventListener('click',async()=>{
+  };
+  document.getElementById('detailRevertBtn').onclick=async()=>{
     r.items=JSON.parse(JSON.stringify(_detailOrigItems));
     await renderDetail();
-  });
+  };
+  document.getElementById('sendDutchPayBtn').onclick=()=>sendReceiptToDutchPay(r);
 }
 
 // v1.32: 항상 보이는 입력창 (label + field, rawValue, type?, options?)
-function kvHtml(label,field,rawValue,type,options){
+function kvHtml(label,field,rawValue,type,options,extraClass=''){
   const rv=escapeHtml(rawValue==null?'':rawValue);
+  const cls=`kv${extraClass?' '+extraClass:''}`;
   if(type==='select'){
     const opts=(options||[]).map(([v,t])=>`<option value="${escapeHtml(v)}"${v===(rawValue||'')?'selected':''}>${escapeHtml(t)}</option>`).join('');
-    return `<div class="kv"><div class="kv-lbl">${escapeHtml(label)}</div><select class="kv-inp" data-field="${field}">${opts}</select></div>`;
+    return `<div class="${cls}"><div class="kv-lbl">${escapeHtml(label)}</div><select class="kv-inp" data-field="${field}">${opts}</select></div>`;
   }else if(type==='date'){
-    return `<div class="kv"><div class="kv-lbl">${escapeHtml(label)}</div><input class="kv-inp" type="date" data-field="${field}" value="${rv}"/></div>`;
+    return `<div class="${cls}"><div class="kv-lbl">${escapeHtml(label)}</div><input class="kv-inp" type="date" data-field="${field}" value="${rv}"/></div>`;
   }else{
-    return `<div class="kv"><div class="kv-lbl">${escapeHtml(label)}</div><input class="kv-inp" type="text" data-field="${field}" value="${rv}" placeholder="—"/></div>`;
+    return `<div class="${cls}"><div class="kv-lbl">${escapeHtml(label)}</div><input class="kv-inp" type="text" data-field="${field}" value="${rv}" placeholder="—"/></div>`;
   }
 }
 
@@ -5729,6 +5845,7 @@ function _dbxBindEvents(){
 
   applyTheme(getThemePreference());
   bindThemeSettings();
+  bindMyNameSettings();
 
   // Dropbox 이벤트 바인딩 (1회)
   _dbxBindEvents();
