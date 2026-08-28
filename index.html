@@ -170,6 +170,22 @@ svg{display:block;flex-shrink:0;}
 .r-card-meta{font-size:11px;color:var(--label3);margin-top:2px;display:flex;gap:6px;align-items:center;}
 .r-card-amt{font-size:13px;font-weight:700;text-align:right;flex-shrink:0;white-space:nowrap;}
 
+.r-card-check{width:22px;height:22px;margin:0;flex:0 0 22px;border:1.5px solid var(--sep2);border-radius:7px;background:var(--card);color:#fff;display:none;align-items:center;justify-content:center;padding:0;transition:background .12s,border-color .12s,transform .12s;}
+.batch-select-mode .r-card-check{display:flex;}
+.r-card-check svg{width:13px;height:13px;opacity:0;transform:scale(.7);transition:opacity .12s,transform .12s;}
+.r-card.batch-selected{background:var(--blue-bg);box-shadow:inset 3px 0 0 var(--blue);}
+.r-card.batch-selected .r-card-check{background:var(--blue);border-color:var(--blue);}
+.r-card.batch-selected .r-card-check svg{opacity:1;transform:scale(1);}
+.batch-export-bar{display:none;border-top:1px solid var(--sep);background:color-mix(in srgb,var(--left-bg) 94%,transparent);padding:10px var(--pad-x);align-items:center;gap:9px;box-shadow:0 -8px 24px rgba(0,0,0,.06);z-index:115;}
+.batch-export-bar.on{display:flex;}
+.batch-export-summary{flex:1;min-width:0;}
+.batch-export-count{font-size:12px;font-weight:700;color:var(--label);}
+.batch-export-total{font-size:10.5px;color:var(--label3);margin-top:2px;font-variant-numeric:tabular-nums;}
+.batch-export-cancel,.batch-export-send{height:34px;border-radius:9px;padding:0 11px;font-size:11px;font-weight:700;white-space:nowrap;}
+.batch-export-cancel{border:1px solid var(--sep2);background:var(--card);color:var(--label2);}
+.batch-export-send{border:1px solid var(--blue);background:var(--blue);color:#fff;}
+.batch-export-send:disabled{opacity:.42;cursor:not-allowed;}
+
 .empty-state{padding:40px 24px;text-align:center;color:var(--label3);font-size:13px;}
 .empty-state svg{margin:0 auto 12px;color:var(--sep2);}
 
@@ -324,6 +340,10 @@ svg{display:block;flex-shrink:0;}
 .prev-items-head-row{padding:0 2px 4px;font-size:10.5px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.3px;}
 .prev-items-head-row span:nth-child(2),.prev-items-head-row span:nth-child(3),.prev-items-head-row span:nth-child(4){text-align:right;padding-right:9px;}
 .prev-item-row{margin-bottom:5px;}
+.prev-item-row.amount-mismatch .prev-item-qty,
+.prev-item-row.amount-mismatch .prev-item-price,
+.prev-item-row.amount-mismatch .prev-item-amt{border-color:var(--amber);background:var(--amber-bg);}
+.prev-item-row.amount-mismatch .prev-item-amt::before{content:'!';display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-right:5px;border-radius:50%;background:var(--amber);color:#fff;font-size:10px;font-weight:800;flex:0 0 auto;}
 .prev-item-name,.prev-item-qty,.prev-item-price,.prev-item-amt{border:1px solid var(--sep2);background:var(--card);border-radius:5px;padding:7px 9px;font-size:13.5px;outline:none;font-family:inherit;color:var(--label);min-width:0;font-variant-numeric:tabular-nums;line-height:1.3;}
 .prev-item-qty,.prev-item-price,.prev-item-amt{text-align:right;}
 .prev-item-amt.readonly{background:var(--fill2);color:var(--label);cursor:default;display:flex;align-items:center;justify-content:flex-end;font-weight:500;}
@@ -350,6 +370,12 @@ svg{display:block;flex-shrink:0;}
 .alert.warn{background:var(--amber-bg);color:var(--amber);}
 .alert.err{background:var(--red-bg);color:var(--red);}
 .alert.ok{background:var(--green-bg);color:var(--green-txt);}
+.amount-audit-alert{align-items:flex-start;}
+.amount-audit-alert strong{display:block;margin-bottom:2px;}
+.amount-audit-list{margin:5px 0 0;padding-left:17px;}
+.amount-audit-list li+li{margin-top:2px;}
+.items-table tr.amount-mismatch td{background:var(--amber-bg);}
+.items-table tr.amount-mismatch input[data-f="amount"]{border-color:var(--amber);color:var(--amber);font-weight:650;}
 
 .primary-btn{width:100%;border:none;border-radius:var(--rs);padding:13px;font-size:14px;font-weight:600;background:var(--blue);color:#fff;margin-top:18px;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:6px;}
 .primary-btn:hover{opacity:.88;}
@@ -528,6 +554,9 @@ svg{display:block;flex-shrink:0;}
 .month-nav-today{height:24px;font-size:10.5px;color:var(--blue-txt);background:var(--blue-bg);border:1px solid color-mix(in srgb,var(--blue) 24%,transparent);border-radius:7px;padding:0 7px;font-weight:650;line-height:1;display:flex;align-items:center;justify-content:center;white-space:nowrap;}
 .month-nav-today:hover{border-color:var(--blue);}
 .month-nav-today.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+.batch-select-toggle{height:24px;font-size:10.5px;color:var(--label2);background:var(--card);border:1px solid var(--sep2);border-radius:7px;padding:0 7px;font-weight:650;line-height:1;display:flex;align-items:center;justify-content:center;white-space:nowrap;}
+.batch-select-toggle:hover{border-color:var(--blue);color:var(--blue-txt);}
+.batch-select-toggle.on{background:var(--blue-bg);border-color:color-mix(in srgb,var(--blue) 42%,transparent);color:var(--blue-txt);}
 .month-nav.context-spacer{display:none;}
 
 /* 인물 검색 시간 필터 */
@@ -857,6 +886,9 @@ svg{display:block;flex-shrink:0;}
   .side-top,.month-nav,.side-search,.main-top{flex:0 0 auto;}
   .side-list{flex:1;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;padding-bottom:22px;}
   .side-foot{display:none;}
+  .batch-export-bar{position:fixed;left:0;right:0;bottom:calc(68px + env(safe-area-inset-bottom,0px));padding:10px 18px;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}
+  .batch-export-send{height:38px;font-size:12px;padding:0 14px;}
+  .batch-export-cancel{height:38px;}
   .view.on{height:100%;min-height:0;display:flex;flex-direction:column;}
   .main-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
   .side-top{height:var(--mobile-brand-head-h);min-height:var(--mobile-brand-head-h);box-sizing:border-box;}
@@ -952,6 +984,7 @@ svg{display:block;flex-shrink:0;}
         <div class="month-nav-center">
           <div class="month-nav-label" id="monthLabel">—</div>
           <button class="month-nav-today" id="monthToday" aria-pressed="false">전체</button>
+          <button class="batch-select-toggle" id="batchSelectToggle" type="button" aria-pressed="false">선택</button>
         </div>
         <button class="month-nav-btn" id="monthNext" aria-label="다음 달">›</button>
       </div>
@@ -967,6 +1000,15 @@ svg{display:block;flex-shrink:0;}
       </div>
 
       <div class="side-list" id="sideList"></div>
+
+      <div class="batch-export-bar" id="batchExportBar" aria-live="polite">
+        <div class="batch-export-summary">
+          <div class="batch-export-count" id="batchExportCount">0건 선택</div>
+          <div class="batch-export-total" id="batchExportTotal">합계 0원</div>
+        </div>
+        <button class="batch-export-cancel" id="batchExportCancel" type="button">취소</button>
+        <button class="batch-export-send" id="batchExportSend" type="button" disabled>더치페이로 보내기</button>
+      </div>
 
       <div class="side-foot">
         <div>
@@ -1521,7 +1563,9 @@ svg{display:block;flex-shrink:0;}
 // v2.05 — 모바일 RECEIPT DB와 버전 표시의 글자 기준선 정렬.
 // v2.06 — 모바일 더치페이 아이콘을 절대 중앙 고정하고 요약 참석자를 한 줄로 표시.
 // v2.07 — 모바일 요약 카드의 상하 여백과 네 화면의 상단 제목 계층을 통일.
-const APP_VERSION='v2.07';
+// v2.08 — 영수증 목록 다중 선택과 더치페이 일괄 전송을 추가하고 중복 기록은 갱신 처리.
+// v2.09 — AI 인식 금액 원본을 보존하고 수량×단가·품목 합계·영수증 총액을 이중 검증.
+const APP_VERSION='v2.09';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -1794,13 +1838,30 @@ function getCatSvg(cat){
   return CAT_SVGS[normalizeCategory(cat)]||`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
 }
 
-// 같은 GitHub Pages 출처의 더치페이 저장소에 선택 영수증을 새 모임으로 전달한다.
-function sendReceiptToDutchPay(r){
+// 같은 GitHub Pages 출처의 더치페이 저장소에 영수증을 모임 단위로 전달한다.
+// 여러 건도 상태를 한 번만 읽고 저장한 뒤 더치페이 탭 하나만 연다.
+function sendReceiptsToDutchPay(records,{single=false}={}){
+  const sourceRecords=(records||[]).filter(Boolean);
+  if(!sourceRecords.length){toast('보낼 영수증을 선택해주세요',{type:'error'});return false;}
   const storageKey='dutchpay_v1';
   const now=new Date().toISOString();
-  const payer=(r.paidBy||getMyName()||'').trim();
-  const people=[...(r.participants||[]),payer].map(v=>(v||'').trim()).filter((v,i,a)=>v&&a.indexOf(v)===i);
-  if(!people.length){toast('먼저 내 이름 또는 참석자를 입력해주세요',{type:'error'});return;}
+  const prepared=sourceRecords.map(r=>{
+    const payer=(r.paidBy||getMyName()||'').trim();
+    const people=[...(r.participants||[]),payer].map(v=>(v||'').trim()).filter((v,i,a)=>v&&a.indexOf(v)===i);
+    return {r,payer,people};
+  });
+  const invalid=prepared.filter(x=>!x.people.length);
+  if(invalid.length){
+    const names=invalid.slice(0,3).map(x=>x.r.store||'매장명 없음').join(', ');
+    toast(`${names}${invalid.length>3?' 외 '+(invalid.length-3)+'건':''}: 내 이름 또는 참석자를 입력해주세요`,{type:'error',duration:5200});
+    return false;
+  }
+  if(!single){
+    const total=sourceRecords.reduce((sum,r)=>sum+(r.total||0),0);
+    const preview=sourceRecords.slice(0,4).map(r=>`• ${r.store||'매장명 없음'} · ${fmtMoney(r.total||0)}원`).join('\n');
+    const more=sourceRecords.length>4?`\n외 ${sourceRecords.length-4}건`:'';
+    if(!confirm(`${sourceRecords.length}건, 합계 ${fmtMoney(total)}원을 더치페이로 보낼까요?\n\n${preview}${more}`))return false;
+  }
   try{
     const raw=localStorage.getItem(storageKey);
     let state;
@@ -1815,25 +1876,34 @@ function sendReceiptToDutchPay(r){
     }
     state.version=3;
     state.deletedGroups=state.deletedGroups||{};
-    const receiptText=(r.items||[]).map(it=>`${it.name||''} | ${it.quantity||1} | ${it.unitPrice||0} | ${it.amount||0}`).join('\n');
-    const existing=state.groups.find(g=>g.receiptSourceId===r.id);
-    const groupId=existing?.id||('g'+Date.now()+Math.floor(Math.random()*1000));
-    const itemId=1;
-    const group={
-      ...(existing||{}),id:groupId,receiptSourceId:r.id,name:r.store||'영수증',nameAuto:false,
-      createdAt:existing?.createdAt||now,updatedAt:now,
-      data:{people,items:[{id:itemId,name:r.store||'영수증',amount:r.total||0,payer:payer||people[0],members:people.slice(),watchers:[],isTreat:false,receiptText}],idc:itemId,settleDateStart:r.date||new Date().toISOString().slice(0,10),settleDateEnd:null,itemSort:'default',itemSearch:'',payments:{}}
-    };
-    if(existing) state.groups[state.groups.indexOf(existing)]=group; else state.groups.push(group);
-    state.currentGroupId=groupId;state.savedAt=now;
+    let created=0,updated=0,lastGroupId=null;
+    prepared.forEach(({r,payer,people},index)=>{
+      const receiptText=(r.items||[]).map(it=>`${it.name||''} | ${it.quantity||1} | ${it.unitPrice||0} | ${it.amount||0}`).join('\n');
+      const existing=state.groups.find(g=>g.receiptSourceId===r.id);
+      const groupId=existing?.id||('g'+Date.now()+index+Math.floor(Math.random()*1000));
+      const itemId=1;
+      const group={
+        ...(existing||{}),id:groupId,receiptSourceId:r.id,name:r.store||'영수증',nameAuto:false,
+        createdAt:existing?.createdAt||now,updatedAt:now,
+        data:{people,items:[{id:itemId,name:r.store||'영수증',amount:r.total||0,payer:payer||people[0],members:people.slice(),watchers:[],isTreat:false,receiptText}],idc:itemId,settleDateStart:r.date||new Date().toISOString().slice(0,10),settleDateEnd:null,itemSort:'default',itemSearch:'',payments:{}}
+      };
+      if(existing){state.groups[state.groups.indexOf(existing)]=group;updated++;}
+      else{state.groups.push(group);created++;}
+      lastGroupId=groupId;
+    });
+    state.currentGroupId=lastGroupId;state.savedAt=now;
     localStorage.setItem(storageKey,JSON.stringify(state));
     if(getMyName())localStorage.setItem(DUTCH_PAY_NAME_KEY,getMyName());
     window.open('/dutch-pay/?from=receipt-db','_blank','noopener');
-    toast(existing?'더치페이 기록을 업데이트했어요':'더치페이에 새 모임으로 보냈어요',{type:'success'});
+    if(single)toast(updated?'더치페이 기록을 업데이트했어요':'더치페이에 새 모임으로 보냈어요',{type:'success'});
+    else toast(`더치페이로 ${sourceRecords.length}건을 보냈어요 · 새 모임 ${created}건${updated?` · 업데이트 ${updated}건`:''}`,{type:'success'});
+    return true;
   }catch(e){
     toast('더치페이 연결에 실패했어요. 더치페이 데이터 백업 후 다시 시도해주세요',{type:'error'});
+    return false;
   }
 }
+function sendReceiptToDutchPay(r){return sendReceiptsToDutchPay([r],{single:true});}
 
 // 사용자 학습 사전 — 가게명 → 카테고리
 let storeCatMap={};  // { "하나로마트 청담점": "마트", ... }
@@ -2048,6 +2118,54 @@ function parseReceiptText(raw){
   return out;
 }
 
+// 금액 무결성 검사: 각 행의 수량×단가와 금액, 품목 금액 합계와 영수증 총액을 따로 확인한다.
+function getAmountAudit(data){
+  const allItems=data&&data.items||[];
+  const items=allItems.filter(it=>(it.name||'').trim());
+  const rowMismatches=[];
+  allItems.forEach((it,index)=>{
+    if(!(it.name||'').trim())return;
+    const quantity=Number(it.quantity)||0;
+    const unitPrice=Number(it.unitPrice)||0;
+    const amount=Number(it.amount)||0;
+    if(quantity===0||unitPrice===0)return; // 증정품·금액 미기재 품목은 행 곱셈 검사 제외
+    const expected=Math.round(quantity*unitPrice);
+    if(expected!==amount){
+      rowMismatches.push({index,name:(it.name||'').trim(),quantity,unitPrice,amount,expected,diff:amount-expected});
+    }
+  });
+  const itemSum=items.reduce((sum,it)=>sum+(Number(it.amount)||0),0);
+  const total=Number(data&&data.total)||0;
+  const totalDiff=itemSum-total;
+  const hasItems=items.length>0;
+  return {items,rowMismatches,itemSum,total,totalDiff,hasItems,ok:rowMismatches.length===0&&(!hasItems||totalDiff===0)};
+}
+
+function _amountAuditMessages(data){
+  const audit=getAmountAudit(data);
+  const messages=[];
+  audit.rowMismatches.slice(0,4).forEach(m=>{
+    messages.push(`${m.name}: ${_fmtN(m.quantity)} × ${_fmtN(m.unitPrice)}원 = ${_fmtN(m.expected)}원인데 입력 금액은 ${_fmtN(m.amount)}원이에요.`);
+  });
+  if(audit.rowMismatches.length>4)messages.push(`그 밖에 ${audit.rowMismatches.length-4}개 품목도 확인이 필요해요.`);
+  if(audit.hasItems&&audit.totalDiff!==0){
+    messages.push(`품목 합계 ${_fmtN(audit.itemSum)}원과 영수증 총액 ${_fmtN(audit.total)}원이 ${_fmtN(Math.abs(audit.totalDiff))}원 달라요.`);
+  }
+  return {audit,messages};
+}
+
+function amountAuditAlertHtml(data,{showOk=true}={}){
+  const {audit,messages}=_amountAuditMessages(data);
+  const warnIcon='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+  if(messages.length){
+    return `<div class="alert warn amount-audit-alert">${warnIcon}<div><strong>금액 확인이 필요해요</strong><ul class="amount-audit-list">${messages.map(msg=>`<li>${escapeHtml(msg)}</li>`).join('')}</ul><div style="margin-top:6px;">영수증 사진과 비교한 뒤 수정해주세요. 저장할 때도 다시 확인합니다.</div></div></div>`;
+  }
+  if(showOk&&audit.hasItems){
+    return `<div class="alert ok amount-audit-alert"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><div><strong>금액이 모두 일치해요</strong>수량×단가, 각 품목 금액, 품목 합계와 영수증 총액이 정확히 맞습니다.</div></div>`;
+  }
+  return '';
+}
+
 function validateParsed(p){
   if(!p)return {ok:false,errors:['파싱된 내용이 없어요']};
   const errs=[];const warns=[];
@@ -2060,15 +2178,9 @@ function validateParsed(p){
   if(!namedItems.length){
     warns.push('품목 정보가 없어요. 노래방·주유·병원처럼 품목이 없는 영수증은 그대로 저장 가능, 필요하면 아래에서 직접 추가하세요.');
   }
-  // 합계 검증 — 사용자가 총액을 수동으로 손댔을 때만 차이 안내
-  // (자동 모드면 항상 일치하니까 알림 불필요)
-  if(p._totalManual && namedItems.length){
-    const sum=namedItems.reduce((s,i)=>s+(i.amount||0),0);
-    if(sum!==p.total){
-      const diff=Math.abs(sum-p.total);
-      warns.push(`수동 입력 총액 ${fmtMoney(p.total)}원이 품목 합계 ${fmtMoney(sum)}원과 ${fmtMoney(diff)}원 달라요. 봉사료·할인·세금 등 영수증 사정으로 다르면 그대로 저장하세요.`);
-    }
-  }
+  // 금액 불일치는 경고로 남기되 저장 직전 반드시 재확인한다.
+  const {messages}=_amountAuditMessages(p);
+  if(messages.length)warns.push(...messages);
   return {ok:errs.length===0,errors:errs,warnings:warns};
 }
 
@@ -2319,12 +2431,46 @@ function getFiltered(){
   });
 }
 
+let _batchSelectMode=false;
+const _batchSelectedIds=new Set();
+
+function _updateBatchExportUi(){
+  const side=document.querySelector('.side');
+  const toggle=document.getElementById('batchSelectToggle');
+  const bar=document.getElementById('batchExportBar');
+  const selected=receipts.filter(r=>_batchSelectedIds.has(r.id));
+  const total=selected.reduce((sum,r)=>sum+(r.total||0),0);
+  side?.classList.toggle('batch-select-mode',_batchSelectMode);
+  toggle?.classList.toggle('on',_batchSelectMode);
+  if(toggle){toggle.textContent=_batchSelectMode?'완료':'선택';toggle.setAttribute('aria-pressed',String(_batchSelectMode));toggle.disabled=!receipts.length;}
+  bar?.classList.toggle('on',_batchSelectMode);
+  const count=document.getElementById('batchExportCount');if(count)count.textContent=`${selected.length}건 선택`;
+  const totalEl=document.getElementById('batchExportTotal');if(totalEl)totalEl.textContent=`합계 ${fmtMoney(total)}원`;
+  const send=document.getElementById('batchExportSend');if(send)send.disabled=!selected.length;
+}
+function _setBatchSelectMode(active,{render=true}={}){
+  _batchSelectMode=!!active;
+  if(!_batchSelectMode)_batchSelectedIds.clear();
+  if(_batchSelectMode){selectedId=null;_mobileListMode='list';}
+  _updateBatchExportUi();
+  if(render){renderSide();renderDetail();}
+}
+function _toggleBatchReceipt(id){
+  if(_batchSelectedIds.has(id))_batchSelectedIds.delete(id);else _batchSelectedIds.add(id);
+  renderSide();
+}
+
 function _cardHtml(r){
   const sel=(r.id===selectedId)?' sel':'';
+  const batchSel=_batchSelectedIds.has(r.id)?' batch-selected':'';
+  const batchA11y=_batchSelectMode?`role="checkbox" aria-checked="${String(_batchSelectedIds.has(r.id))}"`:'role="button"';
   const meta=[fmtDateKor(r.date)];
   if(r.paidBy)meta.push(escapeHtml(r.paidBy));
   if((r.participants||[]).length>0)meta.push(`${r.participants.length}명`);
-  return `<div class="r-card${sel}" data-id="${r.id}">
+  return `<div class="r-card${sel}${batchSel}" data-id="${r.id}" ${batchA11y}>
+    <button class="r-card-check" type="button" tabindex="-1" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>
+    </button>
     <div class="r-card-info">
       <div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div>
       <div class="r-card-meta">${meta.join(' · ')}</div>
@@ -2370,6 +2516,7 @@ function renderSide(){
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h12a2 2 0 0 1 2 2v15l-3-2-3 2-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2z"/></svg>
       <div>${emptyMsg}</div>
     </div>`;
+    _updateBatchExportUi();
     return;
   }
   const html=[];
@@ -2397,10 +2544,19 @@ function renderSide(){
   // 이벤트 위임
   list.querySelectorAll('.r-card').forEach(el=>{
     el.addEventListener('click',()=>{
-      const id=el.dataset.id;selectReceipt(id);
+      const id=el.dataset.id;
+      if(_batchSelectMode)_toggleBatchReceipt(id);else selectReceipt(id);
     });
   });
+  _updateBatchExportUi();
 }
+
+document.getElementById('batchSelectToggle').addEventListener('click',()=>_setBatchSelectMode(!_batchSelectMode));
+document.getElementById('batchExportCancel').addEventListener('click',()=>_setBatchSelectMode(false));
+document.getElementById('batchExportSend').addEventListener('click',()=>{
+  const selected=receipts.filter(r=>_batchSelectedIds.has(r.id));
+  if(sendReceiptsToDutchPay(selected))_setBatchSelectMode(false);
+});
 
 function updateStats(){
   document.getElementById('footStat').textContent=`${receipts.length}건`;
@@ -2428,6 +2584,7 @@ function _syncMobileSurface(name){
   else app.classList.add('mobile-list-view');
 }
 function switchTab(name){
+  if(name!=='list'&&_batchSelectMode)_setBatchSelectMode(false,{render:false});
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===name));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
   document.querySelector(`.nav-btn[data-nav="${name}"]`)?.classList.add('on');
@@ -2619,12 +2776,10 @@ function updatePreview(){
   }
   const p=parseReceiptText(v);
   if(p){
-    // GPT가 읽어온 총액은 참고용으로만 보존, 미리보기는 항상 자동 합계로 시작
+    // AI가 읽은 원본을 보존한다. 자동 보정으로 불일치를 숨기지 않고 사용자가 사진과 대조하게 한다.
     p._gptTotal=p.total;
-    p._totalManual=false;
-    // 모든 품목 amount를 (가능하면) 수량×단가로 재계산 — GPT 표기 오류 보정
-    for(const it of p.items||[])_recalcAmount(it);
-    p.total=(p.items||[]).reduce((s,i)=>s+(i.amount||0),0);
+    p._totalManual=true;
+    p._totalSource='ai';
   }
   _currentParsed=p;
   // 가게명 인식되면 카테고리 자동 채움 (입력란이 비어있거나 이전에 자동 채웠을 때만)
@@ -2649,16 +2804,19 @@ function renderPreviewForm(){
   const namedItems=(p.items||[]).filter(it=>(it.name||'').trim());
   const sum=namedItems.reduce((s,i)=>s+(i.amount||0),0);
   const matchOk=sum===p.total||namedItems.length===0;
+  const audit=getAmountAudit(p);
+  const mismatchIndexes=new Set(audit.rowMismatches.map(m=>m.index));
 
   const itemsHtml=(p.items||[]).length
     ? (`<div class="prev-items-head-row"><span>품목명</span><span>수량</span><span>단가</span><span>금액</span><span></span></div>` +
        p.items.map((it,idx)=>{
         const negCls=(it.amount||0)<0?' neg':'';
-        return `<div class="prev-item-row" data-idx="${idx}">
+        const rowMismatch=mismatchIndexes.has(idx);
+        return `<div class="prev-item-row${rowMismatch?' amount-mismatch':''}" data-idx="${idx}">
           <input class="prev-item-name" data-f="name" placeholder="품목명" value="${escapeHtml(it.name||'')}" autocomplete="off"/>
           <input class="prev-item-qty" data-f="quantity" type="text" inputmode="numeric" maxlength="3" value="${it.quantity||1}"/>
           <input class="prev-item-price" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/>
-          <div class="prev-item-amt readonly${negCls}" data-amt="${idx}">${_fmtN(it.amount||0)}</div>
+          <div class="prev-item-amt readonly${negCls}" data-amt="${idx}"${rowMismatch?' title="수량×단가와 금액이 일치하지 않습니다"':''}>${_fmtN(it.amount||0)}</div>
           <button type="button" class="prev-item-del" tabindex="-1" data-del="${idx}" title="이 품목 삭제" aria-label="삭제">×</button>
         </div>`;
       }).join(''))
@@ -2669,20 +2827,19 @@ function renderPreviewForm(){
   if(v2.errors.length){
     alertsHtml+=`<div class="alert err"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>${v2.errors.map(escapeHtml).join('<br>')}</div></div>`;
   }
-  if(v2.warnings.length){
-    alertsHtml+=`<div class="alert warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><div>${v2.warnings.map(escapeHtml).join('<br>')}</div></div>`;
+  const nonAmountWarnings=v2.warnings.filter(msg=>!_amountAuditMessages(p).messages.includes(msg));
+  if(nonAmountWarnings.length){
+    alertsHtml+=`<div class="alert warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><div>${nonAmountWarnings.map(escapeHtml).join('<br>')}</div></div>`;
   }
-  if(!v2.errors.length&&!v2.warnings.length){
-    alertsHtml=`<div class="alert ok"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><div>정상이에요. 필요한 부분 수정 후 사진 첨부하고 저장하세요.</div></div>`;
-  }
+  alertsHtml+=amountAuditAlertHtml(p);
 
   const autoTotal=_autoTotal();
   const totalDiff=p.total!==autoTotal;
   const totalHintHtml=p._totalManual
     ? `<div class="prev-total-hint${totalDiff?' diff':''}">
         ${totalDiff
-          ? `수동 입력 · 자동 합계 <b>${fmtMoney(autoTotal)}원</b>과 다름`
-          : `수동 입력 · 자동 합계와 일치`}
+          ? `${p._totalSource==='ai'?'AI 인식 총액':'직접 입력 총액'} · 품목 합계 <b>${fmtMoney(autoTotal)}원</b>과 다름`
+          : `${p._totalSource==='ai'?'AI 인식 총액':'직접 입력 총액'} · 품목 합계와 일치`}
         <button type="button" class="prev-total-reset" title="자동 합계로 되돌리기">↺ 자동</button>
       </div>`
     : `<div class="prev-total-hint">자동 합계 · 품목 금액의 합</div>`;
@@ -2706,7 +2863,7 @@ function renderPreviewForm(){
       </div>
       ${namedItems.length>0?`<div class="prev-foot"><span class="prev-foot-lbl">품목 합계</span><span class="prev-foot-val${matchOk?'':' mismatch'}">${fmtMoney(sum)}원${matchOk?'':` ≠ 총액 ${fmtMoney(p.total)}원`}</span></div>`:''}
     </div>
-    ${alertsHtml}
+    <div class="preview-alerts">${alertsHtml}</div>
   `;
 
   bindPreviewFormEvents();
@@ -2726,8 +2883,23 @@ function _refreshPreviewSummary(){
     foot.textContent=`${fmtMoney(sum)}원${matchOk?'':` ≠ 총액 ${fmtMoney(p.total)}원`}`;
     foot.classList.toggle('mismatch',!matchOk);
   }
-  // alert 영역은 입력 중에 자주 바뀌면 거슬리니 일단 두고, 저장 버튼만 체크
+  // 행별 불일치 강조
+  const mismatchIndexes=new Set(getAmountAudit(p).rowMismatches.map(m=>m.index));
+  previewArea.querySelectorAll('.prev-item-row').forEach(row=>{
+    row.classList.toggle('amount-mismatch',mismatchIndexes.has(parseInt(row.dataset.idx,10)));
+  });
+  // 포커스를 유지한 채 검증 알림만 갱신
   const v2=validateParsed(p);
+  const alerts=previewArea.querySelector('.preview-alerts');
+  if(alerts){
+    let html='';
+    if(v2.errors.length)html+=`<div class="alert err"><div>${v2.errors.map(escapeHtml).join('<br>')}</div></div>`;
+    const auditMessages=_amountAuditMessages(p).messages;
+    const otherWarnings=v2.warnings.filter(msg=>!auditMessages.includes(msg));
+    if(otherWarnings.length)html+=`<div class="alert warn"><div>${otherWarnings.map(escapeHtml).join('<br>')}</div></div>`;
+    html+=amountAuditAlertHtml(p);
+    alerts.innerHTML=html;
+  }
   saveBtn.disabled=v2.errors.length>0;
 }
 
@@ -2770,6 +2942,7 @@ function bindPreviewFormEvents(){
   if(totalInp){
     const commit=()=>{
       p._totalManual=true;
+      p._totalSource='manual';
       p.total=_parseN(totalInp.value);
       _refreshPreviewSummary();
     };
@@ -2790,6 +2963,7 @@ function bindPreviewFormEvents(){
   if(resetBtn){
     resetBtn.addEventListener('click',()=>{
       p._totalManual=false;
+      p._totalSource='auto';
       _recalcTotalIfAuto();
       renderPreviewForm();
     });
@@ -3054,6 +3228,15 @@ saveBtn.addEventListener('click',async()=>{
   const p=_currentParsed;
   const v2=validateParsed(p);
   if(v2.errors.length){toast('필수 항목이 비어있어요',{type:'error'});return;}
+  const {audit:amountAudit}=_amountAuditMessages(p);
+  if(!amountAudit.ok){
+    const summary=[
+      amountAudit.rowMismatches.length?`수량×단가와 금액이 다른 품목 ${amountAudit.rowMismatches.length}개`:null,
+      amountAudit.hasItems&&amountAudit.totalDiff!==0?`품목 합계와 영수증 총액 차이 ${_fmtN(Math.abs(amountAudit.totalDiff))}원`:null,
+    ].filter(Boolean).join('\n');
+    const ok=confirm(`금액 불일치가 남아 있어요.\n\n${summary}\n\n영수증 사진과 확인하셨나요? 그래도 저장하려면 확인을 눌러주세요.`);
+    if(!ok){toast('저장을 멈췄어요. 표시된 금액을 확인해주세요',{type:'warning'});return;}
+  }
   const date=p.date||new Date().toISOString().slice(0,10);
   const id=_newId(date);
   let imageId=null;
@@ -4500,7 +4683,8 @@ async function renderDetail(){
   const _detailPhotoUrl=r.imageId?await _ensureImgUrl(r.imageId):null;
 
   const sum=(r.items||[]).reduce((s,i)=>s+(i.amount||0),0);
-  const mismatch=(r.items||[]).length>0 && sum!==r.total;
+  const detailAmountAudit=getAmountAudit(r);
+  const detailMismatchIndexes=new Set(detailAmountAudit.rowMismatches.map(m=>m.index));
 
   // 공통 서브 HTML 조각
   const infoKvHtml=`
@@ -4570,7 +4754,7 @@ async function renderDetail(){
         <table class="items-table" id="itemsTable">
           <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
           <tbody>
-            ${(r.items||[]).map((it,idx)=>{const _ca=(it.quantity||0)!==0&&(it.unitPrice||0)!==0?Math.round((it.quantity||0)*(it.unitPrice||0)):null;const _m=_ca!==null&&_ca!==(it.amount||0);return`<tr data-idx="${idx}">
+            ${(r.items||[]).map((it,idx)=>{const _ca=(it.quantity||0)!==0&&(it.unitPrice||0)!==0?Math.round((it.quantity||0)*(it.unitPrice||0)):null;const _m=_ca!==null&&_ca!==(it.amount||0);return`<tr data-idx="${idx}"${detailMismatchIndexes.has(idx)?' class="amount-mismatch"':''}>
               <td><input class="item-name-inp" data-f="name" value="${escapeHtml(it.name)}"/></td>
               <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" maxlength="3" value="${it.quantity||0}"/></td>
               <td><input class="item-num-inp" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/></td>
@@ -4580,7 +4764,7 @@ async function renderDetail(){
             <tr class="total-row"><td>합계</td><td></td><td colspan="2" class="detail-total-cell"><input id="dTotalAmt" class="item-num-inp" type="text" inputmode="numeric" value="${_fmtN(r.total||0)}" style="font-weight:700;font-size:14px;text-align:right;${(r.total||0)<0?'color:var(--red);':''}"/></td><td></td></tr>
           </tbody>
         </table>
-        ${mismatch?`<div class="alert warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><div>상세내역 합계 ${fmtMoney(sum)}원과 총액 ${fmtMoney(r.total)}원이 ${fmtMoney(Math.abs(sum-r.total))}원 달라요.</div></div>`:''}
+        <div id="detailAmountAudit">${amountAuditAlertHtml(r)}</div>
       </div>
     </div>
 
@@ -4773,6 +4957,19 @@ async function renderDetail(){
   // ── 수정 확인 / 되돌리기 ──
   document.getElementById('detailConfirmBtn').onclick=async()=>{
     _syncDetailFromInputs(r);
+    const dTotalBeforeSave=document.getElementById('dTotalAmt');
+    const draftTotal=dTotalBeforeSave?_parseN(dTotalBeforeSave.value):(r.total||0);
+    const draftAudit=getAmountAudit({...r,total:draftTotal});
+    if(!draftAudit.ok){
+      const summary=[
+        draftAudit.rowMismatches.length?`수량×단가와 금액이 다른 품목 ${draftAudit.rowMismatches.length}개`:null,
+        draftAudit.hasItems&&draftAudit.totalDiff!==0?`품목 합계와 총액 차이 ${_fmtN(Math.abs(draftAudit.totalDiff))}원`:null,
+      ].filter(Boolean).join('\n');
+      if(!confirm(`금액 불일치가 남아 있어요.\n\n${summary}\n\n영수증 사진과 확인하셨나요? 그래도 수정 내용을 저장할까요?`)){
+        toast('저장을 멈췄어요. 표시된 금액을 확인해주세요',{type:'warning'});
+        return;
+      }
+    }
     // 정보 필드 수집
     body.querySelectorAll('.kv .kv-inp').forEach(inp=>{const f=inp.dataset.field;if(f)r[f]=inp.value;});
     // 메모·참석자·태그 수집
@@ -4868,6 +5065,19 @@ function _liveUpdateDetailTotal(){
   const dTotalInp=document.getElementById('dTotalAmt');
   if(dTotalInp){dTotalInp.value=_fmtN(sum);dTotalInp.style.color=sum<0?'var(--red)':'';}
 }
+function _refreshDetailAmountAudit(r){
+  const wrap=document.getElementById('detailAmountAudit');
+  if(!wrap)return;
+  _syncDetailFromInputs(r);
+  const totalInp=document.getElementById('dTotalAmt');
+  const draft={...r,total:totalInp?_parseN(totalInp.value):(r.total||0)};
+  const audit=getAmountAudit(draft);
+  wrap.innerHTML=amountAuditAlertHtml(draft);
+  const mismatchIndexes=new Set(audit.rowMismatches.map(m=>m.index));
+  document.querySelectorAll('#itemsTable tbody tr[data-idx]').forEach(tr=>{
+    tr.classList.toggle('amount-mismatch',mismatchIndexes.has(parseInt(tr.dataset.idx,10)));
+  });
+}
 function _bindDetailItemTableEvents(r){
   const tbl=document.getElementById('itemsTable');if(!tbl)return;
 
@@ -4878,7 +5088,7 @@ function _bindDetailItemTableEvents(r){
     const pInp=tr.querySelector('input[data-f="unitPrice"]');
     const aInp=tr.querySelector('input[data-f="amount"]');
     if(!qInp||!pInp||!aInp) return;
-    if(aInp.dataset.manual==='1'){_liveUpdateDetailTotal();return;}
+    if(aInp.dataset.manual==='1'){_liveUpdateDetailTotal();_refreshDetailAmountAudit(r);return;}
     const qty=parseInt(qInp.value)||0;
     const price=_parseN(pInp.value);
     if(qty!==0&&price!==0){
@@ -4887,6 +5097,7 @@ function _bindDetailItemTableEvents(r){
       aInp.style.color=amt<0?'var(--red)':'';
     }
     _liveUpdateDetailTotal();
+    _refreshDetailAmountAudit(r);
   }
 
   tbl.querySelectorAll('tbody tr[data-idx]').forEach(tr=>{
@@ -4922,8 +5133,8 @@ function _bindDetailItemTableEvents(r){
         });
       }else if(f==='amount'){
         inp.addEventListener('focus',()=>{inp.value=String(_parseN(inp.value));inp.select();});
-        inp.addEventListener('input',()=>{inp.dataset.manual='1';_liveCommaFmt(inp);_detailSetDirty(true);_liveUpdateDetailTotal();});
-        inp.addEventListener('blur',()=>{const n=_parseN(inp.value);inp.value=_fmtN(n);inp.style.color=n<0?'var(--red)':'';_liveUpdateDetailTotal();});
+        inp.addEventListener('input',()=>{inp.dataset.manual='1';_liveCommaFmt(inp);_detailSetDirty(true);_liveUpdateDetailTotal();_refreshDetailAmountAudit(r);});
+        inp.addEventListener('blur',()=>{const n=_parseN(inp.value);inp.value=_fmtN(n);inp.style.color=n<0?'var(--red)':'';_liveUpdateDetailTotal();_refreshDetailAmountAudit(r);});
       }else{
         inp.addEventListener('focus',()=>inp.select());
         inp.addEventListener('input',()=>_detailSetDirty(true));
@@ -4936,7 +5147,9 @@ function _bindDetailItemTableEvents(r){
       const idx=parseInt(btn.dataset.del,10);
       if(!confirm(`'${r.items[idx].name}' 품목을 삭제할까요?`))return;
       _syncDetailFromInputs(r);
-      r.items.splice(idx,1);r.updatedAt=nowISO();
+      r.items.splice(idx,1);
+      r.total=r.items.reduce((sum,it)=>sum+(Number(it.amount)||0),0);
+      r.updatedAt=nowISO();
       await dbPut('receipts',r);
       await loadAll();await renderDetail();
       dbxSyncNow(true);
@@ -4946,8 +5159,8 @@ function _bindDetailItemTableEvents(r){
   const _dTotalInp=document.getElementById('dTotalAmt');
   if(_dTotalInp){
     _dTotalInp.addEventListener('focus',()=>{_dTotalInp.value=String(_parseN(_dTotalInp.value));_dTotalInp.select();});
-    _dTotalInp.addEventListener('blur',()=>{const n=_parseN(_dTotalInp.value);_dTotalInp.value=_fmtN(n);_dTotalInp.style.color=n<0?'var(--red)':'';});
-    _dTotalInp.addEventListener('input',()=>{_liveCommaFmt(_dTotalInp);_detailSetDirty(true);});
+    _dTotalInp.addEventListener('blur',()=>{const n=_parseN(_dTotalInp.value);_dTotalInp.value=_fmtN(n);_dTotalInp.style.color=n<0?'var(--red)':'';_refreshDetailAmountAudit(r);});
+    _dTotalInp.addEventListener('input',()=>{_liveCommaFmt(_dTotalInp);_detailSetDirty(true);_refreshDetailAmountAudit(r);});
   }
 }
 function _reRenderDetailItems(r){
