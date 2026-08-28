@@ -276,6 +276,8 @@ svg{display:block;flex-shrink:0;}
 .cat-picker-trigger[aria-expanded="true"]{border-color:var(--blue);background:var(--card);box-shadow:0 0 0 3px var(--blue-bg);}
 .cat-picker-trigger-icon{width:24px;height:24px;border-radius:7px;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .cat-picker-trigger-icon svg{width:15px;height:15px;}
+.cat-icon-png{display:block;flex-shrink:0;background:currentColor;-webkit-mask:var(--cat-icon) center / contain no-repeat;mask:var(--cat-icon) center / contain no-repeat;}
+.cat-picker-trigger-icon .cat-icon-png{width:15px;height:15px;}
 .cat-picker-trigger-label{flex:1;font-size:13.5px;font-weight:550;}
 .cat-picker-trigger-label.empty{color:var(--label3);font-weight:400;}
 .cat-picker-trigger-chevron{color:var(--label3);transition:transform .15s;}
@@ -285,6 +287,7 @@ svg{display:block;flex-shrink:0;}
 .cat-picker-title{grid-column:1/-1;margin:0 -12px 4px;padding:13px 16px;border-bottom:1px solid var(--sep);color:var(--label2);font-size:12px;font-weight:700;letter-spacing:-.1px;}
 .cat-picker-option{min-height:78px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--label2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-size:11.5px;font-weight:600;transition:background .12s,border-color .12s,color .12s;}
 .cat-picker-option svg{width:27px;height:27px;}
+.cat-picker-option .cat-icon-png{width:27px;height:27px;}
 .cat-picker-option:hover{background:var(--fill);color:var(--label);}
 .cat-picker-option.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue-txt);}
 @media(max-width:520px){
@@ -292,6 +295,7 @@ svg{display:block;flex-shrink:0;}
   .cat-picker-title{margin:0 -6px 3px;padding:10px 12px;}
   .cat-picker-option{min-height:58px;gap:4px;padding:3px 0;font-size:9.5px;border-radius:9px;}
   .cat-picker-option svg{width:22px;height:22px;}
+  .cat-picker-option .cat-icon-png{width:22px;height:22px;}
   .detail-cat-popover{left:calc(-100% - 10px);width:calc(200% + 10px);}
 }
 
@@ -387,6 +391,7 @@ svg{display:block;flex-shrink:0;}
 .detail-cat-trigger{width:100%;min-height:28px;border:0;background:transparent;color:var(--label);display:flex;align-items:center;gap:9px;padding:0;text-align:left;font:inherit;}
 .detail-cat-trigger-icon{width:25px;height:25px;flex:0 0 25px;border-radius:7px;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;}
 .detail-cat-trigger-icon svg{width:16px;height:16px;}
+.detail-cat-trigger-icon .cat-icon-png{width:16px;height:16px;}
 .detail-cat-trigger-label{flex:1;font-size:14px;font-weight:600;}
 .detail-cat-trigger-chevron{color:var(--label3);transition:transform .15s;}
 .detail-cat-trigger[aria-expanded="true"] .detail-cat-trigger-chevron{transform:rotate(180deg);}
@@ -708,6 +713,7 @@ svg{display:block;flex-shrink:0;}
 .det-hd-card:hover{background:var(--fill2);}
 .det-cat-box{width:48px;height:48px;border-radius:12px;background:var(--blue-bg);border:1px solid rgba(98,100,238,.25);display:flex;align-items:center;justify-content:center;color:var(--blue-txt);flex-shrink:0;}
 .det-cat-box svg{width:24px;height:24px;}
+.det-cat-box .cat-icon-png{width:24px;height:24px;}
 .det-hd-info{min-width:0;grid-column:1;}
 .det-hd-store{font-size:15px;font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
 .det-payer-badge{font-size:11px;font-weight:600;background:var(--blue-bg);color:var(--blue-txt);border-radius:20px;padding:2px 9px;flex-shrink:0;}
@@ -1521,7 +1527,8 @@ svg{display:block;flex-shrink:0;}
 // v2.05 — 모바일 RECEIPT DB와 버전 표시의 글자 기준선 정렬.
 // v2.06 — 모바일 더치페이 아이콘을 절대 중앙 고정하고 요약 참석자를 한 줄로 표시.
 // v2.07 — 모바일 요약 카드의 상하 여백과 네 화면의 상단 제목 계층을 통일.
-const APP_VERSION='v2.07';
+// v2.08 — 제공받은 PNG로 주요 카테고리 아이콘 교체.
+const APP_VERSION='v2.08';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -1759,8 +1766,21 @@ const CAT_RULES=[
   {cat:'병원·약국', kws:['병원','약국','의원','치과','한의원','클리닉']},
 ];
 
+const CAT_PNGS={
+  '외식':'icons/categories/dining.png',
+  '술집':'icons/categories/bar.png',
+  '카페':'icons/categories/cafe.png',
+  '노래방':'icons/categories/karaoke.png',
+  '영화':'icons/categories/movie.png',
+  '숙박':'icons/categories/lodging.png',
+  '골프':'icons/categories/golf.png',
+  '스파':'icons/categories/spa.png',
+  '운동':'icons/categories/exercise.png',
+  '병원·약국':'icons/categories/medical.png',
+  '경조사':'icons/categories/gyeongjo.png',
+};
 
-// 카테고리 SVG 아이콘 (line-art, stroke-width 1.8)
+// 카테고리 SVG 아이콘 (line-art, stroke-width 1.8). 제공된 PNG가 없는 카테고리의 fallback.
 const CAT_SVGS={
   '외식':`<svg viewBox="-2 -2 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>`,
   '술집':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 0 1 0-5c.78 0 1.57.5 2.5.5C9.44 3.5 10 3 11 3s1.44.5 3 .5 2.5-1 4-1 1.5 2.5 0 5-2.5.5-4 .5z"/><path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/></svg>`,
@@ -1790,8 +1810,12 @@ function getCategoryLabel(cat){
   const normalized=normalizeCategory(cat);
   return CATEGORY_LABELS[normalized]||normalized||'';
 }
+function getCatPng(path){
+  return `<span class="cat-icon-png" style="--cat-icon:url('${path}')" aria-hidden="true"></span>`;
+}
 function getCatSvg(cat){
-  return CAT_SVGS[normalizeCategory(cat)]||`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+  const normalized=normalizeCategory(cat);
+  return CAT_PNGS[normalized]?getCatPng(CAT_PNGS[normalized]):CAT_SVGS[normalized]||`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
 }
 
 // 같은 GitHub Pages 출처의 더치페이 저장소에 선택 영수증을 새 모임으로 전달한다.
