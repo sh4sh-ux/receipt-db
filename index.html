@@ -1587,7 +1587,8 @@ svg{display:block;flex-shrink:0;}
 // v2.13 — 상세내역 계산 확인창의 위·아래 여백을 동일하게 맞춤.
 // v2.14 — 카테고리 아이콘의 선 굵기를 통일하고 여행 아이콘을 확대.
 // v2.15 — 모바일 품목명 정렬 및 계산 확인창 위·아래 회색 여백 통일.
-const APP_VERSION='v2.15';
+// v2.16 — 금액 확인 메시지 텍스트 간결화.
+const APP_VERSION='v2.16';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -2184,7 +2185,7 @@ function amountAuditAlertHtml(data,{showOk=true}={}){
     return `<div class="alert warn amount-audit-alert">${warnIcon}<div><strong>금액 확인이 필요해요</strong><ul class="amount-audit-list">${messages.map(msg=>`<li>${escapeHtml(msg)}</li>`).join('')}</ul><div style="margin-top:6px;">영수증 사진과 비교한 뒤 수정해주세요. 저장할 때도 다시 확인합니다.</div></div></div>`;
   }
   if(showOk&&audit.hasItems){
-    return `<div class="alert ok amount-audit-alert"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><div><strong>금액이 모두 일치해요</strong>수량×단가, 각 품목 금액, 품목 합계와 영수증 총액이 정확히 맞습니다.</div></div>`;
+    return `<div class="alert ok amount-audit-alert"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><div><strong>금액 확인 완료</strong>수량·단가·합계 모두 정확히 일치합니다.</div></div>`;
   }
   return '';
 }
