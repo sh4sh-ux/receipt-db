@@ -759,7 +759,7 @@ svg{display:block;flex-shrink:0;}
 .det-expense-toggle:hover{background:var(--blue-bg);}
 .det-expense-toggle svg{transition:transform .18s;}
 .det-expense-toggle[aria-expanded="false"] svg{transform:rotate(-90deg);}
-.detail-items-panel{background:var(--fill);}
+.detail-items-panel{background:var(--fill);padding-bottom:30px;}
 .detail-items-panel.closed{display:none;}
 .detail-items-tools{padding:8px 14px;display:flex;align-items:center;justify-content:flex-end;gap:6px;}
 .detail-items-tools .ghost-mini{border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;}
@@ -776,8 +776,8 @@ svg{display:block;flex-shrink:0;}
 .detail-items-panel .items-table input:hover{background:var(--fill2);}
 .detail-items-panel .items-table input:focus{border-color:var(--blue);background:var(--card);}
 .detail-items-panel .items-table tr.total-row td{background:transparent;border-top:2px solid var(--sep2);border-bottom:none;padding-top:9px;padding-bottom:9px;}
-/* 합계 행의 9px 하단 패딩까지 포함해 확인창 위·아래의 실제 여백을 14px로 맞춘다. */
-.detail-items-panel .alert{margin:5px 14px 14px!important;}
+/* 확인창 아래 여백은 부모 안쪽 패딩으로 확보해 회색 배경이 확실히 보이게 한다. */
+.detail-items-panel .alert{margin:5px 14px 0!important;}
 @media(max-width:780px){
   .det-hd-people{flex-wrap:nowrap;overflow:hidden;white-space:nowrap;transform:translateY(-4px);}
   .det-hd-person{flex:0 0 auto;}
@@ -788,6 +788,9 @@ svg{display:block;flex-shrink:0;}
   .det-hd-amt{font-size:16px;}
   .detail-items-panel .items-table th,
   .detail-items-panel .items-table td{padding:7px 4px;}
+  /* 모바일에서는 열 제목과 합계를 실제 품목명 텍스트 시작선에 맞춘다. */
+  .detail-items-panel .items-table th:first-child,
+  .detail-items-panel .items-table tr.total-row td:first-child{padding-left:3px;}
   .detail-items-panel .items-table th:nth-child(2){width:34px;}
   .detail-items-panel .items-table th:nth-child(3){width:76px;}
   .detail-items-panel .items-table th:nth-child(4){width:80px;}
@@ -1583,7 +1586,8 @@ svg{display:block;flex-shrink:0;}
 // v2.12 — 다중 영수증을 일회성 전송 묶음으로 안전하게 전달하고 네비게이션 설명을 통일.
 // v2.13 — 상세내역 계산 확인창의 위·아래 여백을 동일하게 맞춤.
 // v2.14 — 카테고리 아이콘의 선 굵기를 통일하고 여행 아이콘을 확대.
-const APP_VERSION='v2.14';
+// v2.15 — 모바일 품목명 정렬 및 계산 확인창 위·아래 회색 여백 통일.
+const APP_VERSION='v2.15';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
