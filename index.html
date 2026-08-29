@@ -772,10 +772,12 @@ svg{display:block;flex-shrink:0;}
 .detail-items-panel .items-table .item-name-inp,
 .detail-items-panel .items-table .item-num-inp{border:1px solid transparent;background:transparent;border-radius:5px;padding:5px 4px;}
 .detail-items-panel .items-table .item-name-inp{padding-left:0;}
+.detail-items-panel .items-table td:nth-child(4) .item-num-inp{font-weight:600;}
 .detail-items-panel .items-table input:hover{background:var(--fill2);}
 .detail-items-panel .items-table input:focus{border-color:var(--blue);background:var(--card);}
 .detail-items-panel .items-table tr.total-row td{background:transparent;border-top:2px solid var(--sep2);border-bottom:none;padding-top:9px;padding-bottom:9px;}
-.detail-items-panel .alert{margin:14px!important;}
+/* 합계 행의 9px 하단 패딩까지 포함해 확인창 위·아래의 실제 여백을 14px로 맞춘다. */
+.detail-items-panel .alert{margin:5px 14px 14px!important;}
 @media(max-width:780px){
   .det-hd-people{flex-wrap:nowrap;overflow:hidden;white-space:nowrap;transform:translateY(-4px);}
   .det-hd-person{flex:0 0 auto;}
@@ -1580,7 +1582,8 @@ svg{display:block;flex-shrink:0;}
 // v2.11 — 교통을 버스 선 아이콘으로 교체하고 카테고리 아이콘의 시각 크기를 통일.
 // v2.12 — 다중 영수증을 일회성 전송 묶음으로 안전하게 전달하고 네비게이션 설명을 통일.
 // v2.13 — 상세내역 계산 확인창의 위·아래 여백을 동일하게 맞춤.
-const APP_VERSION='v2.13';
+// v2.14 — 카테고리 아이콘의 선 굵기를 통일하고 여행 아이콘을 확대.
+const APP_VERSION='v2.14';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -1820,16 +1823,11 @@ const CAT_RULES=[
 ];
 
 const CAT_PNGS={
+  // 선 굵기와 형태의 기준으로 선택한 네 아이콘은 원본 실루엣을 유지한다.
   '술집':'icons/categories/bar.png',
   '카페':'icons/categories/cafe.png',
-  '노래방':'icons/categories/karaoke.png',
   '영화':'icons/categories/movie.png',
-  '숙박':'icons/categories/lodging.png',
   '골프':'icons/categories/golf.png',
-  '스파':'icons/categories/spa.png',
-  '운동':'icons/categories/exercise.png',
-  '병원·약국':'icons/categories/medical.png',
-  '경조사':'icons/categories/gyeongjo.png',
 };
 
 // 원본 PNG마다 투명 여백이 달라 보이는 크기가 흔들리므로 실제 실루엣 기준으로 보정한다.
@@ -1837,27 +1835,27 @@ const CAT_PNGS={
 const CAT_ICON_SCALES={
   '외식':.9,'카페':1,'술집':.92,'케이크':.94,'노래방':1.05,'교통':.94,
   '쇼핑':.94,'영화':.94,'숙박':.96,'골프':.94,'스파':.98,'운동':.9,
-  '여행':.94,'병원·약국':.88,'경조사':.9,'기타':.94,
+  '여행':1.08,'병원·약국':.88,'경조사':.9,'기타':.94,
 };
 
-// 카테고리 SVG 아이콘 (line-art, stroke-width 1.8). 제공된 PNG가 없는 카테고리의 fallback.
+// 기준 PNG와 시각적으로 같은 굵기가 되도록 SVG 선은 모두 1.55로 통일한다.
 const CAT_SVGS={
-  '외식':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>`,
+  '외식':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>`,
   '술집':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 0 1 0-5c.78 0 1.57.5 2.5.5C9.44 3.5 10 3 11 3s1.44.5 3 .5 2.5-1 4-1 1.5 2.5 0 5-2.5.5-4 .5z"/><path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/></svg>`,
   '카페':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h12v9a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8Z"/><path d="M17 10h2a3 3 0 0 1 0 6h-2"/><path d="M8 5V3M12 5V2M16 5V3"/></svg>`,
-  '케이크':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><line x1="7" y1="4" x2="7" y2="5"/><line x1="12" y1="4" x2="12" y2="5"/><line x1="17" y1="4" x2="17" y2="5"/></svg>`,
-  '노래방':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></svg>`,
-  '쇼핑':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="14" rx="2"/><path d="M8 9V6a4 4 0 0 1 8 0v3M8 12c.4 2.2 1.7 3.2 4 3.2s3.6-1 4-3.2"/></svg>`,
-  '교통':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2.5 2.5 0 0 1 2.5 2.5v12a2.5 2.5 0 0 1-2.5 2.5H7a2.5 2.5 0 0 1-2.5-2.5v-12A2.5 2.5 0 0 1 7 3Z"/><path d="M8.5 5h7M7 8h10v6H7z"/><path d="M4.5 9H3.4v3M19.5 9h1.1v3"/><circle cx="8" cy="17" r="1.15"/><circle cx="16" cy="17" r="1.15"/><path d="M7 20v1.5h2V20M15 20v1.5h2V20"/></svg>`,
+  '케이크':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><line x1="7" y1="4" x2="7" y2="5"/><line x1="12" y1="4" x2="12" y2="5"/><line x1="17" y1="4" x2="17" y2="5"/></svg>`,
+  '노래방':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></svg>`,
+  '쇼핑':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="14" rx="2"/><path d="M8 9V6a4 4 0 0 1 8 0v3M8 12c.4 2.2 1.7 3.2 4 3.2s3.6-1 4-3.2"/></svg>`,
+  '교통':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2.5 2.5 0 0 1 2.5 2.5v12a2.5 2.5 0 0 1-2.5 2.5H7a2.5 2.5 0 0 1-2.5-2.5v-12A2.5 2.5 0 0 1 7 3Z"/><path d="M8.5 5h7M7 8h10v6H7z"/><path d="M4.5 9H3.4v3M19.5 9h1.1v3"/><circle cx="8" cy="17" r="1.15"/><circle cx="16" cy="17" r="1.15"/><path d="M7 20v1.5h2V20M15 20v1.5h2V20"/></svg>`,
   '영화':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>`,
-  '숙박':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M2 18h20"/></svg>`,
+  '숙박':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M2 18h20"/></svg>`,
   '골프':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V3l10 4-10 4"/><ellipse cx="13" cy="21" rx="7" ry="2"/></svg>`,
-  '스파':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 13c-1-1.15-1-2.3 0-3.45s1-2.3 0-3.45"/><path d="M12 13c-1-1.15-1-2.3 0-3.45s1-2.3 0-3.45"/><path d="M16.5 13c-1-1.15-1-2.3 0-3.45s1-2.3 0-3.45"/><path d="M4.5 15.5c2.1 1.25 4.6 1.9 7.5 1.9s5.4-.65 7.5-1.9"/><path d="M5 18c1.8 2 4.15 3 7 3s5.2-1 7-3"/></svg>`,
-  '운동':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h3v2h12V9h3v6h-3v-2H6v2H3V9Z"/><path d="M6 7h3v10H6zM15 7h3v10h-3z"/></svg>`,
-  '여행':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c.9 0 1.4 1 1.4 2.1v4.2l6.6 4v2l-6.6-2v4.1l2.6 2V20L12 18.8 8 20v-1.1l2.6-2v-4.1l-6.6 2v-2l6.6-4V4.6c0-1.1.5-2.1 1.4-2.1Z"/></svg>`,
-  '기타':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M8 17h5"/></svg>`,
-  '병원·약국':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3Z"/></svg>`,
-  '경조사':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5h8a1.5 1.5 0 0 1 1.5 1.5v17.5h-11V4A1.5 1.5 0 0 1 8 2.5Z"/><path d="M6.5 7h11M12 7v14.5"/><path d="M6.5 18.5c1.1-.9 2.3-1.3 3.7-1.3h3.6c1.4 0 2.6.4 3.7 1.3"/></svg>`,
+  '스파':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 13c-1-1.15-1-2.3 0-3.45s1-2.3 0-3.45"/><path d="M12 13c-1-1.15-1-2.3 0-3.45s1-2.3 0-3.45"/><path d="M16.5 13c-1-1.15-1-2.3 0-3.45s1-2.3 0-3.45"/><path d="M4.5 15.5c2.1 1.25 4.6 1.9 7.5 1.9s5.4-.65 7.5-1.9"/><path d="M5 18c1.8 2 4.15 3 7 3s5.2-1 7-3"/></svg>`,
+  '운동':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h3v2h12V9h3v6h-3v-2H6v2H3V9Z"/><path d="M6 7h3v10H6zM15 7h3v10h-3z"/></svg>`,
+  '여행':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c.9 0 1.4 1 1.4 2.1v4.2l6.6 4v2l-6.6-2v4.1l2.6 2V20L12 18.8 8 20v-1.1l2.6-2v-4.1l-6.6 2v-2l6.6-4V4.6c0-1.1.5-2.1 1.4-2.1Z"/></svg>`,
+  '기타':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M8 17h5"/></svg>`,
+  '병원·약국':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3Z"/></svg>`,
+  '경조사':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5h8a1.5 1.5 0 0 1 1.5 1.5v17.5h-11V4A1.5 1.5 0 0 1 8 2.5Z"/><path d="M6.5 7h11M12 7v14.5"/><path d="M6.5 18.5c1.1-.9 2.3-1.3 3.7-1.3h3.6c1.4 0 2.6.4 3.7 1.3"/></svg>`,
   '부의금':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v16H5V5a2 2 0 0 1 2-2Z"/><path d="M5 7h14M12 7v14"/><path d="M5 18c1.2-1 2.6-1.5 4.2-1.5h5.6c1.6 0 3 .5 4.2 1.5"/></svg>`,
   '축의금':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v16H5V5a2 2 0 0 1 2-2Z"/><path d="M5 7h14M12 7v14"/><path d="M5 18c1.2-1 2.6-1.5 4.2-1.5h5.6c1.6 0 3 .5 4.2 1.5"/></svg>`,
 };
