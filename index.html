@@ -127,6 +127,9 @@ svg{display:block;flex-shrink:0;}
 .nav-mobile-label{display:none;}
 .icon-nav .nav-btn.tab{flex:0 0 48px;padding:0;}
 .nav-spacer{flex:1;min-height:28px;}
+.icon-nav [data-nav-label]{position:relative;}
+.icon-nav [data-nav-label]::after{content:attr(data-nav-label);position:absolute;z-index:80;left:calc(100% + 11px);top:50%;transform:translateY(-50%) translateX(-3px);padding:6px 9px;border-radius:7px;background:#242426;color:#fff;font-size:12px;font-weight:600;line-height:1;letter-spacing:-.1px;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.2);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s,transform .12s,visibility .12s;}
+.icon-nav [data-nav-label]:hover::after,.icon-nav [data-nav-label]:focus-visible::after,.icon-nav [data-nav-label].show-nav-tip::after{opacity:1;visibility:visible;transform:translateY(-50%) translateX(0);}
 
 /* ── LEFT SIDEBAR ── */
 .side{border-right:1px solid var(--sep);background:var(--left-bg);display:flex;flex-direction:column;min-height:700px;position:sticky;top:0;max-height:100vh;overflow:hidden;}
@@ -293,6 +296,7 @@ svg{display:block;flex-shrink:0;}
 .cat-picker-trigger-icon{width:24px;height:24px;border-radius:7px;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .cat-picker-trigger-icon svg{width:15px;height:15px;}
 .cat-icon-png{display:block;flex-shrink:0;background:currentColor;-webkit-mask:var(--cat-icon) center / contain no-repeat;mask:var(--cat-icon) center / contain no-repeat;}
+.cat-icon-png,.cat-icon-svg{transform:scale(var(--cat-scale,1));transform-origin:center;}
 .cat-picker-trigger-icon .cat-icon-png{width:15px;height:15px;}
 .cat-picker-trigger-label{flex:1;font-size:13.5px;font-weight:550;}
 .cat-picker-trigger-label.empty{color:var(--label3);font-weight:400;}
@@ -865,6 +869,7 @@ svg{display:block;flex-shrink:0;}
 }
 @media(max-width:780px){
   .icon-nav{padding-top:8px;padding-bottom:max(8px,env(safe-area-inset-bottom,0px));}
+  .icon-nav [data-nav-label]::after{display:none;}
   .nav-brand{display:none;}
   .nav-btn:hover{transform:none;}
   .side-top{padding-top:max(18px,calc(env(safe-area-inset-top,0px) + 12px));padding-bottom:14px;}
@@ -948,21 +953,21 @@ svg{display:block;flex-shrink:0;}
 
     <!-- ── ICON NAV ── -->
     <nav class="icon-nav" id="iconNav">
-      <button class="nav-brand" id="navBrandBtn" type="button" title="Receipt DB 처음으로" aria-label="Receipt DB 처음으로">R</button>
-      <button class="nav-btn" id="navLedgerBtn" data-nav="ledger" title="통계" aria-label="통계">
+      <button class="nav-brand" id="navBrandBtn" type="button" data-nav-label="홈" aria-label="홈">R</button>
+      <button class="nav-btn" id="navLedgerBtn" data-nav="ledger" data-nav-label="통계" aria-label="통계">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
         <span class="nav-mobile-label">통계</span>
       </button>
-      <button class="nav-btn on tab" data-tab="list" data-nav="list" title="내역" aria-label="내역">
+      <button class="nav-btn on tab" data-tab="list" data-nav="list" data-nav-label="내역" aria-label="내역">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1.5 1.5 0 0 1 1.5 1.5V21l-2.5-1.8-2.5 1.8-2.5-1.8L9.5 21 7 19.2 4.5 21V4.5A1.5 1.5 0 0 1 6 3Z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
         <span class="nav-mobile-label">내역</span>
       </button>
-      <button class="nav-btn tab" data-tab="input" data-nav="input" title="추가" aria-label="추가">
+      <button class="nav-btn tab" data-tab="input" data-nav="input" data-nav-label="추가" aria-label="추가">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         <span class="nav-mobile-label">추가</span>
       </button>
       <div class="nav-spacer"></div>
-      <button class="nav-btn tab" data-tab="settings" data-nav="settings" title="설정" aria-label="설정">
+      <button class="nav-btn tab" data-tab="settings" data-nav="settings" data-nav-label="설정" aria-label="설정">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         <span class="nav-mobile-label">설정</span>
       </button>
@@ -1572,10 +1577,13 @@ svg{display:block;flex-shrink:0;}
 // v2.08 — 제공받은 PNG로 주요 카테고리 아이콘 교체.
 // v2.09 — 카테고리 PNG 아이콘 교체 PR 릴리스 버전 반영.
 // v2.10 — 영수증 목록 다중 선택·더치페이 일괄 전송과 AI 인식 금액 이중 검증.
-const APP_VERSION='v2.10';
+// v2.11 — 교통을 버스 선 아이콘으로 교체하고 카테고리 아이콘의 시각 크기를 통일.
+// v2.12 — 다중 영수증을 일회성 전송 묶음으로 안전하게 전달하고 네비게이션 설명을 통일.
+const APP_VERSION='v2.12';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
+const DUTCH_PAY_TRANSFER_KEY='receipt_db_dutchpay_transfer_v1';
 const _themeMedia=window.matchMedia('(prefers-color-scheme: dark)');
 
 function getMyName(){
@@ -1811,7 +1819,6 @@ const CAT_RULES=[
 ];
 
 const CAT_PNGS={
-  '외식':'icons/categories/dining.png',
   '술집':'icons/categories/bar.png',
   '카페':'icons/categories/cafe.png',
   '노래방':'icons/categories/karaoke.png',
@@ -1824,15 +1831,23 @@ const CAT_PNGS={
   '경조사':'icons/categories/gyeongjo.png',
 };
 
+// 원본 PNG마다 투명 여백이 달라 보이는 크기가 흔들리므로 실제 실루엣 기준으로 보정한다.
+// 외식·교통 등 SVG에도 같은 배율 체계를 적용해 선택기와 정보 카드의 크기를 통일한다.
+const CAT_ICON_SCALES={
+  '외식':.9,'카페':1,'술집':.92,'케이크':.94,'노래방':1.05,'교통':.94,
+  '쇼핑':.94,'영화':.94,'숙박':.96,'골프':.94,'스파':.98,'운동':.9,
+  '여행':.94,'병원·약국':.88,'경조사':.9,'기타':.94,
+};
+
 // 카테고리 SVG 아이콘 (line-art, stroke-width 1.8). 제공된 PNG가 없는 카테고리의 fallback.
 const CAT_SVGS={
-  '외식':`<svg viewBox="-2 -2 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>`,
+  '외식':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>`,
   '술집':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 0 1 0-5c.78 0 1.57.5 2.5.5C9.44 3.5 10 3 11 3s1.44.5 3 .5 2.5-1 4-1 1.5 2.5 0 5-2.5.5-4 .5z"/><path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/></svg>`,
   '카페':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h12v9a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8Z"/><path d="M17 10h2a3 3 0 0 1 0 6h-2"/><path d="M8 5V3M12 5V2M16 5V3"/></svg>`,
   '케이크':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><line x1="7" y1="4" x2="7" y2="5"/><line x1="12" y1="4" x2="12" y2="5"/><line x1="17" y1="4" x2="17" y2="5"/></svg>`,
   '노래방':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></svg>`,
   '쇼핑':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="14" rx="2"/><path d="M8 9V6a4 4 0 0 1 8 0v3M8 12c.4 2.2 1.7 3.2 4 3.2s3.6-1 4-3.2"/></svg>`,
-  '교통':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>`,
+  '교통':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2.5 2.5 0 0 1 2.5 2.5v12a2.5 2.5 0 0 1-2.5 2.5H7a2.5 2.5 0 0 1-2.5-2.5v-12A2.5 2.5 0 0 1 7 3Z"/><path d="M8.5 5h7M7 8h10v6H7z"/><path d="M4.5 9H3.4v3M19.5 9h1.1v3"/><circle cx="8" cy="17" r="1.15"/><circle cx="16" cy="17" r="1.15"/><path d="M7 20v1.5h2V20M15 20v1.5h2V20"/></svg>`,
   '영화':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>`,
   '숙박':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M2 18h20"/></svg>`,
   '골프':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V3l10 4-10 4"/><ellipse cx="13" cy="21" rx="7" ry="2"/></svg>`,
@@ -1854,20 +1869,23 @@ function getCategoryLabel(cat){
   const normalized=normalizeCategory(cat);
   return CATEGORY_LABELS[normalized]||normalized||'';
 }
-function getCatPng(path){
-  return `<span class="cat-icon-png" style="--cat-icon:url('${path}')" aria-hidden="true"></span>`;
+function getCatPng(path,cat){
+  const scale=CAT_ICON_SCALES[cat]||1;
+  return `<span class="cat-icon-png" style="--cat-icon:url('${path}');--cat-scale:${scale}" aria-hidden="true"></span>`;
 }
 function getCatSvg(cat){
   const normalized=normalizeCategory(cat);
-  return CAT_PNGS[normalized]?getCatPng(CAT_PNGS[normalized]):CAT_SVGS[normalized]||`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+  if(CAT_PNGS[normalized])return getCatPng(CAT_PNGS[normalized],normalized);
+  const svg=CAT_SVGS[normalized]||`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+  return svg.replace('<svg ',`<svg class="cat-icon-svg" style="--cat-scale:${CAT_ICON_SCALES[normalized]||1}" `);
 }
 
-// 같은 GitHub Pages 출처의 더치페이 저장소에 영수증을 모임 단위로 전달한다.
-// 여러 건도 상태를 한 번만 읽고 저장한 뒤 더치페이 탭 하나만 연다.
+// 같은 출처의 더치페이에 영수증 묶음을 원자적으로 전달한다.
+// 더치페이 주 저장소를 여기서 직접 수정하면 시작 시 Dropbox 동기화와 충돌할 수 있으므로,
+// 별도 일회성 봉투를 저장하고 더치페이 쪽에서 전체 묶음을 한 번에 병합한다.
 function sendReceiptsToDutchPay(records,{single=false}={}){
   const sourceRecords=(records||[]).filter(Boolean);
   if(!sourceRecords.length){toast('보낼 영수증을 선택해주세요',{type:'error'});return false;}
-  const storageKey='dutchpay_v1';
   const now=new Date().toISOString();
   const prepared=sourceRecords.map(r=>{
     const payer=(r.paidBy||getMyName()||'').trim();
@@ -1887,40 +1905,18 @@ function sendReceiptsToDutchPay(records,{single=false}={}){
     if(!confirm(`${sourceRecords.length}건, 합계 ${fmtMoney(total)}원을 더치페이로 보낼까요?\n\n${preview}${more}`))return false;
   }
   try{
-    const raw=localStorage.getItem(storageKey);
-    let state;
-    if(!raw){state={version:3,savedAt:now,groups:[],currentGroupId:null,deletedGroups:{}};}
-    else{
-      const parsed=JSON.parse(raw);
-      if((parsed.version===2||parsed.version===3)&&Array.isArray(parsed.groups)) state=parsed;
-      else if(Array.isArray(parsed.people)||Array.isArray(parsed.items)){
-        const legacyId='g'+Date.now()+'0';
-        state={version:3,savedAt:now,groups:[{id:legacyId,name:(parsed.people||[]).join(', ')||'기존 모임',nameAuto:true,createdAt:now,updatedAt:now,data:{people:parsed.people||[],items:parsed.items||[],idc:parsed.idc||0,settleDateStart:parsed.settleDateStart||new Date().toISOString().slice(0,10),settleDateEnd:parsed.settleDateEnd||null,itemSort:'default',itemSearch:'',payments:parsed.payments||{}}}],currentGroupId:legacyId,deletedGroups:{}};
-      }else throw new Error('unsupported dutch-pay data');
-    }
-    state.version=3;
-    state.deletedGroups=state.deletedGroups||{};
-    let created=0,updated=0,lastGroupId=null;
-    prepared.forEach(({r,payer,people},index)=>{
-      const receiptText=(r.items||[]).map(it=>`${it.name||''} | ${it.quantity||1} | ${it.unitPrice||0} | ${it.amount||0}`).join('\n');
-      const existing=state.groups.find(g=>g.receiptSourceId===r.id);
-      const groupId=existing?.id||('g'+Date.now()+index+Math.floor(Math.random()*1000));
-      const itemId=1;
-      const group={
-        ...(existing||{}),id:groupId,receiptSourceId:r.id,name:r.store||'영수증',nameAuto:false,
-        createdAt:existing?.createdAt||now,updatedAt:now,
-        data:{people,items:[{id:itemId,name:r.store||'영수증',amount:r.total||0,payer:payer||people[0],members:people.slice(),watchers:[],isTreat:false,receiptText}],idc:itemId,settleDateStart:r.date||new Date().toISOString().slice(0,10),settleDateEnd:null,itemSort:'default',itemSearch:'',payments:{}}
-      };
-      if(existing){state.groups[state.groups.indexOf(existing)]=group;updated++;}
-      else{state.groups.push(group);created++;}
-      lastGroupId=groupId;
-    });
-    state.currentGroupId=lastGroupId;state.savedAt=now;
-    localStorage.setItem(storageKey,JSON.stringify(state));
+    const batchId=`rb_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
+    const entries=prepared.map(({r,payer,people})=>({
+      sourceId:String(r.id),store:r.store||'영수증',date:r.date||new Date().toISOString().slice(0,10),
+      total:Number(r.total)||0,payer:payer||people[0],people,
+      items:(r.items||[]).map(it=>({name:it.name||'',quantity:Number(it.quantity)||1,unitPrice:Number(it.unitPrice)||0,amount:Number(it.amount)||0}))
+    }));
+    const envelope={version:1,batchId,createdAt:now,entries};
+    localStorage.setItem(DUTCH_PAY_TRANSFER_KEY,JSON.stringify(envelope));
     if(getMyName())localStorage.setItem(DUTCH_PAY_NAME_KEY,getMyName());
-    window.open('/dutch-pay/?from=receipt-db','_blank','noopener');
-    if(single)toast(updated?'더치페이 기록을 업데이트했어요':'더치페이에 새 모임으로 보냈어요',{type:'success'});
-    else toast(`더치페이로 ${sourceRecords.length}건을 보냈어요 · 새 모임 ${created}건${updated?` · 업데이트 ${updated}건`:''}`,{type:'success'});
+    window.open(`/dutch-pay/?from=receipt-db&batch=${encodeURIComponent(batchId)}`,'_blank','noopener');
+    if(single)toast('더치페이로 영수증을 보냈어요',{type:'success'});
+    else toast(`더치페이로 영수증 ${sourceRecords.length}건을 한 번에 보냈어요`,{type:'success'});
     return true;
   }catch(e){
     toast('더치페이 연결에 실패했어요. 더치페이 데이터 백업 후 다시 시도해주세요',{type:'error'});
@@ -2700,6 +2696,15 @@ document.querySelector('.app-title').addEventListener('click',()=>{
 document.getElementById('navBrandBtn')?.addEventListener('click',()=>{
   document.querySelector('.app-title').click();
   switchTab('list');
+});
+// 데스크탑에서는 마우스·키보드뿐 아니라 클릭했을 때도 메뉴 이름을 잠시 보여준다.
+document.querySelectorAll('#iconNav [data-nav-label]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#iconNav .show-nav-tip').forEach(el=>el.classList.remove('show-nav-tip'));
+    btn.classList.add('show-nav-tip');
+    clearTimeout(btn._navTipTimer);
+    btn._navTipTimer=setTimeout(()=>btn.classList.remove('show-nav-tip'),1200);
+  });
 });
 
 // ════════════════════════════════════════════════════════════════
