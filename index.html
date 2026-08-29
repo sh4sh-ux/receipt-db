@@ -244,9 +244,11 @@ svg{display:block;flex-shrink:0;}
 .input-row.top{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch;}
 .input-row.preview{}
 .input-row.options{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.input-row.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.input-row.actions .primary-btn,.input-row.actions .ghost-btn{margin-top:0;}
-.input-row.actions .primary-btn,.input-row.actions .ghost-btn{width:100%;min-height:46px;}
+.input-row.actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--sep);margin:16px -32px -32px;padding:12px 32px;z-index:5;}
+.input-row.actions .primary-btn{margin-top:0;min-height:42px;padding:0 24px;}
+.input-row.actions .ghost-btn{margin-top:0;min-height:42px;padding:0 16px;}
+.actions-shortcut{font-size:11px;color:var(--label3);margin-right:auto;display:flex;align-items:center;gap:4px;}
+.actions-shortcut kbd{background:var(--fill2);border:1px solid var(--sep2);border-radius:4px;padding:1px 6px;font-size:10px;font-family:monospace;color:var(--label2);}
 @media(max-width:900px){
   .input-row.top,.input-row.options{grid-template-columns:1fr;}
 }
@@ -693,6 +695,7 @@ svg{display:block;flex-shrink:0;}
   #viewList>.main-top>div:first-child{min-width:0;flex:1 1 120px;}
   #viewList .main-actions{margin-left:auto;flex-wrap:wrap;justify-content:flex-end;}
   .main-body{padding:18px 18px 24px;}
+  .input-row.actions{margin:12px -18px -24px;padding:10px 18px;}
   :root{--pad-x:18px;}
   .input-grid{grid-template-columns:1fr;gap:14px;}
   .input-stack,#gptModeArea{gap:14px;}
@@ -1225,11 +1228,12 @@ svg{display:block;flex-shrink:0;}
 
             <!-- ④ 저장/초기화 -->
             <div class="input-row actions">
+              <span class="actions-shortcut"><kbd>⌘</kbd>+<kbd>↵</kbd> 저장</span>
+              <button class="ghost-btn" id="clearBtn">초기화</button>
               <button class="primary-btn" id="saveBtn" disabled>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 저장
               </button>
-              <button class="ghost-btn" id="clearBtn">입력 초기화</button>
             </div>
           </div>
         </div>
@@ -1589,7 +1593,8 @@ svg{display:block;flex-shrink:0;}
 // v2.15 — 모바일 품목명 정렬 및 계산 확인창 위·아래 회색 여백 통일.
 // v2.16 — 금액 확인 메시지 텍스트 간결화.
 // v2.17 — 합계 행 수직 정렬 middle로 통일.
-const APP_VERSION='v2.17';
+// v2.18 — 저장 바 sticky + Cmd+Enter 단축키 추가.
+const APP_VERSION='v2.18';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -3252,6 +3257,14 @@ document.getElementById('promptCopyBtn').addEventListener('click',async()=>{
     try{document.execCommand('copy');toast('프롬프트가 복사됐어요',{type:'success'});}
     catch(_){toast('복사 실패 — 수동으로 복사해주세요',{type:'error'});}
     ta.remove();
+  }
+});
+
+// ── Cmd+Enter 저장 단축키 ──
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='Enter'&&!saveBtn.disabled){
+    e.preventDefault();
+    saveBtn.click();
   }
 });
 
