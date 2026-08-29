@@ -775,7 +775,7 @@ svg{display:block;flex-shrink:0;}
 .detail-items-panel .items-table td:nth-child(4) .item-num-inp{font-weight:600;}
 .detail-items-panel .items-table input:hover{background:var(--fill2);}
 .detail-items-panel .items-table input:focus{border-color:var(--blue);background:var(--card);}
-.detail-items-panel .items-table tr.total-row td{background:transparent;border-top:2px solid var(--sep2);border-bottom:none;padding-top:9px;padding-bottom:9px;}
+.detail-items-panel .items-table tr.total-row td{background:transparent;border-top:2px solid var(--sep2);border-bottom:none;padding-top:9px;padding-bottom:9px;vertical-align:middle;}
 /* 확인창 아래 여백은 부모 안쪽 패딩으로 확보해 회색 배경이 확실히 보이게 한다. */
 .detail-items-panel .alert{margin:5px 14px 0!important;}
 @media(max-width:780px){
@@ -1588,7 +1588,8 @@ svg{display:block;flex-shrink:0;}
 // v2.14 — 카테고리 아이콘의 선 굵기를 통일하고 여행 아이콘을 확대.
 // v2.15 — 모바일 품목명 정렬 및 계산 확인창 위·아래 회색 여백 통일.
 // v2.16 — 금액 확인 메시지 텍스트 간결화.
-const APP_VERSION='v2.16';
+// v2.17 — 합계 행 수직 정렬 middle로 통일.
+const APP_VERSION='v2.17';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
