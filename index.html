@@ -244,11 +244,11 @@ svg{display:block;flex-shrink:0;}
 .input-row.top{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch;}
 .input-row.preview{}
 .input-row.options{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.input-row.actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--sep);margin:16px -32px -32px;padding:12px 32px;z-index:5;}
-.input-row.actions .primary-btn{margin-top:0;min-height:42px;padding:0 24px;}
-.input-row.actions .ghost-btn{margin-top:0;min-height:42px;padding:0 16px;}
-.actions-shortcut{font-size:11px;color:var(--label3);margin-right:auto;display:flex;align-items:center;gap:4px;}
-.actions-shortcut kbd{background:var(--fill2);border:1px solid var(--sep2);border-radius:4px;padding:1px 6px;font-size:10px;font-family:monospace;color:var(--label2);}
+.input-row.actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:color-mix(in srgb,var(--card) 97%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--sep);margin:16px -32px -44px;padding:10px 32px 16px;z-index:5;}
+.input-row.actions .primary-btn{margin-top:0;min-height:40px;padding:0 22px;width:auto;white-space:nowrap;flex-shrink:0;}
+.input-row.actions .ghost-btn{margin-top:0;min-height:40px;padding:0 16px;width:auto;white-space:nowrap;flex-shrink:0;}
+.actions-shortcut{font-size:11px;color:var(--label3);margin-right:auto;display:flex;align-items:center;gap:5px;}
+.actions-shortcut kbd{background:var(--fill2);border:1px solid var(--sep2);border-radius:5px;padding:2px 8px;font-size:13px;font-family:monospace;color:var(--label2);line-height:1.4;}
 @media(max-width:900px){
   .input-row.top,.input-row.options{grid-template-columns:1fr;}
 }
@@ -695,7 +695,7 @@ svg{display:block;flex-shrink:0;}
   #viewList>.main-top>div:first-child{min-width:0;flex:1 1 120px;}
   #viewList .main-actions{margin-left:auto;flex-wrap:wrap;justify-content:flex-end;}
   .main-body{padding:18px 18px 24px;}
-  .input-row.actions{margin:12px -18px -24px;padding:10px 18px;}
+  .input-row.actions{margin:12px -18px -32px;padding:9px 18px 14px;}
   :root{--pad-x:18px;}
   .input-grid{grid-template-columns:1fr;gap:14px;}
   .input-stack,#gptModeArea{gap:14px;}
@@ -725,7 +725,7 @@ svg{display:block;flex-shrink:0;}
 
 /* ── HIDDEN VIEWS ── */
 .view{display:none;}
-.view.on{display:block;}
+.view.on{display:block;overflow:hidden;}
 
 /* ── MODAL ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:190;}
@@ -1594,7 +1594,8 @@ svg{display:block;flex-shrink:0;}
 // v2.16 — 금액 확인 메시지 텍스트 간결화.
 // v2.17 — 합계 행 수직 정렬 middle로 통일.
 // v2.18 — 저장 바 sticky + Cmd+Enter 단축키 추가.
-const APP_VERSION='v2.18';
+// v2.19 — 저장 바 버튼 너비 auto·kbd 크기 ↑·하단 여백 정리.
+const APP_VERSION='v2.19';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
