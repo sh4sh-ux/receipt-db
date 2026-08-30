@@ -704,7 +704,7 @@ svg{display:block;flex-shrink:0;}
   .input-row.top .field-ta,.input-row.top .photo-zone{height:156px;min-height:156px;}
   .input-row.top .photo-preview{object-fit:cover;object-position:center top;}
   #viewInput .main-top{padding-bottom:12px;}
-  #viewInput .main-body{padding-top:14px;}
+  #viewInput .main-body{padding-top:14px;padding-bottom:56px;}
   #viewInput .input-mode-row{margin-bottom:12px;}
   #viewInput .prompt-tools-row{margin-bottom:-2px;}
   .row-3{grid-template-columns:1fr;}
@@ -1599,7 +1599,8 @@ svg{display:block;flex-shrink:0;}
 // v2.20 — actions 바 margin-bottom 0 + #viewInput padding-bottom 0 → gap 완전 차단.
 // v2.21 — 버튼 높이 36px·너비 2배; side-foot min-height 55px → 구분선 수평 정렬.
 // v2.22 — .view.on overflow:hidden 제거 → 카테고리 팝오버 클리핑 버그 수정.
-const APP_VERSION='v2.22';
+// v2.23 — 모바일 #viewInput .main-body padding-bottom:56px → 액션바가 마지막 폼 필드 가리는 버그 수정.
+const APP_VERSION='v2.23';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
