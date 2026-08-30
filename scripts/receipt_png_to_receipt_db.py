@@ -140,7 +140,8 @@ def save_inbox(data):
 
 def make_record(path, date_str):
     """앱 데이터 모델(Receipt)에 맞는 레코드 + 이미지 항목 생성."""
-    digest = hashlib.sha1(path.read_bytes()).hexdigest()[:6]
+    full_digest = hashlib.sha1(path.read_bytes()).hexdigest()
+    digest = full_digest[:6]
     rec_id = f"rec_{date_str.replace('-', '')}_p{digest}"
     img_id = "img_" + rec_id[4:]  # 앱의 imageId 규칙: 'img_' + id의 'rec_' 뒷부분
     data_url, mime = encode_image(path)
@@ -158,6 +159,9 @@ def make_record(path, date_str):
         "imageId": img_id,
         "notes": "스캔 자동등록 (PNG)",
         "tags": [],
+        # 원본 파일 내용의 sha1. 앱(스캔함)이 같은 사진을 다른 날짜로 등록해
+        # ID가 어긋나더라도 이 값으로 중복을 걸러낸다.
+        "srcHash": full_digest,
         "createdAt": now,
         "updatedAt": now,
     }
@@ -220,9 +224,18 @@ def main():
             existing_ids.add(receipt["id"])
             added += 1
             print(f"  inbox 등록: {receipt['id']} (사진 {image['mime']})")
+            # 이동 전에 저장한다. 이동이 실패해 예외가 나더라도 등록분이 남고,
+            # 파일도 그대로라 다음 실행에서 같은 ID로 다시 처리돼 유실이 없다.
+            save_inbox(inbox)
 
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        path.rename(dest)
+        try:
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            path.rename(dest)
+        except FileNotFoundError:
+            # Dropbox 동기화 중이거나 다른 기기가 이미 옮김 — 등록은 끝났으니 넘어간다
+            print("  파일이 이미 없음 — 이동 건너뜀")
+        except OSError as e:
+            print(f"  이동 실패({e}) — 파일은 그대로 두고 다음 실행에서 재시도")
 
     if args.dry_run:
         print(f"\n[dry-run] {len(targets)}개 파일이 처리 대상입니다.")
