@@ -1734,10 +1734,12 @@ svg{display:block;flex-shrink:0;}
 // v2.30 — 모바일 저장 바 fixed→sticky 복귀. iOS 키보드가 열리면 fixed가 화면 밖으로 밀려 저장 버튼이 사라지던 문제.
 // v2.31 — 모바일 토스트가 하단 nav bar에 가려지던 문제 수정 (nav bar 위로 띄움).
 // v2.32 — 스캔함을 앱 최상단(/스캔함)으로 이동. 경로 설정 가능 + '위치 확인' 진단 추가.
+// v2.34 — '위치 확인'이 App folder를 Full Dropbox로 오진하던 버그 수정.
+//         옛 백업 JSON을 남의 파일로 세어 잘못 판단했다. 이름 패턴 + /Apps 존재를 함께 본다.
 // v2.33 — Dropbox 저장 위치를 /07_Apps/영수증(RECEIPT-DB)/로 이동(앱 전체 폴더 통합).
 //         스캔함 기본값도 그 폴더 안으로 되돌리고(설정으로 변경은 계속 가능),
 //         등록 완료 파일을 '완료 JPG'/'완료 PDF'로 종류별 분류.
-const APP_VERSION='v2.33';
+const APP_VERSION='v2.34';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -5575,38 +5577,45 @@ document.getElementById('printPdfBtn')?.addEventListener('click',printMonthPdf);
 // ── 스캔함 위치 진단 ──
 // Dropbox 앱 등록 유형(App folder / Full Dropbox)에 따라 API 경로가 실제 Dropbox의
 // 어디로 매핑되는지가 달라진다. 루트 목록을 읽어 사용자에게 실제 위치를 알려준다.
+//
+// ⚠️ Dropbox API에는 "내가 App folder 앱인가"를 직접 알려주는 호출이 없다. 그래서 추정하는데,
+// v2.33의 판별은 앱이 만든 이름 목록을 하드코딩해 두고 그 밖의 항목이 하나라도 있으면
+// Full Dropbox로 봤다. 목록에 옛 백업 파일(receipt-db_2026-05-27_3items.json 등)이 빠져 있어서
+// App folder인데도 Full Dropbox로 답하는 오진이 있었다 (v2.34에서 수정).
+// 이제 두 가지 근거를 함께 본다:
+//   ① 루트에 이 앱이 만들 수 없는 이름이 있는가 (이름 패턴으로 판정 — 백업 JSON 포함)
+//   ② 루트에 앱 폴더 모음(/Apps)이 있는가 — 진짜 Dropbox 최상위에만 있다.
+//      ⚠️ 이 폴더 이름은 계정 언어를 따른다. 한국어 계정은 '/앱'이므로 둘 다 확인한다.
+// 둘 중 하나라도 참이면 Full Dropbox로 본다.
+const _APP_MADE_RE=/^(01_Personal|07_Apps|스캔함|Receipt_DB|backups|images|완료 JPG|완료 PDF|receipt-db[-_ ].*)$/i;
+
 async function _dbxWhereIsScanbox(){
   const token=await _dbxToken();
-  const resp=await fetch('https://api.dropboxapi.com/2/files/list_folder',{
+  const rpc=async(ep,body)=>fetch('https://api.dropboxapi.com/2/'+ep,{
     method:'POST',
     headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({path:'',recursive:false}),
+    body:JSON.stringify(body),
   });
+  const resp=await rpc('files/list_folder',{path:'',recursive:false});
   const names=resp.ok?((await resp.json()).entries||[]).map(e=>e.name):[];
-  // 앱 폴더 스코프면 루트에 앱이 만든 것들만 보인다. 사용자 Dropbox 최상위 폴더가
-  // 여러 개 보이면 Full Dropbox 스코프다.
-  const appMade=new Set(['01_Personal','07_Apps','스캔함','Receipt_DB','backups','images']);
-  const foreign=names.filter(n=>!appMade.has(n));
-  const scope=foreign.length>0?'Full Dropbox':'App folder';
+  const has=async path=>{ try{ return (await rpc('files/get_metadata',{path})).ok; }catch(_){ return false; } };
+
+  // 설정에서 스캔함을 옮겼다면 그 최상위 폴더도 앱이 만든 것이다
   const scan=_dbxScanDir();
+  const scanTop=scan.split('/').filter(Boolean)[0]||'';
+  const mine=n=>_APP_MADE_RE.test(n)||n===scanTop;
+  const foreign=names.filter(n=>!mine(n));
+  // 앱 폴더 모음 — 영문 계정은 /Apps, 한국어 계정은 /앱
+  const hasApps=(await has('/Apps'))||(await has('/앱'));
+  const full=foreign.length>0||hasApps;
+  const scope=full?'Full Dropbox':'App folder';
+
   // App folder 권한이면 앱이 쓰는 경로가 앱 전용 폴더 안으로 한 겹 접힌다.
-  const base=scope==='App folder'?'앱 > 이름 (Apps/…/Receipt_DB_v1)':'Dropbox 최상위';
+  const base=full?'Dropbox 최상위':'Dropbox > 앱 > (이 앱의 폴더)';
   const real=base+scan;
-  // 폴더 존재 확인
-  const has=async path=>{
-    try{
-      const r=await fetch('https://api.dropboxapi.com/2/files/get_metadata',{
-        method:'POST',
-        headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-        body:JSON.stringify({path}),
-      });
-      return r.ok;
-    }catch(_){ return false; }
-  };
   const exists=await has(scan);
-  const dataDir=_DBX_DATA_DIR;
-  const moved=_DBX_DATA_DIR===_DBX_ROOT;
-  return {scope,names,real,scan,exists,base,dataDir,moved};
+  return {scope,names,real,scan,exists,base,foreign,hasApps,
+          dataDir:_DBX_DATA_DIR, moved:_DBX_DATA_DIR===_DBX_ROOT};
 }
 
 document.getElementById('scanWhereBtn')?.addEventListener('click',async(e)=>{
@@ -5621,6 +5630,7 @@ document.getElementById('scanWhereBtn')?.addEventListener('click',async(e)=>{
     const r=await _dbxWhereIsScanbox();
     box.innerHTML=
       `Dropbox 연결 유형: <b>${escapeHtml(r.scope)}</b>\n`
+     +`  (근거: 남의 항목 ${r.foreign.length}개, 앱 폴더 모음 ${r.hasApps?'있음':'없음'})\n`
      +(r.scope==='App folder'
         ? `  ⚠️ 이 권한으로는 07_Apps가 앱 전용 폴더 안에 생깁니다.\n`
          +`     Dropbox 최상위에 두려면 Full Dropbox 앱 키로 바꿔 연결하세요.\n`
