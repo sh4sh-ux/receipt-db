@@ -1808,6 +1808,8 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.53 — 링크(#r=...)로 열면 추가 탭이 채워진 채 열린다. 모바일에서 가장 번거롭던
+//         '복사 → 앱 전환 → 붙여넣기'를 링크 한 번으로 대신한다.
 // v2.52 — 앱에서 붙인 사진도 완료 폴더에 제대로 된 이름으로 올린다.
 //         Dropbox 스캔함을 거치지 않아도 사진이 정리된다.
 // v2.51 — 앱이 지은 이름을 되읽는다. 260809_영수증(5,900)_스타벅스.jpg 를 넣으면
@@ -1831,7 +1833,7 @@ svg{display:block;flex-shrink:0;}
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.52';
+const APP_VERSION='v2.53';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -3053,6 +3055,44 @@ document.querySelectorAll('#iconNav [data-nav-label]').forEach(btn=>{
 // INPUT VIEW — paste + photo + preview + save
 // ════════════════════════════════════════════════════════════════
 const pasteTa=document.getElementById('pasteTa');
+
+// ── 링크로 받은 영수증 채우기 ────────────────────────────────────
+// 모바일에서 '복사 → 앱 전환 → 붙여넣기'가 가장 번거로워서, 링크 한 번으로 대신한다.
+//   #r=<base64(UTF-8) 붙여넣기 형식 텍스트>
+// 링크를 열면 추가 탭이 그 내용으로 채워진다. 사진만 붙여 저장하면 끝난다.
+function _readReceiptLink(){
+  const h=String(location.hash||'');
+  const m=h.match(/[#&]r=([^&]+)/);
+  if(!m)return null;
+  try{
+    // base64url → 원문. 한글이 있으므로 UTF-8로 되돌린다.
+    const b64=decodeURIComponent(m[1]).replace(/-/g,'+').replace(/_/g,'/');
+    const bin=atob(b64);
+    const bytes=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+    const text=new TextDecoder('utf-8').decode(bytes);
+    return text.trim()||null;
+  }catch(e){ console.warn('receipt link:',e.message||e); return null; }
+}
+
+async function _applyReceiptLink(){
+  const text=_readReceiptLink();
+  if(!text)return false;
+  history.replaceState({},'',location.pathname+location.search);   // 주소창 정리
+  switchTab('input');
+  const ta=document.getElementById('pasteTa');
+  if(!ta)return false;
+  ta.value=text;
+  updatePreview();                       // 매장명·일자·금액·품목이 채워진다
+  setTimeout(()=>{
+    toast('영수증 내용을 채웠어요 — 사진만 붙이고 저장하세요',{type:'success',duration:6000});
+    const pz=document.getElementById('photoZone');
+    if(pz)pz.scrollIntoView({behavior:'smooth',block:'center'});
+  },200);
+  return true;
+}
+
+
 const previewArea=document.getElementById('previewArea');
 const saveBtn=document.getElementById('saveBtn');
 const photoZone=document.getElementById('photoZone');
@@ -7932,6 +7972,8 @@ function _dbxBindEvents(){
     if(!_isMobileLayout()) switchTab('input');
     else{_mobileListMode='list';switchTab('list');}
     renderDetail();
+    // 링크로 영수증 내용을 받았으면 추가 탭을 그 내용으로 채운다 (모바일 복붙 대체)
+    await _applyReceiptLink();
     // 모바일 스와이프 백: 오른쪽으로 스와이프 → 상세에서 목록으로
     if(_isTouch){
       const mainEl=document.querySelector('main.main');
