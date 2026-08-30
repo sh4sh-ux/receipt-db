@@ -1758,7 +1758,10 @@ svg{display:block;flex-shrink:0;}
 //         그 자리의 동명 폴더는 이 앱 데이터가 아니다 (최상위의 오래된 화석 폴더가 실제로 있었다).
 // v2.37 — '옛 앱 폴더에서 가져오기' 추가. Full Dropbox 권한이면 앱이 앱 폴더 안까지
 //         볼 수 있으므로, 사용자가 파일을 끌어 옮기지 않아도 앱이 찾아서 가져온다.
-const APP_VERSION='v2.37';
+// v2.38 — 완료 JPG·완료 PDF 폴더를 동기화 때 미리 만든다(넣기 전에도 구조가 보이게).
+//         가져오기가 실패하면 실제 연결 상태를 확인해 원인을 짚어 준다.
+//         (막히는 경우는 거의 App key가 아직 옛 것인 상황이라 그 사실을 직접 알려준다)
+const APP_VERSION='v2.38';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -6358,9 +6361,13 @@ async function _dbxProcessScanbox(){
   try{
     // 폴더가 없으면 만들어 둔다. 사용자가 Dropbox 앱에서 넣을 곳을 찾을 수 있어야
     // 기능이 시작되므로, 파일이 없어도 폴더는 항상 존재해야 한다.
+    // 완료 폴더도 함께 만든다 — v2.37까지는 파일을 실제로 옮길 때만 만들어져서,
+    // 넣기 전에는 어디로 분류되는지 Dropbox에서 눈으로 확인할 수 없었다.
     await _dbxEnsureFolder(_dbxScanDir());
+    await _dbxEnsureFolder(_dbxScanDoneDir(true));    // 완료 JPG
+    await _dbxEnsureFolder(_dbxScanDoneDir(false));   // 완료 PDF
     const files=await _dbxListScanbox();
-    if(!files.length)return 0;
+    if(!files.length)return 0;   // 폴더는 위에서 이미 만들어 뒀다
     const token=await _dbxToken();
     const deleted=new Set(JSON.parse(_ls(_K.DELETED_IDS)||'[]'));
     for(const f of files){
@@ -6574,13 +6581,16 @@ async function _dbxJsonAt(token,path){
 }
 
 // 앱 폴더 모음을 훑어 이 앱 데이터 폴더를 찾는다 (앱 폴더 이름을 몰라도 된다)
+let _lastScannedAppDirs=[];
 async function _findLegacyReceiptDir(token){
+  _lastScannedAppDirs=[];
   for(const root of _APPS_ROOTS){
     const lr=await fetch('https://api.dropboxapi.com/2/files/list_folder',{method:'POST',
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
       body:JSON.stringify({path:root})});
     if(!lr.ok)continue;
     const subs=((await lr.json()).entries||[]).filter(e=>e['.tag']==='folder');
+    _lastScannedAppDirs.push(...subs.map(x=>root+'/'+x.name));
     for(const sub of subs){
       for(const rel of _LEGACY_RELS){
         const dir=`${root}/${sub.name}${rel}`;
@@ -6601,10 +6611,25 @@ async function importFromAppFolder(){
   catch(e){ t?.remove?.(); toast('찾기 실패: '+(e.message||e),{type:'error'}); return; }
   t?.remove?.();
   if(!hit){
-    alert('Dropbox의 앱 폴더에서 영수증 데이터를 찾지 못했습니다.\n\n'
-        +'· Full Dropbox 권한의 App key로 연결돼 있는지 확인해 주세요.\n'
-        +'  (App folder 권한이면 다른 앱 폴더 안을 볼 수 없습니다)\n'
-        +'· 이미 옮기셨다면 이 작업은 필요 없습니다.');
+    // 막다른 안내 대신 실제 상태를 확인해 무엇이 문제인지 짚어 준다.
+    // 여기서 막히는 경우는 거의 App key가 아직 옛 것(App folder)인 상황이다.
+    let diag='';
+    try{
+      const w=await _dbxWhereIsScanbox();
+      if(w.scope==='App folder'){
+        diag='지금 App key는 아직 옛 것(App folder 권한)입니다.\n'
+            +'App folder 권한은 다른 앱 폴더 안을 볼 수 없어서 찾을 수 없습니다.\n\n'
+            +'해결: 위 Dropbox 카드에서 [연결 해제] → App Key 칸의 값을\n'
+            +'Full Dropbox 앱의 키로 바꿔 넣고 [Dropbox 연결하기]\n'
+            +'⚠️ 연결 해제는 App key를 지우지 않으니, 칸의 값을 반드시 새 키로 고쳐야 합니다.';
+      }else{
+        diag='Full Dropbox 권한으로 연결돼 있는데도 찾지 못했습니다.\n'
+            +'이미 옮기셨다면 이 작업은 필요 없습니다.\n\n'
+            +'훑어본 앱 폴더: '+(_lastScannedAppDirs.join(', ')||'(앱 폴더 모음을 못 찾음)');
+      }
+      diag+='\n\nDropbox 최상위 목록: '+(w.names.join(', ')||'(비어 있음)');
+    }catch(e){ diag='상태 확인에 실패했습니다: '+(e.message||e); }
+    alert('Dropbox의 앱 폴더에서 영수증 데이터를 찾지 못했습니다.\n\n'+diag);
     return;
   }
   // 사진 개수도 세어 보고 확인받는다
