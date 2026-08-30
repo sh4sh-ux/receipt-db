@@ -1415,7 +1415,8 @@ svg{display:block;flex-shrink:0;}
                치웁니다. <b>새 위치에 대체물이 실제로 있는 것만</b> 골라서 치우고,
                Dropbox <code class="scan-path">/앱</code> 폴더도 같이 치우는데,
                <b>그 앱의 데이터가 새 위치에 확인된 것만</b> 지웁니다.
-               받은함과 모르는 폴더는 건드리지 않습니다.</p>
+               받은함도 치우는데, 안에 영수증이 남아 있으면 <b>버리지 않고 스캔함으로 옮긴 뒤</b>
+               치웁니다. 모르는 폴더는 건드리지 않습니다.</p>
             <p class="scan-where">대조가 어긋나는 폴더는 원본을 그대로 둡니다.
                <b>받은함</b>은 건드리지 않습니다 — 스캔함에 넣으면 아직 처리 안 한 영수증이
                바로 등록돼 버리기 때문입니다. Full Dropbox 권한으로 연결돼 있어야 동작합니다.</p>
@@ -1783,13 +1784,15 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.44 — 받은함도 치운다. 비어 있으면 그냥 치우고, 영수증이 남아 있으면
+//         스캔함으로 옮긴 뒤 치운다 (버리지 않는다).
 // v2.43 — 아직 안 옮긴 앱은 지우기 전에 데이터를 새 위치로 먼저 옮긴다.
 //         이 앱은 Full Dropbox 권한이라 그 앱을 열지 않아도 대신 옮겨줄 수 있다.
 // v2.42 — 치우기 대상에 Dropbox 앱 폴더(/앱/<앱이름>)도 포함. 그 앱 데이터가
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.43';
+const APP_VERSION='v2.44';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -6771,6 +6774,36 @@ async function cleanupOldFolders(){
     }catch(e){ return false; }
   };
   const ready=[],held=[],unknown=[];
+
+  // ── 받은함 ── 안에 든 것을 버리지 않는다.
+  // 비어 있으면 그냥 치우고, 파일이 있으면 스캔함으로 옮긴 뒤 치운다.
+  // 받은함은 원래 '처리해 달라고 넣어두는 곳'이라 스캔함이 그 파일들의 목적지다.
+  const inboxDir=_LEGACY_WORK_DIR+'/받은함';
+  let inboxMoved=0;
+  if(await has(inboxDir)){
+    const all=await _dbxListAll(token,inboxDir);
+    const files=(all||[]).filter(e=>e['.tag']==='file');
+    if(files.length){
+      await _dbxEnsureFolder(_dbxScanDir());
+      for(let i=0;i<files.length;i+=900){
+        const entries=files.slice(i,i+900).map(f=>({
+          from_path:f.path_display,
+          to_path:_dbxScanDir()+'/'+f.path_display.slice(f.path_display.lastIndexOf('/')+1)}));
+        try{
+          const r=await fetch('https://api.dropboxapi.com/2/files/move_batch_v2',{method:'POST',
+            headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+            body:JSON.stringify({entries,autorename:true})});
+          if(r.ok)inboxMoved+=entries.length;
+        }catch(e){}
+      }
+      if(inboxMoved===files.length)ready.push({path:inboxDir,count:0,
+        why:`받은함 — 남아 있던 ${inboxMoved}개를 스캔함으로 옮김`,movedToScan:inboxMoved});
+      else held.push({path:inboxDir,why:'스캔함으로 옮기지 못한 파일이 있음'});
+    }else{
+      ready.push({path:inboxDir,count:0,why:'받은함 — 비어 있음'});
+    }
+  }
+
   for(const tg of _CLEANUP_TARGETS){
     if(!await has(tg.path))continue;                          // 이미 없음
     if(!await has(tg.need())){ held.push(tg); continue; }      // 대체물이 없다 — 손대지 않는다
@@ -6808,8 +6841,9 @@ async function cleanupOldFolders(){
   if(!ready.length){
     alert('지울 옛 폴더가 없습니다.\n\n'
       +(held.length
-        ? '아래는 새 위치에 대체물이 확인되지 않아 그대로 뒀습니다:\n'
-          +held.map(x=>'  · '+x.path).join('\n')+'\n\n먼저 [한번에 정리]를 눌러 주세요.'
+        ? '아래는 그대로 뒀습니다:\n'
+          +held.map(x=>'  · '+x.path+(x.why?'\n     ('+x.why+')':'')).join('\n')
+          +'\n\n새 위치에 데이터가 없어서라면 먼저 [한번에 정리]를 눌러 주세요.'
         : '이미 다 정리되셨습니다.'));
     return;
   }
@@ -6820,11 +6854,15 @@ async function cleanupOldFolders(){
       ? '아직 안 옮긴 앱이 있어 먼저 데이터를 새 위치로 옮겼습니다:\n'
         +rescuedList.map(x=>'  · '+x.why.replace(' 옛 앱 폴더','')).join('\n')+'\n\n'
       : '')
+    +(inboxMoved
+      ? `받은함에 남아 있던 영수증 ${inboxMoved}개를 스캔함으로 옮겼습니다.\n`
+        +'다음 동기화 때 영수증으로 자동 등록됩니다.\n\n'
+      : '')
     +list+'\n\n'
     +(held.length?'그대로 두는 것 (새 위치에 아직 데이터가 없음):\n'
         +held.map(x=>'  · '+x.path+(x.why?'\n     ('+x.why+')':'')).join('\n')+'\n\n':'')
     +(unknown.length?'모르는 폴더라 건드리지 않습니다:\n'+unknown.map(x=>'  · '+x).join('\n')+'\n\n':'')
-    +'※ 받은함은 건드리지 않습니다 (아직 처리 안 한 영수증)\n'
+    +'※ 안에 든 영수증은 버리지 않고 스캔함으로 옮깁니다\n'
     +'※ Dropbox 휴지통에서 30일간 되살릴 수 있습니다\n\n지울까요?'))return;
 
   const lt=toast('지우는 중…',{duration:300000});
@@ -6841,10 +6879,12 @@ async function cleanupOldFolders(){
   alert(`옛 폴더 ${done}개를 치웠습니다.`
     +(failed?`\n${failed}개는 실패했습니다 — 다시 눌러 주세요.`:'')
     +'\n\n(Dropbox 휴지통에서 30일간 복구할 수 있습니다)'
-    +'\n\n아래는 직접 확인하고 치우세요:\n'
-    +'  · /01_Personal/영수증/받은함 — 아직 처리 안 한 영수증'
-    +(held.length?'\n'+held.map(x=>'  · '+x.path).join('\n'):'')
-    +(unknown.length?'\n'+unknown.map(x=>'  · '+x).join('\n'):''));
+    +(inboxMoved?`\n받은함에 있던 ${inboxMoved}개는 스캔함으로 옮겨 뒀습니다.`:'')
+    +((held.length||unknown.length)
+      ? '\n\n아래는 직접 확인하고 치우세요:\n'
+        +[...held.map(x=>'  · '+x.path+(x.why?'  ('+x.why+')':'')),
+          ...unknown.map(x=>'  · '+x+'  (모르는 폴더)')].join('\n')
+      : '\n\n옛 폴더는 모두 정리됐습니다.'));
 }
 
 async function tidyReceiptFolders(){
