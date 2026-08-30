@@ -1784,6 +1784,8 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.45 — 연결 카드에 '이 기기가 쓰는 폴더'를 항상 표시. localStorage가 기기마다
+//         따로라 한 기기만 키를 바꾸면 서로 다른 곳을 보는데 그게 안 보였다.
 // v2.44 — 받은함도 치운다. 비어 있으면 그냥 치우고, 영수증이 남아 있으면
 //         스캔함으로 옮긴 뒤 치운다 (버리지 않는다).
 // v2.43 — 아직 안 옮긴 앱은 지우기 전에 데이터를 새 위치로 먼저 옮긴다.
@@ -1792,7 +1794,7 @@ svg{display:block;flex-shrink:0;}
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.44';
+const APP_VERSION='v2.45';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -7324,8 +7326,15 @@ function renderDbxSettings(){
         <div style="font-size:11px;color:var(--label3);margin-bottom:4px;">
           자동 동기화: ${fmtTime(ls)||'아직 동기화 전 — 영수증을 저장하면 자동 시작돼요'}
         </div>
-        <div style="font-size:11px;color:var(--label3);margin-bottom:10px;">
+        <div style="font-size:11px;color:var(--label3);margin-bottom:6px;">
           전체 백업(사진 포함): ${lb?escapeHtml(lb):'아직 없음 — 아래 버튼으로 백업 권장'}
+        </div>
+        <!-- 이 기기가 실제로 쓰는 폴더. localStorage는 기기마다 따로라
+             한 기기에서만 App key를 바꾸면 기기끼리 다른 곳을 보게 된다.
+             그 상태가 '연결됨'만으로는 안 보여서 여기에 드러낸다. -->
+        <div style="font-size:11px;margin-bottom:10px;color:${_DBX_DATA_DIR===_DBX_ROOT?'var(--label3)':'var(--red)'};">
+          이 기기가 쓰는 폴더: <code style="font-size:10.5px;">${escapeHtml(_DBX_DATA_DIR)}</code>
+          ${_DBX_DATA_DIR===_DBX_ROOT?'':'<br>⚠️ 옛 위치입니다 — 다른 기기와 다른 곳을 보고 있을 수 있어요.<br>App Key를 Full Dropbox 키로 바꿔 다시 연결해 주세요.'}
         </div>
         <button id="dbxSyncNowBtn" class="bkp-restore-btn" style="margin-bottom:8px;">
           ↻ 지금 동기화 (양방향)
