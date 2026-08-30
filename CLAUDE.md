@@ -55,6 +55,10 @@
 - `.view.on`에 `overflow:hidden`을 걸지 말 것 — 카테고리 팝오버가 잘림 (v2.22에서 제거).
 - 모바일에서 하단에 띄우는 것(토스트·일괄 전송 바 등)은 **nav bar 68px + safe-area를 반드시 비켜야 한다.**
   `bottom:20px` 같은 값을 그대로 쓰면 nav bar에 가려진다 (v2.31).
+- ⚠️ **헤더 높이를 `height`로 고정하지 말 것 — `min-height`를 쓸 것** (v2.56).
+  `padding-top`이 `safe-area-inset-top`에 따라 달라지므로 고정 높이는 반드시 어딘가에서 잘린다.
+- ⚠️ **화면 전체 높이를 계산하는 곳(`.shell`·`.app`)은 `--cw-h`를 빼야 한다.**
+  미연결 경고 띠가 뜨면 그만큼 아래가 잘린다 (v2.56에서 `.app` 누락분 수정).
 
 ## ⚠️ Dropbox 데이터 경로 (v2.33~ · /07_Apps 통합)
 모든 앱 데이터를 Dropbox `/07_Apps/` 아래로 모으면서 이 앱도 이동했다.
@@ -90,6 +94,17 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v2.56` — **모바일 헤더가 상태바 아래로 잘리던 것 수정 + 버전을 모든 탭에서.**
+  헤더(`.side-top`/`.main-top`)가 `height`로 **고정**돼 있는데 `padding-top`은
+  `max(18px, safe-area-inset-top + 12px)`로 **가변**이었다. 두 값이 어긋나면 내용이 상자를 넘쳐
+  윗부분이 잘린다 — safe-area가 0인 기기에서도 실제로 6px 잘리고 있었다(필요 114px vs 고정 108px).
+  `height` → **`min-height`**로 바꿔 기준 높이는 지키되 필요하면 늘어나게 했다(`.main-top`은
+  `flex:0 0 <basis>`도 `flex:0 0 auto`로). 높이 변수에도 safe-area를 더한다(노치 없으면 108px 그대로).
+  **버전 칩**은 내역 탭 사이드바에만 있어 다른 탭에서 확인할 수 없었다. 각 탭 헤더 눈썹줄에
+  `.main-eye-row` + `.js-app-version`을 두고 `querySelectorAll`로 주입한다.
+  `#mainEye`는 JS가 textContent/innerHTML로 계속 덮어쓰므로 칩은 **그 안이 아니라 형제**로 둔다.
+  같이 고친 것: **`.app` 높이가 `--cw-h`(미연결 경고 띠)를 빼지 않아** 띠가 뜨면 앱 전체가
+  띠 높이만큼 밀려 **저장 버튼이 하단 nav bar 뒤로 숨던 v2.55 버그**.
 - `v2.55` — **연결 안 된 기기를 알아볼 수 있게.** 모바일에서 저장했는데 내역에도 안 보이고
   완료 JPG로도 안 가던 일의 원인은 대개 **그 기기가 Dropbox에 연결돼 있지 않은 것**이다.
   localStorage는 기기마다 따로라 데스크탑에서 App key를 바꿔도 폰은 그대로인데,

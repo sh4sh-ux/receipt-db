@@ -211,6 +211,9 @@ svg{display:block;flex-shrink:0;}
 .main-top{padding:24px 32px 18px;border-bottom:1px solid var(--sep);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
 #viewList>.main-top{position:sticky;top:0;z-index:70;background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}
 .main-eye{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px;}
+/* 눈썹줄 + 버전 칩. 버전을 모든 탭에서 볼 수 있게 한다(내역 탭 사이드바에만 있었음). */
+.main-eye-row{display:flex;align-items:baseline;gap:7px;}
+.main-eye-row .app-version{text-transform:none;flex-shrink:0;}
 .main-title{font-size:22px;font-weight:700;letter-spacing:-.4px;}
 .main-sub{font-size:13px;color:var(--label2);margin-top:4px;line-height:1.5;}
 .main-actions{display:flex;gap:6px;flex-shrink:0;}
@@ -976,12 +979,17 @@ svg{display:block;flex-shrink:0;}
 @media(max-width:780px){
   html,body{height:100%;overflow:hidden;}
   :root{
-    --mobile-brand-head-h:108px;
+    /* 헤더 높이는 safe-area(노치·다이나믹 아일랜드)를 포함해야 한다.
+       .side-top/.main-top의 padding-top이 max(18px, safe+12px)이므로
+       고정 108px이면 노치 폰에서 상단이 상태바 아래로 잘린다. */
+    --mobile-brand-head-h:calc(90px + max(18px, env(safe-area-inset-top,0px) + 12px));
     --mobile-month-head-h:56px;
     --mobile-main-head-h:calc(var(--mobile-brand-head-h) + var(--mobile-month-head-h));
   }
   .shell{height:calc(100dvh - var(--cw-h,0px));min-height:0;box-sizing:border-box;overflow:hidden;padding-bottom:calc(68px + env(safe-area-inset-bottom,0px));}
-  .app{height:calc(100dvh - 68px - env(safe-area-inset-bottom,0px));min-height:0;overflow:hidden;}
+  /* --cw-h(미연결 경고 띠)만큼도 빼야 한다. 안 빼면 앱 전체가 띠 높이만큼 아래로
+     밀려 저장 버튼이 하단 nav bar 뒤로 숨는다(v2.55에서 띠를 넣을 때 누락). */
+  .app{height:calc(100dvh - 68px - env(safe-area-inset-bottom,0px) - var(--cw-h,0px));min-height:0;overflow:hidden;}
   .side,.main{height:100%;min-height:0;overflow:hidden;}
   .app.mobile-stats-view .main,
   .app.mobile-content-view .main,
@@ -994,12 +1002,14 @@ svg{display:block;flex-shrink:0;}
   .batch-export-cancel{height:38px;}
   .view.on{height:100%;min-height:0;display:flex;flex-direction:column;}
   .main-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
-  .side-top{height:var(--mobile-brand-head-h);min-height:var(--mobile-brand-head-h);box-sizing:border-box;}
-  .month-nav{height:var(--mobile-month-head-h);box-sizing:border-box;}
+  /* ⚠️ 높이를 height로 '고정'하지 말 것. padding-top이 safe-area에 따라 달라지므로
+     고정 높이면 내용이 상자를 넘쳐 헤더 윗부분이 잘린다(v2.56).
+     min-height로 두면 기준 높이는 지키면서 필요할 때만 늘어나 절대 잘리지 않는다. */
+  .side-top{min-height:var(--mobile-brand-head-h);box-sizing:border-box;}
+  .month-nav{min-height:var(--mobile-month-head-h);box-sizing:border-box;}
   .main-top{
-    height:var(--mobile-main-head-h);
     min-height:var(--mobile-main-head-h);
-    flex:0 0 var(--mobile-main-head-h);
+    flex:0 0 auto;
     box-sizing:border-box;
     padding-top:max(18px,calc(env(safe-area-inset-top,0px) + 12px));
   }
@@ -1137,7 +1147,10 @@ svg{display:block;flex-shrink:0;}
       <section class="view on" id="viewList">
         <div class="main-top">
           <div>
-            <div class="main-eye" id="mainEye">가계부</div>
+            <div class="main-eye-row">
+              <div class="main-eye" id="mainEye">가계부</div>
+              <span class="app-version js-app-version" title="앱 버전"></span>
+            </div>
             <div class="main-title" id="mainTitle">—</div>
             <div class="main-sub" id="mainSub">왼쪽 목록에서 영수증을 선택하면 상세 정보가 표시됩니다.</div>
           </div>
@@ -1168,7 +1181,10 @@ svg{display:block;flex-shrink:0;}
       <section class="view" id="viewInput">
         <div class="main-top">
           <div>
-            <div class="main-eye">새 영수증 추가</div>
+            <div class="main-eye-row">
+              <div class="main-eye">새 영수증 추가</div>
+              <span class="app-version js-app-version" title="앱 버전"></span>
+            </div>
             <div class="main-title" id="inputModeTitle">영수증 정리 결과 붙여넣기</div>
             <div class="main-sub" id="inputModeSub">사용 중인 AI 도구에 영수증 사진과 프롬프트를 전달한 뒤, 정리된 결과를 붙여넣으세요.</div>
           </div>
@@ -1336,7 +1352,10 @@ svg{display:block;flex-shrink:0;}
       <section class="view" id="viewSettings">
         <div class="main-top">
           <div>
-            <div class="main-eye">설정</div>
+            <div class="main-eye-row">
+              <div class="main-eye">설정</div>
+              <span class="app-version js-app-version" title="앱 버전"></span>
+            </div>
             <div class="main-title">환경설정 및 데이터 관리</div>
             <div class="main-sub">화면 테마와 백업·복원 옵션을 관리합니다.</div>
           </div>
@@ -1827,6 +1846,9 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.56 — 모바일 헤더가 상태바 아래로 잘리던 것 수정. 헤더 높이가 108px 고정인데
+//         padding-top은 safe-area+12px이라 노치 폰에서 내용이 상자를 넘쳤다.
+//         높이에 safe-area를 더한다(노치 없으면 108px 그대로). 버전은 모든 탭 헤더에 표시.
 // v2.55 — Dropbox 연결 안 된 기기임을 항상 보이는 띠로 알린다(설정에 들어가야만
 //         보였다). #k=<App Key> 링크로 폰에서 키 타이핑 없이 연결한다.
 // v2.54 — 앱에 저장한 사진이 완료 JPG·PDF로 안 가던 것 해결. 동기화 때 밀린 것을
@@ -1856,7 +1878,7 @@ svg{display:block;flex-shrink:0;}
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.55';
+const APP_VERSION='v2.56';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -8068,6 +8090,8 @@ function _dbxBindEvents(){
 (async function init(){
   // 버전 표시 — DOM 두 곳에 모두 주입 (HTML 정적 텍스트가 stale해도 JS가 진실의 원천)
   const av=document.getElementById('appVersion');if(av)av.textContent=APP_VERSION;
+  // 각 탭 헤더의 버전 칩 — 내역 탭 사이드바에서만 보이던 것을 모든 탭에서 보이게
+  document.querySelectorAll('.js-app-version').forEach(el=>{el.textContent=APP_VERSION;});
   const avs=document.getElementById('appVersionStat');if(avs)avs.textContent=APP_VERSION;
   const pm=document.getElementById('printMonth');if(pm&&!pm.value)pm.value=viewMonth;
   const sd=document.getElementById('scanDirInp');if(sd)sd.value=_dbxScanDir();
