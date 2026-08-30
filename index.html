@@ -528,6 +528,8 @@ svg{display:block;flex-shrink:0;}
 .print-opt-check{cursor:pointer;}
 .print-opt-check input{width:15px;height:15px;accent-color:var(--blue);cursor:pointer;}
 .scan-where{font-size:12px;color:var(--label2);background:var(--fill);border-radius:8px;padding:8px 10px;margin-bottom:10px;line-height:1.5;}
+.scan-report{font-size:11.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--fill2);border:1px solid var(--sep2);border-radius:8px;padding:10px 12px;margin-top:10px;line-height:1.6;white-space:pre-wrap;word-break:break-all;color:var(--label2);}
+.scan-report b{color:var(--label);}
 .scan-path{background:var(--fill);border:1px solid var(--sep2);border-radius:5px;padding:1px 5px;font-size:11.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--label);white-space:nowrap;}
 /* 인쇄 전용 컨테이너 — 화면에서는 완전히 숨긴다 */
 #printRoot{display:none;}
@@ -1396,17 +1398,27 @@ svg{display:block;flex-shrink:0;}
 
           <div class="setting-card">
             <h3>스캔함 — 폴더에 넣으면 자동 등록</h3>
-            <p>Dropbox의 <code class="scan-path">Receipt_DB/스캔함/</code> 폴더에 영수증 사진을 넣어두면
-               동기화할 때 앱이 자동으로 등록하고, <code class="scan-path">등록완료/YYYY-MM/</code> 아래로
+            <p>아래 폴더에 영수증 사진을 넣어두면 동기화할 때 앱이 자동으로 등록하고,
+               <code class="scan-path">등록완료/YYYY-MM/</code> 아래로
                <code class="scan-path">YYYY-MM-DD_영수증</code> 형식으로 이름을 바꿔 옮깁니다.
                날짜는 파일명 → 사진 촬영일(EXIF) → 업로드 시각 순으로 정합니다.
                폰·다른 컴퓨터에서 동시에 써도 같은 영수증이 두 번 등록되지 않습니다.</p>
-            <p class="scan-where">폴더를 못 찾겠으면 Dropbox 앱 검색창에 <b>스캔함</b> 또는
-               <b>receipt-db_sync.json</b>을 넣어보세요. 동기화를 한 번 하면 자동으로 만들어집니다.</p>
+            <div class="print-opt-row">
+              <label class="print-opt" style="flex:1;min-width:180px;">
+                <span>폴더</span>
+                <input type="text" id="scanDirInp" placeholder="/스캔함" style="flex:1;min-width:120px;"/>
+              </label>
+            </div>
+            <p class="scan-where" id="scanWhere">Dropbox 앱에서 이 폴더를 찾아 <b>즐겨찾기(별표)</b> 해두면 한 번에 갑니다.
+               위치가 헷갈리면 아래 <b>위치 확인</b>을 눌러 실제 경로를 보세요.</p>
             <div class="setting-btn-row">
               <button id="scanNowBtn">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
                 지금 스캔함 확인
+              </button>
+              <button id="scanWhereBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/></svg>
+                위치 확인
               </button>
             </div>
           </div>
@@ -1715,7 +1727,8 @@ svg{display:block;flex-shrink:0;}
 // v2.29 — 스캔함 폴더를 동기화 때 자동 생성 (없으면 사용자가 넣을 곳을 못 찾음) + 위치 안내.
 // v2.30 — 모바일 저장 바 fixed→sticky 복귀. iOS 키보드가 열리면 fixed가 화면 밖으로 밀려 저장 버튼이 사라지던 문제.
 // v2.31 — 모바일 토스트가 하단 nav bar에 가려지던 문제 수정 (nav bar 위로 띄움).
-const APP_VERSION='v2.31';
+// v2.32 — 스캔함을 앱 최상단(/스캔함)으로 이동. 경로 설정 가능 + '위치 확인' 진단 추가.
+const APP_VERSION='v2.32';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -5550,6 +5563,70 @@ function printMonthPdf(){
 }
 document.getElementById('printPdfBtn')?.addEventListener('click',printMonthPdf);
 
+// ── 스캔함 위치 진단 ──
+// Dropbox 앱 등록 유형(App folder / Full Dropbox)에 따라 API 경로가 실제 Dropbox의
+// 어디로 매핑되는지가 달라진다. 루트 목록을 읽어 사용자에게 실제 위치를 알려준다.
+async function _dbxWhereIsScanbox(){
+  const token=await _dbxToken();
+  const resp=await fetch('https://api.dropboxapi.com/2/files/list_folder',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({path:'',recursive:false}),
+  });
+  const names=resp.ok?((await resp.json()).entries||[]).map(e=>e.name):[];
+  // 앱 폴더 스코프면 루트에 앱이 만든 것들만 보인다. 사용자 Dropbox 최상위 폴더가
+  // 여러 개 보이면 Full Dropbox 스코프다.
+  const appMade=new Set(['01_Personal','스캔함','Receipt_DB','backups','images']);
+  const foreign=names.filter(n=>!appMade.has(n));
+  const scope=foreign.length>0?'Full Dropbox':'App folder';
+  const scan=_dbxScanDir();
+  const real=scope==='App folder'
+    ? `앱 > 이름 (Apps/…/Receipt_DB_v1)${scan}`
+    : `Dropbox 최상위${scan}`;
+  // 폴더 존재 확인
+  let exists=false;
+  try{
+    const r2=await fetch('https://api.dropboxapi.com/2/files/get_metadata',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({path:scan}),
+    });
+    exists=r2.ok;
+  }catch(_){}
+  return {scope,names,real,scan,exists};
+}
+
+document.getElementById('scanWhereBtn')?.addEventListener('click',async(e)=>{
+  if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
+  const btn=e.currentTarget; btn.disabled=true;
+  const card=btn.closest('.setting-card');
+  let box=card.querySelector('.scan-report');
+  if(!box){box=document.createElement('div');box.className='scan-report';card.appendChild(box);}
+  box.textContent='확인 중…';
+  try{
+    const r=await _dbxWhereIsScanbox();
+    box.innerHTML=
+      `Dropbox 연결 유형: <b>${escapeHtml(r.scope)}</b>\n`
+     +`앱이 쓰는 경로: <b>${escapeHtml(r.scan)}</b>\n`
+     +`Dropbox에서 찾을 위치:\n  <b>${escapeHtml(r.real)}</b>\n`
+     +`폴더 존재: <b>${r.exists?'있음 ✓':'없음 — 아래 ‘지금 스캔함 확인’을 누르면 만들어집니다'}</b>\n`
+     +`앱 루트 목록: ${escapeHtml(r.names.join(', ')||'(비어 있음)')}`;
+  }catch(err){
+    box.textContent='확인 실패: '+(err.message||err);
+  }finally{btn.disabled=false;}
+});
+
+// 스캔함 폴더 경로 입력 — 값이 바뀌면 저장하고 폴더를 만들어 둔다
+document.getElementById('scanDirInp')?.addEventListener('change',async(e)=>{
+  const v=String(e.target.value||'').trim();
+  try{ if(v)localStorage.setItem(_K.SCAN_DIR,v); else localStorage.removeItem(_K.SCAN_DIR); }catch(_){}
+  e.target.value=_dbxScanDir();
+  if(dbxIsConnected()){
+    try{await _dbxEnsureFolder(_dbxScanDir());toast(`스캔함 폴더를 ${_dbxScanDir()} 로 바꿨어요`,{type:'success'});}
+    catch(err){toast('폴더 만들기 실패: '+(err.message||err),{type:'error'});}
+  }
+});
+
 document.getElementById('scanNowBtn')?.addEventListener('click',async(e)=>{
   if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
   const btn=e.currentTarget;
@@ -5716,6 +5793,7 @@ const _K={  // localStorage 키 모음
   UPLOADED_IMGS: 'dbx_uploaded_imgs',  // Dropbox에 업로드된 imageId 목록 (JSON array)
   CODE_VERIFIER: 'dbx_code_verifier',
   STATE:         'dbx_oauth_state',
+  SCAN_DIR:      'dbx_scan_dir',       // 스캔함 폴더 경로 (앱 루트 기준)
 };
 
 const _ls  = k     => localStorage.getItem(k)||'';
@@ -6005,8 +6083,18 @@ const _DBX_BACKUP_DIR=_DBX_DATA_DIR+'/backups';
 const _DBX_IMAGES_DIR=_DBX_DATA_DIR+'/images';  // 이미지 개별 파일 저장 폴더
 const _SYNC_PATH=_DBX_DATA_DIR+'/receipt-db_sync.json';
 const _INBOX_PATH=_DBX_DATA_DIR+'/receipt-db_inbox.json';
-const _DBX_SCAN_DIR=_DBX_DATA_DIR+'/스캔함';          // 앱 전용 수신 폴더 (맥은 보지 않음)
-const _DBX_SCAN_DONE=_DBX_SCAN_DIR+'/등록완료';       // 처리 후 이동 — YYYY-MM/ 하위로
+// 스캔함 위치 — 앱 데이터 폴더(_DBX_DATA_DIR) 안이 아니라 **앱 최상단**에 둔다.
+// 데이터 폴더 안에 두면 Dropbox 앱에서 매번 여러 단계를 타고 들어가야 해서 쓰기 힘들다.
+// 설정에서 바꿀 수 있고, 값은 localStorage에 저장한다.
+const _SCAN_DIR_DEFAULT='/스캔함';
+function _dbxScanDir(){
+  let v=_ls(_K.SCAN_DIR)||_SCAN_DIR_DEFAULT;
+  v=String(v).trim().replace(/\\/g,'/').replace(/\/+$/,'');   // 끝 슬래시 제거
+  if(!v)v=_SCAN_DIR_DEFAULT;
+  if(!v.startsWith('/'))v='/'+v;
+  return v;
+}
+function _dbxScanDoneDir(){return _dbxScanDir()+'/등록완료';}
 const _SCAN_IMG_EXTS=['.jpg','.jpeg','.png'];
 const _SCAN_DOC_EXTS=['.pdf'];
 const _SCAN_BATCH_MAX=20;                              // 한 번에 처리할 최대 파일 수
@@ -6116,7 +6204,7 @@ async function _dbxListScanbox(){
   const resp=await fetch('https://api.dropboxapi.com/2/files/list_folder',{
     method:'POST',
     headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({path:_DBX_SCAN_DIR,recursive:false}),
+    body:JSON.stringify({path:_dbxScanDir(),recursive:false}),
   });
   if(resp.status===409||resp.status===404)return [];         // 폴더 없음 — 아직 안 쓰는 상태
   if(!resp.ok){console.warn('scan list:',await resp.text());return [];}
@@ -6139,7 +6227,7 @@ async function _dbxProcessScanbox(){
   try{
     // 폴더가 없으면 만들어 둔다. 사용자가 Dropbox 앱에서 넣을 곳을 찾을 수 있어야
     // 기능이 시작되므로, 파일이 없어도 폴더는 항상 존재해야 한다.
-    await _dbxEnsureFolder(_DBX_SCAN_DIR);
+    await _dbxEnsureFolder(_dbxScanDir());
     const files=await _dbxListScanbox();
     if(!files.length)return 0;
     const token=await _dbxToken();
@@ -6164,8 +6252,9 @@ async function _dbxProcessScanbox(){
 
         if(deleted.has(id)){
           // 사용자가 지운 영수증 — 다시 만들지 않되 파일은 치워서 무한 재처리를 막는다
-          await _dbxEnsureFolder(_DBX_SCAN_DONE+'/'+date.slice(0,7));
-          await _dbxMoveInto(f.path_display,_DBX_SCAN_DONE+'/'+date.slice(0,7),`${date}_영수증`,ext);
+          const dm=_dbxScanDoneDir()+'/'+date.slice(0,7);
+          await _dbxEnsureFolder(dm);
+          await _dbxMoveInto(f.path_display,dm,`${date}_영수증`,ext);
           continue;
         }
         // 같은 파일이 이미 등록돼 있으면(ID 또는 내용 해시) 레코드는 건드리지 않고 파일만 이동
@@ -6189,8 +6278,8 @@ async function _dbxProcessScanbox(){
         }
         // ★ 저장이 끝난 뒤에 이동한다 (실패해도 다음 회차에 같은 ID로 다시 처리 → 유실 없음)
         const ym=date.slice(0,7);
-        await _dbxEnsureFolder(_DBX_SCAN_DONE+'/'+ym);
-        await _dbxMoveInto(f.path_display,_DBX_SCAN_DONE+'/'+ym,`${date}_영수증`,ext);
+        await _dbxEnsureFolder(_dbxScanDoneDir()+'/'+ym);
+        await _dbxMoveInto(f.path_display,_dbxScanDoneDir()+'/'+ym,`${date}_영수증`,ext);
       }catch(fe){console.warn('scan file:',f.name,fe.message||fe);}
     }
     if(newImageIds.length){
@@ -6772,6 +6861,7 @@ function _dbxBindEvents(){
   const av=document.getElementById('appVersion');if(av)av.textContent=APP_VERSION;
   const avs=document.getElementById('appVersionStat');if(avs)avs.textContent=APP_VERSION;
   const pm=document.getElementById('printMonth');if(pm&&!pm.value)pm.value=viewMonth;
+  const sd=document.getElementById('scanDirInp');if(sd)sd.value=_dbxScanDir();
 
   applyTheme(getThemePreference());
   bindThemeSettings();
