@@ -5762,6 +5762,9 @@ async function _dbxMakeChallenge(v){
 async function dbxConnect(){
   const appKey=(document.getElementById('dbxAppKey')?.value||'').trim();
   if(!appKey){toast('App Key를 입력해주세요',{type:'error'});return;}
+  // App key가 바뀌면(App folder 앱 → Full Dropbox 앱) 저장 위치를 다시 판단해야 한다.
+  // 새 앱은 옛 앱의 폴더 안을 볼 수 없으므로 이전 완료 표시를 지우고 처음부터 확인한다.
+  if(_ls(_K.APP_KEY)!==appKey){localStorage.removeItem(_K_DBX_MIGRATED);_dbxRootPromise=null;}
   _lsSet(_K.APP_KEY,appKey);
 
   const verifier=await _dbxMakeVerifier();
