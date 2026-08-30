@@ -1447,7 +1447,11 @@ svg{display:block;flex-shrink:0;}
                매장명·금액을 채우면 완료 폴더의 파일 이름도 곧바로 따라 바뀝니다 —
                <code class="scan-path">260809_영수증(5,900)_스타벅스 강남구청정문점.jpg</code>.
                예전에 들어간 파일은 <b>완료 파일 이름 정리</b>를 한 번 누르면 같은 규칙으로 맞춰집니다.</p>
-            <p class="scan-where"><b>이름을 이 규칙으로 지어 넣으면 영수증이 통째로 완성됩니다.</b>
+            <p class="scan-where"><b>스캔함을 안 거쳐도 됩니다.</b>
+               <b>추가</b> 탭에서 사진을 붙여 저장하면, 앱이 그 사진을 완료 폴더에
+               <code class="scan-path">260809_영수증(5,900)_스타벅스 강남구청정문점.jpg</code>
+               이름으로 알아서 올립니다. 나중에 매장명·금액을 고치면 이름도 따라 바뀝니다.</p>
+            <p class="scan-where"><b>스캔함에 넣을 때도 이름을 이 규칙으로 지으면 통째로 완성됩니다.</b>
                <code class="scan-path">260809_영수증(5,900)_스타벅스 강남구청정문점.jpg</code> →
                일자·금액·매장명·카테고리가 모두 채워진 채로 등록됩니다. 입력할 게 없습니다.</p>
             <p class="scan-where"><b>파일 이름에 가게 이름만 있어도 매장명까지 채워집니다.</b>
@@ -1804,6 +1808,8 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.52 — 앱에서 붙인 사진도 완료 폴더에 제대로 된 이름으로 올린다.
+//         Dropbox 스캔함을 거치지 않아도 사진이 정리된다.
 // v2.51 — 앱이 지은 이름을 되읽는다. 260809_영수증(5,900)_스타벅스.jpg 를 넣으면
 //         일자·금액·매장명이 모두 채워진 채로 등록된다 (입력할 게 없다).
 // v2.50 — '완료 파일 이름 정리': 옛 규칙으로 들어간 파일들을 한 번에 다시 짓는다.
@@ -1825,7 +1831,7 @@ svg{display:block;flex-shrink:0;}
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.51';
+const APP_VERSION='v2.52';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -3649,6 +3655,9 @@ saveBtn.addEventListener('click',async()=>{
   const dup=receipts.find(r=>r.date===rec.date&&(r.store||'').trim()===(rec.store||'').trim()&&r.total===rec.total);
   if(dup){const ok=await _confirmDup(rec.store,rec.date,rec.total);if(!ok)return;}
   await dbPut('receipts',rec);
+  // 사진을 붙였으면 완료 폴더에도 사람이 알아볼 이름으로 올린다.
+  // 이러면 Dropbox 스캔함을 거치지 않아도 사진이 제대로 정리된다.
+  if(rec.imageId)_dbxArchiveReceiptPhoto(rec);
   // 카테고리 학습 — 가게명 + 카테고리 둘 다 있을 때, 사용자가 손댄 경우(또는 자동값이 맞다고 확인한 경우 모두)
   if(rec.store&&finalCat){
     await learnCategory(rec.store,finalCat);
@@ -5361,8 +5370,10 @@ async function renderDetail(){
     }
     r.updatedAt=nowISO();
     if(r.store&&r.category) await learnCategory(r.store,r.category);
-    // 매장명·금액이 채워졌으니 완료 폴더의 파일 이름도 그에 맞게 다시 짓는다
-    const renamed=await _dbxRenameScanFile(r);
+    // 매장명·금액이 채워졌으니 완료 폴더 쪽도 맞춘다.
+    // 보관본이 아직 없으면(앱에서 사진만 붙인 영수증) 이때 올리고, 있으면 이름만 고친다.
+    const archived=r.imageId&&!r.scanPath?await _dbxArchiveReceiptPhoto(r):false;
+    const renamed=archived||await _dbxRenameScanFile(r);
     await dbPut('receipts',r);
     toast(renamed?'수정됨 · 사진 파일 이름도 바꿨어요':'수정됨',{type:'success'});
     await loadAll();await renderDetail();
@@ -7717,6 +7728,46 @@ async function _dbxEnsureImagesFolder(){
 }
 
 // IndexedDB 이미지 → Dropbox images/{imgId}.jpg 업로드
+
+// 붙인 사진을 '완료 JPG'(PDF면 '완료 PDF')에 사람이 알아볼 이름으로 올린다.
+//   260809_영수증(5,900)_스타벅스 강남구청정문점.jpg
+// images/ 에 올라가는 것은 앱이 쓰는 사본이라 이름이 img_xxx 다. 그건 그대로 두고,
+// 보관용 사본을 따로 둔다. rec.scanPath 에 경로를 남겨 두면 나중에 매장명·금액이
+// 바뀔 때 _dbxRenameScanFile 이 이름을 따라 고쳐 준다.
+async function _dbxArchiveReceiptPhoto(rec){
+  if(!dbxIsConnected()||!rec||!rec.imageId||rec.scanPath)return false;
+  try{
+    const img=await dbGet('images',rec.imageId);
+    if(!img)return false;
+    let body;
+    if(img.data){
+      const b64=img.data.replace(/^data:[^;]+;base64,/,'');
+      const bin=atob(b64);const bytes=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+      body=bytes;
+    }else if(img.blob){body=img.blob;}
+    else return false;
+    const mime=String(img.mime||'image/jpeg');
+    const isPdf=mime.includes('pdf');
+    const ext=isPdf?'.pdf':(mime.includes('png')?'.png':'.jpg');
+    const dir=_dbxScanDoneDir(!isPdf);
+    await _dbxEnsureFolder(dir);
+    const path=dir+'/'+_scanFileName(rec)+ext;
+    const token=await _dbxToken();
+    const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/octet-stream',
+        'Dropbox-API-Arg':_dbxApiArg({path,mode:'add',autorename:true,mute:true})},
+      body,
+    });
+    if(!resp.ok){console.warn('archive photo:',await resp.text());return false;}
+    const meta=await resp.json();
+    rec.scanPath=meta?.path_display||path;
+    await dbPut('receipts',rec);
+    return true;
+  }catch(e){ console.warn('archive photo:',e.message||e); return false; }
+}
+
 async function _dbxUploadImage(imgId,{force=false}={}){
   if(!dbxIsConnected()||!imgId)return false;
   const uploaded=new Set(JSON.parse(_ls(_K.UPLOADED_IMGS)||'[]'));
