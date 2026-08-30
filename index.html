@@ -727,6 +727,10 @@ svg{display:block;flex-shrink:0;}
 @media(max-width:780px){
   .shell{padding:0 0 calc(76px + env(safe-area-inset-bottom,0px));}
   .app{grid-template-columns:1fr;border-radius:0;border:none;box-shadow:none;min-height:100vh;}
+  /* 토스트는 하단 nav bar(68px) 위로 띄운다. 기본값(bottom:20px)이면 nav bar와 겹쳐
+     메시지가 가려진다. batch-export-bar가 떠 있을 때는 그보다 더 위로 올린다. */
+  .toast-container{bottom:calc(68px + env(safe-area-inset-bottom,0px) + 12px);}
+  body:has(.batch-export-bar.on) .toast-container{bottom:calc(68px + 56px + env(safe-area-inset-bottom,0px) + 12px);}
   .icon-nav{position:fixed;z-index:120;top:auto;left:0;right:0;bottom:0;height:calc(68px + env(safe-area-inset-bottom,0px));padding:6px 18px max(6px,env(safe-area-inset-bottom,0px));border-right:none;border-top:1px solid var(--sep);background:var(--bg);background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);flex-direction:row;justify-content:space-around;gap:0;}
   .icon-nav .nav-btn,.icon-nav .nav-btn.tab{width:64px;height:52px;flex:0 0 64px;border-radius:12px;flex-direction:column;gap:3px;}
   .icon-nav .nav-btn svg{width:20px;height:20px;}
@@ -1710,7 +1714,8 @@ svg{display:block;flex-shrink:0;}
 // v2.28 — 스캔함: Dropbox 수신 폴더 자동 등록. 내용 해시 ID·srcHash로 다중 기기 중복 차단.
 // v2.29 — 스캔함 폴더를 동기화 때 자동 생성 (없으면 사용자가 넣을 곳을 못 찾음) + 위치 안내.
 // v2.30 — 모바일 저장 바 fixed→sticky 복귀. iOS 키보드가 열리면 fixed가 화면 밖으로 밀려 저장 버튼이 사라지던 문제.
-const APP_VERSION='v2.30';
+// v2.31 — 모바일 토스트가 하단 nav bar에 가려지던 문제 수정 (nav bar 위로 띄움).
+const APP_VERSION='v2.31';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';

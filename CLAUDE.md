@@ -53,6 +53,8 @@
   fixed 시절의 63px 보정을 되살리면 액션바 아래 빈 공간이 생긴다.
 - `.actions-shortcut`(⌘+↵)은 모바일에서 숨긴다 — 폰에서 쓸 수 없고 좁은 폭에서 '저 장'으로 줄바꿈돼 깨진다.
 - `.view.on`에 `overflow:hidden`을 걸지 말 것 — 카테고리 팝오버가 잘림 (v2.22에서 제거).
+- 모바일에서 하단에 띄우는 것(토스트·일괄 전송 바 등)은 **nav bar 68px + safe-area를 반드시 비켜야 한다.**
+  `bottom:20px` 같은 값을 그대로 쓰면 nav bar에 가려진다 (v2.31).
 
 ## ⚠️ Dropbox 실제 데이터 경로 (App folder 스코프)
 앱의 Dropbox 연동은 **App folder 타입** — API 경로 `/01_Personal/영수증/Receipt_DB/...`는
@@ -66,6 +68,8 @@
   (inbox 단일 쓰기 원칙 — 순차 실행은 안전). receipt_pdf_to_jpg.py 원본은 맥에만 있음(repo 밖)
 
 ### Changelog
+- `v2.31` — 모바일 토스트가 하단 nav bar에 가려지던 문제 수정. `.toast-container`의 기본 `bottom:20px`이 nav bar(68px) 안쪽이라 메시지가 겹쳐 보였다.
+  모바일에서 nav bar 위 12px로 띄우고, 일괄 전송 바가 떠 있을 땐 그보다 더 위로 올린다.
 - `v2.30` — **모바일 저장 버튼이 사라지던 버그 수정**: 액션바를 `position:fixed`에서 `sticky`로 되돌림.
   `body`가 `overflow:hidden`이고 `.main-body`가 스크롤 컨테이너인 구조라, iOS에서 키보드가 열리면
   레이아웃 뷰포트는 그대로인 채 비주얼 뷰포트만 줄어 fixed 액션바가 화면 밖으로 밀려났다.
@@ -398,7 +402,7 @@ P오플레 클래식 플레인 1+1 680.0g | 1 | 3,980 | 3,980
 - IndexedDB 트랜잭션은 microtask 안에 다 끝내야 — async/await 중간에 외부 await 끼면 트랜잭션 종료됨
 
 ## 현재 상태 (2026-08-30 기준)
-- **버전 `v2.30`**, main 브랜치에 push 완료. 미완결 작업 없음.
+- **버전 `v2.31`**, main 브랜치에 push 완료.
 - 직전 작업: v2.25~v2.30 일괄 릴리스 — 초성 검색, PDF 내보내기(브라우저 인쇄),
   스캔함(Dropbox 수신 폴더 자동 등록, 다중 기기 안전), 모바일 저장 버튼 사라지던 버그 수정.
 - 그 전 작업: CLAUDE.md를 코드 실제와 대조해 정리 — 다크 테마(기본)·테마 토글 섹션 신설,
