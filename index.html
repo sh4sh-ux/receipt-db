@@ -192,7 +192,7 @@ svg{display:block;flex-shrink:0;}
 .empty-state{padding:40px 24px;text-align:center;color:var(--label3);font-size:13px;}
 .empty-state svg{margin:0 auto 12px;color:var(--sep2);}
 
-.side-foot{border-top:1px solid var(--sep);padding:12px var(--pad-x);display:flex;justify-content:space-between;align-items:center;}
+.side-foot{border-top:1px solid var(--sep);min-height:55px;padding:0 var(--pad-x);display:flex;justify-content:space-between;align-items:center;}
 .foot-stat{font-size:12px;color:var(--label2);}
 .foot-stat b{color:var(--label);font-weight:700;}
 
@@ -244,10 +244,10 @@ svg{display:block;flex-shrink:0;}
 .input-row.top{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch;}
 .input-row.preview{}
 .input-row.options{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.input-row.actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--sep);margin:16px -32px 0;padding:10px 32px;z-index:5;}
+.input-row.actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--sep);margin:16px -32px 0;padding:9px 32px;z-index:5;}
 #viewInput .main-body{padding-bottom:0;}
-.input-row.actions .primary-btn{margin-top:0;min-height:40px;padding:0 22px;width:auto;white-space:nowrap;flex-shrink:0;}
-.input-row.actions .ghost-btn{margin-top:0;min-height:40px;padding:0 16px;width:auto;white-space:nowrap;flex-shrink:0;}
+.input-row.actions .primary-btn{margin-top:0;min-height:36px;padding:0 44px;width:auto;white-space:nowrap;flex-shrink:0;}
+.input-row.actions .ghost-btn{margin-top:0;min-height:36px;padding:0 32px;width:auto;white-space:nowrap;flex-shrink:0;}
 .actions-shortcut{font-size:11px;color:var(--label3);margin-right:auto;display:flex;align-items:center;gap:5px;}
 .actions-shortcut kbd{background:var(--fill2);border:1px solid var(--sep2);border-radius:5px;padding:2px 8px;font-size:13px;font-family:monospace;color:var(--label2);line-height:1.4;}
 @media(max-width:900px){
@@ -1597,7 +1597,8 @@ svg{display:block;flex-shrink:0;}
 // v2.18 — 저장 바 sticky + Cmd+Enter 단축키 추가.
 // v2.19 — 저장 바 버튼 너비 auto·kbd 크기 ↑·하단 여백 정리.
 // v2.20 — actions 바 margin-bottom 0 + #viewInput padding-bottom 0 → gap 완전 차단.
-const APP_VERSION='v2.20';
+// v2.21 — 버튼 높이 36px·너비 2배; side-foot min-height 55px → 구분선 수평 정렬.
+const APP_VERSION='v2.21';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
