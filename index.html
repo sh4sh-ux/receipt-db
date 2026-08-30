@@ -2296,7 +2296,7 @@ function dailySparkline(ym){
 // ════════════════════════════════════════════════════════════════
 const GPT_PROMPT=`이 영수증을 정확히 아래 형식으로만 정리해줘. 형식 외 다른 설명·문장 금지.
 
-매장명: [가게 이름]
+매장명: [브랜드명 + 정확한 지점명]
 일자: YYYY.MM.DD
 총액: ##,###원
 
@@ -2304,8 +2304,18 @@ const GPT_PROMPT=`이 영수증을 정확히 아래 형식으로만 정리해줘
 
 품목1 | 1 | 1,000 | 1,000
 품목2 | 2 | 500 | 1,000
+쿠폰 할인 | 1 | -500 | -500
 
-쉼표는 천 단위 구분만 쓰고, 품목명은 영수증에 적힌 그대로 유지해줘. 할인/쿠폰은 금액에 - 붙여서.`;
+규칙:
+- 총액은 상품 합계가 아니라 할인·쿠폰·포인트 등을 반영한 실제 최종 결제금액으로 적어줘.
+- 품목명, 옵션(사이즈 포함), 단가가 모두 같은 상품이 여러 줄이면 반드시 한 줄로 합쳐줘.
+- 같은 상품을 합칠 때 수량은 합산하고 금액은 단가 × 수량으로 계산해줘.
+- 같은 상품이라도 옵션·사이즈·단가 중 하나라도 다르면 별도 행으로 유지해줘.
+- 할인/쿠폰/포인트 사용은 별도 행으로 적고 단가와 금액에 음수(-)를 붙여줘.
+- 품목 금액 합계(할인 포함)가 총액과 일치하는지 마지막에 스스로 검산한 뒤 출력해줘.
+- 영수증의 합계·할인액·결제금액과 OCR 문자가 충돌하면 인쇄된 금액 구조를 우선해서 판단해줘.
+- 승인번호, 카드번호, 주문번호, 바코드, 리워드, 잔액, 사업자번호, 전화번호와 품목이 아닌 코드(SRPO 등)는 품목으로 넣지 마.
+- 쉼표는 천 단위 구분만 쓰고, 불필요한 설명은 절대 덧붙이지 마.`;
 
 // ════════════════════════════════════════════════════════════════
 // PARSER
@@ -2371,6 +2381,28 @@ function parseReceiptText(raw){
     }
   }
   if(!out.store&&!out.date&&!out.total&&!out.items.length)return null;
+
+  // 동일 품목 이중 방어: 이름+단가가 같으면 수량/금액을 합친다.
+  // 옵션·사이즈가 다르면 품목명 자체가 달라지므로 별도 행으로 유지된다.
+  if(out.items.length>1){
+    const merged=[];
+    const byKey=new Map();
+    for(const it of out.items){
+      const name=String(it.name||'').trim();
+      const unitPrice=Number(it.unitPrice)||0;
+      const key=`${name}\u0000${unitPrice}`;
+      const prev=byKey.get(key);
+      if(prev){
+        prev.quantity=(Number(prev.quantity)||0)+(Number(it.quantity)||0);
+        prev.amount=(Number(prev.amount)||0)+(Number(it.amount)||0);
+      }else{
+        const copy={...it,name,quantity:Number(it.quantity)||1,unitPrice,amount:Number(it.amount)||0};
+        byKey.set(key,copy);
+        merged.push(copy);
+      }
+    }
+    out.items=merged;
+  }
   return out;
 }
 
@@ -6527,7 +6559,7 @@ async function _dbxProcessScanbox(){
 
         if(deleted.has(id)){
           // 사용자가 지운 영수증 — 다시 만들지 않되 파일은 치워서 무한 재처리를 막는다
-          const dm=_dbxScanDoneDir(isImg)+'/'+date.slice(0,7);
+          const dm=_dbxScanDoneDir(isImg);
           await _dbxEnsureFolder(dm);
           await _dbxMoveInto(f.path_display,dm,`${date}_영수증`,ext);
           continue;
@@ -6557,7 +6589,7 @@ async function _dbxProcessScanbox(){
           receipts=await dbAll('receipts');   // 방금 넣은 레코드를 곧바로 쓰기 위해
         }
         // ★ 저장이 끝난 뒤에 이동한다 (실패해도 다음 회차에 같은 ID로 다시 처리 → 유실 없음)
-        const doneDir=_dbxScanDoneDir(isImg)+'/'+date.slice(0,7);  // 사진 → 완료 JPG, PDF → 완료 PDF
+        const doneDir=_dbxScanDoneDir(isImg);  // 사진 → 완료 JPG, PDF → 완료 PDF
         await _dbxEnsureFolder(doneDir);
         _lastMovedPath='';
         // 파일명에 매장명·금액을 담는다. 지금은 매장명만 알 수 있고 금액은 나중에
