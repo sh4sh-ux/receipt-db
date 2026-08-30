@@ -1443,6 +1443,10 @@ svg{display:block;flex-shrink:0;}
             </ul>
             <p>날짜는 파일명 → 사진 촬영일(EXIF) → 업로드 시각 순으로 정합니다.
                폰·다른 컴퓨터에서 동시에 써도 같은 영수증이 두 번 등록되지 않습니다.</p>
+            <p class="scan-where"><b>파일 이름은 앱이 알아서 짓습니다.</b>
+               매장명·금액을 채우면 완료 폴더의 파일 이름도 곧바로 따라 바뀝니다 —
+               <code class="scan-path">260809_영수증(5,900)_스타벅스 강남구청정문점.jpg</code>.
+               예전에 들어간 파일은 <b>완료 파일 이름 정리</b>를 한 번 누르면 같은 규칙으로 맞춰집니다.</p>
             <p class="scan-where"><b>파일 이름에 가게 이름을 넣어두면 매장명까지 채워집니다.</b>
                예) <code class="scan-path">2026-08-09 스타벅스.jpg</code> →
                일자 8월 9일 · 매장명 스타벅스 · 카테고리 자동 분류.
@@ -1461,6 +1465,10 @@ svg{display:block;flex-shrink:0;}
             <p class="scan-where" id="scanWhere">Dropbox 앱에서 이 폴더를 찾아 <b>즐겨찾기(별표)</b> 해두면 한 번에 갑니다.
                위치가 헷갈리면 아래 <b>위치 확인</b>을 눌러 실제 경로를 보세요.</p>
             <div class="setting-btn-row">
+              <button id="renameAllBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                완료 파일 이름 정리
+              </button>
               <button id="scanNowBtn">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
                 지금 스캔함 확인
@@ -1793,6 +1801,9 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.50 — '완료 파일 이름 정리': 옛 규칙으로 들어간 파일들을 한 번에 다시 짓는다.
+// v2.49 — 완료 파일 이름에 금액·매장명을 넣는다: 260809_영수증(5,900)_스타벅스.jpg
+//         영수증을 저장하면 Dropbox 파일 이름도 앱이 알아서 다시 짓는다.
 // v2.48 — 파일 이름에서 가게 이름도 읽어 매장명·카테고리를 채운다.
 //         기기 기본 이름의 찌꺼기('사진', 시각 등)는 걸러 낸다.
 // v2.47 — 스캔함에서 등록되면 그 영수증을 바로 열어 준다. 파일이 스캔함에서
@@ -1809,7 +1820,7 @@ svg{display:block;flex-shrink:0;}
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.48';
+const APP_VERSION='v2.50';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -5313,8 +5324,10 @@ async function renderDetail(){
     }
     r.updatedAt=nowISO();
     if(r.store&&r.category) await learnCategory(r.store,r.category);
+    // 매장명·금액이 채워졌으니 완료 폴더의 파일 이름도 그에 맞게 다시 짓는다
+    const renamed=await _dbxRenameScanFile(r);
     await dbPut('receipts',r);
-    toast('수정됨',{type:'success'});
+    toast(renamed?'수정됨 · 사진 파일 이름도 바꿨어요':'수정됨',{type:'success'});
     await loadAll();await renderDetail();
     dbxSyncNow(true);
   };
@@ -5729,6 +5742,8 @@ document.getElementById('scanDirInp')?.addEventListener('change',async(e)=>{
 
 document.getElementById('tidyBtn')?.addEventListener('click',tidyReceiptFolders);
 document.getElementById('cleanupBtn')?.addEventListener('click',cleanupOldFolders);
+
+document.getElementById('renameAllBtn')?.addEventListener('click',renameScanFilesAll);
 
 document.getElementById('scanNowBtn')?.addEventListener('click',async(e)=>{
   if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
@@ -6385,6 +6400,50 @@ function _exifDate(buf){
 
 // 이동. 같은 이름이 있으면 -2, -3 … 으로 재시도해 기존 파일명 규칙을 지킨다.
 // 반환: 'moved' | 'gone'(다른 기기가 이미 처리) | 'failed'
+
+// 완료 파일 이름을 영수증 내용으로 다시 짓는다.
+//   260809_영수증(5,900)_스타벅스 강남구청정문점.jpg
+// 매장명·금액이 아직 없으면 그 부분은 뺀다(260809_영수증.jpg).
+// Dropbox가 막는 글자(\ / : ? * " < > |)는 지운다.
+function _scanFileName(rec){
+  const d=String(rec.date||'').replace(/-/g,'').slice(2);           // 260809
+  const amt=Number(rec.total||0);
+  const money=amt?`(${amt.toLocaleString('ko-KR')})`:'';
+  const store=String(rec.store||'').replace(/[\\/:*?"<>|]/g,'').trim();
+  return `${d}_영수증${money}${store?'_'+store:''}`.slice(0,180);
+}
+
+// 영수증 내용이 바뀌면 완료 폴더의 파일 이름도 따라 바꾼다.
+// rec.scanPath 에 현재 경로를 들고 다니며, 바뀐 경로를 다시 적어 둔다.
+async function _dbxRenameScanFile(rec){
+  if(!rec||!rec.scanPath||!dbxIsConnected())return false;
+  const cur=rec.scanPath;
+  const dir=cur.slice(0,cur.lastIndexOf('/'));
+  const ext=cur.slice(cur.lastIndexOf('.'));
+  const want=dir+'/'+_scanFileName(rec)+ext;
+  if(want===cur)return false;
+  try{
+    const token=await _dbxToken();
+    for(let n=1;n<=5;n++){
+      const to=n===1?want:want.replace(new RegExp(ext.replace('.','\\.')+'$'),`-${n}${ext}`);
+      const r=await fetch('https://api.dropboxapi.com/2/files/move_v2',{method:'POST',
+        headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+        body:JSON.stringify({from_path:cur,to_path:to,autorename:n===5})});
+      if(r.ok){
+        rec.scanPath=(await r.json())?.metadata?.path_display||to;
+        return true;
+      }
+      const txt=await r.text();
+      if(txt.includes('from_lookup/not_found')){ rec.scanPath=''; return false; }  // 사용자가 옮김
+      if(txt.includes('to/conflict'))continue;
+      console.warn('rename scan file:',txt);
+      return false;
+    }
+  }catch(e){ console.warn('rename scan file:',e.message||e); }
+  return false;
+}
+
+let _lastMovedPath='';   // 방금 옮긴 파일의 최종 경로 (이름 다시 짓기에 쓴다)
 async function _dbxMoveInto(fromPath,dir,base,ext){
   const token=await _dbxToken();
   for(let n=1;n<=12;n++){
@@ -6395,7 +6454,11 @@ async function _dbxMoveInto(fromPath,dir,base,ext){
       body:JSON.stringify({from_path:fromPath,to_path:dir+'/'+name,
         autorename:n===12,allow_ownership_transfer:false}),  // 마지막 시도는 서버 자동이름으로 확실히 성공시킴
     });
-    if(resp.ok)return 'moved';
+    if(resp.ok){
+      try{ _lastMovedPath=(await resp.json())?.metadata?.path_display||dir+'/'+name; }
+      catch(e){ _lastMovedPath=dir+'/'+name; }
+      return 'moved';
+    }
     const txt=await resp.text();
     if(txt.includes('from_lookup/not_found'))return 'gone';  // 다른 기기가 먼저 옮김 — 정상
     if(txt.includes('to/conflict'))continue;                 // 이름 충돌 — 다음 번호로
@@ -6491,11 +6554,20 @@ async function _dbxProcessScanbox(){
           });
           added++;
           _lastScanIds.push(id);
+          receipts=await dbAll('receipts');   // 방금 넣은 레코드를 곧바로 쓰기 위해
         }
         // ★ 저장이 끝난 뒤에 이동한다 (실패해도 다음 회차에 같은 ID로 다시 처리 → 유실 없음)
         const doneDir=_dbxScanDoneDir(isImg)+'/'+date.slice(0,7);  // 사진 → 완료 JPG, PDF → 완료 PDF
         await _dbxEnsureFolder(doneDir);
-        await _dbxMoveInto(f.path_display,doneDir,`${date}_영수증`,ext);
+        _lastMovedPath='';
+        // 파일명에 매장명·금액을 담는다. 지금은 매장명만 알 수 있고 금액은 나중에
+        // 사용자가 넣으면 _dbxRenameScanFile 이 다시 지어 준다.
+        const recNow=receipts.find(x=>x.id===id)||{date,store,total:0};
+        await _dbxMoveInto(f.path_display,doneDir,_scanFileName(recNow),ext);
+        if(_lastMovedPath){
+          const saved=receipts.find(x=>x.id===id);
+          if(saved){ saved.scanPath=_lastMovedPath; await dbPut('receipts',saved); }
+        }
       }catch(fe){console.warn('scan file:',f.name,fe.message||fe);}
     }
     if(newImageIds.length){
@@ -6804,6 +6876,69 @@ async function _rescueAppFolder(token,appDir,needPath){
   if(r.ok)return true;
   const txt=await r.text();
   return txt.includes('conflict');   // 이미 있으면 그것도 성공으로 본다
+}
+
+
+// 완료 폴더의 파일 이름을 지금 규칙으로 한 번에 다시 짓는다.
+// scanPath 가 없는(옛 규칙으로 옮겨진) 파일은 파일명의 날짜로 영수증을 찾아 짝짓는다.
+async function renameScanFilesAll(){
+  if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
+  await _dbxResolveRoot();
+  const token=await _dbxToken();
+  const t=toast('완료 폴더를 살펴보는 중…',{duration:60000});
+  const plan=[];
+  try{
+    receipts=await dbAll('receipts');
+    const byPath=new Map();
+    for(const r of receipts)if(r.scanPath)byPath.set(r.scanPath,r);
+    for(const isImg of [true,false]){
+      const all=await _dbxListAll(token,_dbxScanDoneDir(isImg));
+      for(const f of (all||[]).filter(e=>e['.tag']==='file')){
+        const cur=f.path_display;
+        const nm=cur.slice(cur.lastIndexOf('/')+1);
+        const ext=nm.slice(nm.lastIndexOf('.'));
+        // ① 경로로 짝을 찾고, 없으면 ② 파일명의 날짜로 찾는다
+        let rec=byPath.get(cur);
+        if(!rec){
+          const d=_scanDateFromName(nm);
+          if(!d)continue;
+          const cands=receipts.filter(r=>r.date===d&&r.store);
+          if(cands.length!==1)continue;      // 그 날짜에 후보가 여럿이면 건드리지 않는다
+          rec=cands[0];
+        }
+        if(!rec.store&&!rec.total)continue;  // 아직 채울 내용이 없다
+        const dir=cur.slice(0,cur.lastIndexOf('/'));
+        const want=dir+'/'+_scanFileName(rec)+ext;
+        if(want!==cur)plan.push({from:cur,to:want,rec});
+      }
+    }
+  }catch(e){ t?.remove?.(); toast('살펴보기 실패: '+(e.message||e),{type:'error'}); return; }
+  t?.remove?.();
+
+  if(!plan.length){ alert('바꿀 파일 이름이 없습니다.\n이미 다 정리돼 있거나, 매장명·금액이 아직 비어 있습니다.'); return; }
+  const sample=plan.slice(0,5).map(x=>'  · '+x.from.slice(x.from.lastIndexOf('/')+1)
+    +'\n     → '+x.to.slice(x.to.lastIndexOf('/')+1)).join('\n');
+  if(!confirm(`완료 폴더의 파일 이름 ${plan.length}개를 다시 짓습니다.\n\n${sample}`
+    +(plan.length>5?`\n  … 외 ${plan.length-5}개`:'')+'\n\n계속할까요?'))return;
+
+  const lt=toast('이름 바꾸는 중…',{duration:300000});
+  let done=0;
+  for(const x of plan){
+    try{
+      const r=await fetch('https://api.dropboxapi.com/2/files/move_v2',{method:'POST',
+        headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+        body:JSON.stringify({from_path:x.from,to_path:x.to,autorename:true})});
+      if(r.ok){
+        x.rec.scanPath=(await r.json())?.metadata?.path_display||x.to;
+        await dbPut('receipts',x.rec);
+        done++;
+      }
+    }catch(e){}
+  }
+  lt?.remove?.();
+  receipts=await dbAll('receipts');
+  await dbxSyncUpload();
+  toast(`파일 이름 ${done}개를 바꿨어요`,{type:'success',duration:5000});
 }
 
 async function cleanupOldFolders(){
