@@ -1027,7 +1027,6 @@ svg{display:block;flex-shrink:0;}
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
 
@@ -6248,8 +6247,8 @@ function dbxDisconnect(){
      · 옛 위치: /01_Personal/영수증/Receipt_DB/
    폴더 구성:
      스캔함/            — 여기에 사진·PDF를 넣으면 동기화 때 자동 등록된다
-     완료 JPG/         — 사진 및 PDF 첫 페이지 JPG가 날짜 이름으로 보관된다
-     완료 PDF/         — 등록된 원본 PDF가 날짜 이름으로 옮겨진다
+     완료 JPG/YYYY-MM/  — 등록된 사진(jpg·jpeg·png)이 날짜 이름으로 옮겨진다
+     완료 PDF/YYYY-MM/  — 등록된 PDF가 날짜 이름으로 옮겨진다
      images/ · backups/ · receipt-db_sync.json · receipt-db_inbox.json
    이전은 copy만 하고 옛 폴더는 지우지 않는다. 복사가 실패하면 옛 위치로 계속
    동작하다 다음 동기화에 재시도하므로 어떤 경우에도 데이터가 사라지지 않는다.
@@ -6344,8 +6343,8 @@ const _SCAN_BATCH_MAX=20;                              // 한 번에 처리할 �
 //  ④ v2.33부터 맥 스크립트도 같은 '스캔함' 폴더를 감시한다(폴더 통합). 양쪽 모두
 //     원본 파일 내용의 sha1로 ID와 srcHash를 만들기 때문에, 같은 파일을 둘이 봐도
 //     먼저 처리한 쪽의 레코드로 합쳐질 뿐 중복이 생기지 않는다.
-//  ⑤ 사진은 '완료 JPG/', PDF 원본은 '완료 PDF/'로 옮긴다. PDF는 첫 페이지 JPG도
-//     '완료 JPG/'에 같은 파일명으로 추가 보관한다.
+//  ⑤ 등록을 마친 파일은 확장자로 갈라 '완료 JPG/YYYY-MM/' 또는
+//     '완료 PDF/YYYY-MM/'으로 옮긴다 (맥 스크립트도 같은 규칙).
 // ════════════════════════════════════════════════════════════════
 
 async function _sha1Hex(buf){
@@ -6446,75 +6445,6 @@ function _scanFileName(rec){
   return `${d}_영수증${money}${store?'_'+store:''}`.slice(0,180);
 }
 
-
-// PDF 스캔본의 첫 페이지를 JPG로 보관한다.
-// 원본 PDF는 그대로 유지하고, 미리보기/보관용 JPG만 추가 생성한다.
-async function _pdfFirstPageToJpegBlob(buf){
-  if(!window.pdfjsLib)throw new Error('PDFJS_NOT_LOADED');
-  const data=new Uint8Array(buf);
-  const task=window.pdfjsLib.getDocument({data,disableWorker:true});
-  const pdf=await task.promise;
-  try{
-    if(!pdf.numPages)throw new Error('PDF_NO_PAGES');
-    const page=await pdf.getPage(1);
-    const base=page.getViewport({scale:1});
-    const longest=Math.max(base.width,base.height)||1;
-    const scale=Math.min(2,2400/longest);
-    const viewport=page.getViewport({scale:Math.max(.5,scale)});
-    const canvas=document.createElement('canvas');
-    canvas.width=Math.max(1,Math.round(viewport.width));
-    canvas.height=Math.max(1,Math.round(viewport.height));
-    const ctx=canvas.getContext('2d',{alpha:false});
-    if(!ctx)throw new Error('CANVAS_UNAVAILABLE');
-    ctx.fillStyle='#fff';
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    await page.render({canvasContext:ctx,viewport,background:'white'}).promise;
-    const blob=await new Promise((resolve,reject)=>canvas.toBlob(
-      b=>b?resolve(b):reject(new Error('JPEG_ENCODE_FAILED')),'image/jpeg',.92));
-    canvas.width=1;canvas.height=1;
-    return blob;
-  }finally{
-    try{await pdf.destroy();}catch(e){}
-  }
-}
-
-async function _dbxUploadBinary(path,blob,{overwrite=false}={}){
-  const token=await _dbxToken();
-  const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{
-    method:'POST',
-    headers:{
-      'Authorization':'Bearer '+token,
-      'Dropbox-API-Arg':_dbxApiArg({path,mode:overwrite?'overwrite':'add',autorename:false,mute:true}),
-      'Content-Type':'application/octet-stream',
-    },
-    body:blob,
-  });
-  if(resp.ok)return true;
-  const txt=await resp.text();
-  if(resp.status===409&&txt.includes('conflict'))return true;
-  throw new Error(txt||('DROPBOX_UPLOAD_'+resp.status));
-}
-
-async function _dbxRenamePdfJpgCompanion(oldPdfPath,rec,token){
-  if(!oldPdfPath||!oldPdfPath.toLowerCase().endsWith('.pdf'))return false;
-  const oldName=oldPdfPath.slice(oldPdfPath.lastIndexOf('/')+1,-4);
-  const from=_dbxScanDoneDir(true)+'/'+oldName+'.jpg';
-  const to=_dbxScanDoneDir(true)+'/'+_scanFileName(rec)+'.jpg';
-  if(from===to)return false;
-  try{
-    const r=await fetch('https://api.dropboxapi.com/2/files/move_v2',{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-      body:JSON.stringify({from_path:from,to_path:to,autorename:true}),
-    });
-    if(r.ok)return true;
-    const txt=await r.text();
-    if(txt.includes('from_lookup/not_found'))return false;
-    console.warn('rename pdf jpg companion:',txt);
-  }catch(e){console.warn('rename pdf jpg companion:',e.message||e);}
-  return false;
-}
-
 // 영수증 내용이 바뀌면 완료 폴더의 파일 이름도 따라 바꾼다.
 // rec.scanPath 에 현재 경로를 들고 다니며, 바뀐 경로를 다시 적어 둔다.
 async function _dbxRenameScanFile(rec){
@@ -6532,9 +6462,7 @@ async function _dbxRenameScanFile(rec){
         headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
         body:JSON.stringify({from_path:cur,to_path:to,autorename:n===5})});
       if(r.ok){
-        const oldPath=cur;
         rec.scanPath=(await r.json())?.metadata?.path_display||to;
-        if(ext.toLowerCase()==='.pdf')await _dbxRenamePdfJpgCompanion(oldPath,rec,token);
         return true;
       }
       const txt=await r.text();
@@ -6623,12 +6551,6 @@ async function _dbxProcessScanbox(){
         const lower=f.name.toLowerCase();
         const ext=lower.slice(lower.lastIndexOf('.'));
         const isImg=_SCAN_IMG_EXTS.includes(ext);
-        const isPdf=ext==='.pdf';
-        let pdfJpgBlob=null;
-        if(isPdf){
-          try{ pdfJpgBlob=await _pdfFirstPageToJpegBlob(buf); }
-          catch(pe){ console.warn('pdf→jpg render:',f.name,pe.message||pe); }
-        }
         // 날짜: 파일명 → EXIF 촬영일 → Dropbox 업로드 시각
         const date=_scanDateFromName(f.name)
           ||(isImg?_exifDate(buf):null)
@@ -6677,18 +6599,6 @@ async function _dbxProcessScanbox(){
         if(_lastMovedPath){
           const saved=receipts.find(x=>x.id===id);
           if(saved){ saved.scanPath=_lastMovedPath; await dbPut('receipts',saved); }
-
-          // PDF 원본은 완료 PDF에 그대로 두고, 첫 페이지 JPG를 완료 JPG에 같은 이름으로 추가한다.
-          if(isPdf&&pdfJpgBlob){
-            try{
-              await _dbxEnsureFolder(_dbxScanDoneDir(true));
-              const movedName=_lastMovedPath.slice(_lastMovedPath.lastIndexOf('/')+1);
-              const jpgBase=movedName.replace(/\.pdf$/i,'');
-              await _dbxUploadBinary(_dbxScanDoneDir(true)+'/'+jpgBase+'.jpg',pdfJpgBlob);
-            }catch(je){
-              console.warn('pdf→jpg upload:',f.name,je.message||je);
-            }
-          }
         }
       }catch(fe){console.warn('scan file:',f.name,fe.message||fe);}
     }
