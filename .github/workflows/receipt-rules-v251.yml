@@ -1,0 +1,98 @@
+name: Apply receipt aggregation rules
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/receipt-rules-v251.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Patch receipt rules with safety checks
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          original = text
+
+          # 1) AI 붙여넣기 프롬프트: 동일 품목은 수량으로 합치고 할인은 음수 행으로 유지.
+          prompt_pattern = re.compile(r"const GPT_PROMPT=`이 영수증을 정확히 아래 형식으로만 정리해줘\.[\s\S]*?할인/쿠폰은 금액에 - 붙여서\.`;")
+          prompt_replacement = r'''const GPT_PROMPT=`이 영수증을 정확히 아래 형식으로만 정리해줘. 형식 외 다른 설명·문장 금지.
+
+매장명: [브랜드명 + 정확한 지점명]
+일자: YYYY.MM.DD
+총액: ##,###원
+
+품목명 | 수량 | 단가 | 금액
+
+품목1 | 1 | 1,000 | 1,000
+품목2 | 2 | 500 | 1,000
+쿠폰 할인 | 1 | -500 | -500
+
+규칙:
+- 총액은 상품 합계가 아니라 할인·쿠폰·포인트 등을 반영한 실제 최종 결제금액으로 적어줘.
+- 품목명, 옵션(사이즈 포함), 단가가 모두 같은 상품이 여러 줄이면 반드시 한 줄로 합쳐줘.
+- 같은 상품을 합칠 때 수량은 합산하고 금액은 단가 × 수량으로 계산해줘.
+- 같은 상품이라도 옵션·사이즈·단가 중 하나라도 다르면 별도 행으로 유지해줘.
+- 할인/쿠폰/포인트 사용은 별도 행으로 적고 단가와 금액에 음수(-)를 붙여줘.
+- 품목 금액 합계(할인 포함)가 총액과 일치하는지 마지막에 스스로 검산한 뒤 출력해줘.
+- 영수증의 합계·할인액·결제금액과 OCR 문자가 충돌하면 인쇄된 금액 구조를 우선해서 판단해줘.
+- 승인번호, 카드번호, 주문번호, 바코드, 리워드, 잔액, 사업자번호, 전화번호와 품목이 아닌 코드(SRPO 등)는 품목으로 넣지 마.
+- 쉼표는 천 단위 구분만 쓰고, 불필요한 설명은 절대 덧붙이지 마.`;'''
+          text, count = prompt_pattern.subn(prompt_replacement, text, count=1)
+          if count != 1:
+              raise SystemExit(f'PROMPT_PATCH_COUNT={count}; expected 1')
+
+          # 2) 파서 자체에서도 동일 이름+동일 단가 행을 합쳐 AI 출력 편차를 이중 방어.
+          parser_old = """  if(!out.store&&!out.date&&!out.total&&!out.items.length)return null;\n  return out;\n}"""
+          parser_new = """  if(!out.store&&!out.date&&!out.total&&!out.items.length)return null;\n\n  // 동일 품목 이중 방어: 이름+단가가 같으면 수량/금액을 합친다.\n  // 옵션·사이즈가 다르면 품목명 자체가 달라지므로 별도 행으로 유지된다.\n  if(out.items.length>1){\n    const merged=[];\n    const byKey=new Map();\n    for(const it of out.items){\n      const name=String(it.name||'').trim();\n      const unitPrice=Number(it.unitPrice)||0;\n      const key=`${name}\\u0000${unitPrice}`;\n      const prev=byKey.get(key);\n      if(prev){\n        prev.quantity=(Number(prev.quantity)||0)+(Number(it.quantity)||0);\n        prev.amount=(Number(prev.amount)||0)+(Number(it.amount)||0);\n      }else{\n        const copy={...it,name,quantity:Number(it.quantity)||1,unitPrice,amount:Number(it.amount)||0};\n        byKey.set(key,copy);\n        merged.push(copy);\n      }\n    }\n    out.items=merged;\n  }\n  return out;\n}"""
+          if text.count(parser_old) != 1:
+              raise SystemExit(f'PARSER_ANCHOR_COUNT={text.count(parser_old)}; expected 1')
+          text = text.replace(parser_old, parser_new, 1)
+
+          # 3) 완료 파일은 월 하위폴더 없이 사용자가 지정한 완료 JPG/PDF 폴더에 직접 저장.
+          old_deleted = "const dm=_dbxScanDoneDir(isImg)+'/'+date.slice(0,7);"
+          old_done = "const doneDir=_dbxScanDoneDir(isImg)+'/'+date.slice(0,7);  // 사진 → 완료 JPG, PDF → 완료 PDF"
+          if text.count(old_deleted) != 1:
+              raise SystemExit(f'DELETED_DIR_ANCHOR_COUNT={text.count(old_deleted)}; expected 1')
+          if text.count(old_done) != 1:
+              raise SystemExit(f'DONE_DIR_ANCHOR_COUNT={text.count(old_done)}; expected 1')
+          text = text.replace(old_deleted, "const dm=_dbxScanDoneDir(isImg);", 1)
+          text = text.replace(old_done, "const doneDir=_dbxScanDoneDir(isImg);  // 사진 → 완료 JPG, PDF → 완료 PDF", 1)
+
+          # 정적 안전 검사: 핵심 규칙과 기존 파일명 규칙이 모두 남아 있어야 한다.
+          checks = [
+              "품목명, 옵션(사이즈 포함), 단가가 모두 같은 상품이 여러 줄이면 반드시 한 줄로 합쳐줘.",
+              "const _dbxScanDoneDir=isImg=>_DBX_DATA_DIR+(isImg?'/완료 JPG':'/완료 PDF');",
+              "function _scanFileName",
+              "수량·단가·합계 모두 정확히 일치합니다.",
+          ]
+          for needle in checks:
+              if needle not in text:
+                  raise SystemExit(f'SAFETY_CHECK_FAILED: {needle}')
+
+          if text == original:
+              raise SystemExit('NO_CHANGES')
+          path.write_text(text, encoding='utf-8')
+
+      - name: Commit patched app
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --check
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: aggregate duplicate receipt items and completion folders"
+          git push
