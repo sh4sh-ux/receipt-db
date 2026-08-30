@@ -1443,6 +1443,10 @@ svg{display:block;flex-shrink:0;}
             </ul>
             <p>날짜는 파일명 → 사진 촬영일(EXIF) → 업로드 시각 순으로 정합니다.
                폰·다른 컴퓨터에서 동시에 써도 같은 영수증이 두 번 등록되지 않습니다.</p>
+            <p class="scan-where"><b>등록되면 스캔함에서는 사라집니다.</b>
+               사진은 위 완료 폴더로 옮겨지고, 영수증은 <b>내역 탭</b>에 새로 생깁니다.
+               등록 직후 앱이 그 영수증을 바로 열어 주니 <b>매장명·금액만 채우시면</b> 됩니다.
+               (사진 내용은 읽지 않으므로 금액은 직접 입력하셔야 합니다)</p>
             <div class="print-opt-row">
               <label class="print-opt" style="flex:1;min-width:180px;">
                 <span>폴더</span>
@@ -1784,6 +1788,8 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.47 — 스캔함에서 등록되면 그 영수증을 바로 열어 준다. 파일이 스캔함에서
+//         사라지기만 하고 어디서 찾는지 알 수 없던 문제.
 // v2.46 — 영수증 폴더 바로 아래 낱개 파일까지 처리하고(사진·PDF는 스캔함으로,
 //         로그는 삭제), 비면 영수증 폴더 자체도 치운다.
 // v2.45 — 연결 카드에 '이 기기가 쓰는 폴더'를 항상 표시. localStorage가 기기마다
@@ -1796,7 +1802,7 @@ svg{display:block;flex-shrink:0;}
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.46';
+const APP_VERSION='v2.47';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -5728,7 +5734,10 @@ document.getElementById('scanNowBtn')?.addEventListener('click',async(e)=>{
       receipts=await dbAll('receipts');
       renderSide();if(!_isDetailEditing())renderDetail();
       await dbxSyncUpload();
-      toast(`스캔함 ${n}건 등록했어요`,{type:'success'});
+      // 사진 원본이 어디로 갔는지도 알려준다 — 스캔함에서 사라져 당황하지 않게
+      toast(`영수증 ${n}건 등록됐어요 · 사진은 '완료 JPG'에 보관됐어요`,
+        {type:'success',duration:5000});
+      if(_lastScanIds.length&&!_isDetailEditing())await selectReceipt(_lastScanIds[0]);
     }else{
       toast('스캔함에 새 영수증이 없어요');
     }
@@ -6387,6 +6396,7 @@ async function _dbxListScanbox(){
 }
 
 let _dbxScanBusy=false;
+let _lastScanIds=[];   // 마지막 스캔에서 새로 등록된 영수증 id
 // 반환: 새로 등록된 건수
 async function _dbxProcessScanbox(){
   if(!dbxIsConnected()||_dbxScanBusy)return 0;
@@ -6394,6 +6404,7 @@ async function _dbxProcessScanbox(){
   _dbxScanBusy=true;
   let added=0;
   const newImageIds=[];
+  _lastScanIds=[];        // 이번에 등록된 영수증 id — 끝나고 그리로 데려가기 위해
   try{
     // 폴더가 없으면 만들어 둔다. 사용자가 Dropbox 앱에서 넣을 곳을 찾을 수 있어야
     // 기능이 시작되므로, 파일이 없어도 폴더는 항상 존재해야 한다.
@@ -6449,6 +6460,7 @@ async function _dbxProcessScanbox(){
             createdAt:now,updatedAt:now,
           });
           added++;
+          _lastScanIds.push(id);
         }
         // ★ 저장이 끝난 뒤에 이동한다 (실패해도 다음 회차에 같은 ID로 다시 처리 → 유실 없음)
         const doneDir=_dbxScanDoneDir(isImg)+'/'+date.slice(0,7);  // 사진 → 완료 JPG, PDF → 완료 PDF
@@ -7241,8 +7253,14 @@ async function dbxSyncNow(force=false,upload=true){
     if(downloadOk!==false)scanned=await _dbxProcessScanbox();
     if(scanned>0){
       renderSide();
-      if(!_isDetailEditing())renderDetail();
-      toast(`☁ 스캔함 ${scanned}건 등록됨`,{duration:2600});
+      // 파일이 스캔함에서 사라지고 토스트만 떠서는 어디로 갔는지 알 수 없다.
+      // 방금 등록된 영수증을 열어 준다 — 매장명·금액을 바로 채울 수 있게.
+      if(!_isDetailEditing()&&_lastScanIds.length)await selectReceipt(_lastScanIds[0]);
+      else if(!_isDetailEditing())renderDetail();
+      toast(scanned===1
+        ? '영수증 1건 등록됐어요 — 매장명·금액을 채워 주세요'
+        : `영수증 ${scanned}건 등록됐어요 — 매장명·금액을 채워 주세요`,
+        {type:'success',duration:5000});
     }
     if((upload||scanned>0)&&downloadOk!==false)await dbxSyncUpload(); // 로컬 최신본 올리기
   }finally{
