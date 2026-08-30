@@ -1447,7 +1447,10 @@ svg{display:block;flex-shrink:0;}
                매장명·금액을 채우면 완료 폴더의 파일 이름도 곧바로 따라 바뀝니다 —
                <code class="scan-path">260809_영수증(5,900)_스타벅스 강남구청정문점.jpg</code>.
                예전에 들어간 파일은 <b>완료 파일 이름 정리</b>를 한 번 누르면 같은 규칙으로 맞춰집니다.</p>
-            <p class="scan-where"><b>파일 이름에 가게 이름을 넣어두면 매장명까지 채워집니다.</b>
+            <p class="scan-where"><b>이름을 이 규칙으로 지어 넣으면 영수증이 통째로 완성됩니다.</b>
+               <code class="scan-path">260809_영수증(5,900)_스타벅스 강남구청정문점.jpg</code> →
+               일자·금액·매장명·카테고리가 모두 채워진 채로 등록됩니다. 입력할 게 없습니다.</p>
+            <p class="scan-where"><b>파일 이름에 가게 이름만 있어도 매장명까지 채워집니다.</b>
                예) <code class="scan-path">2026-08-09 스타벅스.jpg</code> →
                일자 8월 9일 · 매장명 스타벅스 · 카테고리 자동 분류.
                기기가 붙인 기본 이름(<code class="scan-path">사진 2026. 8. 30. …</code>)은
@@ -1801,6 +1804,8 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.51 — 앱이 지은 이름을 되읽는다. 260809_영수증(5,900)_스타벅스.jpg 를 넣으면
+//         일자·금액·매장명이 모두 채워진 채로 등록된다 (입력할 게 없다).
 // v2.50 — '완료 파일 이름 정리': 옛 규칙으로 들어간 파일들을 한 번에 다시 짓는다.
 // v2.49 — 완료 파일 이름에 금액·매장명을 넣는다: 260809_영수증(5,900)_스타벅스.jpg
 //         영수증을 저장하면 Dropbox 파일 이름도 앱이 알아서 다시 짓는다.
@@ -1820,7 +1825,7 @@ svg{display:block;flex-shrink:0;}
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.50';
+const APP_VERSION='v2.51';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -6360,6 +6365,26 @@ async function _sha1Hex(buf){
 //   '사진 2026. 8. 30. 오후 9 55 48.png' → null (전부 찌꺼기)
 // 기기 기본 이름에 흔히 붙는 낱말들. 'Screenshot ... at 18.35' 의 at 처럼
 // 연결어가 매장명으로 새면 안 하느니만 못하므로 함께 걸러 낸다.
+
+// 앱이 지은 이름(_scanFileName)을 그대로 되읽는다.
+//   260809_영수증(5,900)_스타벅스 강남구청정문점  → 일자·금액·매장명
+//   260809_영수증_스타벅스                        → 일자·매장명
+//   260809_영수증(5,900)                          → 일자·금액
+// 파일 이름만 이 규칙으로 지어 스캔함에 넣으면 영수증이 통째로 완성된다.
+function _parseOwnScanName(name){
+  const base=String(name||'').replace(/\.[a-z0-9]+$/i,'').trim();
+  const m=base.match(/^(\d{2})(\d{2})(\d{2})_영수증(?:\(([\d,]+)\))?(?:_(.+))?$/);
+  if(!m)return null;
+  const [,yy,mm,dd,money,store]=m;
+  const mo=+mm, d=+dd;
+  if(mo<1||mo>12||d<1||d>31)return null;
+  return {
+    date:`20${yy}-${mm}-${dd}`,
+    total:money?Number(money.replace(/,/g,''))||0:0,
+    store:(store||'').trim(),
+  };
+}
+
 const _SCAN_NOISE=/^(사진|스크린샷|screenshot|screen[ _-]?shot|image|img|photo|pic|scan|스캔|kakaotalk|카카오톡|영수증|receipt|무제|untitled|다운로드|download|copy|복사본|at|on|of|the|and|pm|am|오전|오후)$/i;
 function _scanStoreFromName(name){
   let t=String(name||'').replace(/\.[a-z0-9]+$/i,'');          // 확장자
@@ -6551,8 +6576,11 @@ async function _dbxProcessScanbox(){
         const lower=f.name.toLowerCase();
         const ext=lower.slice(lower.lastIndexOf('.'));
         const isImg=_SCAN_IMG_EXTS.includes(ext);
-        // 날짜: 파일명 → EXIF 촬영일 → Dropbox 업로드 시각
-        const date=_scanDateFromName(f.name)
+        // 앱이 지은 이름이면 일자·금액·매장명을 그대로 되읽는다.
+        // 그게 아니면 날짜: 파일명 → EXIF 촬영일 → Dropbox 업로드 시각 순으로 정한다.
+        const own=_parseOwnScanName(f.name);
+        const date=(own&&own.date)
+          ||_scanDateFromName(f.name)
           ||(isImg?_exifDate(buf):null)
           ||String(f.client_modified||f.server_modified||nowISO()).slice(0,10);
         const id=`rec_${date.replace(/-/g,'')}_p${hash.slice(0,6)}`;
@@ -6574,12 +6602,13 @@ async function _dbxProcessScanbox(){
             newImageIds.push(imageId);
           }
           const now=nowISO();
-          // 파일 이름에 가게 이름이 들어 있으면 매장명으로 쓰고, 카테고리도 자동 분류한다.
-          // 사진 속 글자는 읽지 않으므로 이름이 유일한 단서다.
-          const store=_scanStoreFromName(f.name)||'';
+          // 파일 이름에서 매장명·금액을 읽는다. 사진 속 글자는 읽지 않으므로 이름이 유일한 단서다.
+          // 앱이 지은 이름이면 금액까지 들어 있어 영수증이 통째로 완성된다.
+          const store=(own&&own.store)||_scanStoreFromName(f.name)||'';
+          const total=(own&&own.total)||0;
           await dbPut('receipts',{
             id,date,time:'',store,category:store?(autocategorize(store)||''):'',
-            total:0,items:[],imageId:isImg?imageId:'',
+            total,items:[],imageId:isImg?imageId:'',
             notes:isImg?'스캔함 자동등록':'스캔함 자동등록 (PDF — 사진 없음)',
             tags:[],srcHash:hash,participants:[],paidBy:'',
             createdAt:now,updatedAt:now,
