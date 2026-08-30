@@ -1399,6 +1399,21 @@ svg{display:block;flex-shrink:0;}
           </div>
 
           <div class="setting-card">
+            <h3>옛 앱 폴더에서 가져오기</h3>
+            <p>App key를 <b>Full Dropbox</b> 권한으로 바꾸면 저장 위치가
+               <code class="scan-path">/07_Apps/영수증(RECEIPT-DB)/</code>로 옮겨집니다.
+               예전 데이터는 Dropbox의 <b>앱/&lt;앱이름&gt;/</b> 안에 남아 있는데,
+               이 버튼을 누르면 앱이 찾아서 가져옵니다. 기록은 지금 것과 합치고,
+               사진도 함께 복사합니다. <b>옛 폴더의 원본은 지우지 않습니다.</b></p>
+            <div class="setting-btn-row">
+              <button id="importOldBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/><path d="M12 10v6"/><path d="m9 13 3 3 3-3"/></svg>
+                옛 앱 폴더에서 가져오기
+              </button>
+            </div>
+          </div>
+
+          <div class="setting-card">
             <h3>스캔함 — 폴더에 넣으면 자동 등록</h3>
             <p>아래 폴더에 영수증을 넣어두면 동기화할 때 앱이 자동으로 등록하고,
                <code class="scan-path">YYYY-MM-DD_영수증</code> 형식으로 이름을 바꿔
@@ -1741,7 +1756,9 @@ svg{display:block;flex-shrink:0;}
 //         등록 완료 파일을 '완료 JPG'/'완료 PDF'로 종류별 분류.
 // v2.35 — App key를 바꾼 직후에는 옛 폴더를 복사하지 않는다. 저장 공간이 통째로 달라지므로
 //         그 자리의 동명 폴더는 이 앱 데이터가 아니다 (최상위의 오래된 화석 폴더가 실제로 있었다).
-const APP_VERSION='v2.36';
+// v2.37 — '옛 앱 폴더에서 가져오기' 추가. Full Dropbox 권한이면 앱이 앱 폴더 안까지
+//         볼 수 있으므로, 사용자가 파일을 끌어 옮기지 않아도 앱이 찾아서 가져온다.
+const APP_VERSION='v2.37';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -5659,6 +5676,8 @@ document.getElementById('scanDirInp')?.addEventListener('change',async(e)=>{
   }
 });
 
+document.getElementById('importOldBtn')?.addEventListener('click',importFromAppFolder);
+
 document.getElementById('scanNowBtn')?.addEventListener('click',async(e)=>{
   if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
   await _dbxResolveRoot();
@@ -6532,6 +6551,98 @@ async function dbxSyncUpload(){
 }
 
 // 자동 다운로드 + 머지 (앱 시작, visibilitychange, 폴링 시 호출)
+
+// ════════════════════════════════════════════════════════════════
+// 옛 앱 폴더에서 가져오기 (v2.37)
+//
+// App folder 권한이던 시절 데이터는 Dropbox의 `앱/<앱이름>/` 안에 들어 있다.
+// Full Dropbox 권한으로 바꿔 연결하면 앱이 그 폴더 안까지 볼 수 있으므로,
+// 파일을 손으로 끌어 옮기지 않아도 앱이 찾아서 가져올 수 있다.
+//  · 영수증 기록(sync.json·inbox.json)은 내려받아 기존 병합 규칙으로 합친다.
+//    덮어쓰지 않으므로 이 기기에서 새로 넣은 영수증이 사라지지 않는다.
+//  · 사진은 서버끼리 복사(copy_batch_v2)한다 — 내려받았다 올리지 않아 빠르다.
+//  · 옛 폴더의 원본은 지우지 않는다.
+// ════════════════════════════════════════════════════════════════
+const _APPS_ROOTS=['/앱','/Apps'];
+const _LEGACY_RELS=['/07_Apps/영수증(RECEIPT-DB)','/01_Personal/영수증/Receipt_DB'];
+
+async function _dbxJsonAt(token,path){
+  const r=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',
+    headers:{'Authorization':'Bearer '+token,'Dropbox-API-Arg':_dbxApiArg({path})}});
+  if(!r.ok)return null;
+  try{ return JSON.parse(await r.text()); }catch(e){ return null; }
+}
+
+// 앱 폴더 모음을 훑어 이 앱 데이터 폴더를 찾는다 (앱 폴더 이름을 몰라도 된다)
+async function _findLegacyReceiptDir(token){
+  for(const root of _APPS_ROOTS){
+    const lr=await fetch('https://api.dropboxapi.com/2/files/list_folder',{method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({path:root})});
+    if(!lr.ok)continue;
+    const subs=((await lr.json()).entries||[]).filter(e=>e['.tag']==='folder');
+    for(const sub of subs){
+      for(const rel of _LEGACY_RELS){
+        const dir=`${root}/${sub.name}${rel}`;
+        const data=await _dbxJsonAt(token,dir+'/receipt-db_sync.json');
+        if(data&&data.app==='receipt-db'&&Array.isArray(data.receipts))return {dir,data};
+      }
+    }
+  }
+  return null;
+}
+
+async function importFromAppFolder(){
+  if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
+  await _dbxResolveRoot();
+  const t=toast('옛 앱 폴더를 찾는 중…',{duration:30000});
+  let hit=null,token;
+  try{ token=await _dbxToken(); hit=await _findLegacyReceiptDir(token); }
+  catch(e){ t?.remove?.(); toast('찾기 실패: '+(e.message||e),{type:'error'}); return; }
+  t?.remove?.();
+  if(!hit){
+    alert('Dropbox의 앱 폴더에서 영수증 데이터를 찾지 못했습니다.\n\n'
+        +'· Full Dropbox 권한의 App key로 연결돼 있는지 확인해 주세요.\n'
+        +'  (App folder 권한이면 다른 앱 폴더 안을 볼 수 없습니다)\n'
+        +'· 이미 옮기셨다면 이 작업은 필요 없습니다.');
+    return;
+  }
+  // 사진 개수도 세어 보고 확인받는다
+  let imgs=[];
+  try{
+    const ir=await fetch('https://api.dropboxapi.com/2/files/list_folder',{method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({path:hit.dir+'/images'})});
+    if(ir.ok)imgs=((await ir.json()).entries||[]).filter(e=>e['.tag']==='file');
+  }catch(e){}
+  if(!confirm(`찾았습니다:\n${hit.dir}\n\n영수증 ${hit.data.receipts.length}건 · 사진 ${imgs.length}장\n\n`
+             +'이 내용을 새 위치로 가져옵니다.\n'
+             +'기록은 지금 것과 합치고(같은 영수증은 최신 우선), 사진은 복사합니다.\n'
+             +'옛 폴더의 원본은 그대로 둡니다.\n\n계속할까요?'))return;
+
+  const lt=toast('가져오는 중…',{duration:120000});
+  let added=0;
+  try{
+    added=await _dbxMerge(hit.data);
+    const inbox=await _dbxJsonAt(token,hit.dir+'/receipt-db_inbox.json');
+    if(inbox&&inbox.app==='receipt-db'&&Array.isArray(inbox.receipts))added+=await _dbxMerge(inbox);
+    // 사진은 서버끼리 복사 — 이미 있으면 conflict가 나지만 무시하면 된다
+    for(let i=0;i<imgs.length;i+=900){
+      const entries=imgs.slice(i,i+900).map(f=>({from_path:f.path_display,
+        to_path:_dbxImagesDir()+'/'+f.name}));
+      if(!entries.length)continue;
+      await fetch('https://api.dropboxapi.com/2/files/copy_batch_v2',{method:'POST',
+        headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+        body:JSON.stringify({entries,autorename:false})}).catch(()=>{});
+    }
+    receipts=await dbAll('receipts');
+    await dbxSyncUpload();                    // 합친 결과를 새 위치에 올려 둔다
+  }catch(e){ lt?.remove?.(); toast('가져오기 실패: '+(e.message||e),{type:'error'}); return; }
+  lt?.remove?.();
+  renderSide(); if(!_isDetailEditing())renderDetail(); renderDbxSettings();
+  toast(`가져왔습니다 — 영수증 ${added}건 추가, 사진 ${imgs.length}장 복사`,{type:'success',duration:5000});
+}
+
 async function dbxSyncDownload(){
   if(!dbxIsConnected())return true;
   try{
