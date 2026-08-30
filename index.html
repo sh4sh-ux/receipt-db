@@ -1013,7 +1013,7 @@ svg{display:block;flex-shrink:0;}
       <div class="side-search">
         <div class="search-wrap">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="searchInp" type="text" placeholder="가게·품목·날짜·'결제자 홍길동'"/>
+          <input id="searchInp" type="text" placeholder="가게·품목·날짜·초성(ㅎㄴㄹ)·결제자"/>
           <button class="search-clear" id="searchClear" tabindex="-1" aria-label="검색어 지우기">
             <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -1603,7 +1603,8 @@ svg{display:block;flex-shrink:0;}
 // v2.23 — 모바일 #viewInput .main-body padding-bottom:56px → 액션바가 마지막 폼 필드 가리는 버그 수정.
 // v2.24 — 모바일 액션바 position:fixed(nav bar 위) → sticky 오작동 근본 수정.
 // v2.25 — CLAUDE.md를 코드 실제 상태와 동기화 (문서 정정, 앱 동작 변경 없음).
-const APP_VERSION='v2.25';
+// v2.26 — 한글 초성 검색 ("ㅎㄴㄹ" → 하나로마트). 쌍자음 접기·조합중 즉시 반영.
+const APP_VERSION='v2.26';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -2366,6 +2367,48 @@ const FOOD_TAXONOMY=[
 ];
 
 // 검색어에 한영 대역 + 식품 동의어 포함한 검색 텀 배열 반환
+// ── 한글 초성(자모) 검색 ──
+// "ㅎㄴㄹ" → "하나로". 검색어가 자음만으로 이루어졌을 때만 동작한다.
+// 호환 자모 ㄱ~ㅎ 는 U+3131~U+314E, 모음 ㅏ~ㅣ(U+314F~)는 제외 — 자음만 초성 질의로 본다.
+const _CHO=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const _CHO_QUERY_RE=/^[\u3131-\u314E]+$/;
+// 쌍자음은 예사소리로 접는다 — "ㄱㅊㅈ"으로도 "꼬치집"이 찾아지게. 인덱스·질의 양쪽에 똑같이 적용한다.
+const _CHO_FOLD={'ㄲ':'ㄱ','ㄸ':'ㄷ','ㅃ':'ㅂ','ㅆ':'ㅅ','ㅉ':'ㅈ'};
+function _foldCho(s){return String(s||'').replace(/[ㄲㄸㅃㅆㅉ]/g,c=>_CHO_FOLD[c]);}
+function _isChoQuery(q){return _CHO_QUERY_RE.test(String(q||'').replace(/\s+/g,''));}
+// 검색어를 초성 인덱스와 같은 형태로 — 공백 제거 + 쌍자음 접기.
+function _normChoQuery(q){return _foldCho(String(q||'').replace(/\s+/g,''));}
+// 완성형 한글은 초성으로, 나머지 문자는 그대로 둔다 (영문·숫자 섞인 가게명도 매칭되게).
+function _toCho(str){
+  let out='';
+  const t=String(str||'');
+  for(let i=0;i<t.length;i++){
+    const c=t.charCodeAt(i);
+    out+=(c>=0xAC00&&c<=0xD7A3)?_CHO[Math.floor((c-0xAC00)/588)]:t[i];
+  }
+  return _foldCho(out);
+}
+// 영수증 한 건의 초성 인덱스 — 렌더마다 다시 만들지 않도록 캐시.
+// 캐시 키에 updatedAt을 넣어 수정되면 자동 무효화된다.
+const _choCache=new Map();
+function _receiptCho(r){
+  const key=r.id+'|'+(r.updatedAt||'');
+  const hit=_choCache.get(key);
+  if(hit!==undefined)return hit;
+  const parts=[
+    r.store||'',
+    r.category||'', getCategoryLabel(r.category)||'',
+    r.paidBy||'', r.notes||'',
+    (r.participants||[]).join(' '),
+    (r.tags||[]).join(' '),
+    (r.items||[]).map(it=>it.name||'').join(' '),
+  ];
+  const cho=_toCho(parts.join('\n'));
+  if(_choCache.size>2000)_choCache.clear();
+  _choCache.set(key,cho);
+  return cho;
+}
+
 function _getSearchTerms(q){
   const terms=[q];
   // 1. 한↔영 직역 (KO_EN_TERMS)
@@ -2433,6 +2476,13 @@ function getFiltered(){
   if(q.startsWith('참석자 ')){
     const pq=q.slice(4).trim().toLowerCase();
     if(pq) return receipts.filter(r=>(r.participants||[]).some(p=>p.toLowerCase().includes(pq)));
+  }
+
+  // ── 초성(자모) 검색 ── "ㅎㄴㄹ" → "하나로마트"
+  // 자음만 입력했을 땐 일반 부분일치로는 절대 안 걸리므로 초성 인덱스로만 판단한다.
+  if(_isChoQuery(q)){
+    const cq=_normChoQuery(q);
+    return receipts.filter(r=>_receiptCho(r).includes(cq));
   }
 
   // ── 카테고리명 매칭 시 해당 카테고리 키워드로 확장 ──
@@ -2700,9 +2750,23 @@ function _clearSearch(){
 }
 searchClear.addEventListener('click',_clearSearch);
 
+function _applySearchInput(){
+  searchQuery=searchInp.value;
+  if(searchQuery)selectedId=null;
+  _monthCatFilter=null;
+  _personTimeFilter={type:'all',value:''};
+  _ledgerTimeFilter={type:'month'};
+  _updateSearchClear();renderSide();renderDetail();
+}
 searchInp.addEventListener('compositionstart',()=>{_searchComposing=true;});
-searchInp.addEventListener('compositionend',()=>{_searchComposing=false;searchQuery=searchInp.value;if(searchQuery)selectedId=null;_monthCatFilter=null;_personTimeFilter={type:'all',value:''};_ledgerTimeFilter={type:'month'};_updateSearchClear();renderSide();renderDetail();});
-searchInp.addEventListener('input',()=>{if(!_searchComposing){searchQuery=searchInp.value;if(searchQuery)selectedId=null;_monthCatFilter=null;_personTimeFilter={type:'all',value:''};_ledgerTimeFilter={type:'month'};_updateSearchClear();renderSide();renderDetail();}});
+searchInp.addEventListener('compositionend',()=>{_searchComposing=false;_applySearchInput();});
+// 조합 중엔 중간 상태로 렌더하지 않는 게 기본(IME 규칙)이지만,
+// 초성 검색은 마지막 자음이 계속 조합 버퍼에 남아 한 글자씩 늦게 반영된다.
+// 자음만 있는 값은 조합 중이어도 바로 반영한다.
+searchInp.addEventListener('input',()=>{
+  if(_searchComposing&&!_isChoQuery(searchInp.value))return;
+  _applySearchInput();
+});
 
 // 앱 제목 클릭 → 초기 화면으로 리셋
 document.querySelector('.app-title').addEventListener('click',()=>{
