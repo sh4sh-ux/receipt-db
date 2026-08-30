@@ -56,18 +56,39 @@
 - 모바일에서 하단에 띄우는 것(토스트·일괄 전송 바 등)은 **nav bar 68px + safe-area를 반드시 비켜야 한다.**
   `bottom:20px` 같은 값을 그대로 쓰면 nav bar에 가려진다 (v2.31).
 
-## ⚠️ Dropbox 실제 데이터 경로 (App folder 스코프)
-앱의 Dropbox 연동은 **App folder 타입** — API 경로 `/01_Personal/영수증/Receipt_DB/...`는
-실제 Dropbox의 `01_Personal/Apps/앱/Receipt_DB_v1/01_Personal/영수증/Receipt_DB/...`로 매핑된다.
-- 로컬 미러: `~/Library/CloudStorage/Dropbox/01_Personal/Apps/앱/Receipt_DB_v1/01_Personal/영수증/Receipt_DB/`
-- `~/CloudStorage/Dropbox/01_Personal/영수증/Receipt_DB/`는 2026-06-02에 멈춘 화석 사본 — 앱이 보지 않음
-- 스캔 자동화(inbox 쓰기)는 위 라이브 로컬 미러 경로를 사용한다 (receipt_pdf_to_jpg.py)
+## ⚠️ Dropbox 데이터 경로 (v2.32~ · /07_Apps 통합)
+모든 앱 데이터를 Dropbox `/07_Apps/` 아래로 모으면서 이 앱도 이동했다.
+
+```
+/07_Apps/영수증(RECEIPT-DB)/
+  스캔함/              — 여기에 사진·PDF를 넣으면 동기화 때 자동 등록된다
+  완료 JPG/YYYY-MM/    — 등록된 사진(jpg·jpeg·png)이 YYYY-MM-DD_영수증.확장자로 옮겨짐
+  완료 PDF/YYYY-MM/    — 등록된 PDF가 같은 규칙으로 옮겨짐
+  images/              — 앱이 관리하는 영수증 사진 원본
+  backups/             — 수동 전체 백업 JSON
+  receipt-db_sync.json · receipt-db_inbox.json
+```
+
+- 옛 위치는 `/01_Personal/영수증/Receipt_DB/`. `_dbxResolveRoot()`가 동기화 시작 때 한 번
+  **copy_v2로 통째 복사**하고 옛 폴더는 **지우지 않는다**. 복사가 실패하면 옛 위치로 계속
+  동작하다 다음 동기화에 재시도하므로 어떤 경우에도 데이터가 사라지지 않는다.
+  성공 여부는 localStorage `dbx_migrated_07apps`에 기록해 1회만 돈다.
+- ⚠️ **`/07_Apps/`에 실제로 저장되려면 Dropbox 앱이 Full Dropbox 권한이어야 한다.**
+  App folder 권한이면 경로가 `/Apps/<앱>/07_Apps/...` 안으로 접힌다.
+- 한글 폴더명이라 `Dropbox-API-Arg` 헤더는 반드시 `_dbxApiArg()`로 ASCII 이스케이프할 것
+  (HTTP 헤더는 ASCII만 허용 — 안 하면 fetch가 통째로 실패한다).
 - **PNG/JPG 스크린샷**(토스 전자영수증 등)은 `scripts/receipt_png_to_receipt_db.py`가 처리 —
-  감시 폴더에서 날짜 추출·리네임 후 `등록완료/YYYY-MM/`으로 이동, inbox에 레코드+사진 등록.
-  ID는 `rec_YYYYMMDD_p해시6` 형식이라 앱·PDF 스크립트와 충돌 없음. PDF 스크립트와 동시 실행 금지
-  (inbox 단일 쓰기 원칙 — 순차 실행은 안전). receipt_pdf_to_jpg.py 원본은 맥에만 있음(repo 밖)
+  v2.32부터 **앱과 같은 `스캔함/` 폴더를 감시**하고 완료 파일도 같은 `완료 JPG`/`완료 PDF`로 옮긴다.
+  앱과 스크립트가 같은 파일을 봐도 안전하다: 양쪽 모두 **원본 파일 내용의 sha1**로
+  ID(`rec_YYYYMMDD_p해시6`)와 `srcHash`를 만들기 때문에 먼저 처리한 쪽으로 합쳐질 뿐 중복이 없다.
+  PDF 스크립트(`receipt_pdf_to_jpg.py`, repo 밖·맥에만 있음)와 **동시 실행은 금지**
+  (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v2.32` — **Dropbox 폴더 통합**: 저장 위치를 `/07_Apps/영수증(RECEIPT-DB)/`로 이동.
+  스캔함 등록 완료 파일을 `등록완료/YYYY-MM/` 한 곳이 아니라 **`완료 JPG`/`완료 PDF`로 종류별 분류**
+  (이름은 그대로 `YYYY-MM-DD_영수증.확장자`). 맥 스크립트도 같은 스캔함·같은 완료 폴더를 쓰도록 통일.
+  옛 폴더는 복사만 하고 지우지 않으며, 복사 실패 시 옛 위치로 계속 동작해 유실이 없다.
 - `v2.31` — 모바일 토스트가 하단 nav bar에 가려지던 문제 수정. `.toast-container`의 기본 `bottom:20px`이 nav bar(68px) 안쪽이라 메시지가 겹쳐 보였다.
   모바일에서 nav bar 위 12px로 띄우고, 일괄 전송 바가 떠 있을 땐 그보다 더 위로 올린다.
 - `v2.30` — **모바일 저장 버튼이 사라지던 버그 수정**: 액션바를 `position:fixed`에서 `sticky`로 되돌림.
@@ -337,12 +358,14 @@ P오플레 클래식 플레인 1+1 680.0g | 1 | 3,980 | 3,980
 ### 소유권 — 폴더마다 처리 주체는 하나
 | 자원 | 주체 |
 |---|---|
-| `01_Personal/영수증/` (+ `등록완료/`) | **맥 스크립트만** |
-| `Receipt_DB/스캔함/` (+ `등록완료/`) | **앱만** |
+| `스캔함/` (+ `완료 JPG/`, `완료 PDF/`) | **앱과 맥 스크립트 둘 다** (v2.32~ 폴더 통합) |
 | `receipt-db_inbox.json` | **맥만 씀** — 앱은 읽기 전용 |
 | `receipt-db_sync.json`, `images/` | **앱만 씀** |
 
-두 감시 폴더가 겹치지 않으므로 같은 파일을 둘이 보는 일이 없다.
+v2.31까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/영수증/`, 앱=`스캔함/`),
+폴더가 여기저기 흩어지는 원인이라 v2.32에서 `스캔함/` 하나로 합쳤다. 겹쳐도 안전한 이유는
+아래 "중복이 안 생기는 이유"와 같다 — 양쪽 모두 **원본 파일 내용의 sha1**로 ID와 `srcHash`를
+만들기 때문에 먼저 처리한 쪽의 레코드로 합쳐질 뿐이다.
 - ⚠️ **파이썬 스크립트는 맥 한 대에서만 돌릴 것.** 두 대가 같은 폴더를 감시하면
   inbox.json을 양쪽이 써서 Dropbox 충돌 사본이 생긴다. 폴더 분리로 못 막는 유일한 경우다.
 
@@ -402,7 +425,7 @@ P오플레 클래식 플레인 1+1 680.0g | 1 | 3,980 | 3,980
 - IndexedDB 트랜잭션은 microtask 안에 다 끝내야 — async/await 중간에 외부 await 끼면 트랜잭션 종료됨
 
 ## 현재 상태 (2026-08-30 기준)
-- **버전 `v2.31`**, main 브랜치에 push 완료.
+- **버전 `v2.32`** — Dropbox 폴더 통합(`/07_Apps/영수증(RECEIPT-DB)/`) + 완료 JPG/PDF 분류.
 - 직전 작업: v2.25~v2.30 일괄 릴리스 — 초성 검색, PDF 내보내기(브라우저 인쇄),
   스캔함(Dropbox 수신 폴더 자동 등록, 다중 기기 안전), 모바일 저장 버튼 사라지던 버그 수정.
 - 그 전 작업: CLAUDE.md를 코드 실제와 대조해 정리 — 다크 테마(기본)·테마 토글 섹션 신설,

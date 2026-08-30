@@ -527,6 +527,8 @@ svg{display:block;flex-shrink:0;}
 .print-opt input[type="month"]{border:1px solid var(--sep2);background:var(--fill);color:var(--label);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;}
 .print-opt-check{cursor:pointer;}
 .print-opt-check input{width:15px;height:15px;accent-color:var(--blue);cursor:pointer;}
+.scan-dest{margin:6px 0 10px;padding-left:18px;font-size:12.5px;line-height:1.9;color:var(--label2)}
+.scan-dest li{list-style:disc}
 .scan-where{font-size:12px;color:var(--label2);background:var(--fill);border-radius:8px;padding:8px 10px;margin-bottom:10px;line-height:1.5;}
 .scan-path{background:var(--fill);border:1px solid var(--sep2);border-radius:5px;padding:1px 5px;font-size:11.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--label);white-space:nowrap;}
 /* 인쇄 전용 컨테이너 — 화면에서는 완전히 숨긴다 */
@@ -1396,10 +1398,15 @@ svg{display:block;flex-shrink:0;}
 
           <div class="setting-card">
             <h3>스캔함 — 폴더에 넣으면 자동 등록</h3>
-            <p>Dropbox의 <code class="scan-path">Receipt_DB/스캔함/</code> 폴더에 영수증 사진을 넣어두면
-               동기화할 때 앱이 자동으로 등록하고, <code class="scan-path">등록완료/YYYY-MM/</code> 아래로
-               <code class="scan-path">YYYY-MM-DD_영수증</code> 형식으로 이름을 바꿔 옮깁니다.
-               날짜는 파일명 → 사진 촬영일(EXIF) → 업로드 시각 순으로 정합니다.
+            <p>Dropbox의 <code class="scan-path">07_Apps/영수증(RECEIPT-DB)/스캔함/</code> 폴더에
+               영수증을 넣어두면 동기화할 때 앱이 자동으로 등록하고,
+               <code class="scan-path">YYYY-MM-DD_영수증</code> 형식으로 이름을 바꿔
+               종류별로 갈라 옮깁니다.</p>
+            <ul class="scan-dest">
+              <li>사진(JPG·JPEG·PNG) → <code class="scan-path">완료 JPG/YYYY-MM/</code></li>
+              <li>PDF → <code class="scan-path">완료 PDF/YYYY-MM/</code></li>
+            </ul>
+            <p>날짜는 파일명 → 사진 촬영일(EXIF) → 업로드 시각 순으로 정합니다.
                폰·다른 컴퓨터에서 동시에 써도 같은 영수증이 두 번 등록되지 않습니다.</p>
             <p class="scan-where">폴더를 못 찾겠으면 Dropbox 앱 검색창에 <b>스캔함</b> 또는
                <b>receipt-db_sync.json</b>을 넣어보세요. 동기화를 한 번 하면 자동으로 만들어집니다.</p>
@@ -1715,7 +1722,10 @@ svg{display:block;flex-shrink:0;}
 // v2.29 — 스캔함 폴더를 동기화 때 자동 생성 (없으면 사용자가 넣을 곳을 못 찾음) + 위치 안내.
 // v2.30 — 모바일 저장 바 fixed→sticky 복귀. iOS 키보드가 열리면 fixed가 화면 밖으로 밀려 저장 버튼이 사라지던 문제.
 // v2.31 — 모바일 토스트가 하단 nav bar에 가려지던 문제 수정 (nav bar 위로 띄움).
-const APP_VERSION='v2.31';
+// v2.32 — Dropbox 저장 위치를 /07_Apps/영수증(RECEIPT-DB)/로 이동(앱 전체 폴더 통합).
+//         스캔함 등록 완료 파일을 '완료 JPG'/'완료 PDF'로 종류별 분류. 옛 폴더는 복사만 하고
+//         지우지 않으며, 복사 실패 시 옛 위치로 계속 동작해 데이터 유실이 없다.
+const APP_VERSION='v2.32';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -5552,6 +5562,7 @@ document.getElementById('printPdfBtn')?.addEventListener('click',printMonthPdf);
 
 document.getElementById('scanNowBtn')?.addEventListener('click',async(e)=>{
   if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
+  await _dbxResolveRoot();
   const btn=e.currentTarget;
   btn.disabled=true;
   try{
@@ -5882,7 +5893,7 @@ async function dbxBackup(){
   try{
     const token=await _dbxToken();
     await _dbxEnsureFolder(_DBX_DATA_DIR);
-    await _dbxEnsureFolder(_DBX_BACKUP_DIR);
+    await _dbxEnsureFolder(_dbxBackupDir());
     lt=toast('Dropbox에 백업 중... (사진 포함 시 수 초 소요)',{duration:60000});
     const recs=await dbAll('receipts');
     const imgs=await dbAll('images');
@@ -5903,7 +5914,7 @@ async function dbxBackup(){
       method:'POST',
       headers:{
         'Authorization':'Bearer '+token,
-        'Dropbox-API-Arg':_dbxApiArg({path:_DBX_BACKUP_DIR+'/'+filename,mode:'add',autorename:true,mute:false}),
+        'Dropbox-API-Arg':_dbxApiArg({path:_dbxBackupDir()+'/'+filename,mode:'add',autorename:true,mute:false}),
         'Content-Type':'application/octet-stream',
       },
       body:json,
@@ -5929,7 +5940,7 @@ async function _dbxListBackups(){
   const resp=await fetch('https://api.dropboxapi.com/2/files/list_folder',{
     method:'POST',
     headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({path:_DBX_BACKUP_DIR,recursive:false}),
+    body:JSON.stringify({path:_dbxBackupDir(),recursive:false}),
   });
   if(resp.status===409||resp.status===404)return [];
   if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
@@ -6000,13 +6011,67 @@ function dbxDisconnect(){
 // 모바일에서는 IndexedDB 사진 blob이 없을 수 있으므로 누락된 사진만 내려받아 채움.
 // ────────────────────────────────────────────────────────────────
 
-const _DBX_DATA_DIR='/01_Personal/영수증/Receipt_DB';
-const _DBX_BACKUP_DIR=_DBX_DATA_DIR+'/backups';
-const _DBX_IMAGES_DIR=_DBX_DATA_DIR+'/images';  // 이미지 개별 파일 저장 폴더
-const _SYNC_PATH=_DBX_DATA_DIR+'/receipt-db_sync.json';
-const _INBOX_PATH=_DBX_DATA_DIR+'/receipt-db_inbox.json';
-const _DBX_SCAN_DIR=_DBX_DATA_DIR+'/스캔함';          // 앱 전용 수신 폴더 (맥은 보지 않음)
-const _DBX_SCAN_DONE=_DBX_SCAN_DIR+'/등록완료';       // 처리 후 이동 — YYYY-MM/ 하위로
+/* ── Dropbox 저장 위치 (v2.32) ──────────────────────────────────
+   모든 앱 데이터를 Dropbox `/07_Apps/` 아래로 모았다.
+     · 새 위치: /07_Apps/영수증(RECEIPT-DB)/
+     · 옛 위치: /01_Personal/영수증/Receipt_DB/
+   폴더 구성:
+     스캔함/          — 여기에 사진·PDF를 넣으면 동기화 때 자동 등록된다
+     완료 JPG/YYYY-MM/ — 등록된 사진(jpg·jpeg·png)이 날짜 이름으로 옮겨진다
+     완료 PDF/YYYY-MM/ — 등록된 PDF가 날짜 이름으로 옮겨진다
+     images/          — 앱이 관리하는 영수증 사진 원본
+     backups/         — 수동 전체 백업 JSON
+   이전은 copy만 하고 옛 폴더는 지우지 않는다. 복사가 실패하면 옛 위치로 계속
+   동작하다 다음 동기화에 재시도하므로 어떤 경우에도 데이터가 사라지지 않는다. */
+const _DBX_ROOT='/07_Apps/영수증(RECEIPT-DB)';
+const _DBX_OLD_ROOT='/01_Personal/영수증/Receipt_DB';
+const _K_DBX_MIGRATED='dbx_migrated_07apps';
+let   _DBX_DATA_DIR=localStorage.getItem(_K_DBX_MIGRATED)==='1'?_DBX_ROOT:_DBX_OLD_ROOT;
+const _dbxBackupDir=()=>_DBX_DATA_DIR+'/backups';
+const _dbxImagesDir=()=>_DBX_DATA_DIR+'/images';   // 이미지 개별 파일 저장 폴더
+const _syncPath    =()=>_DBX_DATA_DIR+'/receipt-db_sync.json';
+const _inboxPath   =()=>_DBX_DATA_DIR+'/receipt-db_inbox.json';
+const _dbxScanDir  =()=>_DBX_DATA_DIR+'/스캔함';    // 앱 전용 수신 폴더 (맥은 보지 않음)
+// 등록을 마친 파일이 옮겨갈 곳 — 확장자로 갈라 YYYY-MM/ 하위에 넣는다 (v2.32).
+// v2.31까지는 종류 구분 없이 '스캔함/등록완료/'에 모두 쌓였다.
+const _dbxDoneDir  =isImg=>_DBX_DATA_DIR+(isImg?'/완료 JPG':'/완료 PDF');
+
+/* 저장 위치 확인·이전 — 동기화 시작 때 한 번. 원본은 그대로 두고 복사만 한다. */
+let _dbxRootPromise=null;
+function _dbxResolveRoot(){ return _dbxRootPromise||(_dbxRootPromise=_dbxResolveRootOnce()); }
+async function _dbxResolveRootOnce(){
+  if(localStorage.getItem(_K_DBX_MIGRATED)==='1'){ _DBX_DATA_DIR=_DBX_ROOT; return; }
+  if(!dbxIsConnected())return;
+  try{
+    const token=await _dbxToken();
+    const meta=async path=>{
+      try{
+        const r=await fetch('https://api.dropboxapi.com/2/files/get_metadata',{method:'POST',
+          headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+          body:JSON.stringify({path})});   // 본문은 UTF-8 — 헤더만 ASCII 제약이라 그대로 보낸다
+        return r.ok;
+      }catch(e){ return false; }
+    };
+    if(await meta(_DBX_ROOT)){                       // 이미 옮겨져 있음
+      _DBX_DATA_DIR=_DBX_ROOT; localStorage.setItem(_K_DBX_MIGRATED,'1'); return;
+    }
+    await _dbxCreateFolder('/07_Apps');              // 있으면 conflict — _dbxCreateFolder가 무시
+    if(await meta(_DBX_OLD_ROOT)){                   // 옛 폴더를 통째로 복사
+      const cp=await fetch('https://api.dropboxapi.com/2/files/copy_v2',{method:'POST',
+        headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+        body:JSON.stringify({from_path:_DBX_OLD_ROOT,to_path:_DBX_ROOT,autorename:false})});
+      if(!cp.ok){                                    // 실패 — 옛 위치로 계속, 다음 동기화에 재시도
+        console.warn('dbx migrate:',await cp.text());
+        _DBX_DATA_DIR=_DBX_OLD_ROOT; _dbxRootPromise=null; return;
+      }
+      toast('Dropbox 데이터를 07_Apps로 옮겼어요 (옛 폴더는 그대로 보관)',{type:'success',duration:5000});
+    }else{
+      await _dbxCreateFolder(_DBX_ROOT);
+    }
+    _DBX_DATA_DIR=_DBX_ROOT; localStorage.setItem(_K_DBX_MIGRATED,'1');
+    _dbxFolderCache.clear();                         // 경로가 바뀌었으니 폴더 존재 캐시를 버린다
+  }catch(e){ _DBX_DATA_DIR=_DBX_OLD_ROOT; _dbxRootPromise=null; }
+}
 const _SCAN_IMG_EXTS=['.jpg','.jpeg','.png'];
 const _SCAN_DOC_EXTS=['.pdf'];
 const _SCAN_BATCH_MAX=20;                              // 한 번에 처리할 최대 파일 수
@@ -6022,8 +6087,11 @@ const _SCAN_BATCH_MAX=20;                              // 한 번에 처리할 �
 //     (반대 순서면 이동 성공 + 저장 실패 시 영수증이 사라진다)
 //  ③ 이동 충돌은 이름을 -2, -3으로 바꿔 재시도. 다른 기기가 이미 옮겼으면
 //     from_lookup/not_found 이 오는데, 이건 오류가 아니라 정상 종료로 본다.
-//  ④ 맥 스크립트는 다른 폴더(01_Personal/영수증)를 감시하므로 같은 파일을
-//     둘이 보는 일이 없다. 실수로 양쪽에 넣은 경우는 srcHash로 걸러낸다.
+//  ④ v2.32부터 맥 스크립트도 같은 '스캔함' 폴더를 감시한다(폴더 통합). 양쪽 모두
+//     원본 파일 내용의 sha1로 ID와 srcHash를 만들기 때문에, 같은 파일을 둘이 봐도
+//     먼저 처리한 쪽의 레코드로 합쳐질 뿐 중복이 생기지 않는다.
+//  ⑤ 등록을 마친 파일은 확장자로 갈라 '완료 JPG/YYYY-MM/' 또는
+//     '완료 PDF/YYYY-MM/'으로 옮긴다 (맥 스크립트도 같은 규칙).
 // ════════════════════════════════════════════════════════════════
 
 async function _sha1Hex(buf){
@@ -6116,7 +6184,7 @@ async function _dbxListScanbox(){
   const resp=await fetch('https://api.dropboxapi.com/2/files/list_folder',{
     method:'POST',
     headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({path:_DBX_SCAN_DIR,recursive:false}),
+    body:JSON.stringify({path:_dbxScanDir(),recursive:false}),
   });
   if(resp.status===409||resp.status===404)return [];         // 폴더 없음 — 아직 안 쓰는 상태
   if(!resp.ok){console.warn('scan list:',await resp.text());return [];}
@@ -6139,7 +6207,7 @@ async function _dbxProcessScanbox(){
   try{
     // 폴더가 없으면 만들어 둔다. 사용자가 Dropbox 앱에서 넣을 곳을 찾을 수 있어야
     // 기능이 시작되므로, 파일이 없어도 폴더는 항상 존재해야 한다.
-    await _dbxEnsureFolder(_DBX_SCAN_DIR);
+    await _dbxEnsureFolder(_dbxScanDir());
     const files=await _dbxListScanbox();
     if(!files.length)return 0;
     const token=await _dbxToken();
@@ -6164,8 +6232,9 @@ async function _dbxProcessScanbox(){
 
         if(deleted.has(id)){
           // 사용자가 지운 영수증 — 다시 만들지 않되 파일은 치워서 무한 재처리를 막는다
-          await _dbxEnsureFolder(_DBX_SCAN_DONE+'/'+date.slice(0,7));
-          await _dbxMoveInto(f.path_display,_DBX_SCAN_DONE+'/'+date.slice(0,7),`${date}_영수증`,ext);
+          const delDir=_dbxDoneDir(isImg)+'/'+date.slice(0,7);
+          await _dbxEnsureFolder(delDir);
+          await _dbxMoveInto(f.path_display,delDir,`${date}_영수증`,ext);
           continue;
         }
         // 같은 파일이 이미 등록돼 있으면(ID 또는 내용 해시) 레코드는 건드리지 않고 파일만 이동
@@ -6188,9 +6257,9 @@ async function _dbxProcessScanbox(){
           added++;
         }
         // ★ 저장이 끝난 뒤에 이동한다 (실패해도 다음 회차에 같은 ID로 다시 처리 → 유실 없음)
-        const ym=date.slice(0,7);
-        await _dbxEnsureFolder(_DBX_SCAN_DONE+'/'+ym);
-        await _dbxMoveInto(f.path_display,_DBX_SCAN_DONE+'/'+ym,`${date}_영수증`,ext);
+        const doneDir=_dbxDoneDir(isImg)+'/'+date.slice(0,7);   // 사진 → 완료 JPG, PDF → 완료 PDF
+        await _dbxEnsureFolder(doneDir);
+        await _dbxMoveInto(f.path_display,doneDir,`${date}_영수증`,ext);
       }catch(fe){console.warn('scan file:',f.name,fe.message||fe);}
     }
     if(newImageIds.length){
@@ -6313,7 +6382,7 @@ async function dbxSyncUpload(){
       method:'POST',
       headers:{
         'Authorization':'Bearer '+token,
-        'Dropbox-API-Arg':_dbxApiArg({path:_SYNC_PATH,mode:'overwrite',mute:true}),
+        'Dropbox-API-Arg':_dbxApiArg({path:_syncPath(),mode:'overwrite',mute:true}),
         'Content-Type':'application/octet-stream',
       },
       body:payload,
@@ -6340,7 +6409,7 @@ async function dbxSyncDownload(){
       method:'POST',
       headers:{
         'Authorization':'Bearer '+token,
-        'Dropbox-API-Arg':_dbxApiArg({path:_SYNC_PATH}),
+        'Dropbox-API-Arg':_dbxApiArg({path:_syncPath()}),
       },
     });
     if(resp.status===409||resp.status===404)return true;
@@ -6359,7 +6428,7 @@ async function dbxSyncDownload(){
         method:'POST',
         headers:{
           'Authorization':'Bearer '+token,
-          'Dropbox-API-Arg':_dbxApiArg({path:_INBOX_PATH}),
+          'Dropbox-API-Arg':_dbxApiArg({path:_inboxPath()}),
         },
       });
       if(ir.ok){
@@ -6393,6 +6462,7 @@ async function dbxSyncNow(force=false,upload=true){
   _lastAutoSyncAt=now;
   _dbxUpdateSyncBadge('syncing');
   try{
+    await _dbxResolveRoot();                   // 07_Apps 이전 확인 — 경로가 정해진 뒤에 읽는다
     const downloadOk=await dbxSyncDownload();   // 원격 변경 내려받기
     // 스캔함 처리 — 새로 등록된 게 있으면 다운로드 전용 모드라도 반드시 올려야
     // 다른 기기가 볼 수 있다 (inbox와 달리 sync.json은 앱이 유일한 쓰기 주체라 경합 없음)
@@ -6614,7 +6684,7 @@ async function _dbxEnsureImagesFolder(){
   const resp=await fetch('https://api.dropboxapi.com/2/files/create_folder_v2',{
     method:'POST',
     headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({path:_DBX_IMAGES_DIR,autorename:false}),
+    body:JSON.stringify({path:_dbxImagesDir(),autorename:false}),
   });
   if(resp.ok){_imgsFolderReady=true;return;}
   const errorText=await resp.text();
@@ -6647,7 +6717,7 @@ async function _dbxUploadImage(imgId,{force=false}={}){
       headers:{
         'Authorization':'Bearer '+token,
         'Content-Type':'application/octet-stream',
-        'Dropbox-API-Arg':_dbxApiArg({path:_DBX_IMAGES_DIR+'/'+imgId+'.jpg',mode:'overwrite',mute:true}),
+        'Dropbox-API-Arg':_dbxApiArg({path:_dbxImagesDir()+'/'+imgId+'.jpg',mode:'overwrite',mute:true}),
       },
       body,
     });
@@ -6667,7 +6737,7 @@ async function _dbxDownloadImage(imgId){
       method:'POST',
       headers:{
         'Authorization':'Bearer '+token,
-        'Dropbox-API-Arg':_dbxApiArg({path:_DBX_IMAGES_DIR+'/'+imgId+'.jpg'}),
+        'Dropbox-API-Arg':_dbxApiArg({path:_dbxImagesDir()+'/'+imgId+'.jpg'}),
       },
     });
     if(resp.status===404||resp.status===409)return null;

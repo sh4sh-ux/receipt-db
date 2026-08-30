@@ -4,12 +4,12 @@
 receipt_png_to_receipt_db.py — PNG/JPG 영수증 스크린샷 자동 등록
 
 receipt_pdf_to_jpg.py 의 자매 스크립트. PDF 스캔 자동화는 기존 스크립트가
-그대로 담당하고, 이 스크립트는 Dropbox 영수증 폴더에 들어온 PNG/JPG
+그대로 담당하고, 이 스크립트는 Dropbox 스캔함 폴더에 들어온 PNG/JPG
 (토스 전자영수증 스크린샷 등)만 처리한다:
 
   1. 감시 폴더(WATCH_DIR)에서 *.png / *.jpg / *.jpeg 파일을 찾고
   2. 파일명(또는 수정시각)에서 날짜를 추출해 이름을 바꾼 뒤
-     `등록완료/YYYY-MM/` 하위 폴더로 이동(분류)하고
+     `완료 JPG/YYYY-MM/`(PDF면 `완료 PDF/`) 하위 폴더로 이동(분류)하고
   3. receipt-db 앱의 수신함(receipt-db_inbox.json)에
      레코드 + 사진(base64)을 등록한다.
 
@@ -44,17 +44,22 @@ from pathlib import Path
 
 # ───────────────────── 설정 (맥 환경에 맞게 확인/수정) ─────────────────────
 
-# PNG/JPG를 떨어뜨리는 폴더 — PDF를 넣는 폴더와 같게 맞출 것
-WATCH_DIR = Path.home() / "Library/CloudStorage/Dropbox/01_Personal/영수증"
-
-# receipt-db 앱 데이터 폴더 (App folder 스코프의 라이브 로컬 미러 — CLAUDE.md 참고)
+# receipt-db 앱 데이터 폴더 — 모든 앱을 Dropbox `/07_Apps/` 아래로 모으면서 이동했다.
+# (옛 위치: 01_Personal/Apps/앱/Receipt_DB_v1/01_Personal/영수증/Receipt_DB)
 RECEIPT_DB_DIR = Path.home() / (
-    "Library/CloudStorage/Dropbox/01_Personal/Apps/앱/Receipt_DB_v1"
-    "/01_Personal/영수증/Receipt_DB"
+    "Library/CloudStorage/Dropbox/07_Apps/영수증(RECEIPT-DB)"
 )
+
+# 영수증을 떨어뜨리는 폴더 — 앱(스캔함)과 같은 폴더 하나로 통일했다.
+# 앱과 이 스크립트가 같은 파일을 봐도 안전하다: 양쪽 모두 원본 파일 내용의 sha1로
+# ID(rec_YYYYMMDD_p해시6)와 srcHash를 만들기 때문에 먼저 처리한 쪽의 레코드로 합쳐진다.
+WATCH_DIR = RECEIPT_DB_DIR / "스캔함"
+
 INBOX_PATH = RECEIPT_DB_DIR / "receipt-db_inbox.json"
 
-DONE_DIR_NAME = "등록완료"          # 처리 완료 파일이 이동되는 하위 폴더
+# 처리 완료 파일이 이동되는 폴더 — 확장자로 갈라 종류별로 모은다 (앱과 같은 규칙)
+DONE_DIR_IMG = "완료 JPG"
+DONE_DIR_DOC = "완료 PDF"
 EXTS = {".png", ".jpg", ".jpeg"}    # 처리 대상 확장자
 MAX_SIDE = 2000                     # Pillow 사용 시 리사이즈 최대 변(px)
 JPEG_QUALITY = 85
@@ -170,8 +175,9 @@ def make_record(path, date_str):
 
 
 def dest_path(path, date_str):
-    """등록완료/YYYY-MM/ 아래로 이동할 새 경로 (이름 충돌 시 -2, -3 …)."""
-    done_dir = WATCH_DIR / DONE_DIR_NAME / date_str[:7]
+    """완료 JPG(또는 완료 PDF)/YYYY-MM/ 아래로 이동할 새 경로 (이름 충돌 시 -2, -3 …)."""
+    top = DONE_DIR_DOC if path.suffix.lower() == ".pdf" else DONE_DIR_IMG
+    done_dir = RECEIPT_DB_DIR / top / date_str[:7]
     base = f"{date_str}_영수증"
     ext = path.suffix.lower()
     cand = done_dir / f"{base}{ext}"
@@ -188,7 +194,7 @@ def main():
     args = ap.parse_args()
 
     if not WATCH_DIR.exists():
-        sys.exit(f"감시 폴더 없음: {WATCH_DIR}\n스크립트 상단 WATCH_DIR을 확인하세요.")
+        sys.exit(f"감시 폴더 없음: {WATCH_DIR}\n앱에서 Dropbox 동기화를 한 번 하면 자동으로 만들어집니다.")
 
     # macOS는 한글 파일명이 NFD로 저장됨 — 확장자 비교만 하면 문제 없음
     targets = sorted(
@@ -211,7 +217,7 @@ def main():
         name = unicodedata.normalize("NFC", path.name)
         date_str = file_date(path)
         dest = dest_path(path, date_str)
-        print(f"• {name} → 일자 {date_str}, 이동 {dest.relative_to(WATCH_DIR)}")
+        print(f"• {name} → 일자 {date_str}, 이동 {dest.relative_to(RECEIPT_DB_DIR)}")
         if args.dry_run:
             continue
 
