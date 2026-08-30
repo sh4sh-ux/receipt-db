@@ -752,7 +752,15 @@ svg{display:block;flex-shrink:0;}
   #viewList .main-actions{margin-left:auto;flex-wrap:wrap;justify-content:flex-end;}
   .main-body{padding:18px 18px 24px;}
   .input-row.actions{margin:12px -18px 0;padding:9px 18px;}
-  #viewInput .input-row.actions{position:fixed;bottom:calc(68px + env(safe-area-inset-bottom,0px));left:0;right:0;margin:0;padding:9px 18px;z-index:200;}
+  /* v2.30 — position:fixed 되돌림. 이 앱은 body가 overflow:hidden이고 .main-body가
+     스크롤 컨테이너라, iOS에서 키보드가 열리면 레이아웃 뷰포트는 그대로인 채
+     비주얼 뷰포트만 줄어든다. fixed는 레이아웃 뷰포트 기준이라 액션바가 화면 밖으로
+     밀려나 '저장 버튼이 사라지는' 증상이 났다(붙여넣기 = 키보드 사용).
+     sticky는 스크롤 컨테이너(.main-body) 기준이라 뷰포트 계산과 무관하다.
+     ※ 다시 fixed로 바꾸지 말 것. */
+  #viewInput .input-row.actions{position:sticky;bottom:0;left:auto;right:auto;margin:12px -18px 0;padding:9px 18px;z-index:20;}
+  /* Cmd+Enter는 폰에서 쓸 수 없고, 좁은 폭에서 '저 장'으로 줄바꿈돼 깨진다 */
+  .actions-shortcut{display:none;}
   :root{--pad-x:18px;}
   .input-grid{grid-template-columns:1fr;gap:14px;}
   .input-stack,#gptModeArea{gap:14px;}
@@ -760,7 +768,8 @@ svg{display:block;flex-shrink:0;}
   .input-row.top .field-ta,.input-row.top .photo-zone{height:156px;min-height:156px;}
   .input-row.top .photo-preview{object-fit:cover;object-position:center top;}
   #viewInput .main-top{padding-bottom:12px;}
-  #viewInput .main-body{padding-top:14px;padding-bottom:63px;}
+  /* sticky는 문서 흐름에 남아 있으므로 fixed 시절의 보정 여백(63px)이 필요 없다 */
+  #viewInput .main-body{padding-top:14px;padding-bottom:0;}
   #viewInput .input-mode-row{margin-bottom:12px;}
   #viewInput .prompt-tools-row{margin-bottom:-2px;}
   .row-3{grid-template-columns:1fr;}
@@ -1700,7 +1709,8 @@ svg{display:block;flex-shrink:0;}
 // v2.27 — 월별 PDF 내보내기(브라우저 인쇄). #printRoot + @media print, 외부 의존성 없음.
 // v2.28 — 스캔함: Dropbox 수신 폴더 자동 등록. 내용 해시 ID·srcHash로 다중 기기 중복 차단.
 // v2.29 — 스캔함 폴더를 동기화 때 자동 생성 (없으면 사용자가 넣을 곳을 못 찾음) + 위치 안내.
-const APP_VERSION='v2.29';
+// v2.30 — 모바일 저장 바 fixed→sticky 복귀. iOS 키보드가 열리면 fixed가 화면 밖으로 밀려 저장 버튼이 사라지던 문제.
+const APP_VERSION='v2.30';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
