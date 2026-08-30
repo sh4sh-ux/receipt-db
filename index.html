@@ -1784,6 +1784,8 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.46 — 영수증 폴더 바로 아래 낱개 파일까지 처리하고(사진·PDF는 스캔함으로,
+//         로그는 삭제), 비면 영수증 폴더 자체도 치운다.
 // v2.45 — 연결 카드에 '이 기기가 쓰는 폴더'를 항상 표시. localStorage가 기기마다
 //         따로라 한 기기만 키를 바꾸면 서로 다른 곳을 보는데 그게 안 보였다.
 // v2.44 — 받은함도 치운다. 비어 있으면 그냥 치우고, 영수증이 남아 있으면
@@ -1794,7 +1796,7 @@ svg{display:block;flex-shrink:0;}
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.45';
+const APP_VERSION='v2.46';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -6806,6 +6808,45 @@ async function cleanupOldFolders(){
     }
   }
 
+  // ── 영수증 폴더 바로 아래 낱개 파일 ──
+  // 사진·PDF는 아직 정리 안 된 영수증이므로 버리지 않고 스캔함으로 옮긴다.
+  // 로그는 스크립트가 남긴 찌꺼기라 지운다. 그 밖의 파일은 정체를 모르니 남긴다.
+  let looseMoved=0,looseDeleted=0;
+  const looseKept=[];
+  {
+    const all=await _dbxListAll(token,_LEGACY_WORK_DIR);
+    const loose=(all||[]).filter(e=>e['.tag']==='file'
+      &&e.path_display.slice(_LEGACY_WORK_DIR.length+1).indexOf('/')<0);   // 바로 아래만
+    const media=[],logs=[];
+    for(const f of loose){
+      const n=f.path_display.slice(f.path_display.lastIndexOf('/')+1).toLowerCase();
+      if(/\.(jpg|jpeg|png|pdf|heic)$/.test(n))media.push(f);
+      else if(/\.log$/.test(n))logs.push(f);
+      else looseKept.push(f.path_display);
+    }
+    if(media.length){
+      await _dbxEnsureFolder(_dbxScanDir());
+      for(let i=0;i<media.length;i+=900){
+        const entries=media.slice(i,i+900).map(f=>({from_path:f.path_display,
+          to_path:_dbxScanDir()+'/'+f.path_display.slice(f.path_display.lastIndexOf('/')+1)}));
+        try{
+          const r=await fetch('https://api.dropboxapi.com/2/files/move_batch_v2',{method:'POST',
+            headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+            body:JSON.stringify({entries,autorename:true})});
+          if(r.ok)looseMoved+=entries.length;
+        }catch(e){}
+      }
+    }
+    for(const f of logs){
+      try{
+        const r=await fetch('https://api.dropboxapi.com/2/files/delete_v2',{method:'POST',
+          headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+          body:JSON.stringify({path:f.path_display})});
+        if(r.ok)looseDeleted++;
+      }catch(e){}
+    }
+  }
+
   for(const tg of _CLEANUP_TARGETS){
     if(!await has(tg.path))continue;                          // 이미 없음
     if(!await has(tg.need())){ held.push(tg); continue; }      // 대체물이 없다 — 손대지 않는다
@@ -6856,10 +6897,11 @@ async function cleanupOldFolders(){
       ? '아직 안 옮긴 앱이 있어 먼저 데이터를 새 위치로 옮겼습니다:\n'
         +rescuedList.map(x=>'  · '+x.why.replace(' 옛 앱 폴더','')).join('\n')+'\n\n'
       : '')
-    +(inboxMoved
-      ? `받은함에 남아 있던 영수증 ${inboxMoved}개를 스캔함으로 옮겼습니다.\n`
+    +((inboxMoved+looseMoved)
+      ? `아직 정리 안 된 영수증 ${inboxMoved+looseMoved}개를 스캔함으로 옮겼습니다.\n`
         +'다음 동기화 때 영수증으로 자동 등록됩니다.\n\n'
       : '')
+    +(looseDeleted?`스크립트 로그 ${looseDeleted}개를 지웠습니다.\n\n`:'')
     +list+'\n\n'
     +(held.length?'그대로 두는 것 (새 위치에 아직 데이터가 없음):\n'
         +held.map(x=>'  · '+x.path+(x.why?'\n     ('+x.why+')':'')).join('\n')+'\n\n':'')
@@ -6877,11 +6919,24 @@ async function cleanupOldFolders(){
       if(r.ok)done++; else failed++;
     }catch(e){ failed++; }
   }
+  // 하위를 다 치우고 나서 영수증 폴더가 비었으면 폴더 자체도 치운다
+  let parentGone=false;
+  try{
+    const left=await _dbxListAll(token,_LEGACY_WORK_DIR);
+    if(left&&left.length===0){
+      const r=await fetch('https://api.dropboxapi.com/2/files/delete_v2',{method:'POST',
+        headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+        body:JSON.stringify({path:_LEGACY_WORK_DIR})});
+      parentGone=r.ok;
+    }
+  }catch(e){}
   lt?.remove?.();
-  alert(`옛 폴더 ${done}개를 치웠습니다.`
+  alert(`옛 폴더 ${done+(parentGone?1:0)}개를 치웠습니다.`
+    +(parentGone?`\n${_LEGACY_WORK_DIR} 폴더까지 비워서 함께 지웠습니다.`:'')
     +(failed?`\n${failed}개는 실패했습니다 — 다시 눌러 주세요.`:'')
     +'\n\n(Dropbox 휴지통에서 30일간 복구할 수 있습니다)'
-    +(inboxMoved?`\n받은함에 있던 ${inboxMoved}개는 스캔함으로 옮겨 뒀습니다.`:'')
+    +((inboxMoved+looseMoved)?`\n영수증 ${inboxMoved+looseMoved}개는 스캔함으로 옮겨 뒀습니다.`:'')
+    +(looseKept.length?'\n\n정체를 몰라 남긴 파일:\n'+looseKept.map(x=>'  · '+x).join('\n'):'')
     +((held.length||unknown.length)
       ? '\n\n아래는 직접 확인하고 치우세요:\n'
         +[...held.map(x=>'  · '+x.path+(x.why?'  ('+x.why+')':'')),
