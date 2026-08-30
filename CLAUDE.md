@@ -25,6 +25,22 @@
   세 가지 모두 다른 의미라 헷갈리지 말 것.
 
 
+## ⚠️ 작업 규칙 — CSS/레이아웃 변경 시 필수
+**데스크탑과 모바일 두 뷰포트를 실제로 띄워 확인한 뒤에만 push할 것.**
+한쪽만 보고 올려서 v2.19~v2.23까지 다섯 번 연속 재수정한 이력이 있음.
+
+- 데스크탑 검증은 뷰포트 폭을 **명시적으로 1280px로 지정**해서 할 것.
+  브라우저 창이 780px 이하면 모바일 미디어쿼리가 걸려 데스크탑을 본 게 아님 (실제로 이 착각으로 오판했음).
+- 모바일은 375px에서 **스크롤을 끝까지 내려** 마지막 필드(메모)까지 도달하는지 확인.
+- 확인 항목: 액션바 위치, 하단으로 새는 내용 유무, 사이드바 구분선과 액션바 구분선 정렬.
+
+### 레이아웃 구조상 주의 (v2.24에서 확정)
+- 모바일(≤780px)에서 `.main`이 `display:block`으로 바뀌므로 `.main-body`가 flex 자식이 아니게 됨.
+  → `position:sticky; bottom:0`이 기준을 잃고 문서 흐름 중간에 박힘.
+  → 그래서 모바일 액션바는 **`position:fixed`**, 데스크탑은 **`sticky`**로 분기.
+- 모바일 액션바는 하단 nav bar(68px) 위에 고정: `bottom:calc(68px + env(safe-area-inset-bottom,0px))`.
+- `.view.on`에 `overflow:hidden`을 걸지 말 것 — 카테고리 팝오버가 잘림 (v2.22에서 제거).
+
 ## ⚠️ Dropbox 실제 데이터 경로 (App folder 스코프)
 앱의 Dropbox 연동은 **App folder 타입** — API 경로 `/01_Personal/영수증/Receipt_DB/...`는
 실제 Dropbox의 `01_Personal/Apps/앱/Receipt_DB_v1/01_Personal/영수증/Receipt_DB/...`로 매핑된다.
@@ -37,6 +53,15 @@
   (inbox 단일 쓰기 원칙 — 순차 실행은 안전). receipt_pdf_to_jpg.py 원본은 맥에만 있음(repo 밖)
 
 ### Changelog
+- `v2.24` — 모바일 액션바 `position:fixed`(하단 nav bar 위) 전환 → sticky 오작동 근본 수정. `.main-body` 하단 패딩 63px.
+- `v2.23` — 모바일 `#viewInput .main-body` padding-bottom 56px (v2.24에서 63px로 재조정).
+- `v2.22` — `.view.on`의 `overflow:hidden` 제거 → 카테고리 팝오버가 잘리던 버그 수정.
+- `v2.21` — 저장/초기화 버튼 높이 36px·좌우 패딩 2배. `.side-foot` min-height 55px → 사이드바 구분선과 액션바 구분선 수평 정렬.
+- `v2.20` — 액션바 gap 완전 차단: `#viewInput .main-body` padding-bottom 0 + 액션바 margin-bottom 0.
+- `v2.19` — 저장 바 버튼 너비 auto·kbd 크기 확대·하단 클리핑 개선.
+- `v2.18` — 저장 바 sticky 전환 + Cmd+Enter 저장 단축키 추가.
+- `v2.17` — 합계 행 수직 정렬 middle로 통일.
+- `v2.16` — 금액 확인 메시지 텍스트 간결화.
 - `v2.15` — 모바일 상세내역 품목명 정렬 및 계산 확인창 위·아래 회색 여백 통일.
 - `v2.14` — 카테고리 아이콘의 선 굵기를 통일하고 여행 아이콘 확대.
 - `v2.13` — 상세내역 계산 확인창의 위·아래 여백 조정.
@@ -253,9 +278,18 @@ P오플레 클래식 플레인 1+1 680.0g | 1 | 3,980 | 3,980
 - 사진 첨부 input은 `accept="image/*" capture="environment"`로 모바일 카메라 직행 가능
 - IndexedDB 트랜잭션은 microtask 안에 다 끝내야 — async/await 중간에 외부 await 끼면 트랜잭션 종료됨
 
+## 현재 상태 (2026-08-30 기준)
+- **버전 `v2.24`**, main 브랜치에 push 완료. 미완결 작업 없음.
+- 직전 작업: 추가 탭 저장 바(초기화·저장 버튼) 정리 — 버튼 크기, 구분선 정렬, 모바일 액션바 위치 수정.
+  데스크탑 1280px·모바일 375px 양쪽 검증 완료.
+- 로컬 경로: `~/Documents/Codex/2026-08-26/new-chat/work/receipt-db`
+- 배포: `git push origin main` (GitHub `sh4sh-ux/receipt-db`)
+
+### 작업 흐름
+브랜치 생성 → 커밋 → main으로 squash merge → `git fetch origin main && git rebase origin/main` → push → 브랜치 삭제.
+`gh` CLI는 이 환경에 없으므로 PR 없이 로컬 squash merge로 진행.
+
 ## 다음 작업 후보
-- Dropbox OAuth 연동 (Phase 3)
 - 한글 자모 검색 ("ㅎㄴㄹ" → "하나로")
-- 월별 통계 차트
 - PDF로 영수증 묶음 내보내기 (가계부 인쇄용)
 - PWA 설정 (홈 화면 추가, manifest)
