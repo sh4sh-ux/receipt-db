@@ -1399,24 +1399,24 @@ svg{display:block;flex-shrink:0;}
           </div>
 
           <div class="setting-card">
-            <h3>옛 앱 폴더에서 가져오기</h3>
-            <p><b>영수증 작업 폴더 통합</b> — 맥 스크립트가 쓰던
-               <code class="scan-path">/01_Personal/영수증/</code>의
-               <b>완료 JPG · 완료 PDF · 오류 · 서류(A4)변환</b>을 이 앱 폴더 안으로 모읍니다.
-               받은함은 옮기지 않습니다(스캔함에 넣으면 바로 등록되므로).</p>
-            <p>App key를 <b>Full Dropbox</b> 권한으로 바꾸면 저장 위치가
-               <code class="scan-path">/07_Apps/영수증(RECEIPT-DB)/</code>로 옮겨집니다.
-               예전 데이터는 Dropbox의 <b>앱/&lt;앱이름&gt;/</b> 안에 남아 있는데,
-               이 버튼을 누르면 앱이 찾아서 가져옵니다. 기록은 지금 것과 합치고,
-               사진도 함께 복사합니다. <b>옛 폴더의 원본은 지우지 않습니다.</b></p>
+            <h3>한번에 정리</h3>
+            <p>흩어져 있던 영수증 파일을 이 앱 폴더
+               <code class="scan-path">/07_Apps/영수증(RECEIPT-DB)/</code> 한 곳으로 모읍니다.
+               버튼 하나로 아래를 순서대로 처리합니다.</p>
+            <ul class="scan-dest">
+              <li>옛 앱 폴더(<b>앱/&lt;앱이름&gt;/</b>)의 영수증 기록과 사진 가져오기</li>
+              <li>맥 작업 폴더(<code class="scan-path">/01_Personal/영수증/</code>)의
+                  <b>완료 JPG · 완료 PDF · 오류 · 서류(A4)변환</b> 모으기</li>
+              <li><b>파일 내용을 하나하나 대조</b>해 새 위치에 똑같이 들어갔는지 확인</li>
+              <li>대조가 끝난 <b>원본만</b> 삭제 (Dropbox 휴지통에서 30일간 복구 가능)</li>
+            </ul>
+            <p class="scan-where">대조가 어긋나는 폴더는 원본을 그대로 둡니다.
+               <b>받은함</b>은 건드리지 않습니다 — 스캔함에 넣으면 아직 처리 안 한 영수증이
+               바로 등록돼 버리기 때문입니다. Full Dropbox 권한으로 연결돼 있어야 동작합니다.</p>
             <div class="setting-btn-row">
-              <button id="consolidateBtn">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
-                영수증 작업 폴더 통합
-              </button>
-              <button id="importOldBtn">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/><path d="M12 10v6"/><path d="m9 13 3 3 3-3"/></svg>
-                옛 앱 폴더에서 가져오기
+              <button id="tidyBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>
+                한번에 정리
               </button>
             </div>
           </div>
@@ -1771,7 +1771,9 @@ svg{display:block;flex-shrink:0;}
 //         (막히는 경우는 거의 App key가 아직 옛 것인 상황이라 그 사실을 직접 알려준다)
 // v2.39 — 맥 스크립트가 쓰던 /01_Personal/영수증 의 완료 JPG·완료 PDF·오류·서류(A4)변환을
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
-const APP_VERSION='v2.39';
+// v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
+//         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+const APP_VERSION='v2.40';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -5689,8 +5691,7 @@ document.getElementById('scanDirInp')?.addEventListener('change',async(e)=>{
   }
 });
 
-document.getElementById('importOldBtn')?.addEventListener('click',importFromAppFolder);
-document.getElementById('consolidateBtn')?.addEventListener('click',consolidateReceiptFolders);
+document.getElementById('tidyBtn')?.addEventListener('click',tidyReceiptFolders);
 
 document.getElementById('scanNowBtn')?.addEventListener('click',async(e)=>{
   if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
@@ -6646,6 +6647,146 @@ async function _dbxListAll(token,path){
     cursor=d.cursor;
   }
   return out;
+}
+
+
+// ════════════════════════════════════════════════════════════════
+// 한번에 정리 (v2.40)
+//
+// 버튼을 여러 개 눌러 가며 단계를 밟게 하지 않는다. 하나로 끝낸다:
+//   ① 옛 앱 폴더의 기록·사진 가져오기
+//   ② 맥 작업 폴더(/01_Personal/영수증)의 완료본 모으기
+//   ③ 복사가 실제로 됐는지 **파일 내용 해시로 대조**
+//   ④ 대조가 끝난 원본만 지운다
+//
+// 삭제는 되돌릴 수 없다. 그래서 이름·개수가 아니라 Dropbox가 주는 content_hash가
+// 새 위치의 것과 정확히 같을 때만 지운다. 하나라도 어긋나면 그 폴더는 건드리지 않는다.
+// ════════════════════════════════════════════════════════════════
+
+// 폴더 안의 파일을 { 상대경로: content_hash } 로 만든다
+async function _dbxHashMap(token,root){
+  const all=await _dbxListAll(token,root);
+  if(!all)return null;
+  const m=new Map();
+  for(const e of all)if(e['.tag']==='file')m.set(e.path_display.slice(root.length),e.content_hash||'');
+  return m;
+}
+
+async function _dbxDeleteBatch(token,paths){
+  let n=0;
+  for(let i=0;i<paths.length;i+=900){
+    const r=await fetch('https://api.dropboxapi.com/2/files/delete_batch',{method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({entries:paths.slice(i,i+900).map(path=>({path}))})});
+    if(r.ok)n+=Math.min(900,paths.length-i);
+  }
+  return n;
+}
+
+async function tidyReceiptFolders(){
+  if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
+  await _dbxResolveRoot();
+  if(_DBX_DATA_DIR!==_DBX_ROOT){
+    alert('아직 새 위치로 옮겨지지 않았습니다.\n\n'
+        +'Full Dropbox 권한의 App key로 연결한 뒤 다시 눌러 주세요.\n'
+        +'(연결 해제는 App key를 지우지 않으니, 칸의 값을 새 키로 고쳐야 합니다)');
+    return;
+  }
+  const token=await _dbxToken();
+  const t=toast('정리할 것을 살펴보는 중…',{duration:120000});
+
+  // ── ① 옛 앱 폴더에서 기록·사진 가져오기 (있으면) ──
+  let imported=0;
+  try{
+    const hit=await _findLegacyReceiptDir(token);
+    if(hit){
+      imported=await _dbxMerge(hit.data);
+      const inbox=await _dbxJsonAt(token,hit.dir+'/receipt-db_inbox.json');
+      if(inbox&&inbox.app==='receipt-db'&&Array.isArray(inbox.receipts))imported+=await _dbxMerge(inbox);
+      const imgs=await _dbxListAll(token,hit.dir+'/images');
+      const files=(imgs||[]).filter(e=>e['.tag']==='file');
+      for(let i=0;i<files.length;i+=900){
+        await fetch('https://api.dropboxapi.com/2/files/copy_batch_v2',{method:'POST',
+          headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+          body:JSON.stringify({autorename:false,entries:files.slice(i,i+900).map(f=>({
+            from_path:f.path_display,to_path:_dbxImagesDir()+'/'+f.name}))})}).catch(()=>{});
+      }
+      if(imported){receipts=await dbAll('receipts');await dbxSyncUpload();}
+    }
+  }catch(e){ console.warn('tidy import:',e.message||e); }
+
+  // ── ② 맥 작업 폴더의 완료본을 새 위치로 복사 ──
+  const plan=[],counts={};
+  for(const sub of _WORK_SUBDIRS){
+    const from=`${_LEGACY_WORK_DIR}/${sub}`;
+    const all=await _dbxListAll(token,from);
+    if(!all)continue;
+    const files=all.filter(e=>e['.tag']==='file');
+    if(!files.length)continue;
+    counts[sub]=files.length;
+    for(const f of files)plan.push({from_path:f.path_display,
+      to_path:`${_DBX_DATA_DIR}/${sub}${f.path_display.slice(from.length)}`});
+  }
+  t?.remove?.();
+
+  if(!plan.length&&!imported){
+    alert('정리할 것이 없습니다 — 이미 다 옮겨졌습니다.\n\n'
+        +'남은 옛 폴더는 화면 아래 안내를 보고 직접 지우시면 됩니다.');
+    return;
+  }
+  const summary=Object.entries(counts).map(([k,v])=>`  · ${k} ${v}개`).join('\n');
+  if(!confirm('영수증 폴더를 한번에 정리합니다.\n\n'
+    +(imported?`· 옛 앱 폴더에서 영수증 ${imported}건 가져옴\n`:'')
+    +(plan.length?`· ${_LEGACY_WORK_DIR} 에서 옮길 파일 ${plan.length}개\n${summary}\n`:'')
+    +'\n복사한 뒤 파일 내용을 하나하나 대조해서,\n'
+    +'새 위치에 똑같이 들어간 것만 원본을 지웁니다.\n'
+    +'대조가 어긋나면 그 폴더는 그대로 둡니다.\n\n'
+    +'※ 받은함은 건드리지 않습니다.\n'
+    +'※ 맥의 receipt_pdf_to_jpg.py 경로도 새 위치로 고쳐 주세요.\n\n계속할까요?'))return;
+
+  const lt=toast('복사하는 중…',{duration:600000});
+  for(const sub of Object.keys(counts))await _dbxEnsureFolder(`${_DBX_DATA_DIR}/${sub}`);
+  for(let i=0;i<plan.length;i+=900){
+    await fetch('https://api.dropboxapi.com/2/files/copy_batch_v2',{method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({entries:plan.slice(i,i+900),autorename:false})}).catch(()=>{});
+  }
+
+  // ── ③ 내용 해시로 대조 → ④ 확인된 원본만 삭제 ──
+  const el=document.querySelector('.toast-container .toast:last-child');
+  if(el)el.textContent='옮겨졌는지 대조하는 중…';
+  const safe=[],unsafe=[];
+  for(const sub of Object.keys(counts)){
+    const from=`${_LEGACY_WORK_DIR}/${sub}`, to=`${_DBX_DATA_DIR}/${sub}`;
+    const src=await _dbxHashMap(token,from), dst=await _dbxHashMap(token,to);
+    if(!src||!dst){unsafe.push(sub);continue;}
+    let allOk=true;
+    for(const [rel,h] of src)if(dst.get(rel)!==h){allOk=false;break;}
+    if(allOk)safe.push({sub,paths:[...src.keys()].map(r=>from+r)});
+    else unsafe.push(sub);
+  }
+  lt?.remove?.();
+
+  let deleted=0;
+  if(safe.length){
+    const n=safe.reduce((a,x)=>a+x.paths.length,0);
+    if(confirm(`대조 완료 — ${safe.map(x=>x.sub).join(', ')} 의 파일 ${n}개가\n`
+      +'새 위치에 내용까지 똑같이 들어간 것을 확인했습니다.\n\n'
+      +`${_LEGACY_WORK_DIR} 쪽 원본 ${n}개를 지울까요?\n`
+      +'(Dropbox 휴지통에서 30일간 되살릴 수 있습니다)')){
+      const dt=toast('지우는 중…',{duration:300000});
+      for(const x of safe)deleted+=await _dbxDeleteBatch(token,x.paths);
+      dt?.remove?.();
+    }
+  }
+  renderSide(); if(!_isDetailEditing())renderDetail(); renderDbxSettings();
+  alert('정리 끝났습니다.\n\n'
+    +(imported?`· 영수증 ${imported}건 가져옴\n`:'')
+    +(plan.length?`· 파일 ${plan.length}개 복사\n`:'')
+    +(deleted?`· 원본 ${deleted}개 삭제 (휴지통에서 복구 가능)\n`:'')
+    +(unsafe.length?`\n⚠️ ${unsafe.join(', ')} 는 대조가 어긋나 원본을 그대로 뒀습니다.\n   다시 한 번 눌러 주세요.\n`:'')
+    +'\n남은 화석 폴더는 직접 지우세요 (앱이 쓰지 않습니다):\n'
+    +'  · /01_Personal/Apps\n  · /01_Personal/영수증/Receipt_DB\n  · /01_Personal/Dutch-Pay');
 }
 
 async function consolidateReceiptFolders(){
