@@ -527,6 +527,7 @@ svg{display:block;flex-shrink:0;}
 .print-opt input[type="month"]{border:1px solid var(--sep2);background:var(--fill);color:var(--label);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;}
 .print-opt-check{cursor:pointer;}
 .print-opt-check input{width:15px;height:15px;accent-color:var(--blue);cursor:pointer;}
+.scan-where{font-size:12px;color:var(--label2);background:var(--fill);border-radius:8px;padding:8px 10px;margin-bottom:10px;line-height:1.5;}
 .scan-path{background:var(--fill);border:1px solid var(--sep2);border-radius:5px;padding:1px 5px;font-size:11.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--label);white-space:nowrap;}
 /* 인쇄 전용 컨테이너 — 화면에서는 완전히 숨긴다 */
 #printRoot{display:none;}
@@ -1387,6 +1388,8 @@ svg{display:block;flex-shrink:0;}
                <code class="scan-path">YYYY-MM-DD_영수증</code> 형식으로 이름을 바꿔 옮깁니다.
                날짜는 파일명 → 사진 촬영일(EXIF) → 업로드 시각 순으로 정합니다.
                폰·다른 컴퓨터에서 동시에 써도 같은 영수증이 두 번 등록되지 않습니다.</p>
+            <p class="scan-where">폴더를 못 찾겠으면 Dropbox 앱 검색창에 <b>스캔함</b> 또는
+               <b>receipt-db_sync.json</b>을 넣어보세요. 동기화를 한 번 하면 자동으로 만들어집니다.</p>
             <div class="setting-btn-row">
               <button id="scanNowBtn">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
@@ -1696,7 +1699,8 @@ svg{display:block;flex-shrink:0;}
 // v2.26 — 한글 초성 검색 ("ㅎㄴㄹ" → 하나로마트). 쌍자음 접기·조합중 즉시 반영.
 // v2.27 — 월별 PDF 내보내기(브라우저 인쇄). #printRoot + @media print, 외부 의존성 없음.
 // v2.28 — 스캔함: Dropbox 수신 폴더 자동 등록. 내용 해시 ID·srcHash로 다중 기기 중복 차단.
-const APP_VERSION='v2.28';
+// v2.29 — 스캔함 폴더를 동기화 때 자동 생성 (없으면 사용자가 넣을 곳을 못 찾음) + 위치 안내.
+const APP_VERSION='v2.29';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -6118,6 +6122,9 @@ async function _dbxProcessScanbox(){
   let added=0;
   const newImageIds=[];
   try{
+    // 폴더가 없으면 만들어 둔다. 사용자가 Dropbox 앱에서 넣을 곳을 찾을 수 있어야
+    // 기능이 시작되므로, 파일이 없어도 폴더는 항상 존재해야 한다.
+    await _dbxEnsureFolder(_DBX_SCAN_DIR);
     const files=await _dbxListScanbox();
     if(!files.length)return 0;
     const token=await _dbxToken();
