@@ -1783,11 +1783,13 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.43 — 아직 안 옮긴 앱은 지우기 전에 데이터를 새 위치로 먼저 옮긴다.
+//         이 앱은 Full Dropbox 권한이라 그 앱을 열지 않아도 대신 옮겨줄 수 있다.
 // v2.42 — 치우기 대상에 Dropbox 앱 폴더(/앱/<앱이름>)도 포함. 그 앱 데이터가
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.42';
+const APP_VERSION='v2.43';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -6733,6 +6735,28 @@ const _CLEANUP_TARGETS=[
   {path:'/01_Personal/영수증/서류(A4)변환', need:()=>_DBX_ROOT+'/서류(A4)변환',          why:'A4 변환본'},
 ];
 
+
+// 앱 폴더(/앱/<앱이름>) 안을 뒤져 그 앱의 데이터 파일을 찾아 새 위치로 복사한다.
+// 앱마다 파일이 폴더 루트에 있기도 하고 07_Apps/... 아래로 옮겨져 있기도 해서,
+// 이름으로 찾는다. 성공하면 true — 그때부터 그 앱 폴더는 지워도 되는 상태가 된다.
+async function _rescueAppFolder(token,appDir,needPath){
+  const wanted=needPath.slice(needPath.lastIndexOf('/')+1);
+  const all=await _dbxListAll(token,appDir);
+  if(!all)return false;
+  // 같은 이름이 여러 개면 가장 최근에 바뀐 것을 쓴다
+  const hits=all.filter(e=>e['.tag']==='file'&&e.path_display.endsWith('/'+wanted))
+                .sort((a,b)=>String(b.server_modified||'').localeCompare(String(a.server_modified||'')));
+  if(!hits.length)return false;
+  const dir=needPath.slice(0,needPath.lastIndexOf('/'));
+  await _dbxEnsureFolder(dir);
+  const r=await fetch('https://api.dropboxapi.com/2/files/copy_v2',{method:'POST',
+    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({from_path:hits[0].path_display,to_path:needPath,autorename:false})});
+  if(r.ok)return true;
+  const txt=await r.text();
+  return txt.includes('conflict');   // 이미 있으면 그것도 성공으로 본다
+}
+
 async function cleanupOldFolders(){
   if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
   await _dbxResolveRoot();
@@ -6768,9 +6792,15 @@ async function cleanupOldFolders(){
       const full=root+'/'+sub.name;
       const pair=_APPFOLDER_PAIRS.find(x=>x.names.includes(sub.name));
       if(!pair){ unknown.push(full); continue; }               // 모르는 폴더 — 절대 손대지 않는다
-      if(!await has(pair.need)){ held.push({path:full,why:pair.label+' — 아직 새 위치에 데이터가 없음'}); continue; }
+      let rescued=false;
+      if(!await has(pair.need)){
+        // 아직 안 옮긴 앱 — 지우기 전에 먼저 데이터를 새 위치로 살려 옮긴다
+        rescued=await _rescueAppFolder(token,full,pair.need);
+        if(!rescued){ held.push({path:full,why:pair.label+' — 데이터를 못 찾아 옮기지 못함'}); continue; }
+      }
       const all=await _dbxListAll(token,full);
-      ready.push({path:full,why:pair.label+' 옛 앱 폴더',count:(all||[]).filter(e=>e['.tag']==='file').length});
+      ready.push({path:full,why:pair.label+' 옛 앱 폴더'+(rescued?' (데이터를 새 위치로 먼저 옮김)':''),
+                  count:(all||[]).filter(e=>e['.tag']==='file').length,rescued});
     }
   }
   t?.remove?.();
@@ -6784,7 +6814,12 @@ async function cleanupOldFolders(){
     return;
   }
   const list=ready.map(x=>`  · ${x.path}\n     (${x.why} · 파일 ${x.count}개)`).join('\n');
+  const rescuedList=ready.filter(x=>x.rescued);
   if(!confirm('아래 옛 폴더를 지웁니다.\n새 위치에 대체물이 있는 것만 골랐습니다.\n\n'
+    +(rescuedList.length
+      ? '아직 안 옮긴 앱이 있어 먼저 데이터를 새 위치로 옮겼습니다:\n'
+        +rescuedList.map(x=>'  · '+x.why.replace(' 옛 앱 폴더','')).join('\n')+'\n\n'
+      : '')
     +list+'\n\n'
     +(held.length?'그대로 두는 것 (새 위치에 아직 데이터가 없음):\n'
         +held.map(x=>'  · '+x.path+(x.why?'\n     ('+x.why+')':'')).join('\n')+'\n\n':'')
