@@ -726,7 +726,7 @@ svg{display:block;flex-shrink:0;}
 
 /* ── HIDDEN VIEWS ── */
 .view{display:none;}
-.view.on{display:block;overflow:hidden;}
+.view.on{display:block;}
 
 /* ── MODAL ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:190;}
@@ -1598,7 +1598,8 @@ svg{display:block;flex-shrink:0;}
 // v2.19 — 저장 바 버튼 너비 auto·kbd 크기 ↑·하단 여백 정리.
 // v2.20 — actions 바 margin-bottom 0 + #viewInput padding-bottom 0 → gap 완전 차단.
 // v2.21 — 버튼 높이 36px·너비 2배; side-foot min-height 55px → 구분선 수평 정렬.
-const APP_VERSION='v2.21';
+// v2.22 — .view.on overflow:hidden 제거 → 카테고리 팝오버 클리핑 버그 수정.
+const APP_VERSION='v2.22';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
