@@ -56,6 +56,9 @@
   (inbox 단일 쓰기 원칙 — 순차 실행은 안전). receipt_pdf_to_jpg.py 원본은 맥에만 있음(repo 밖)
 
 ### Changelog
+- `v2.25` — CLAUDE.md를 코드 실제 상태와 동기화: 다크 테마(기본)·테마 전환 섹션 신설,
+  브레이크포인트 700→780px, 아이콘 원칙(인라인 SVG + PNG 4개), 카테고리 16종·`normalizeCategory` alias 구조,
+  `capture` 함정 정정, v1.63~v2.07 changelog 공백 요약. **앱 동작 변경 없음.**
 - `v2.24` — 모바일 액션바 `position:fixed`(하단 nav bar 위) 전환 → sticky 오작동 근본 수정. `.main-body` 하단 패딩 63px.
 - `v2.23` — 모바일 `#viewInput .main-body` padding-bottom 56px (v2.24에서 63px로 재조정).
 - `v2.22` — `.view.on`의 `overflow:hidden` 제거 → 카테고리 팝오버가 잘리던 버그 수정.
@@ -314,7 +317,7 @@ P오플레 클래식 플레인 1+1 680.0g | 1 | 3,980 | 3,980
 - IndexedDB 트랜잭션은 microtask 안에 다 끝내야 — async/await 중간에 외부 await 끼면 트랜잭션 종료됨
 
 ## 현재 상태 (2026-08-30 기준)
-- **버전 `v2.24`**, main 브랜치에 push 완료. 미완결 작업 없음.
+- **버전 `v2.25`**, main 브랜치에 push 완료.
 - 직전 작업: CLAUDE.md를 코드 실제와 대조해 정리 — 다크 테마(기본)·테마 토글 섹션 신설,
   브레이크포인트 700→780px, 아이콘 원칙(인라인 SVG + PNG 4개), 카테고리 16종·alias 구조,
   `capture` 함정 정정, v1.63~v2.07 changelog 공백 요약. **코드 변경 없음 — 문서만.**
