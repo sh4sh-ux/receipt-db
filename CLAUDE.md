@@ -56,6 +56,9 @@
   (inbox 단일 쓰기 원칙 — 순차 실행은 안전). receipt_pdf_to_jpg.py 원본은 맥에만 있음(repo 밖)
 
 ### Changelog
+- `v2.27` — **월별 PDF 내보내기 (인쇄)**: 설정 탭에서 달·품목포함 여부를 고르면
+  인쇄 전용 DOM(`#printRoot`)을 만들고 `window.print()` — 인쇄 창에서 'PDF로 저장'.
+  외부 라이브러리 없이 `@media print`로만 구현. 요약·카테고리별·영수증 목록·품목 상세 순.
 - `v2.26` — **한글 초성(자모) 검색**: 검색어가 자음만이면(`ㅎㄴㄹ`) 초성 인덱스로 매칭.
   가게명·카테고리·결제자·참석자·태그·메모·품목명 전부 대상. 쌍자음은 예사소리로 접어(`ㄲ→ㄱ`) `ㄱㅊㅈ`로도 `꼬치집`이 나옴.
   초성 질의는 IME 조합 중에도 즉시 반영(마지막 자음이 버퍼에 남아 한 글자 늦던 문제).
@@ -300,6 +303,24 @@ P오플레 클래식 플레인 1+1 680.0g | 1 | 3,980 | 3,980
 - `<head>` 최상단 인라인 스크립트가 페인트 전에 `documentElement.dataset.theme`을 세팅 — **FOUC 방지용이니 지우지 말 것**
 - `applyTheme()`가 `data-theme` / `data-theme-preference` / `<meta id="themeColorMeta">`(`#111113` ↔ `#F7F7F8`) 셋을 함께 갱신
 
+## PDF 내보내기 = 브라우저 인쇄 (v2.27)
+- 외부 라이브러리 금지 원칙 때문에 PDF를 직접 만들지 않는다.
+  `buildPrintHtml(ym,{includeItems})` → `#printRoot`에 주입 → `window.print()` →
+  사용자가 인쇄 창에서 '대상: PDF로 저장' 선택.
+- `#printRoot`는 화면에서 `display:none`, `@media print`에서만 `display:block`.
+  인쇄 시 `body>*{display:none}`으로 앱 UI 전체를 숨긴다.
+- ⚠️ **인쇄 블록에서는 CSS 토큰(`var(--...)`)을 쓰지 말 것.**
+  기본 테마가 다크라 토큰을 그대로 쓰면 검은 배경이 그대로 인쇄된다. 흑백을 직접 지정한다.
+- 표는 `table-layout:fixed` + `<colgroup>`으로 폭 고정 — 안 그러면 영수증마다 컬럼 위치가 달라진다.
+- `.pr-rec{break-inside:avoid}`로 영수증 한 건이 페이지 경계에서 쪼개지지 않게 한다.
+  한 페이지보다 큰 영수증(품목 80개 등)은 어쩔 수 없이 나뉘지만 내용 손실은 없다.
+  `thead{display:table-header-group}`이라 표 머리글은 페이지마다 반복된다.
+- `#printRoot`는 인쇄 후(`afterprint`) 비운다. 인쇄 시작 시에도 먼저 비워서
+  중단된 이전 인쇄 내용이 남지 않게 한다.
+- 💡 Playwright로 검증할 땐 `page.pdf()`에 **`margin` 파라미터를 넘기지 말 것** —
+  넘기면 CSS와 무관하게 결과가 1페이지로 붕괴해 페이지 분할을 잘못 판단하게 된다.
+  `emulateMedia({media:'print'})`도 먼저 호출해야 `#printRoot`가 보인다.
+
 ## 한글 IME 주의 (dutchpay에서 학습된 패턴)
 - `keydown`에서 `preventDefault()` 호출 시 `e.isComposing` 또는
   자체 `composing` 플래그 둘 다 확인 — 안 그러면 마지막 음절이 버퍼에 남음
@@ -320,7 +341,7 @@ P오플레 클래식 플레인 1+1 680.0g | 1 | 3,980 | 3,980
 - IndexedDB 트랜잭션은 microtask 안에 다 끝내야 — async/await 중간에 외부 await 끼면 트랜잭션 종료됨
 
 ## 현재 상태 (2026-08-30 기준)
-- **버전 `v2.26`**, main 브랜치에 push 완료.
+- **버전 `v2.27`**, main 브랜치에 push 완료.
 - 직전 작업: CLAUDE.md를 코드 실제와 대조해 정리 — 다크 테마(기본)·테마 토글 섹션 신설,
   브레이크포인트 700→780px, 아이콘 원칙(인라인 SVG + PNG 4개), 카테고리 16종·alias 구조,
   `capture` 함정 정정, v1.63~v2.07 changelog 공백 요약. **코드 변경 없음 — 문서만.**
@@ -334,7 +355,6 @@ P오플레 클래식 플레인 1+1 680.0g | 1 | 3,980 | 3,980
 `gh` CLI는 이 환경에 없으므로 PR 없이 로컬 squash merge로 진행.
 
 ## 다음 작업 후보
-- PDF로 영수증 묶음 내보내기 (가계부 인쇄용)
 - PWA 마무리 — **절반은 이미 되어 있음**: `apple-mobile-web-app-*` / `mobile-web-app-capable` 메타태그와
   `icons/icon-192.png`·`icon-512.png`·`apple-touch-icon.png`는 있고, **`manifest.json`과 서비스워커만 없다**.
 - `receipt-db/` 화석 폴더(v1.02 사본) 삭제

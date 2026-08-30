@@ -522,6 +522,59 @@ svg{display:block;flex-shrink:0;}
 .setting-card h3{font-size:14px;font-weight:600;margin-bottom:4px;}
 .setting-card p{font-size:12.5px;color:var(--label2);line-height:1.5;margin-bottom:10px;}
 .setting-btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.print-opt-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+.print-opt{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--label2);}
+.print-opt input[type="month"]{border:1px solid var(--sep2);background:var(--fill);color:var(--label);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;}
+.print-opt-check{cursor:pointer;}
+.print-opt-check input{width:15px;height:15px;accent-color:var(--blue);cursor:pointer;}
+/* 인쇄 전용 컨테이너 — 화면에서는 완전히 숨긴다 */
+#printRoot{display:none;}
+
+/* ── 인쇄 (PDF로 저장) ──
+   기본 테마가 다크라서 토큰을 그대로 쓰면 검은 배경이 그대로 찍힌다.
+   인쇄 블록에서는 토큰을 쓰지 말고 흑백을 직접 지정할 것. */
+@media print{
+  @page{size:A4;margin:14mm 12mm;}
+  html,body{background:#fff !important;}
+  body>*{display:none !important;}
+  #printRoot{display:block !important;color:#000;background:#fff;font-size:10.5pt;line-height:1.45;}
+  #printRoot *{color:#000 !important;background:transparent !important;box-shadow:none !important;}
+  .pr-head{border-bottom:1.5pt solid #000;padding-bottom:6pt;margin-bottom:10pt;}
+  .pr-title{font-size:17pt;font-weight:700;margin-bottom:3pt;}
+  .pr-sub{font-size:9pt;color:#444 !important;}
+  .pr-sum{display:flex;gap:14pt;margin:9pt 0 12pt;}
+  .pr-sum div{font-size:9.5pt;min-width:78pt;}
+  .pr-sum b{display:block;font-size:13pt;font-weight:700;margin-top:1pt;}
+  .pr-h2{font-size:11pt;font-weight:700;margin:12pt 0 5pt;padding-bottom:2pt;border-bottom:.75pt solid #666;}
+  table.pr-t{width:100%;border-collapse:collapse;margin-bottom:4pt;}
+  table.pr-t th,table.pr-t td{border-bottom:.5pt solid #bbb;padding:3.5pt 4pt;text-align:left;vertical-align:top;}
+  table.pr-t th{font-size:8.5pt;font-weight:700;border-bottom:.75pt solid #666;white-space:nowrap;}
+  table.pr-t td{font-size:9.5pt;}
+  .pr-num{text-align:right !important;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  /* 표마다 컬럼 폭이 달라지면 인쇄물이 정돈돼 보이지 않는다 — 폭을 고정한다 */
+  table.pr-t{table-layout:fixed;}
+  table.pr-t td{word-break:break-word;}
+  .pr-t-cat col:nth-child(1){width:auto;}
+  .pr-t-cat col:nth-child(2){width:24%;}
+  .pr-t-cat col:nth-child(3){width:14%;}
+  .pr-t-list col:nth-child(1){width:9%;}
+  .pr-t-list col:nth-child(2){width:auto;}
+  .pr-t-list col:nth-child(3){width:13%;}
+  .pr-t-list col:nth-child(4){width:10%;}
+  .pr-t-list col:nth-child(5){width:13%;}
+  .pr-t-list col:nth-child(6){width:17%;}
+  .pr-t-items col:nth-child(1){width:auto;}
+  .pr-t-items col:nth-child(2){width:11%;}
+  .pr-t-items col:nth-child(3){width:18%;}
+  .pr-t-items col:nth-child(4){width:18%;}
+  .pr-neg{color:#000 !important;}
+  /* 영수증 한 건이 페이지 경계에서 쪼개지지 않게 */
+  .pr-rec{break-inside:avoid;page-break-inside:avoid;margin-bottom:9pt;}
+  .pr-rec-h{font-size:10pt;font-weight:700;border-bottom:.5pt solid #999;padding-bottom:2pt;margin-bottom:3pt;}
+  .pr-rec-m{font-size:8.5pt;color:#444 !important;font-weight:400;}
+  table.pr-t thead{display:table-header-group;}
+  .pr-foot{margin-top:10pt;padding-top:5pt;border-top:.5pt solid #999;font-size:8pt;color:#555 !important;}
+}
 .setting-btn-row button{border:1px solid var(--sep2);background:var(--card);color:var(--label);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;}
 .setting-btn-row button:hover{background:var(--fill);}
 .setting-btn-row button.danger{color:var(--red);}
@@ -1327,6 +1380,27 @@ svg{display:block;flex-shrink:0;}
           </div>
 
           <div class="setting-card">
+            <h3>PDF로 내보내기 (인쇄)</h3>
+            <p>선택한 달의 영수증을 인쇄용으로 정리합니다. 인쇄 창에서 <b>대상을 'PDF로 저장'</b>으로 고르면 PDF 파일이 됩니다.</p>
+            <div class="print-opt-row">
+              <label class="print-opt">
+                <span>기간</span>
+                <input type="month" id="printMonth"/>
+              </label>
+              <label class="print-opt print-opt-check">
+                <input type="checkbox" id="printIncludeItems" checked/>
+                <span>품목 상세 포함</span>
+              </label>
+            </div>
+            <div class="setting-btn-row">
+              <button class="primary" id="printPdfBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                인쇄 / PDF로 저장
+              </button>
+            </div>
+          </div>
+
+          <div class="setting-card">
             <h3>엑셀로 내보내기</h3>
             <p>모든 영수증을 스프레드시트 파일(.csv)로 내려받습니다. 엑셀·Numbers·구글 시트에서 바로 열 수 있어요.</p>
             <div class="setting-btn-row">
@@ -1604,7 +1678,8 @@ svg{display:block;flex-shrink:0;}
 // v2.24 — 모바일 액션바 position:fixed(nav bar 위) → sticky 오작동 근본 수정.
 // v2.25 — CLAUDE.md를 코드 실제 상태와 동기화 (문서 정정, 앱 동작 변경 없음).
 // v2.26 — 한글 초성 검색 ("ㅎㄴㄹ" → 하나로마트). 쌍자음 접기·조합중 즉시 반영.
-const APP_VERSION='v2.26';
+// v2.27 — 월별 PDF 내보내기(브라우저 인쇄). #printRoot + @media print, 외부 의존성 없음.
+const APP_VERSION='v2.27';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -5338,6 +5413,107 @@ async function base64ToBlob(dataUrl){
   return await res.blob();
 }
 
+// ── PDF 내보내기 (브라우저 인쇄 → 'PDF로 저장') ──
+// 외부 라이브러리 금지 원칙 때문에 PDF를 직접 생성하지 않고,
+// 인쇄 전용 DOM(#printRoot) + @media print 로 브라우저 인쇄 대화상자에 맡긴다.
+const _PAY_LABELS={card:'카드',cash:'현금',transfer:'계좌이체',other:'기타'};
+function _payLabel(m){return _PAY_LABELS[m]||m||'';}
+
+function buildPrintHtml(ym,{includeItems=true}={}){
+  const list=receiptsForMonth(ym).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.id||'').localeCompare(b.id||''));
+  const sum=monthSummary(ym);
+  const {breakdown}=categoryBreakdown(ym);
+  const money=n=>fmtMoney(n)+'원';
+  const dd=iso=>(iso||'').slice(5).replace('-','.');
+  const today=_todayYMD().replace(/-/g,'.');
+
+  let h='';
+  h+=`<div class="pr-head"><div class="pr-title">${escapeHtml(ymLabel(ym))} 영수증</div>`
+   + `<div class="pr-sub">Receipt DB ${escapeHtml(APP_VERSION)} · ${escapeHtml(today)} 생성</div></div>`;
+  h+=`<div class="pr-sum">`
+   + `<div>총지출<b>${money(sum.total)}</b></div>`
+   + `<div>영수증<b>${sum.count}건</b></div>`
+   + `<div>일평균<b>${money(sum.dayAvg)}</b></div></div>`;
+
+  if(breakdown.length){
+    h+=`<div class="pr-h2">카테고리별</div><table class="pr-t pr-t-cat">`
+     + `<colgroup><col><col><col></colgroup><thead><tr>`
+     + `<th>카테고리</th><th class="pr-num">금액</th><th class="pr-num">비중</th></tr></thead><tbody>`;
+    for(const b of breakdown){
+      h+=`<tr><td>${escapeHtml(getCategoryLabel(b.cat)||b.cat)}</td>`
+       + `<td class="pr-num">${money(b.amt)}</td>`
+       + `<td class="pr-num">${b.pct.toFixed(1)}%</td></tr>`;
+    }
+    h+=`</tbody></table>`;
+  }
+
+  h+=`<div class="pr-h2">영수증 목록 (${list.length}건)</div>`;
+  h+=`<table class="pr-t pr-t-list"><colgroup><col><col><col><col><col><col></colgroup>`
+   + `<thead><tr><th>일자</th><th>매장명</th><th>카테고리</th><th>결제</th><th>결제자</th><th class="pr-num">금액</th></tr></thead><tbody>`;
+  for(const r of list){
+    h+=`<tr><td>${escapeHtml(dd(r.date))}</td>`
+     + `<td>${escapeHtml(r.store||'—')}</td>`
+     + `<td>${escapeHtml(getCategoryLabel(r.category)||r.category||'')}</td>`
+     + `<td>${escapeHtml(_payLabel(r.paymentMethod))}</td>`
+     + `<td>${escapeHtml(r.paidBy||'')}</td>`
+     + `<td class="pr-num">${money(r.total)}</td></tr>`;
+  }
+  h+=`<tr><td colspan="5"><b>합계</b></td><td class="pr-num"><b>${money(sum.total)}</b></td></tr>`;
+  h+=`</tbody></table>`;
+
+  if(includeItems){
+    const withItems=list.filter(r=>(r.items||[]).some(it=>it.name));
+    if(withItems.length){
+      h+=`<div class="pr-h2">상세 내역</div>`;
+      for(const r of withItems){
+        const items=(r.items||[]).filter(it=>it.name);
+        const meta=[fmtDateKor(r.date),getCategoryLabel(r.category)||r.category,_payLabel(r.paymentMethod),r.paidBy].filter(Boolean).join(' · ');
+        h+=`<div class="pr-rec"><div class="pr-rec-h">${escapeHtml(r.store||'—')} `
+         + `<span class="pr-rec-m">${escapeHtml(meta)}</span></div>`;
+        h+=`<table class="pr-t pr-t-items"><colgroup><col><col><col><col></colgroup>`
+         + `<thead><tr><th>품목</th><th class="pr-num">수량</th><th class="pr-num">단가</th><th class="pr-num">금액</th></tr></thead><tbody>`;
+        for(const it of items){
+          h+=`<tr><td>${escapeHtml(it.name)}</td>`
+           + `<td class="pr-num">${escapeHtml(String(it.quantity||1))}</td>`
+           + `<td class="pr-num">${fmtMoney(it.unitPrice||0)}</td>`
+           + `<td class="pr-num">${fmtMoney(it.amount||0)}</td></tr>`;
+        }
+        h+=`<tr><td colspan="3"><b>총액</b></td><td class="pr-num"><b>${money(r.total)}</b></td></tr>`;
+        h+=`</tbody></table>`;
+        if(r.notes)h+=`<div class="pr-rec-m">메모: ${escapeHtml(r.notes)}</div>`;
+        h+=`</div>`;
+      }
+    }
+  }
+  h+=`<div class="pr-foot">Receipt DB에서 생성 · ${escapeHtml(ymLabel(ym))} · 총 ${list.length}건 ${money(sum.total)}</div>`;
+  return h;
+}
+
+let _printCleanupTimer=null;
+function _clearPrintRoot(){
+  const root=document.getElementById('printRoot');
+  if(root)root.innerHTML='';
+  if(_printCleanupTimer){clearTimeout(_printCleanupTimer);_printCleanupTimer=null;}
+}
+function printMonthPdf(){
+  // 이전 인쇄 내용을 먼저 지운다 — 여기서 중단(빈 달 등)되어도 묵은 내용이
+  // #printRoot에 남아 사용자가 Cmd+P를 눌렀을 때 엉뚱한 달이 인쇄되는 걸 막는다.
+  _clearPrintRoot();
+  const inp=document.getElementById('printMonth');
+  const ym=(inp&&inp.value)||viewMonth;
+  if(!/^\d{4}-\d{2}$/.test(ym)){toast('기간을 선택해 주세요',{type:'error'});return;}
+  if(!receiptsForMonth(ym).length){toast(`${ymLabel(ym)}에 영수증이 없어요`,{type:'error'});return;}
+  const includeItems=!!document.getElementById('printIncludeItems')?.checked;
+  document.getElementById('printRoot').innerHTML=buildPrintHtml(ym,{includeItems});
+  const cleanup=()=>{window.removeEventListener('afterprint',cleanup);_clearPrintRoot();};
+  window.addEventListener('afterprint',cleanup);
+  window.print();
+  // afterprint가 안 오는 브라우저 대비. 다음 인쇄가 시작되면 _clearPrintRoot가
+  // 이 타이머를 취소하므로, 묵은 타이머가 새 인쇄 내용을 지우지 않는다.
+  _printCleanupTimer=setTimeout(cleanup,60000);
+}
+document.getElementById('printPdfBtn')?.addEventListener('click',printMonthPdf);
+
 // ── CSV(엑셀) 내보내기 ──
 function exportCsv(){
   if(!receipts.length){toast('저장된 영수증이 없어요',{type:'error'});return;}
@@ -6329,6 +6505,7 @@ function _dbxBindEvents(){
   // 버전 표시 — DOM 두 곳에 모두 주입 (HTML 정적 텍스트가 stale해도 JS가 진실의 원천)
   const av=document.getElementById('appVersion');if(av)av.textContent=APP_VERSION;
   const avs=document.getElementById('appVersionStat');if(avs)avs.textContent=APP_VERSION;
+  const pm=document.getElementById('printMonth');if(pm&&!pm.value)pm.value=viewMonth;
 
   applyTheme(getThemePreference());
   bindThemeSettings();
@@ -6377,5 +6554,6 @@ function _dbxBindEvents(){
 })();
 </script>
 
+<div id="printRoot" aria-hidden="true"></div>
 </body>
 </html>
