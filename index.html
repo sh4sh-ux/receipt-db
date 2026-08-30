@@ -198,6 +198,16 @@ svg{display:block;flex-shrink:0;}
 
 /* ── RIGHT PANEL ── */
 .main{background:var(--card);display:flex;flex-direction:column;min-height:700px;}
+/* 띠는 앱 껍데기 위에 놓고, 그 높이(--cw-h)만큼 껍데기를 줄여 아래가 잘리지 않게 한다.
+   높이는 글자 줄바꿈에 따라 달라지므로 _renderConnWarn()이 실측해 넣는다. */
+.conn-warn{display:none;align-items:center;gap:10px;padding:10px 32px;background:var(--red);color:#fff;
+  font-size:12.5px;font-weight:500;line-height:1.45;position:relative;z-index:300;}
+.conn-warn.on{display:flex;}
+.conn-warn b{font-weight:700;}
+.conn-warn button{margin-left:auto;flex:none;background:rgba(255,255,255,.22);color:#fff;border:0;
+  border-radius:var(--rs);padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.conn-warn button:hover{background:rgba(255,255,255,.34);}
+@media(max-width:780px){.conn-warn{padding:9px 16px;font-size:12px;gap:8px;}}
 .main-top{padding:24px 32px 18px;border-bottom:1px solid var(--sep);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
 #viewList>.main-top{position:sticky;top:0;z-index:70;background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}
 .main-eye{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px;}
@@ -881,7 +891,7 @@ svg{display:block;flex-shrink:0;}
 
 /* 데스크탑은 앱의 큰 틀을 고정하고 목록과 본문만 독립 스크롤 */
 @media(min-width:781px){
-  .shell{height:100vh;box-sizing:border-box;padding-top:30px;padding-bottom:30px;}
+  .shell{height:calc(100vh - var(--cw-h,0px));box-sizing:border-box;padding-top:30px;padding-bottom:30px;}
   .app{height:100%;min-height:0;}
   .icon-nav{position:relative;top:auto;height:100%;max-height:none;}
   .side{position:relative;top:auto;height:100%;min-height:0;max-height:none;}
@@ -970,7 +980,7 @@ svg{display:block;flex-shrink:0;}
     --mobile-month-head-h:56px;
     --mobile-main-head-h:calc(var(--mobile-brand-head-h) + var(--mobile-month-head-h));
   }
-  .shell{height:100dvh;min-height:100dvh;box-sizing:border-box;overflow:hidden;padding-bottom:calc(68px + env(safe-area-inset-bottom,0px));}
+  .shell{height:calc(100dvh - var(--cw-h,0px));min-height:0;box-sizing:border-box;overflow:hidden;padding-bottom:calc(68px + env(safe-area-inset-bottom,0px));}
   .app{height:calc(100dvh - 68px - env(safe-area-inset-bottom,0px));min-height:0;overflow:hidden;}
   .side,.main{height:100%;min-height:0;overflow:hidden;}
   .app.mobile-stats-view .main,
@@ -1029,6 +1039,15 @@ svg{display:block;flex-shrink:0;}
 </style>
 </head>
 <body>
+
+<!-- 이 기기가 Dropbox에 연결 안 됐을 때. 저장은 되지만 다른 기기에 안 보이고
+     사진도 완료 JPG로 정리되지 않는다 — 설정 탭에 들어가야만 알 수 있어서 항상 띄운다.
+     탭마다 보이는 요소가 달라서(모바일 목록에선 .main이 숨는다) 앱 껍데기 위에 둔다. -->
+<div class="conn-warn" id="connWarn">
+  <span><b>이 기기는 Dropbox에 연결되어 있지 않습니다.</b>
+    저장한 영수증이 다른 기기에 안 보이고, 사진도 완료 JPG·PDF로 정리되지 않아요.</span>
+  <button type="button" id="connWarnBtn">연결하기</button>
+</div>
 
 <div class="shell">
   <div class="app">
@@ -1808,6 +1827,10 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.55 — Dropbox 연결 안 된 기기임을 항상 보이는 띠로 알린다(설정에 들어가야만
+//         보였다). #k=<App Key> 링크로 폰에서 키 타이핑 없이 연결한다.
+// v2.54 — 앱에 저장한 사진이 완료 JPG·PDF로 안 가던 것 해결. 동기화 때 밀린 것을
+//         따라잡고, 이 기기가 Dropbox에 연결 안 됐으면 저장할 때 바로 알려 준다.
 // v2.53 — 링크(#r=...)로 열면 추가 탭이 채워진 채 열린다. 모바일에서 가장 번거롭던
 //         '복사 → 앱 전환 → 붙여넣기'를 링크 한 번으로 대신한다.
 // v2.52 — 앱에서 붙인 사진도 완료 폴더에 제대로 된 이름으로 올린다.
@@ -1833,7 +1856,7 @@ svg{display:block;flex-shrink:0;}
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.53';
+const APP_VERSION='v2.55';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -3075,6 +3098,24 @@ function _readReceiptLink(){
   }catch(e){ console.warn('receipt link:',e.message||e); return null; }
 }
 
+// 폰에서 App Key를 손으로 옮겨 적는 건 고역이다. 데스크탑에서 만든
+//   .../receipt-db/#k=<App Key>
+// 링크를 열면 키가 채워지고 Dropbox 인증이 바로 시작된다.
+async function _applyKeyLink(){
+  const m=String(location.hash||'').match(/[#&]k=([A-Za-z0-9_-]+)/);
+  if(!m)return false;
+  const key=m[1];
+  history.replaceState({},'',location.pathname+location.search);   // 주소창 정리
+  if(dbxIsConnected()&&_ls(_K.APP_KEY)===key)return false;         // 이미 이 키로 연결됨
+  switchTab('settings');
+  const inp=document.getElementById('dbxAppKey');
+  if(inp)inp.value=key;
+  renderDbxSettings();
+  toast('App Key를 채웠어요 — Dropbox 인증 화면으로 넘어갑니다',{type:'success',duration:4000});
+  setTimeout(()=>dbxConnect(),1200);
+  return true;
+}
+
 async function _applyReceiptLink(){
   const text=_readReceiptLink();
   if(!text)return false;
@@ -3697,12 +3738,19 @@ saveBtn.addEventListener('click',async()=>{
   await dbPut('receipts',rec);
   // 사진을 붙였으면 완료 폴더에도 사람이 알아볼 이름으로 올린다.
   // 이러면 Dropbox 스캔함을 거치지 않아도 사진이 제대로 정리된다.
-  if(rec.imageId)_dbxArchiveReceiptPhoto(rec);
+  // 조용히 실패하면 정리가 안 된 걸 알 수 없으니 결과를 말해 준다.
+  let _archivedName='';
+  if(rec.imageId){
+    if(!dbxIsConnected())_warnNotConnectedOnce();
+    else if(await _dbxArchiveReceiptPhoto(rec))_archivedName=(rec.scanPath||'').split('/').pop();
+  }
   // 카테고리 학습 — 가게명 + 카테고리 둘 다 있을 때, 사용자가 손댄 경우(또는 자동값이 맞다고 확인한 경우 모두)
   if(rec.store&&finalCat){
     await learnCategory(rec.store,finalCat);
   }
-  toast(`'${rec.store||'영수증'}' 저장됨`,{type:'success'});
+  toast(_archivedName
+    ? `저장됨 · ${_archivedName}`
+    : `'${rec.store||'영수증'}' 저장됨`,{type:'success',duration:_archivedName?5000:3000});
   clearInputs();
   await loadAll();
   // 저장한 영수증의 월로 viewMonth 이동 + 검색 클리어
@@ -7539,6 +7587,11 @@ async function dbxSyncNow(force=false,upload=true){
         : `영수증 ${scanned}건 등록됐어요 — 매장명·금액을 채워 주세요`,
         {type:'success',duration:5000});
     }
+    // 앱에서 사진을 붙인 영수증 중 아직 완료 폴더에 못 올라간 것 따라잡기
+    if(downloadOk!==false){
+      const archived=await _dbxArchivePending();
+      if(archived>0)toast(`사진 ${archived}장을 완료 JPG·PDF로 정리했어요`,{type:'success',duration:4000});
+    }
     if((upload||scanned>0)&&downloadOk!==false)await dbxSyncUpload(); // 로컬 최신본 올리기
   }finally{
     _dbxSyncing=false;
@@ -7645,7 +7698,34 @@ function _dbxUpdateSyncBadge(status){
 }
 
 // ── UI 상태 렌더링 ─────────────────────────────────────────────
+// 연결 안 된 기기임을 항상 보이게 한다. renderDbxSettings가 불릴 때마다 함께 갱신된다.
+// 폰에서 App Key 15자를 손으로 옮겨 적는 건 고역이라, 링크로 넘긴다.
+// 이 링크를 폰에서 열면 키가 채워지고 Dropbox 인증이 바로 시작된다.
+async function _dbxCopyPhoneLink(){
+  const key=_ls(_K.APP_KEY);
+  if(!key){toast('App Key가 없어요',{type:'error'});return;}
+  const url=location.origin+location.pathname+'#k='+key;
+  try{
+    await navigator.clipboard.writeText(url);
+    toast('링크를 복사했어요 — 폰으로 보내서 열면 연결됩니다',{type:'success',duration:5000});
+  }catch(e){
+    prompt('이 링크를 폰으로 보내 열어 주세요',url);
+  }
+}
+
+function _renderConnWarn(){
+  const el=document.getElementById('connWarn');
+  if(!el)return;
+  const show=!dbxIsConnected();
+  el.classList.toggle('on',show);
+  // 띠가 차지한 만큼 앱 껍데기를 줄인다 — 안 그러면 아래가 화면 밖으로 밀린다
+  document.documentElement.style.setProperty('--cw-h',show?el.offsetHeight+'px':'0px');
+}
+// 화면 폭이 바뀌면 띠가 줄바꿈돼 높이가 달라진다
+window.addEventListener('resize',()=>_renderConnWarn());
+
 function renderDbxSettings(){
+  _renderConnWarn();
   const notConn=document.getElementById('dbxNotConnected');
   const conn=document.getElementById('dbxConnected');
   if(!notConn||!conn)return;
@@ -7691,6 +7771,10 @@ function renderDbxSettings(){
         </button>
         <button id="dbxImgUploadAllBtn" class="bkp-restore-btn" style="margin-bottom:8px;">
           ↑ 이미지 Dropbox 전체 업로드
+        </button>
+        <!-- 기기마다 연결이 따로라 폰은 따로 연결해야 한다. 키를 손으로 옮겨 적지 않게 링크로 넘긴다. -->
+        <button id="dbxPhoneLinkBtn" class="bkp-restore-btn" style="margin-bottom:8px;">
+          🔗 폰에서 연결할 링크 복사
         </button>
       `;
     }
@@ -7806,6 +7890,35 @@ async function _dbxArchiveReceiptPhoto(rec){
     await dbPut('receipts',rec);
     return true;
   }catch(e){ console.warn('archive photo:',e.message||e); return false; }
+}
+
+
+// 이 기기가 Dropbox에 연결돼 있지 않으면 사진이 완료 폴더로 정리되지 않는다.
+// 폰과 데스크탑은 연결 정보를 따로 갖고 있어서, 폰에서만 안 돼 있는 경우가 흔하다.
+// 저장할 때마다 잔소리하지 않도록 한 번만 알린다.
+let _notConnWarned=false;
+function _warnNotConnectedOnce(){
+  if(_notConnWarned)return;
+  _notConnWarned=true;
+  toast('이 기기는 Dropbox에 연결되어 있지 않아 사진이 완료 JPG로 정리되지 않습니다',
+    {type:'error',duration:9000,actionLabel:'연결하기',action:()=>switchTab('settings')});
+}
+
+// 사진은 붙였는데 완료 폴더에 아직 안 올라간 영수증을 따라잡는다.
+// v2.52 이전에 저장했거나, 저장 당시 Dropbox가 연결되지 않았던 것들이다.
+// 동기화 때마다 조금씩 처리해 결국 전부 완료 JPG/완료 PDF로 정리된다.
+const _ARCHIVE_CATCHUP_MAX=20;   // 한 번에 이만큼만 — 동기화가 길어지지 않게
+async function _dbxArchivePending(){
+  if(!dbxIsConnected())return 0;
+  const pending=receipts.filter(r=>r.imageId&&!r.scanPath);
+  if(!pending.length)return 0;
+  let n=0;
+  for(const r of pending.slice(0,_ARCHIVE_CATCHUP_MAX)){
+    const fresh=await dbGet('receipts',r.id);      // 그 사이 바뀌었을 수 있다
+    if(!fresh||!fresh.imageId||fresh.scanPath)continue;
+    if(await _dbxArchiveReceiptPhoto(fresh)){r.scanPath=fresh.scanPath;n++;}
+  }
+  return n;
 }
 
 async function _dbxUploadImage(imgId,{force=false}={}){
@@ -7925,6 +8038,8 @@ async function _showDiag(){
 function _dbxBindEvents(){
   const $=id=>document.getElementById(id);
   $('dbxConnectBtn')?.addEventListener('click',dbxConnect);
+  $('connWarnBtn')?.addEventListener('click',()=>switchTab('settings'));
+  $('dbxPhoneLinkBtn')?.addEventListener('click',_dbxCopyPhoneLink);
   $('dbxBackupBtn')?.addEventListener('click',dbxBackup);
   $('dbxRestoreBtn')?.addEventListener('click',_dbxOpenModal);
   $('dbxDisconnectBtn')?.addEventListener('click',dbxDisconnect);
@@ -7972,8 +8087,12 @@ function _dbxBindEvents(){
     if(!_isMobileLayout()) switchTab('input');
     else{_mobileListMode='list';switchTab('list');}
     renderDetail();
-    // 링크로 영수증 내용을 받았으면 추가 탭을 그 내용으로 채운다 (모바일 복붙 대체)
-    await _applyReceiptLink();
+    // 링크로 App Key를 받았으면 바로 연결부터 (폰에서 키 타이핑 없이)
+    if(!await _applyKeyLink()){
+      // 링크로 영수증 내용을 받았으면 추가 탭을 그 내용으로 채운다 (모바일 복붙 대체)
+      await _applyReceiptLink();
+    }
+    _renderConnWarn();
     // 모바일 스와이프 백: 오른쪽으로 스와이프 → 상세에서 목록으로
     if(_isTouch){
       const mainEl=document.querySelector('main.main');
