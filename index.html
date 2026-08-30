@@ -1741,7 +1741,7 @@ svg{display:block;flex-shrink:0;}
 //         등록 완료 파일을 '완료 JPG'/'완료 PDF'로 종류별 분류.
 // v2.35 — App key를 바꾼 직후에는 옛 폴더를 복사하지 않는다. 저장 공간이 통째로 달라지므로
 //         그 자리의 동명 폴더는 이 앱 데이터가 아니다 (최상위의 오래된 화석 폴더가 실제로 있었다).
-const APP_VERSION='v2.35';
+const APP_VERSION='v2.36';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -5867,6 +5867,8 @@ async function dbxConnect(){
   if(_ls(_K.APP_KEY)!==appKey){
     localStorage.removeItem(_K_DBX_MIGRATED);
     localStorage.setItem(_K_DBX_KEYCHANGED,'1');   // 옛 폴더 복사를 건너뛰라는 표시
+    // 옛 키로 받은 refresh token은 새 키(client_id)로는 갱신되지 않는다 — 함께 버린다
+    [_K.ACCESS_TOKEN,_K.REFRESH_TOKEN].forEach(k=>_lsDel(k));
     _dbxRootPromise=null;
   }
   _lsSet(_K.APP_KEY,appKey);
