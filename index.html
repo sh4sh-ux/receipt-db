@@ -1443,6 +1443,11 @@ svg{display:block;flex-shrink:0;}
             </ul>
             <p>날짜는 파일명 → 사진 촬영일(EXIF) → 업로드 시각 순으로 정합니다.
                폰·다른 컴퓨터에서 동시에 써도 같은 영수증이 두 번 등록되지 않습니다.</p>
+            <p class="scan-where"><b>파일 이름에 가게 이름을 넣어두면 매장명까지 채워집니다.</b>
+               예) <code class="scan-path">2026-08-09 스타벅스.jpg</code> →
+               일자 8월 9일 · 매장명 스타벅스 · 카테고리 자동 분류.
+               기기가 붙인 기본 이름(<code class="scan-path">사진 2026. 8. 30. …</code>)은
+               날짜만 읽고 매장명은 비워 둡니다.</p>
             <p class="scan-where"><b>등록되면 스캔함에서는 사라집니다.</b>
                사진은 위 완료 폴더로 옮겨지고, 영수증은 <b>내역 탭</b>에 새로 생깁니다.
                등록 직후 앱이 그 영수증을 바로 열어 주니 <b>매장명·금액만 채우시면</b> 됩니다.
@@ -1788,6 +1793,8 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.48 — 파일 이름에서 가게 이름도 읽어 매장명·카테고리를 채운다.
+//         기기 기본 이름의 찌꺼기('사진', 시각 등)는 걸러 낸다.
 // v2.47 — 스캔함에서 등록되면 그 영수증을 바로 열어 준다. 파일이 스캔함에서
 //         사라지기만 하고 어디서 찾는지 알 수 없던 문제.
 // v2.46 — 영수증 폴더 바로 아래 낱개 파일까지 처리하고(사진·PDF는 스캔함으로,
@@ -1802,7 +1809,7 @@ svg{display:block;flex-shrink:0;}
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.47';
+const APP_VERSION='v2.48';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -6299,6 +6306,26 @@ async function _sha1Hex(buf){
 }
 
 // 파일명에서 날짜 추출 — 맥 스크립트(parse_date_from_name)와 같은 규칙으로 맞춘다.
+
+// 파일 이름에서 가게 이름을 뽑는다. 날짜와 기기 기본 이름 찌꺼기를 걷어내고
+// 뜻 있는 글자가 남을 때만 쓴다. 예)
+//   '2026-08-09 스타벅스.png'            → '스타벅스'
+//   '사진 2026. 8. 30. 오후 9 55 48.png' → null (전부 찌꺼기)
+// 기기 기본 이름에 흔히 붙는 낱말들. 'Screenshot ... at 18.35' 의 at 처럼
+// 연결어가 매장명으로 새면 안 하느니만 못하므로 함께 걸러 낸다.
+const _SCAN_NOISE=/^(사진|스크린샷|screenshot|screen[ _-]?shot|image|img|photo|pic|scan|스캔|kakaotalk|카카오톡|영수증|receipt|무제|untitled|다운로드|download|copy|복사본|at|on|of|the|and|pm|am|오전|오후)$/i;
+function _scanStoreFromName(name){
+  let t=String(name||'').replace(/\.[a-z0-9]+$/i,'');          // 확장자
+  t=t.replace(/(20\d{2})[.\-\/년\s]+\d{1,2}[.\-\/월\s]+\d{1,2}일?/g,' ');  // 2026. 8. 30
+  t=t.replace(/(20\d{2})(\d{2})(\d{2})/g,' ');                  // 20260830
+  t=t.replace(/(오전|오후|am|pm)?\s*\d{1,2}[.\s:]\d{2}([.\s:]\d{2})?/gi,' '); // 오후 9 55 48
+  t=t.replace(/[()\[\]{}_\-–—]+/g,' ');
+  const words=t.split(/\s+/).map(w=>w.trim())
+    .filter(w=>w&&!/^\d+$/.test(w)&&!_SCAN_NOISE.test(w));
+  const store=words.join(' ').trim();
+  return store.length>=2?store.slice(0,60):null;
+}
+
 function _scanDateFromName(name){
   let m=String(name||'').match(/(20\d{2})[.\-\/년\s]+(\d{1,2})[.\-\/월\s]+(\d{1,2})/);
   if(!m)m=String(name||'').match(/(20\d{2})(\d{2})(\d{2})/);
@@ -6452,8 +6479,11 @@ async function _dbxProcessScanbox(){
             newImageIds.push(imageId);
           }
           const now=nowISO();
+          // 파일 이름에 가게 이름이 들어 있으면 매장명으로 쓰고, 카테고리도 자동 분류한다.
+          // 사진 속 글자는 읽지 않으므로 이름이 유일한 단서다.
+          const store=_scanStoreFromName(f.name)||'';
           await dbPut('receipts',{
-            id,date,time:'',store:'',category:'',paymentMethod:'',paymentDetail:'',
+            id,date,time:'',store,category:store?(autocategorize(store)||''):'',
             total:0,items:[],imageId:isImg?imageId:'',
             notes:isImg?'스캔함 자동등록':'스캔함 자동등록 (PDF — 사진 없음)',
             tags:[],srcHash:hash,participants:[],paidBy:'',
