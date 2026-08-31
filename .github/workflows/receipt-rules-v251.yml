@@ -1,10 +1,11 @@
-name: Apply receipt aggregation rules
+name: Patch Receipt DB Dropbox reconnect flow
 
 on:
   push:
     branches: [main]
     paths:
       - '.github/workflows/receipt-rules-v251.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -17,7 +18,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Patch receipt rules with safety checks
+      - name: Patch Dropbox reconnect and legacy scan path handling
         shell: bash
         run: |
           python3 - <<'PY'
@@ -28,73 +29,66 @@ jobs:
           text = path.read_text(encoding='utf-8')
           original = text
 
-          # 1) AI 붙여넣기 프롬프트: 동일 품목은 수량으로 합치고 할인은 음수 행으로 유지.
-          prompt_pattern = re.compile(r"const GPT_PROMPT=`이 영수증을 정확히 아래 형식으로만 정리해줘\.[\s\S]*?할인/쿠폰은 금액에 - 붙여서\.`;")
-          prompt_replacement = r'''const GPT_PROMPT=`이 영수증을 정확히 아래 형식으로만 정리해줘. 형식 외 다른 설명·문장 금지.
+          text = text.replace("const APP_VERSION='v2.67';", "const APP_VERSION='v2.68';")
 
-          매장명: [브랜드명 + 정확한 지점명]
-          일자: YYYY.MM.DD
-          총액: ##,###원
+          if 'function _dbxNormalizeLegacyScanDir(){' not in text:
+              anchor = """function _dbxScanDirDefault(){return _DBX_DATA_DIR+'/스캔함';}\nfunction _dbxScanDir(){\n  let v=_ls(_K.SCAN_DIR)||_dbxScanDirDefault();\n  v=String(v).trim().replace(/\\\\/g,'/').replace(/\\/+$/,'');   // 끝 슬래시 제거\n  if(!v)v=_dbxScanDirDefault();\n  if(!v.startsWith('/'))v='/'+v;\n  return v;\n}\n"""
+              replacement = """function _dbxScanDirDefault(){return _DBX_DATA_DIR+'/스캔함';}\nfunction _dbxNormalizeLegacyScanDir(){\n  try{\n    const raw=_ls(_K.SCAN_DIR);\n    if(!raw)return;\n    const v=String(raw).trim().replace(/\\\\/g,'/').replace(/\\/+$/,'');\n    if(!v){_lsDel(_K.SCAN_DIR);return;}\n    if(v===_DBX_OLD_ROOT+'/스캔함'){_lsDel(_K.SCAN_DIR);return;}\n    if(v.startsWith(_DBX_OLD_ROOT+'/')){\n      _lsSet(_K.SCAN_DIR,_DBX_ROOT+v.slice(_DBX_OLD_ROOT.length));\n    }\n  }catch(e){}\n}\nfunction _dbxScanDir(){\n  _dbxNormalizeLegacyScanDir();\n  let v=_ls(_K.SCAN_DIR)||_dbxScanDirDefault();\n  v=String(v).trim().replace(/\\\\/g,'/').replace(/\\/+$/,'');   // 끝 슬래시 제거\n  if(!v)v=_dbxScanDirDefault();\n  if(!v.startsWith('/'))v='/'+v;\n  return v;\n}\n"""
+              if anchor not in text:
+                  raise SystemExit('SCAN_DIR_ANCHOR_NOT_FOUND')
+              text = text.replace(anchor, replacement, 1)
 
-          품목명 | 수량 | 단가 | 금액
+          old_phone = """async function _dbxCopyPhoneLink(){\n  const key=_ls(_K.APP_KEY);\n  if(!key){toast('App Key가 없어요',{type:'error'});return;}\n  const url=location.origin+location.pathname+'#k='+key;\n  try{\n    await navigator.clipboard.writeText(url);\n    toast('링크를 복사했어요 — 폰으로 보내서 열면 연결됩니다',{type:'success',duration:5000});\n  }catch(e){\n    prompt('이 링크를 폰으로 보내 열어 주세요',url);\n  }\n}\n"""
+          new_phone = """async function _dbxCopyPhoneLink(){\n  const key=_ls(_K.APP_KEY);\n  if(!key){toast('App Key가 없어요',{type:'error'});return;}\n  const url=location.origin+location.pathname+'#k='+key;\n  try{\n    if(navigator.share){\n      await navigator.share({title:'Receipt DB Dropbox 연결',text:'이 링크를 열면 App Key 입력 없이 Dropbox 연결을 시작합니다.',url});\n      toast('연결 링크를 보냈어요',{type:'success',duration:5000});\n      return;\n    }\n  }catch(e){\n    if(e&&e.name==='AbortError')return;\n  }\n  try{\n    await navigator.clipboard.writeText(url);\n    toast('링크를 복사했어요 — 폰으로 보내서 열면 연결됩니다',{type:'success',duration:5000});\n  }catch(e){\n    const picked=prompt('복사가 막혔어요. 아래 링크를 길게 눌러 복사하거나 그대로 보내 주세요.',url);\n    if(picked)toast('링크를 확인했어요',{type:'success',duration:3500});\n  }\n}\n"""
+          if old_phone in text:
+              text = text.replace(old_phone, new_phone, 1)
+          elif 'navigator.share({title:' not in text:
+              raise SystemExit('PHONE_LINK_ANCHOR_NOT_FOUND')
 
-          품목1 | 1 | 1,000 | 1,000
-          품목2 | 2 | 500 | 1,000
-          쿠폰 할인 | 1 | -500 | -500
+          init_anchor = """  const avs=document.getElementById('appVersionStat');if(avs)avs.textContent=APP_VERSION;\n  const pm=document.getElementById('printMonth');if(pm&&!pm.value)pm.value=viewMonth;\n"""
+          init_replacement = """  const avs=document.getElementById('appVersionStat');if(avs)avs.textContent=APP_VERSION;\n  _dbxNormalizeLegacyScanDir();\n  const pm=document.getElementById('printMonth');if(pm&&!pm.value)pm.value=viewMonth;\n"""
+          if '_dbxNormalizeLegacyScanDir();\n  const pm=document.getElementById' not in text:
+              if init_anchor not in text:
+                  raise SystemExit('INIT_ANCHOR_NOT_FOUND')
+              text = text.replace(init_anchor, init_replacement, 1)
 
-          규칙:
-          - 총액은 상품 합계가 아니라 할인·쿠폰·포인트 등을 반영한 실제 최종 결제금액으로 적어줘.
-          - 품목명, 옵션(사이즈 포함), 단가가 모두 같은 상품이 여러 줄이면 반드시 한 줄로 합쳐줘.
-          - 같은 상품을 합칠 때 수량은 합산하고 금액은 단가 × 수량으로 계산해줘.
-          - 같은 상품이라도 옵션·사이즈·단가 중 하나라도 다르면 별도 행으로 유지해줘.
-          - 할인/쿠폰/포인트 사용은 별도 행으로 적고 단가와 금액에 음수(-)를 붙여줘.
-          - 품목 금액 합계(할인 포함)가 총액과 일치하는지 마지막에 스스로 검산한 뒤 출력해줘.
-          - 영수증의 합계·할인액·결제금액과 OCR 문자가 충돌하면 인쇄된 금액 구조를 우선해서 판단해줘.
-          - 승인번호, 카드번호, 주문번호, 바코드, 리워드, 잔액, 사업자번호, 전화번호와 품목이 아닌 코드(SRPO 등)는 품목으로 넣지 마.
-          - 쉼표는 천 단위 구분만 쓰고, 불필요한 설명은 절대 덧붙이지 마.`;'''
-          text, count = prompt_pattern.subn(prompt_replacement, text, count=1)
-          if count != 1:
-              raise SystemExit(f'PROMPT_PATCH_COUNT={count}; expected 1')
-
-          # 2) 파서 자체에서도 동일 이름+동일 단가 행을 합쳐 AI 출력 편차를 이중 방어.
-          parser_old = """  if(!out.store&&!out.date&&!out.total&&!out.items.length)return null;\n  return out;\n}"""
-          parser_new = """  if(!out.store&&!out.date&&!out.total&&!out.items.length)return null;\n\n  // 동일 품목 이중 방어: 이름+단가가 같으면 수량/금액을 합친다.\n  // 옵션·사이즈가 다르면 품목명 자체가 달라지므로 별도 행으로 유지된다.\n  if(out.items.length>1){\n    const merged=[];\n    const byKey=new Map();\n    for(const it of out.items){\n      const name=String(it.name||'').trim();\n      const unitPrice=Number(it.unitPrice)||0;\n      const key=`${name}\\u0000${unitPrice}`;\n      const prev=byKey.get(key);\n      if(prev){\n        prev.quantity=(Number(prev.quantity)||0)+(Number(it.quantity)||0);\n        prev.amount=(Number(prev.amount)||0)+(Number(it.amount)||0);\n      }else{\n        const copy={...it,name,quantity:Number(it.quantity)||1,unitPrice,amount:Number(it.amount)||0};\n        byKey.set(key,copy);\n        merged.push(copy);\n      }\n    }\n    out.items=merged;\n  }\n  return out;\n}"""
-          if text.count(parser_old) != 1:
-              raise SystemExit(f'PARSER_ANCHOR_COUNT={text.count(parser_old)}; expected 1')
-          text = text.replace(parser_old, parser_new, 1)
-
-          # 3) 완료 파일은 월 하위폴더 없이 사용자가 지정한 완료 JPG/PDF 폴더에 직접 저장.
-          old_deleted = "const dm=_dbxScanDoneDir(isImg)+'/'+date.slice(0,7);"
-          old_done = "const doneDir=_dbxScanDoneDir(isImg)+'/'+date.slice(0,7);  // 사진 → 완료 JPG, PDF → 완료 PDF"
-          if text.count(old_deleted) != 1:
-              raise SystemExit(f'DELETED_DIR_ANCHOR_COUNT={text.count(old_deleted)}; expected 1')
-          if text.count(old_done) != 1:
-              raise SystemExit(f'DONE_DIR_ANCHOR_COUNT={text.count(old_done)}; expected 1')
-          text = text.replace(old_deleted, "const dm=_dbxScanDoneDir(isImg);", 1)
-          text = text.replace(old_done, "const doneDir=_dbxScanDoneDir(isImg);  // 사진 → 완료 JPG, PDF → 완료 PDF", 1)
-
-          # 정적 안전 검사: 핵심 규칙과 기존 파일명 규칙이 모두 남아 있어야 한다.
-          checks = [
-              "품목명, 옵션(사이즈 포함), 단가가 모두 같은 상품이 여러 줄이면 반드시 한 줄로 합쳐줘.",
-              "const _dbxScanDoneDir=isImg=>_DBX_DATA_DIR+(isImg?'/완료 JPG':'/완료 PDF');",
-              "function _scanFileName",
-              "수량·단가·합계 모두 정확히 일치합니다.",
+          required = [
+              "const APP_VERSION='v2.68';",
+              "function _dbxNormalizeLegacyScanDir(){",
+              "if(v===_DBX_OLD_ROOT+'/스캔함'){_lsDel(_K.SCAN_DIR);return;}",
+              "navigator.share({title:'Receipt DB Dropbox 연결'",
+              "복사가 막혔어요. 아래 링크를 길게 눌러 복사하거나 그대로 보내 주세요.",
           ]
-          for needle in checks:
+          for needle in required:
               if needle not in text:
-                  raise SystemExit(f'SAFETY_CHECK_FAILED: {needle}')
+                  raise SystemExit(f'MISSING_REQUIRED_PATCH: {needle}')
 
           if text == original:
-              raise SystemExit('NO_CHANGES')
-          path.write_text(text, encoding='utf-8')
+              print('No index.html changes needed')
+          else:
+              path.write_text(text, encoding='utf-8')
           PY
 
+      - name: Check patched JavaScript syntax
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script[^>]*>(.*?)</script>', text, flags=re.S|re.I)
+          Path('/tmp/receipt-db-scripts.js').write_text('\n;\n'.join(scripts), encoding='utf-8')
+          print(f'Extracted {len(scripts)} script blocks')
+          PY
+          node --check /tmp/receipt-db-scripts.js
+
       - name: Commit patched app
+        shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           git diff --cached --check
           git diff --cached --quiet && exit 0
-          git commit -m "fix: aggregate duplicate receipt items and completion folders"
+          git commit -m "fix: improve Dropbox reconnect and scan path migration"
           git push
