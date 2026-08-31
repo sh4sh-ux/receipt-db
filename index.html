@@ -217,7 +217,7 @@ svg{display:block;flex-shrink:0;}
 .r-card-info{flex:1;min-width:0;}
 .r-card-store-row{display:flex;align-items:center;gap:6px;min-width:0;}
 .r-card-store{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.r-photo-error-dot{width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--red-bg);flex:0 0 7px;}
+.r-photo-error-dot{width:5px;height:5px;border-radius:50%;background:var(--red);box-shadow:0 0 0 1px var(--red-bg);flex:0 0 5px;}
 .r-card-meta{font-size:11px;color:var(--label3);margin-top:2px;display:flex;gap:6px;align-items:center;}
 .r-card-amt{font-size:13px;font-weight:700;text-align:right;flex-shrink:0;white-space:nowrap;}
 
@@ -2036,7 +2036,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
 // v2.70 — 사진 참조가 빠진 영수증도 표준 이미지 ID와 완료 JPG 파일에서 자동 복구한다.
 //         images/{imageId}.jpg가 없을 때 완료 JPG 탐색을 건너뛰던 조기 반환도 수정한다.
-const APP_VERSION='v2.70';
+// v2.71 — 파일명에서 읽은 날짜·금액·매장명과 숨은 사진 해시를 함께 보존해
+//         잘못 연결되거나 중복된 사진을 빨간 점으로 표시한다. 점 크기도 5px로 줄였다.
+const APP_VERSION='v2.71';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -2155,9 +2157,9 @@ function dbPut(store,obj){return txStore(store,'readwrite').then(s=>new Promise(
 function dbGet(store,id){return txStore(store,'readonly').then(s=>new Promise((res,rej)=>{const r=s.get(id);r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e.target.error);}));}
 function dbDel(store,id){return txStore(store,'readwrite').then(s=>new Promise((res,rej)=>{const r=s.delete(id);r.onsuccess=()=>res();r.onerror=e=>rej(e.target.error);}));}
 function dbAll(store){return txStore(store,'readonly').then(s=>new Promise((res,rej)=>{const r=s.getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=e=>rej(e.target.error);}));}
-function dbValidImageIds(){return txStore('images','readonly').then(s=>new Promise((res,rej)=>{
-  const ids=new Set(),r=s.openCursor();
-  r.onsuccess=()=>{const c=r.result;if(!c)return res(ids);const im=c.value;if(im&&(im.data||im.blob))ids.add(im.id);c.continue();};
+function dbImageState(){return txStore('images','readonly').then(s=>new Promise((res,rej)=>{
+  const ids=new Set(),hashes=new Map(),r=s.openCursor();
+  r.onsuccess=()=>{const c=r.result;if(!c)return res({ids,hashes});const im=c.value;if(im&&(im.data||im.blob)){ids.add(im.id);if(im.contentHash)hashes.set(im.id,im.contentHash);}c.continue();};
   r.onerror=e=>rej(e.target.error);
 }));}
 function dbClear(store){return txStore(store,'readwrite').then(s=>new Promise((res,rej)=>{const r=s.clear();r.onsuccess=()=>res();r.onerror=e=>rej(e.target.error);}));}
@@ -2173,6 +2175,9 @@ let pendingPhotoUrl=null;
 let viewMonth=_currentYM();  // 'YYYY-MM' — 가계부에서 보고 있는 월
 let _sideAllMonths=false;    // 왼쪽 목록만 전체 기간으로 전환
 let _localImageIds=new Set();// 실제 이미지 데이터가 이 기기에 있는 imageId
+let _localImageHashes=new Map();// imageId → 실제 파일 SHA-1 (화면에는 노출하지 않음)
+let _photoHashCounts=new Map();// 실제 파일 SHA-1 → 연결된 영수증 수
+const _photoHashBackfillFailed=new Set();
 function _currentYM(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 function _todayYMD(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
@@ -2234,11 +2239,14 @@ async function _ensureReceiptImgUrl(receipt){
     const fresh=await dbGet('receipts',receipt.id);
     if(!fresh||fresh.imageId)return fresh?.imageId?_ensureImgUrl(fresh.imageId,fresh):null;
     fresh.imageId=imageId;
+    fresh.imageHash=fresh.imageHash||_localImageHashes.get(imageId)||'';
     fresh.updatedAt=nowISO();
     await dbPut('receipts',fresh);
     receipt.imageId=imageId;
+    receipt.imageHash=fresh.imageHash;
     receipt.updatedAt=fresh.updatedAt;
     _localImageIds.add(imageId);
+    _rebuildPhotoHashCounts();
     renderSide();
     dbxSyncUpload().catch(()=>{});
     return url;
@@ -2267,10 +2275,13 @@ async function _replaceReceiptImage(receipt,file){
   if(!receipt||!file||!file.type.startsWith('image/'))return false;
   const oldImageId=receipt.imageId||null;
   const newImageId=_newReplacementImageId(receipt.id);
+  const photoMeta=await _photoMetaForFile(file);
 
   // 새 파일과 새 참조를 먼저 확정한다. 업로드 실패 시에도 로컬 교체본은 보존된다.
-  await dbPut('images',{id:newImageId,blob:file,mime:file.type||'image/jpeg'});
+  await dbPut('images',{id:newImageId,blob:file,mime:file.type||'image/jpeg',contentHash:photoMeta.contentHash});
   receipt.imageId=newImageId;
+  receipt.imageHash=photoMeta.contentHash;
+  receipt.photoClaim=photoMeta.claim;
   receipt.updatedAt=nowISO();
   await dbPut('receipts',receipt);
 
@@ -2815,17 +2826,20 @@ function getAllCategories(){
 // LOAD & RENDER
 // ════════════════════════════════════════════════════════════════
 async function loadAll(){
-  const [storedReceipts,localImageIds]=await Promise.all([dbAll('receipts'),dbValidImageIds()]);
+  const [storedReceipts,imageState]=await Promise.all([dbAll('receipts'),dbImageState()]);
   receipts=storedReceipts.map(r=>({...r,category:normalizeCategory(r.category)}));
-  _localImageIds=localImageIds;
+  _localImageIds=imageState.ids;
+  _localImageHashes=imageState.hashes;
   receipts.sort((a,b)=>{
     const k=(b.date||'')+(b.time||'')+b.id;
     const j=(a.date||'')+(a.time||'')+a.id;
     return k.localeCompare(j);
   });
+  _rebuildPhotoHashCounts();
   renderSide();
   updateStats();
   updateCatList();
+  _schedulePhotoHashBackfill();
 }
 
 // ── 한국어↔영어 식품 검색어 대역 (영수증에 영문으로 적힌 항목 한글 검색 지원) ──
@@ -3075,9 +3089,9 @@ function _cardHtml(r){
   const meta=[fmtDateKor(r.date)];
   if(r.paidBy)meta.push(escapeHtml(r.paidBy));
   if((r.participants||[]).length>0)meta.push(`${r.participants.length}명`);
-  const photoError=!r.imageId||!_localImageIds.has(r.imageId);
-  const photoErrorDot=photoError
-    ?`<span class="r-photo-error-dot" role="img" aria-label="사진 첨부 누락 또는 불러오기 오류" title="사진 첨부 누락 또는 불러오기 오류"></span>`:'';
+  const photoErrorReason=_photoErrorReason(r);
+  const photoErrorDot=photoErrorReason
+    ?`<span class="r-photo-error-dot" role="img" aria-label="${escapeHtml(photoErrorReason)}" title="${escapeHtml(photoErrorReason)}"></span>`:'';
   return `<div class="r-card${sel}${batchSel}" data-id="${r.id}" ${batchA11y}>
     <button class="r-card-check" type="button" tabindex="-1" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>
@@ -3946,9 +3960,12 @@ saveBtn.addEventListener('click',async()=>{
   const date=p.date||new Date().toISOString().slice(0,10);
   const id=_newId(date);
   let imageId=null;
+  let imageHash='',photoClaim=null;
   if(pendingPhotoBlob){
     imageId='img_'+id.slice(4);  // img_YYYYMMDD_NNN
-    await dbPut('images',{id:imageId,blob:pendingPhotoBlob,mime:pendingPhotoBlob.type||'image/jpeg'});
+    const meta=await _photoMetaForFile(pendingPhotoBlob);
+    imageHash=meta.contentHash;photoClaim=meta.claim;
+    await dbPut('images',{id:imageId,blob:pendingPhotoBlob,mime:pendingPhotoBlob.type||'image/jpeg',contentHash:imageHash});
     _dbxUploadImage(imageId);
   }
   const participants=(document.getElementById('participantsInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
@@ -3973,6 +3990,8 @@ saveBtn.addEventListener('click',async()=>{
     total:p.total||0,
     items:cleanItems,
     imageId,
+    imageHash,
+    photoClaim,
     notes:document.getElementById('noteInp').value,
     participants,
     tags,
@@ -4121,9 +4140,12 @@ async function _saveDirectEntry(){
   const dateVal=document.getElementById('directDate').value||new Date().toISOString().slice(0,10);
   const id=_newId(dateVal);
   let imageId=null;
+  let imageHash='',photoClaim=null;
   if(_directPhotoBlob){
     imageId='img_'+id.slice(4);
-    await dbPut('images',{id:imageId,blob:_directPhotoBlob,mime:_directPhotoBlob.type||'image/jpeg'});
+    const meta=await _photoMetaForFile(_directPhotoBlob);
+    imageHash=meta.contentHash;photoClaim=meta.claim;
+    await dbPut('images',{id:imageId,blob:_directPhotoBlob,mime:_directPhotoBlob.type||'image/jpeg',contentHash:imageHash});
     _dbxUploadImage(imageId);
   }
   const participants=(document.getElementById('participantsInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
@@ -4141,6 +4163,8 @@ async function _saveDirectEntry(){
     total,
     items:[],
     imageId,
+    imageHash,
+    photoClaim,
     notes:document.getElementById('noteInp').value,
     participants,
     tags,
@@ -5559,7 +5583,7 @@ async function renderDetail(){
       e.stopPropagation();
       if(!confirm('사진을 삭제할까요?'))return;
       if(r.imageId){await dbDel('images',r.imageId);_revokeImgUrl(r.imageId);}
-      r.imageId=null;r.updatedAt=nowISO();
+      r.imageId=null;r.imageHash='';r.photoClaim=null;r.updatedAt=nowISO();
       await dbPut('receipts',r);
       toast('사진이 삭제됐어요',{type:'success'});
       await loadAll();await renderDetail();
@@ -6188,7 +6212,7 @@ document.getElementById('exportBtn').addEventListener('click',async()=>{
     const imgsOut=[];
     for(const im of imgs){
       const b64=await blobToBase64(im.blob);
-      imgsOut.push({id:im.id,mime:im.mime||'image/jpeg',data:b64});
+      imgsOut.push({id:im.id,mime:im.mime||'image/jpeg',data:b64,contentHash:im.contentHash||''});
     }
     const payload={
       app:'receipt-db',
@@ -6233,7 +6257,8 @@ document.getElementById('importInp').addEventListener('change',async e=>{
       for(const im of data.images){
         try{
           const blob=await base64ToBlob(im.data);
-          await dbPut('images',{id:im.id,blob,mime:im.mime||'image/jpeg'});imgN++;
+          const contentHash=im.contentHash||await _photoContentHash(blob);
+          await dbPut('images',{id:im.id,blob,mime:im.mime||'image/jpeg',contentHash});imgN++;
         }catch(e){console.warn('이미지 복원 건너뜀:',im.id,e);}
       }
     }
@@ -6471,7 +6496,7 @@ async function dbxBackup(){
     for(const im of imgs){
       try{
         const b64=await blobToBase64(im.blob);
-        if(b64)imgsOut.push({id:im.id,mime:im.mime||'image/jpeg',data:b64});
+        if(b64)imgsOut.push({id:im.id,mime:im.mime||'image/jpeg',data:b64,contentHash:im.contentHash||''});
       }catch(e){console.warn('이미지 백업 건너뜀:',im.id,e);}
     }
     const payload={
@@ -6544,7 +6569,8 @@ async function _dbxRestore(path,name){
       for(const im of data.images){
         try{
           const blob=await base64ToBlob(im.data);
-          await dbPut('images',{id:im.id,blob,mime:im.mime||'image/jpeg'});imgN++;
+          const contentHash=im.contentHash||await _photoContentHash(blob);
+          await dbPut('images',{id:im.id,blob,mime:im.mime||'image/jpeg',contentHash});imgN++;
         }catch(e){console.warn('이미지 복원 건너뜀:',im.id,e);}
       }
     }
@@ -6703,6 +6729,83 @@ const _SCAN_BATCH_MAX=20;                              // 한 번에 처리할 �
 async function _sha1Hex(buf){
   const d=await crypto.subtle.digest('SHA-1',buf);
   return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function _photoContentHash(blob){
+  if(!blob)return '';
+  return _sha1Hex(await blob.arrayBuffer());
+}
+
+// 사용자가 앱에 넣기 전에 정리한 파일명만 검증 근거로 보존한다.
+// 앱이 완료 JPG에 올리면서 새로 만든 이름(scanPath)은 순환 검증이므로 쓰지 않는다.
+function _trustedPhotoClaim(file){
+  const own=_parseOwnScanName(file&&file.name);
+  if(!own)return null;
+  return {date:own.date,total:own.total||0,store:own.store||'',sourceName:file.name};
+}
+
+async function _photoMetaForFile(file){
+  if(!file)return {contentHash:'',claim:null};
+  return {contentHash:await _photoContentHash(file),claim:_trustedPhotoClaim(file)};
+}
+
+function _normPhotoStore(v){return String(v||'').toLowerCase().replace(/[^0-9a-z가-힣]/g,'');}
+function _photoClaimMismatch(r){
+  const c=r&&r.photoClaim;
+  if(!c)return false;
+  if(c.date&&r.date&&c.date!==r.date)return true;
+  if(Number(c.total)>0&&Number(r.total)!==Number(c.total))return true;
+  const a=_normPhotoStore(c.store),b=_normPhotoStore(r.store);
+  return !!(a&&b&&a!==b&&!a.includes(b)&&!b.includes(a));
+}
+
+function _rebuildPhotoHashCounts(){
+  _photoHashCounts=new Map();
+  for(const r of receipts){
+    const h=_localImageHashes.get(r.imageId)||r.imageHash||'';
+    if(h)_photoHashCounts.set(h,(_photoHashCounts.get(h)||0)+1);
+  }
+}
+
+function _photoErrorReason(r){
+  if(!r.imageId)return '사진 첨부 누락';
+  if(!_localImageIds.has(r.imageId))return '사진 파일 불러오기 오류';
+  const actual=_localImageHashes.get(r.imageId)||'';
+  if(r.imageHash&&actual&&r.imageHash!==actual)return '사진 파일 해시 불일치';
+  if(actual&&(_photoHashCounts.get(actual)||0)>1)return '같은 사진이 다른 영수증에도 연결됨';
+  if(_photoClaimMismatch(r))return '사진 파일명의 날짜·금액·매장명과 영수증 정보가 다름';
+  return '';
+}
+
+let _photoHashBackfillRunning=false;
+async function _nextUnhashedImages(limit=6){
+  return txStore('images','readonly').then(s=>new Promise((res,rej)=>{
+    const out=[],q=s.openCursor();
+    q.onsuccess=()=>{const c=q.result;if(!c||out.length>=limit)return res(out);const im=c.value;if(im&&(im.data||im.blob)&&!im.contentHash&&!_photoHashBackfillFailed.has(im.id))out.push(im);c.continue();};
+    q.onerror=e=>rej(e.target.error);
+  }));
+}
+function _schedulePhotoHashBackfill(){
+  if(_photoHashBackfillRunning||!(window.crypto&&crypto.subtle))return;
+  _photoHashBackfillRunning=true;
+  setTimeout(async()=>{
+    try{
+      while(true){
+        const batch=await _nextUnhashedImages();
+        if(!batch.length)break;
+        for(const im of batch){
+          try{
+            const blob=im.blob||await base64ToBlob(im.data);
+            const contentHash=await _photoContentHash(blob);
+            await dbPut('images',{...im,contentHash});
+            _localImageHashes.set(im.id,contentHash);
+          }catch(e){_photoHashBackfillFailed.add(im.id);console.warn('photo hash backfill:',im.id,e);}
+        }
+        _rebuildPhotoHashCounts();renderSide();
+        await new Promise(resolve=>setTimeout(resolve,40));
+      }
+    }finally{_photoHashBackfillRunning=false;}
+  },80);
 }
 
 // 파일명에서 날짜 추출 — 맥 스크립트(parse_date_from_name)와 같은 규칙으로 맞춘다.
@@ -6946,7 +7049,7 @@ async function _dbxProcessScanbox(){
           const imageId='img_'+id.slice(4);
           if(isImg){
             const mime=ext==='.png'?'image/png':'image/jpeg';
-            await dbPut('images',{id:imageId,blob:new Blob([buf],{type:mime}),mime});
+            await dbPut('images',{id:imageId,blob:new Blob([buf],{type:mime}),mime,contentHash:hash});
             newImageIds.push(imageId);
           }
           const now=nowISO();
@@ -6957,6 +7060,8 @@ async function _dbxProcessScanbox(){
           await dbPut('receipts',{
             id,date,time:'',store,category:store?(autocategorize(store)||''):'',
             total,items:[],imageId:isImg?imageId:'',
+            imageHash:isImg?hash:'',
+            photoClaim:isImg&&own?{date:own.date,total:own.total||0,store:own.store||'',sourceName:f.name}:null,
             notes:isImg?'스캔함 자동등록':'스캔함 자동등록 (PDF — 사진 없음)',
             // 결제자는 수동 저장(payerInp)과 같이 '내 이름'을 기본값으로 둔다.
             // 스캔 등록만 ''로 남아 있어 스캔으로 들어온 영수증에는 결제자가 비어 있었다.
@@ -7057,12 +7162,15 @@ async function _dbxImportSyncImages(images){
       if(!im||!im.id||!im.data)continue;
       // inbox 이미지는 항상 덮어쓰기 (이미지 교정 지원)
       const blob=await base64ToBlob(im.data);
-      await dbPut('images',{id:im.id,blob,mime:im.mime||blob.type||'image/jpeg'});
+      const contentHash=im.contentHash||await _photoContentHash(blob);
+      await dbPut('images',{id:im.id,blob,mime:im.mime||blob.type||'image/jpeg',contentHash});
       _localImageIds.add(im.id);
+      _localImageHashes.set(im.id,contentHash);
       _revokeImgUrl(im.id);
       imgN++;
     }catch(e){console.warn('dbx image import skip:',im&&im.id,e);}
   }
+  if(imgN)_rebuildPhotoHashCounts();
   return imgN;
 }
 
@@ -8244,8 +8352,11 @@ async function _dbxDownloadReceiptArchive(imgId,rec){
       if(resp.status===404||resp.status===409)continue;
       if(!resp.ok)continue;
       const blob=await resp.blob();
-      await dbPut('images',{id:imgId,blob,mime:blob.type||'image/jpeg'});
+      const contentHash=await _photoContentHash(blob);
+      await dbPut('images',{id:imgId,blob,mime:blob.type||'image/jpeg',contentHash});
       _localImageIds.add(imgId);
+      _localImageHashes.set(imgId,contentHash);
+      _rebuildPhotoHashCounts();
       if(!rec.scanPath){
         rec.scanPath=path;
         await dbPut('receipts',rec);
@@ -8272,8 +8383,11 @@ async function _dbxDownloadImage(imgId,rec=null){
     });
     if(resp.ok){
       const blob=await resp.blob();
-      await dbPut('images',{id:imgId,blob,mime:blob.type||'image/jpeg'});
+      const contentHash=await _photoContentHash(blob);
+      await dbPut('images',{id:imgId,blob,mime:blob.type||'image/jpeg',contentHash});
       _localImageIds.add(imgId);
+      _localImageHashes.set(imgId,contentHash);
+      _rebuildPhotoHashCounts();
       const url=URL.createObjectURL(blob);
       _imgUrlCache.set(imgId,url);
       return url;
