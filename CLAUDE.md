@@ -94,6 +94,10 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v2.57` — **스캔함으로 등록된 영수증에 결제자가 비어 있던 것 수정.** 수동 저장은
+  `payerInp.value.trim()||getMyName()`으로 '내 이름'을 기본값으로 쓰는데,
+  스캔 등록(`_dbxProcessScanbox`)만 `paidBy:''`로 하드코딩돼 있었다. 같은 기본값을 쓰도록 통일.
+  ⚠️ `getMyName()`은 기기별 localStorage라 **스캔을 처리하는 기기에 '내 이름'이 설정돼 있어야** 채워진다.
 - `v2.56` — **모바일 헤더가 상태바 아래로 잘리던 것 수정 + 버전을 모든 탭에서.**
   헤더(`.side-top`/`.main-top`)가 `height`로 **고정**돼 있는데 `padding-top`은
   `max(18px, safe-area-inset-top + 12px)`로 **가변**이었다. 두 값이 어긋나면 내용이 상자를 넘쳐

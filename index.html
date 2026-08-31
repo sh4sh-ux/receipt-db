@@ -1846,6 +1846,9 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.57 — 스캔함으로 등록된 영수증에 결제자가 비어 있던 것 수정. 수동 저장은
+//         payerInp||getMyName() 으로 '내 이름'을 기본값으로 쓰는데 스캔 등록만
+//         paidBy:'' 로 하드코딩돼 있었다. 같은 기본값을 쓰도록 통일.
 // v2.56 — 모바일 헤더가 상태바 아래로 잘리던 것 수정. 헤더 높이가 108px 고정인데
 //         padding-top은 safe-area+12px이라 노치 폰에서 내용이 상자를 넘쳤다.
 //         높이에 safe-area를 더한다(노치 없으면 108px 그대로). 버전은 모든 탭 헤더에 표시.
@@ -1878,7 +1881,7 @@ svg{display:block;flex-shrink:0;}
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.56';
+const APP_VERSION='v2.57';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -6731,7 +6734,9 @@ async function _dbxProcessScanbox(){
             id,date,time:'',store,category:store?(autocategorize(store)||''):'',
             total,items:[],imageId:isImg?imageId:'',
             notes:isImg?'스캔함 자동등록':'스캔함 자동등록 (PDF — 사진 없음)',
-            tags:[],srcHash:hash,participants:[],paidBy:'',
+            // 결제자는 수동 저장(payerInp)과 같이 '내 이름'을 기본값으로 둔다.
+            // 스캔 등록만 ''로 남아 있어 스캔으로 들어온 영수증에는 결제자가 비어 있었다.
+            tags:[],srcHash:hash,participants:[],paidBy:getMyName()||'',
             createdAt:now,updatedAt:now,
           });
           added++;
