@@ -779,6 +779,20 @@ svg{display:block;flex-shrink:0;}
 }
 
 /* ── TOAST ── */
+/* 당겨서 새로고침 — 홈 화면에 추가한 PWA에는 브라우저 기본 당겨서 새로고침이 없어 직접 구현한다.
+   (더치페이 v5.10 구현을 이 앱 구조에 맞춰 가져왔다.) */
+.ptr-ind{position:fixed;left:50%;top:0;z-index:95;width:36px;height:36px;margin-left:-18px;
+  border-radius:50%;background:var(--card);box-shadow:0 2px 10px rgba(20,25,40,.16);
+  display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;
+  transform:translateY(-48px);will-change:transform,opacity;}
+.ptr-ind svg{width:19px;height:19px;color:var(--blue);display:block;}
+.ptr-ind.settle{transition:transform .24s cubic-bezier(.25,.8,.25,1),opacity .24s ease;}
+.ptr-ind.spin svg{animation:ptrSpin .7s linear infinite;}
+@keyframes ptrSpin{to{transform:rotate(360deg);}}
+@media(prefers-reduced-motion:reduce){
+  .ptr-ind.settle{transition:none;}
+  .ptr-ind.spin svg{animation:none;}
+}
 .toast-container{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:calc(100% - 32px);max-width:420px;}
 /* ── 토스트 색 규칙 ──────────────────────────────────────────────
    원칙: 배경과 글자를 **한 쌍의 토큰으로 묶는다.**
@@ -1937,6 +1951,12 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.67 — 모바일 당겨서 새로고침 추가(더치페이 v5.10 구현 이식).
+//         홈 화면 PWA에는 브라우저 기본 당겨서 새로고침이 없어 직접 구현한다.
+//         ⚠️ 이 앱은 문서가 아니라 .main-body/.side-list 가 스크롤하므로
+//            '문서가 맨 위'가 아니라 '지금 보이는 스크롤러가 맨 위'인지를 본다.
+//         ⚠️ .modal-overlay/.modal-card 는 항상 DOM에 있고 position:fixed 라
+//            querySelector 존재 여부나 offsetParent 로는 판별이 안 된다 → getClientRects().
 // v2.66 — ① 헤더 눈썹을 모든 탭에서 'Receipt DB'로 통일(통계 '가계부', 추가 '새 영수증 추가',
 //            설정 '설정' → 전부 동일). 자간도 0.9px로 맞춤. 인물 검색 아이콘·뒤로가기 버튼이
 //            들어가는 자리는 기능이 있어 그대로 뒀다.
@@ -2012,7 +2032,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.66';
+const APP_VERSION='v2.67';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -8291,6 +8311,68 @@ function _dbxBindEvents(){
   // Dropbox OAuth 콜백 처리 — URL에 ?code= 있으면 토큰 교환
   // (DB 로드 완료 후 실행 — 콜백 성공 시 settings 탭으로 이동)
   await dbxHandleCallback();
+})();
+
+// ── 모바일 당겨서 새로고침 ──────────────────────────────────────────
+// 더치페이 v5.10 구현을 가져오되, 이 앱은 문서가 아니라
+// .main-body / .side-list 가 스크롤하므로 '지금 보이는 스크롤러가 맨 위인지'를 본다.
+// (문서 scrollY 로 판단하면 항상 0이라 아무 데서나 발동한다.)
+(()=>{
+  if(!('ontouchstart' in window))return;
+  const BLOCK='.modal-overlay,.modal-card,.cat-picker-popover:not([hidden])';
+  const TH=70,MAX=104;
+  let y0=0,pulling=false,dist=0,busy=false;
+
+  const ind=document.createElement('div');
+  ind.className='ptr-ind';
+  ind.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"'
+    +' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    +'<path d="M20.5 12a8.5 8.5 0 1 1-2.5-6"/><path d="M20.5 2.5v5h-5"/></svg>';
+  document.body.appendChild(ind);
+  const icon=ind.firstElementChild;
+
+  // 지금 화면에 실제로 보이는 스크롤 컨테이너 (내역=.side-list / 그 외=.main-body)
+  // display:none 이면 getClientRects()가 비고, position:fixed 여도 정상 동작한다.
+  const 보임=el=>!!el&&el.getClientRects().length>0;
+  const 스크롤러=()=>[...document.querySelectorAll('.side-list, .view.on .main-body')]
+    .find(el=>보임(el)&&el.getBoundingClientRect().height>0)||null;
+  const 가려짐=()=>[...document.querySelectorAll(BLOCK)].some(보임);
+  const 맨위=()=>{const s=스크롤러();return !s||s.scrollTop<=0;};
+  const 타이핑중=()=>{const el=document.activeElement;
+    return !!el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.isContentEditable);};
+
+  const ready=()=>!busy&&matchMedia('(max-width:780px)').matches
+    &&맨위()&&!타이핑중()&&!가려짐();
+  const place=(d,rot)=>{ind.style.transform='translateY('+(d-48)+'px)';
+    icon.style.transform='rotate('+rot+'deg)';ind.style.opacity=String(Math.min(1,d/TH*1.2));};
+  const reset=()=>{dist=0;ind.classList.add('settle');ind.classList.remove('spin');
+    ind.style.transform='translateY(-48px)';ind.style.opacity='0';icon.style.transform='';};
+
+  addEventListener('touchstart',e=>{
+    if(e.touches.length!==1||!ready())return;
+    y0=e.touches[0].clientY;pulling=true;dist=0;ind.classList.remove('settle');
+  },{passive:true});
+
+  addEventListener('touchmove',e=>{
+    if(!pulling)return;
+    const dy=e.touches[0].clientY-y0;
+    if(dy<=0||!맨위()){pulling=false;if(dist)reset();return;}
+    e.preventDefault();                 // 기본 바운스 억제
+    dist=Math.min(MAX,dy*0.5);          // 감쇠해서 손가락보다 덜 움직이게
+    place(dist,Math.min(1,dist/TH)*270);
+  },{passive:false});
+
+  const end=()=>{
+    if(!pulling)return;
+    pulling=false;ind.classList.add('settle');
+    if(dist<TH){reset();return;}
+    busy=true;
+    ind.style.transform='translateY(22px)';ind.style.opacity='1';
+    icon.style.transform='';ind.classList.add('spin');
+    setTimeout(()=>location.reload(),340);   // 스피너를 잠깐 보여준 뒤 새로고침
+  };
+  addEventListener('touchend',end,{passive:true});
+  addEventListener('touchcancel',()=>{if(pulling){pulling=false;reset();}},{passive:true});
 })();
 </script>
 
