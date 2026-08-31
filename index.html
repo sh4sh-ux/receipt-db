@@ -2021,7 +2021,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 // v2.72 — 안드로이드 PWA 상태표시줄 배경·아이콘 명암 불일치 수정.
 //         viewport-fit=cover와 black-translucent를 제거하고, 첫 페인트 전에
 //         theme-color·color-scheme을 실제 헤더 배경(--card)과 동기화한다.
-const APP_VERSION='v2.72';
+// v2.73 — 모바일에서 오류 사진 확인 중 이전 통계 본문이 잠깐 노출되던 전환 순서를 수정한다.
+const APP_VERSION='v2.73';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -4272,7 +4273,9 @@ document.getElementById('clearBtn').addEventListener('click',()=>{
 async function selectReceipt(id){
   selectedId=id;
   _mobileListMode='detail';
-  // 다른 탭에서 카드 클릭했을 수 있으니 '내역' 탭으로 전환
+  // 다른 탭에서 카드 클릭했을 수 있으니 '내역' 탭으로 전환.
+  // renderDetail()이 사진을 확인하는 동안에도 이전 통계 본문이 남아 보이지 않도록
+  // 상세 렌더러가 즉시 대기 화면으로 교체한 뒤 사진을 비동기로 확인한다.
   switchTab('list');
   renderSide();
   await renderDetail();
@@ -5393,8 +5396,18 @@ async function renderDetail(){
   _detailOrigItems=JSON.parse(JSON.stringify(r.items||[]));
   _detailSetDirty(false);
 
+  // 오류 표시가 있는 사진은 Dropbox 복구까지 확인하느라 시간이 걸릴 수 있다.
+  // 이때 기존 통계 화면을 그대로 두면 모바일에서 "통계로 갔다가 상세로 이동"한
+  // 것처럼 보이므로, 먼저 현재 영수증의 대기 화면으로 확실히 교체한다.
+  body.innerHTML=`<div class="empty-state" role="status" aria-live="polite">
+    <div>${r.imageId?'사진 확인 중…':'내역 불러오는 중…'}</div>
+  </div>`;
+
   // 상세 카드에서 사용하는 사진 URL만 준비한다.
   const _detailPhotoUrl=await _ensureReceiptImgUrl(r);
+  // 사진 확인 도중 사용자가 목록으로 돌아가거나 다른 영수증을 선택했다면
+  // 먼저 시작된 비동기 렌더가 현재 화면을 덮어쓰지 않게 한다.
+  if(selectedId!==r.id)return;
 
   const sum=(r.items||[]).reduce((s,i)=>s+(i.amount||0),0);
   const detailAmountAudit=getAmountAudit(r);
