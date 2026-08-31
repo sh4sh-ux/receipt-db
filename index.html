@@ -2032,7 +2032,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.67';
+const APP_VERSION='v2.68';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -6560,7 +6560,20 @@ const _inboxPath   =()=>_DBX_DATA_DIR+'/receipt-db_inbox.json';
 // 그 문제가 없어졌다. 영수증 관련 파일을 한 폴더에 모으는 쪽이 찾기 쉽다.
 // 그래도 깊게 느껴지면 설정 탭에서 `/스캔함` 처럼 직접 바꿀 수 있다(localStorage 저장).
 function _dbxScanDirDefault(){return _DBX_DATA_DIR+'/스캔함';}
+function _dbxNormalizeLegacyScanDir(){
+  try{
+    const raw=_ls(_K.SCAN_DIR);
+    if(!raw)return;
+    const v=String(raw).trim().replace(/\\/g,'/').replace(/\/+$/,'');
+    if(!v){_lsDel(_K.SCAN_DIR);return;}
+    if(v===_DBX_OLD_ROOT+'/스캔함'){_lsDel(_K.SCAN_DIR);return;}
+    if(v.startsWith(_DBX_OLD_ROOT+'/')){
+      _lsSet(_K.SCAN_DIR,_DBX_ROOT+v.slice(_DBX_OLD_ROOT.length));
+    }
+  }catch(e){}
+}
 function _dbxScanDir(){
+  _dbxNormalizeLegacyScanDir();
   let v=_ls(_K.SCAN_DIR)||_dbxScanDirDefault();
   v=String(v).trim().replace(/\\/g,'/').replace(/\/+$/,'');   // 끝 슬래시 제거
   if(!v)v=_dbxScanDirDefault();
@@ -7893,10 +7906,20 @@ async function _dbxCopyPhoneLink(){
   if(!key){toast('App Key가 없어요',{type:'error'});return;}
   const url=location.origin+location.pathname+'#k='+key;
   try{
+    if(navigator.share){
+      await navigator.share({title:'Receipt DB Dropbox 연결',text:'이 링크를 열면 App Key 입력 없이 Dropbox 연결을 시작합니다.',url});
+      toast('연결 링크를 보냈어요',{type:'success',duration:5000});
+      return;
+    }
+  }catch(e){
+    if(e&&e.name==='AbortError')return;
+  }
+  try{
     await navigator.clipboard.writeText(url);
     toast('링크를 복사했어요 — 폰으로 보내서 열면 연결됩니다',{type:'success',duration:5000});
   }catch(e){
-    prompt('이 링크를 폰으로 보내 열어 주세요',url);
+    const picked=prompt('복사가 막혔어요. 아래 링크를 길게 눌러 복사하거나 그대로 보내 주세요.',url);
+    if(picked)toast('링크를 확인했어요',{type:'success',duration:3500});
   }
 }
 
@@ -8258,6 +8281,7 @@ function _dbxBindEvents(){
   // 각 탭 헤더의 버전 칩 — 내역 탭 사이드바에서만 보이던 것을 모든 탭에서 보이게
   document.querySelectorAll('.js-app-version').forEach(el=>{el.textContent=APP_VERSION;});
   const avs=document.getElementById('appVersionStat');if(avs)avs.textContent=APP_VERSION;
+  _dbxNormalizeLegacyScanDir();
   const pm=document.getElementById('printMonth');if(pm&&!pm.value)pm.value=viewMonth;
   const sd=document.getElementById('scanDirInp');if(sd)sd.value=_dbxScanDir();
 
