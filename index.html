@@ -213,7 +213,10 @@ svg{display:block;flex-shrink:0;}
 .r-card-info{flex:1;min-width:0;}
 .r-card-store-row{display:flex;align-items:center;gap:6px;min-width:0;}
 .r-card-store{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.r-photo-error-dot{width:5px;height:5px;border-radius:50%;background:var(--red);box-shadow:0 0 0 1px var(--red-bg);flex:0 0 5px;}
+.r-photo-status{width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 16px;}
+.r-photo-status svg{width:16px;height:16px;}
+.r-photo-status.missing{color:var(--amber);}
+.r-photo-status.problem{color:var(--red);}
 .r-card-meta{font-size:11px;color:var(--label3);margin-top:2px;display:flex;gap:6px;align-items:center;}
 .r-card-amt{font-size:13px;font-weight:700;text-align:right;flex-shrink:0;white-space:nowrap;}
 
@@ -236,9 +239,20 @@ svg{display:block;flex-shrink:0;}
 .empty-state{padding:40px 24px;text-align:center;color:var(--label3);font-size:13px;}
 .empty-state svg{margin:0 auto 12px;color:var(--sep2);}
 
-.side-foot{border-top:1px solid var(--sep);min-height:55px;padding:0 var(--pad-x);display:flex;justify-content:space-between;align-items:center;}
+.side-foot{border-top:1px solid var(--sep);min-height:55px;padding:8px var(--pad-x);display:flex;justify-content:space-between;align-items:center;gap:10px;}
 .foot-stat{font-size:12px;color:var(--label2);}
 .foot-stat b{color:var(--label);font-weight:700;}
+.photo-filter-row{display:flex;align-items:center;gap:7px;min-width:0;}
+.photo-filter-mobile{display:none;}
+.photo-filter-chip{height:32px;border:1px solid var(--sep2);border-radius:999px;background:var(--card);color:var(--label2);padding:0 10px;display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:650;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,transform .12s;}
+.photo-filter-chip:hover{background:var(--fill2);color:var(--label);}
+.photo-filter-chip:active{transform:scale(.97);}
+.photo-filter-chip[disabled]{opacity:.42;cursor:default;transform:none;}
+.photo-filter-chip svg{width:14px;height:14px;}
+.photo-filter-chip[data-photo-filter="problem"] svg{color:var(--red);}
+.photo-filter-chip[data-photo-filter="missing"] svg{color:var(--amber);}
+.photo-filter-chip[aria-pressed="true"]{background:var(--blue-bg);border-color:color-mix(in srgb,var(--blue) 55%,var(--sep2));color:var(--blue-txt);}
+.photo-filter-count{font-variant-numeric:tabular-nums;}
 
 /* ── RIGHT PANEL ── */
 .main{background:var(--card);display:flex;flex-direction:column;min-height:700px;}
@@ -1072,6 +1086,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .side-top,.month-nav,.side-search,.main-top{flex:0 0 auto;}
   .side-list{flex:1;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;padding-bottom:22px;}
   .side-foot{display:none;}
+  .photo-filter-mobile{display:flex;padding:0 18px 10px;flex:0 0 auto;overflow-x:auto;scrollbar-width:none;}
+  .photo-filter-mobile::-webkit-scrollbar{display:none;}
+  .photo-filter-chip{height:31px;padding:0 10px;font-size:11.5px;}
   .batch-export-bar{position:fixed;left:0;right:0;bottom:calc(68px + env(safe-area-inset-bottom,0px));padding:10px 18px;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}
   .batch-export-send{height:38px;font-size:12px;padding:0 14px;}
   .batch-export-cancel{height:38px;}
@@ -1205,6 +1222,17 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
         </div>
       </div>
 
+      <div class="photo-filter-row photo-filter-mobile" aria-label="사진 상태 필터">
+        <button class="photo-filter-chip" type="button" data-photo-filter="problem" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.6 2.4 17.4A2 2 0 0 0 4.1 20h15.8a2 2 0 0 0 1.7-2.6L13.7 3.6a2 2 0 0 0-3.4 0Z"/><path d="M12 8v5"/><path d="M12 17h.01"/></svg>
+          <span>확인 필요</span><span class="photo-filter-count" data-photo-count="problem">0</span>
+        </button>
+        <button class="photo-filter-chip" type="button" data-photo-filter="missing" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4H9L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h13"/><path d="M14 9a4 4 0 0 0-5 5"/><path d="m3 3 18 18"/><path d="M17 7h3a2 2 0 0 1 2 2v8"/></svg>
+          <span>사진 없음</span><span class="photo-filter-count" data-photo-count="missing">0</span>
+        </button>
+      </div>
+
       <div class="side-list" id="sideList"></div>
 
       <div class="batch-export-bar" id="batchExportBar" aria-live="polite">
@@ -1220,6 +1248,16 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
         <div>
           <div class="foot-stat" id="footStat">0건</div>
           <span id="dbxSyncBadge" style="display:none;font-size:10px;color:var(--green-txt);font-weight:500;margin-top:1px;"></span>
+        </div>
+        <div class="photo-filter-row photo-filter-desktop" aria-label="사진 상태 필터">
+          <button class="photo-filter-chip" type="button" data-photo-filter="problem" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.6 2.4 17.4A2 2 0 0 0 4.1 20h15.8a2 2 0 0 0 1.7-2.6L13.7 3.6a2 2 0 0 0-3.4 0Z"/><path d="M12 8v5"/><path d="M12 17h.01"/></svg>
+            <span>확인 필요</span><span class="photo-filter-count" data-photo-count="problem">0</span>
+          </button>
+          <button class="photo-filter-chip" type="button" data-photo-filter="missing" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4H9L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h13"/><path d="M14 9a4 4 0 0 0-5 5"/><path d="m3 3 18 18"/><path d="M17 7h3a2 2 0 0 1 2 2v8"/></svg>
+            <span>사진 없음</span><span class="photo-filter-count" data-photo-count="missing">0</span>
+          </button>
         </div>
       </div>
     </aside>
@@ -2022,7 +2060,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         viewport-fit=cover와 black-translucent를 제거하고, 첫 페인트 전에
 //         theme-color·color-scheme을 실제 헤더 배경(--card)과 동기화한다.
 // v2.73 — 모바일에서 오류 사진 확인 중 이전 통계 본문이 잠깐 노출되던 전환 순서를 수정한다.
-const APP_VERSION='v2.73';
+// v2.74 — 사진 상태를 카메라·경고 아이콘으로 구분하고, 데스크톱 하단과 모바일
+//         검색창 아래에 '확인 필요 / 사진 없음' 필터를 추가한다.
+const APP_VERSION='v2.74';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -3040,6 +3080,8 @@ function getFiltered(){
 
 let _batchSelectMode=false;
 const _batchSelectedIds=new Set();
+let _photoListFilter=''; // '' | 'problem'(모든 사진 문제) | 'missing'(누락·불러오기 실패)
+let _photoFilterPrevAllMonths=false;
 
 function _updateBatchExportUi(){
   const side=document.querySelector('.side');
@@ -3067,6 +3109,53 @@ function _toggleBatchReceipt(id){
   renderSide();
 }
 
+function _photoStatusIconHtml(r){
+  const reason=_photoErrorReason(r);
+  if(!reason)return '';
+  const kind=_photoErrorKind(r);
+  const svg=kind==='missing'
+    ?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4H9L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h13"/><path d="M14 9a4 4 0 0 0-5 5"/><path d="m3 3 18 18"/><path d="M17 7h3a2 2 0 0 1 2 2v8"/></svg>`
+    :`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.6 2.4 17.4A2 2 0 0 0 4.1 20h15.8a2 2 0 0 0 1.7-2.6L13.7 3.6a2 2 0 0 0-3.4 0Z"/><path d="M12 8v5"/><path d="M12 17h.01"/></svg>`;
+  return `<span class="r-photo-status ${kind}" role="img" aria-label="${escapeHtml(reason)}" title="${escapeHtml(reason)}">${svg}</span>`;
+}
+
+function _updatePhotoFilterUi(){
+  const problemCount=receipts.filter(r=>!!_photoErrorReason(r)).length;
+  const missingCount=receipts.filter(r=>_photoErrorKind(r)==='missing').length;
+  document.querySelectorAll('[data-photo-count="problem"]').forEach(el=>{el.textContent=problemCount;});
+  document.querySelectorAll('[data-photo-count="missing"]').forEach(el=>{el.textContent=missingCount;});
+  document.querySelectorAll('[data-photo-filter]').forEach(btn=>{
+    const kind=btn.dataset.photoFilter;
+    const count=kind==='problem'?problemCount:missingCount;
+    btn.setAttribute('aria-pressed',String(_photoListFilter===kind));
+    btn.disabled=count===0&&_photoListFilter!==kind;
+  });
+}
+
+function _clearPhotoListFilter(){
+  if(!_photoListFilter)return false;
+  _photoListFilter='';
+  _sideAllMonths=_photoFilterPrevAllMonths;
+  return true;
+}
+
+function _setPhotoListFilter(kind){
+  const next=_photoListFilter===kind?'':kind;
+  if(next&&!_photoListFilter){
+    _photoFilterPrevAllMonths=_sideAllMonths;
+    _sideAllMonths=true;
+  }else if(!next&&_photoListFilter){
+    _clearPhotoListFilter();
+  }
+  _photoListFilter=next;
+  if(next){
+    searchQuery='';searchInp.value='';_updateSearchClear();
+    _monthCatFilter=null;
+  }
+  selectedId=null;_mobileListMode='list';
+  switchTab('list');renderSide();renderDetail();
+}
+
 function _cardHtml(r){
   const sel=(r.id===selectedId)?' sel':'';
   const batchSel=_batchSelectedIds.has(r.id)?' batch-selected':'';
@@ -3074,15 +3163,13 @@ function _cardHtml(r){
   const meta=[fmtDateKor(r.date)];
   if(r.paidBy)meta.push(escapeHtml(r.paidBy));
   if((r.participants||[]).length>0)meta.push(`${r.participants.length}명`);
-  const photoErrorReason=_photoErrorReason(r);
-  const photoErrorDot=photoErrorReason
-    ?`<span class="r-photo-error-dot" role="img" aria-label="${escapeHtml(photoErrorReason)}" title="${escapeHtml(photoErrorReason)}"></span>`:'';
+  const photoStatusIcon=_photoStatusIconHtml(r);
   return `<div class="r-card${sel}${batchSel}" data-id="${r.id}" ${batchA11y}>
     <button class="r-card-check" type="button" tabindex="-1" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>
     </button>
     <div class="r-card-info">
-      <div class="r-card-store-row">${photoErrorDot}<div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div></div>
+      <div class="r-card-store-row">${photoStatusIcon}<div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div></div>
       <div class="r-card-meta">${meta.join(' · ')}</div>
     </div>
     <div class="r-card-amt${(r.total||0)<0?' amt-neg':''}">${fmtMoney(r.total)}원</div>
@@ -3105,7 +3192,10 @@ function renderSide(){
   }
 
   const list=document.getElementById('sideList');
-  const _base=getFiltered();
+  let _base=getFiltered();
+  if(_photoListFilter==='problem')_base=_base.filter(r=>!!_photoErrorReason(r));
+  else if(_photoListFilter==='missing')_base=_base.filter(r=>_photoErrorKind(r)==='missing');
+  _updatePhotoFilterUi();
   // 카테고리 필터 적용 (검색 없는 상태에서만)
   // v1.43 — 그룹 선택 시 모든 멤버 카테고리 포함
   const filtered=(!searchQuery&&_monthCatFilter)
@@ -3117,7 +3207,11 @@ function renderSide(){
     })
     :_base;
   if(!filtered.length){
-    const emptyMsg=searchQuery
+    const emptyMsg=_photoListFilter==='problem'
+      ? '확인이 필요한 영수증이 없어요'
+      : _photoListFilter==='missing'
+        ? '사진이 없는 영수증이 없어요'
+      : searchQuery
       ? `검색 결과가 없어요`
       : _monthCatFilter
         ? `${_sideAllMonths?'전체 기간':ymLabel(viewMonth)} <b>${escapeHtml(_monthCatFilter)}</b> 영수증이 없어요`
@@ -3160,6 +3254,10 @@ function renderSide(){
   });
   _updateBatchExportUi();
 }
+
+document.querySelectorAll('[data-photo-filter]').forEach(btn=>{
+  btn.addEventListener('click',()=>_setPhotoListFilter(btn.dataset.photoFilter));
+});
 
 document.getElementById('batchSelectToggle').addEventListener('click',()=>_setBatchSelectMode(!_batchSelectMode));
 document.getElementById('batchExportCancel').addEventListener('click',()=>_setBatchSelectMode(false));
@@ -3230,6 +3328,7 @@ if(_navLedgerBtn)_navLedgerBtn.addEventListener('click',()=>{
 
 // ── 월 네비게이션 ──
 function changeMonth(offset){
+  _clearPhotoListFilter();
   _sideAllMonths=false;
   if(offset===0){viewMonth=_currentYM();}
   else{viewMonth=ymOffset(viewMonth,offset);}
@@ -3244,7 +3343,7 @@ function changeMonth(offset){
 document.getElementById('monthPrev').addEventListener('click',()=>changeMonth(-1));
 document.getElementById('monthNext').addEventListener('click',()=>changeMonth(1));
 document.getElementById('monthToday').addEventListener('click',()=>{
-  _sideAllMonths=!_sideAllMonths;
+  if(!_clearPhotoListFilter())_sideAllMonths=!_sideAllMonths;
   selectedId=null;
   _monthCatFilter=null;
   _ledgerTimeFilter=_sideAllMonths?{type:'all'}:{type:'month'};
@@ -3272,6 +3371,7 @@ function _clearSearch(){
 searchClear.addEventListener('click',_clearSearch);
 
 function _applySearchInput(){
+  _clearPhotoListFilter();
   searchQuery=searchInp.value;
   if(searchQuery)selectedId=null;
   _monthCatFilter=null;
@@ -3291,6 +3391,7 @@ searchInp.addEventListener('input',()=>{
 
 // 앱 제목 클릭 → 초기 화면으로 리셋
 document.querySelector('.app-title').addEventListener('click',()=>{
+  _clearPhotoListFilter();
   _mobileListMode='list';
   selectedId=null;_monthCatFilter=null;_ledgerTimeFilter={type:'month'};
   if(searchQuery){searchQuery='';searchInp.value='';_updateSearchClear();}
@@ -6772,6 +6873,12 @@ function _photoErrorReason(r){
   if(actual&&(_photoHashCounts.get(actual)||0)>1)return '같은 사진이 다른 영수증에도 연결됨';
   if(_photoClaimMismatch(r))return '사진 파일명의 날짜·금액·매장명과 영수증 정보가 다름';
   return '';
+}
+
+function _photoErrorKind(r){
+  const reason=_photoErrorReason(r);
+  if(!reason)return '';
+  return reason==='사진 첨부 누락'||reason==='사진 파일 불러오기 오류'?'missing':'problem';
 }
 
 let _photoHashBackfillRunning=false;
