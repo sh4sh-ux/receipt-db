@@ -143,7 +143,7 @@ svg{display:block;flex-shrink:0;}
 
 /* ── LEFT SIDEBAR ── */
 .side{border-right:1px solid var(--sep);background:var(--left-bg);display:flex;flex-direction:column;min-height:700px;position:sticky;top:0;max-height:100vh;overflow:hidden;}
-.side-title-row{display:flex;align-items:center;justify-content:flex-start;margin-bottom:14px;}
+.side-title-row{display:flex;align-items:center;justify-content:flex-start;margin-bottom:8px;}
 .side-title{font-size:20px;font-weight:700;letter-spacing:-.3px;}
 .side-top{padding:26px var(--pad-x) 18px;}
 .app-eye-row{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
@@ -790,7 +790,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .app.mobile-stats-view .main,
   .app.mobile-content-view .main,
   .app.mobile-detail-view .main{display:block;order:0;}
-  .side-top{padding:max(18px,calc(env(safe-area-inset-top,0px) + 12px)) 18px 14px;}
+  .side-top{padding:max(18px,calc(env(safe-area-inset-top,0px) + 6px)) 18px 10px;}
   .side-search,.side-list,.side-foot{padding-left:18px;padding-right:18px;}
   .side-search{padding-bottom:10px;}
   .side-list{max-height:none;overflow:visible;padding-bottom:18px;}
@@ -994,7 +994,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .icon-nav [data-nav-label]::after{display:none;}
   .nav-brand{display:none;}
   .nav-btn:hover{transform:none;}
-  .side-top{padding-top:max(18px,calc(env(safe-area-inset-top,0px) + 12px));padding-bottom:14px;}
+  .side-top{padding-top:max(18px,calc(env(safe-area-inset-top,0px) + 6px));padding-bottom:10px;}
   .main-top{padding:19px 18px 15px;}
   .main-title{font-size:22px;}
   .main-body{padding:18px 18px 28px;}
@@ -1009,7 +1009,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
     /* 헤더 높이는 safe-area(노치·다이나믹 아일랜드)를 포함해야 한다.
        .side-top/.main-top의 padding-top이 max(18px, safe+12px)이므로
        고정 108px이면 노치 폰에서 상단이 상태바 아래로 잘린다. */
-    --mobile-brand-head-h:calc(90px + max(18px, env(safe-area-inset-top,0px) + 12px));
+    --mobile-brand-head-h:calc(80px + max(18px, env(safe-area-inset-top,0px) + 6px));
     --mobile-month-head-h:56px;
     --mobile-main-head-h:calc(var(--mobile-brand-head-h) + var(--mobile-month-head-h));
   }
@@ -1038,7 +1038,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
     min-height:var(--mobile-main-head-h);
     flex:0 0 auto;
     box-sizing:border-box;
-    padding-top:max(18px,calc(env(safe-area-inset-top,0px) + 12px));
+    padding-top:max(18px,calc(env(safe-area-inset-top,0px) + 6px));
   }
   /* ⚠️ 홈 화면 앱(standalone)에서는 내용이 상태바 아래로 들어간다.
      그때 여백은 env(safe-area-inset-top)이 대야 하는데, iOS에서 이 값이 0으로
@@ -1048,10 +1048,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
      기존 18px 그대로다(브라우저 UI가 이미 상태바를 비켜 주므로). */
   :root.is-standalone .side-top,
   :root.is-standalone .main-top{
-    padding-top:max(54px,calc(env(safe-area-inset-top,0px) + 12px));
+    padding-top:max(54px,calc(env(safe-area-inset-top,0px) + 6px));
   }
   :root.is-standalone{
-    --mobile-brand-head-h:calc(90px + max(54px, env(safe-area-inset-top,0px) + 12px));
+    --mobile-brand-head-h:calc(80px + max(54px, env(safe-area-inset-top,0px) + 6px));
   }
   .app-eye,.main-eye{font-size:11px;line-height:1.25;letter-spacing:.9px;margin-bottom:0;}
   .app-eye-row{align-items:baseline;margin-bottom:11px;}
@@ -1886,6 +1886,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.61 — 헤더가 필요 이상으로 높던 것 조정. 상태바 아래 숨통 12→6px,
+//         제목 아래 14→8px, 헤더 아래 14→10px. 헤더 170→148px(safe-area 62 기준).
+//         ※ v2.59의 54px 바닥값은 env가 정상인 기기에선 하는 일이 없었다(max로 env쪽이 이김).
+//           env가 0으로 오는 기기를 위한 안전장치로만 남긴다.
 // v2.60 — 토스트가 라이트 모드에서 글자와 배경이 같아 읽을 수 없던 것 수정.
 //         배경은 고정값(#252729)인데 글자만 var(--label)이라 라이트에서 대비 1.26:1이었다.
 //         배경·글자를 한 쌍의 토큰으로 묶고, 상태색은 흰 글씨 대비 4.5:1 이상으로 따로 정의.
@@ -1930,7 +1934,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.60';
+const APP_VERSION='v2.61';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
