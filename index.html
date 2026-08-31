@@ -30,6 +30,35 @@
     if(standalone) document.documentElement.classList.add('is-standalone');
   }catch(e){}
 })();
+
+/* 모바일에서 '문서 자체'가 밀리는 것을 되돌린다.
+   html/body가 overflow:hidden 이라 한번 밀리면 손가락으로는 되돌릴 수 없고,
+   헤더가 상태바 아래로 들어간 채 남는다.
+   iOS는 입력칸을 키보드 위로 올리려고 문서를 스크롤하므로,
+   타이핑 중에는 그 위치를 존중하고 입력이 끝나면 제자리로 돌린다. */
+(()=>{
+  const 모바일 = () => window.innerWidth <= 780;
+  const 타이핑중 = () => {
+    const el = document.activeElement;
+    return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+  };
+  const 되돌리기 = () => {
+    if (!모바일() || 타이핑중()) return;
+    if (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop) {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+  };
+  addEventListener('scroll', 되돌리기, {passive:true});
+  addEventListener('resize', 되돌리기);
+  addEventListener('orientationchange', () => setTimeout(되돌리기, 120));
+  // 입력이 끝난 뒤(키보드 내려간 뒤) 확실히 제자리로
+  addEventListener('focusout', () => setTimeout(되돌리기, 60), true);
+  if (window.visualViewport) {
+    visualViewport.addEventListener('resize', () => setTimeout(되돌리기, 60));
+  }
+})();
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -227,7 +256,7 @@ svg{display:block;flex-shrink:0;}
 @media(max-width:780px){.conn-warn{padding:9px 16px;font-size:12px;gap:8px;}}
 .main-top{padding:24px 32px 18px;border-bottom:1px solid var(--sep);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
 #viewList>.main-top{position:sticky;top:0;z-index:70;background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}
-.main-eye{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px;}
+.main-eye{font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;}
 /* 눈썹줄 + 버전 칩. 버전을 모든 탭에서 볼 수 있게 한다(내역 탭 사이드바에만 있었음). */
 .main-eye-row{display:flex;align-items:baseline;gap:7px;}
 .main-eye-row .app-version{text-transform:none;flex-shrink:0;}
@@ -960,7 +989,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .r-card-meta{margin-top:3px;line-height:1.35;}
 .r-card-amt{font-variant-numeric:tabular-nums;letter-spacing:-.1px;}
 .main-top{padding:28px 34px 21px;}
-.main-eye{letter-spacing:.7px;margin-bottom:7px;}
+.main-eye{letter-spacing:.8px;margin-bottom:7px;}
 .main-title{font-size:24px;letter-spacing:-.6px;line-height:1.2;}
 .main-sub{margin-top:5px;}
 .main-body{padding:26px 34px 38px;}
@@ -1207,7 +1236,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
         <div class="main-top">
           <div>
             <div class="main-eye-row">
-              <div class="main-eye" id="mainEye">가계부</div>
+              <div class="main-eye" id="mainEye">Receipt DB</div>
               <span class="app-version js-app-version" title="앱 버전"></span>
             </div>
             <div class="main-title" id="mainTitle">—</div>
@@ -1241,11 +1270,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
         <div class="main-top">
           <div>
             <div class="main-eye-row">
-              <div class="main-eye">새 영수증 추가</div>
+              <div class="main-eye">Receipt DB</div>
               <span class="app-version js-app-version" title="앱 버전"></span>
             </div>
             <div class="main-title" id="inputModeTitle">영수증 정리 결과 붙여넣기</div>
-            <div class="main-sub" id="inputModeSub">사용 중인 AI 도구에 영수증 사진과 프롬프트를 전달한 뒤, 정리된 결과를 붙여넣으세요.</div>
+            <div class="main-sub" id="inputModeSub">AI가 정리한 결과를 그대로 붙여넣으세요.</div>
           </div>
         </div>
         <div class="main-body">
@@ -1415,7 +1444,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
         <div class="main-top">
           <div>
             <div class="main-eye-row">
-              <div class="main-eye">설정</div>
+              <div class="main-eye">Receipt DB</div>
               <span class="app-version js-app-version" title="앱 버전"></span>
             </div>
             <div class="main-title">환경설정 및 데이터 관리</div>
@@ -1908,6 +1937,14 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.66 — ① 헤더 눈썹을 모든 탭에서 'Receipt DB'로 통일(통계 '가계부', 추가 '새 영수증 추가',
+//            설정 '설정' → 전부 동일). 자간도 0.9px로 맞춤. 인물 검색 아이콘·뒤로가기 버튼이
+//            들어가는 자리는 기능이 있어 그대로 뒀다.
+//         ② 붙여넣기 안내 문구를 한 줄로: 'AI가 정리한 결과를 그대로 붙여넣으세요.'
+//         ③ 헤더가 상태바 아래로 들어가 되돌아오지 않던 문제:
+//            낡은 .main.scrollIntoView() 3곳 제거 + 문서 스크롤 되돌리기 가드 추가.
+//            html/body가 overflow:hidden 이라 한번 밀리면 손가락으로 못 되돌린다.
+//            타이핑 중에는 iOS가 올려둔 위치를 존중하고, 입력이 끝나면 제자리로 돌린다.
 // v2.65 — 내역 탭 헤더의 빈 공간 제거(124→100px). v2.64에서 모든 탭을 124px로
 //         묶었는데 그 값은 부제목이 두 줄인 추가 탭 기준이라, 내역 탭엔 24px이
 //         빈 공간으로 남고 목록이 그만큼 밀렸다. 목록 영역 427→451px.
@@ -1975,7 +2012,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.65';
+const APP_VERSION='v2.66';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -3899,12 +3936,8 @@ saveBtn.addEventListener('click',async()=>{
   switchTab('list');
   renderSide();
   renderDetail();
-  // 모바일: 저장 후 상세 패널로 스크롤
-  if(_isTouch){
-    setTimeout(()=>{
-      document.querySelector('.main').scrollIntoView({behavior:'smooth',block:'start'});
-    },80);
-  }
+  // (구) 저장 후 .main 으로 문서 스크롤 — 지금은 내부 스크롤 구조라 불필요하고
+  //     문서를 밀어 헤더가 상태바 아래로 들어가는 원인이 되어 제거했다.
   // 양방향 동기화 (다운로드→머지→업로드, 백그라운드)
   dbxSyncNow(true);
 });
@@ -3996,7 +4029,7 @@ function _setInputMode(mode){
   const subEl=document.getElementById('inputModeSub');
   if(titleEl)titleEl.textContent=mode==='gpt'?'영수증 정리 결과 붙여넣기':'금액 직접 입력';
   if(subEl)subEl.textContent=mode==='gpt'
-    ?'사용 중인 AI 도구에 영수증 사진과 프롬프트를 전달한 뒤, 정리된 결과를 붙여넣으세요.'
+    ?'AI가 정리한 결과를 그대로 붙여넣으세요.'
     :'상호명과 금액만 입력하면 저장됩니다. 부고장·청첩장 등 참고 이미지를 첨부할 수 있어요.';
   if(mode==='direct'){
     _updateDirectSaveBtn();
@@ -4056,7 +4089,6 @@ async function _saveDirectEntry(){
   switchTab('list');
   renderSide();
   renderDetail();
-  if(_isTouch){setTimeout(()=>{document.querySelector('.main').scrollIntoView({behavior:'smooth',block:'start'});},80);}
   dbxSyncNow(true);
 }
 
@@ -4165,12 +4197,7 @@ async function selectReceipt(id){
   switchTab('list');
   renderSide();
   await renderDetail();
-  // 모바일: 상세 패널로 부드럽게 스크롤
-  if(_isTouch){
-    setTimeout(()=>{
-      document.querySelector('.main').scrollIntoView({behavior:'smooth',block:'start'});
-    },80);
-  }
+  // (구) 상세 패널로 문서 스크롤 — 위와 같은 이유로 제거.
 }
 
 // ── 검색 결과 요약 패널 ──
@@ -5115,22 +5142,22 @@ async function renderDetail(){
       const dq=_parseDateQ(q);
       if(dq){
         if(dq.type==='all'){
-          eye.textContent='전체';
+          eye.textContent='Receipt DB';
           title.textContent='전체 내역';
           sub.textContent=`${receipts.length}건`;
           body.innerHTML=renderAllSummaryHtml(receipts);
         }else if(dq.type==='ym'){
-          eye.textContent='가계부';
+          eye.textContent='Receipt DB';
           title.textContent=ymLabel(dq.ym);
           sub.textContent=filtered.length>0?`${filtered.length}건`:'영수증 없음';
           body.innerHTML=renderMonthSummaryHtml(dq.ym);
         }else if(dq.type==='year'){
-          eye.textContent='연간';
+          eye.textContent='Receipt DB';
           title.textContent=`${dq.year}년 내역`;
           sub.textContent=filtered.length>0?`${filtered.length}건`:'영수증 없음';
           body.innerHTML=renderYearSummaryHtml(dq.year,filtered);
         }else if(dq.type==='month'){
-          eye.textContent='비교';
+          eye.textContent='Receipt DB';
           title.textContent=`${parseInt(dq.month,10)}월 연도별 비교`;
           sub.textContent=filtered.length>0?`${filtered.length}건`:'영수증 없음';
           body.innerHTML=renderCrossYearMonthHtml(dq.month,filtered);
@@ -5193,7 +5220,7 @@ async function renderDetail(){
         _setMobPersonView(true);
       }else{
         // ── 일반 검색 결과 요약 패널 ──
-        eye.textContent='검색';
+        eye.textContent='Receipt DB';
         title.textContent=`'${q}' 검색 결과`;
         sub.textContent=filtered.length>0?`${filtered.length}개 영수증 · 클릭하면 상세 보기`:'결과 없음';
         body.innerHTML=renderSearchSummaryHtml(qL,filtered);
@@ -5213,18 +5240,18 @@ async function renderDetail(){
       // ── 가계부 요약 화면 (시간 필터 pills 포함) ──
       const pillsHtml=_ledgerFilterPillsHtml(_ledgerTimeFilter);
       if(_ledgerTimeFilter.type==='all'){
-        eye.textContent='전체';
+        eye.textContent='Receipt DB';
         title.textContent='전체 내역';
         sub.textContent=`${receipts.length}건`;
         body.innerHTML=pillsHtml+renderAllSummaryHtml(receipts);
       }else if(_ledgerTimeFilter.type==='year'){
         const yRecs=receipts.filter(r=>(r.date||'').startsWith(_ledgerTimeFilter.value+'-'));
-        eye.textContent='연간';
+        eye.textContent='Receipt DB';
         title.textContent=`${_ledgerTimeFilter.value}년 내역`;
         sub.textContent=yRecs.length>0?`${yRecs.length}건`:'영수증 없음';
         body.innerHTML=pillsHtml+renderYearSummaryHtml(_ledgerTimeFilter.value,yRecs);
       }else{
-        eye.textContent='가계부';
+        eye.textContent='Receipt DB';
         title.textContent=ymLabel(viewMonth);
         sub.textContent='목록에서 영수증을 선택하면 상세가 표시됩니다.';
         body.innerHTML=pillsHtml+renderMonthSummaryHtml(viewMonth);
