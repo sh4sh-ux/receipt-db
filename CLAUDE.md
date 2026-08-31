@@ -94,6 +94,10 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v2.72` — **안드로이드 PWA 상태표시줄 배경·아이콘 명암 불일치 수정.**
+  `viewport-fit=cover`·`black-translucent`를 제거해 상태표시줄을 브라우저에 넘기고,
+  첫 페인트 전에 `theme-color`·`color-scheme`을 실제 헤더 배경이랑 맞춤.
+  설치형 시작 색을 위한 `manifest.webmanifest`도 추가.
 - `v2.67` — **모바일 당겨서 새로고침**(더치페이 v5.10 구현 이식). 헤더를 아래로 당기면
   인디케이터가 따라 내려오고, 임계값(70px)을 넘겨 놓으면 스피너 후 `location.reload()`.
   ⚠️ **이 앱은 문서가 아니라 `.main-body`/`.side-list`가 스크롤한다.** 더치페이처럼

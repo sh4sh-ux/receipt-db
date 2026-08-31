@@ -1,0 +1,28 @@
+{
+  "name": "Receipt DB",
+  "short_name": "Receipt DB",
+  "description": "영수증을 보관·검색하고 지출을 관리하는 앱",
+  "lang": "ko-KR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "id": "/receipt-db/",
+  "prefer_related_applications": false
+}

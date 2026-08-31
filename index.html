@@ -2,12 +2,15 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+<!-- 상태표시줄은 브라우저가 배경과 아이콘 명암을 한 쌍으로 관리하게 한다. -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
 <title>영수증 보관함</title>
-<meta name="theme-color" id="themeColorMeta" content="#111213"/>
+<link rel="manifest" href="manifest.webmanifest"/>
+<meta name="color-scheme" content="light dark"/>
+<meta name="theme-color" id="themeColorMeta" content="#FFFFFF"/>
 <meta name="apple-mobile-web-app-title" content="영수증"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
@@ -19,16 +22,9 @@
   const resolved=preference==='system'?(dark?'dark':'light'):preference;
   document.documentElement.dataset.theme=resolved;
   document.documentElement.dataset.themePreference=preference;
-
-  // 홈 화면에 추가한 앱(standalone)인지 첫 페인트 전에 표시해 둔다.
-  // standalone에서는 내용이 상태바 아래로 깔리는데 iOS가 env(safe-area-inset-top)을
-  // 0으로 주는 경우가 있어, CSS에서 최소 여백을 따로 깔기 위한 신호다.
-  // navigator.standalone은 iOS 전용, display-mode는 그 외 브라우저용.
-  try{
-    const standalone = window.navigator.standalone === true
-      || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-    if(standalone) document.documentElement.classList.add('is-standalone');
-  }catch(e){}
+  document.documentElement.style.colorScheme=resolved;
+  const themeMeta=document.getElementById('themeColorMeta');
+  if(themeMeta)themeMeta.setAttribute('content',resolved==='dark'?'#2C2C2E':'#FFFFFF');
 })();
 
 /* 모바일에서 '문서 자체'가 밀리는 것을 되돌린다.
@@ -1101,22 +1097,6 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
     box-sizing:border-box;
     padding-top:max(14px,calc(env(safe-area-inset-top,0px) + 6px));
   }
-  /* ⚠️ 홈 화면 앱(standalone)에서는 내용이 상태바 아래로 들어간다.
-     그때 여백은 env(safe-area-inset-top)이 대야 하는데, iOS에서 이 값이 0으로
-     오는 경우가 있어(viewport-fit=cover를 줬는데도) 헤더가 상태바에 가렸다.
-     env를 못 믿으므로 standalone일 때는 최소 바닥값(54px)을 따로 깐다.
-     env가 정상이면 max()로 그쪽이 이긴다. 브라우저 탭에서는 이 블록이 적용되지 않아
-     기존 18px 그대로다(브라우저 UI가 이미 상태바를 비켜 주므로). */
-  :root.is-standalone .side-top,
-  :root.is-standalone .main-top{
-    padding-top:max(14px,calc(env(safe-area-inset-top,0px) + 6px));
-  }
-  :root.is-standalone{
-    --mobile-brand-head-h:calc(80px + max(14px, env(safe-area-inset-top,0px) + 6px));
-    /* 모든 탭 공통 헤더 높이 — 부제목이 두 줄인 추가 탭 기준(가장 큼).
-       .side-top·.main-top 양쪽에 걸어야 탭을 옮겨도 구분선이 안 움직인다. */
-    --mobile-head-h:calc(110px + max(14px, env(safe-area-inset-top,0px) + 6px));
-  }
   .app-eye,.main-eye{font-size:11px;line-height:1.25;letter-spacing:.9px;margin-bottom:0;}
   .app-eye-row{align-items:baseline;margin-bottom:11px;}
   .main-eye{margin-bottom:11px;}
@@ -2038,7 +2018,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         images/{imageId}.jpg가 없을 때 완료 JPG 탐색을 건너뛰던 조기 반환도 수정한다.
 // v2.71 — 파일명에서 읽은 날짜·금액·매장명과 숨은 사진 해시를 함께 보존해
 //         잘못 연결되거나 중복된 사진을 빨간 점으로 표시한다. 점 크기도 5px로 줄였다.
-const APP_VERSION='v2.71';
+// v2.72 — 안드로이드 PWA 상태표시줄 배경·아이콘 명암 불일치 수정.
+//         viewport-fit=cover와 black-translucent를 제거하고, 첫 페인트 전에
+//         theme-color·color-scheme을 실제 헤더 배경(--card)과 동기화한다.
+const APP_VERSION='v2.72';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -2069,8 +2052,9 @@ function applyTheme(preference,{persist=false}={}){
   const resolved=resolveTheme(pref);
   document.documentElement.dataset.theme=resolved;
   document.documentElement.dataset.themePreference=pref;
+  document.documentElement.style.colorScheme=resolved;
   const meta=document.getElementById('themeColorMeta');
-  if(meta)meta.setAttribute('content',resolved==='dark'?'#111113':'#F7F7F8');
+  if(meta)meta.setAttribute('content',resolved==='dark'?'#2C2C2E':'#FFFFFF');
   document.querySelectorAll('[data-theme-choice]').forEach(btn=>{
     const selected=btn.dataset.themeChoice===pref;
     btn.classList.toggle('on',selected);
