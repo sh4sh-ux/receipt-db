@@ -743,12 +743,29 @@ svg{display:block;flex-shrink:0;}
 
 /* ── TOAST ── */
 .toast-container{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:calc(100% - 32px);max-width:420px;}
-.toast{background:#252729;color:var(--label);border:1px solid var(--sep2);padding:12px 16px;border-radius:10px;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.18);pointer-events:auto;display:flex;align-items:center;gap:12px;opacity:0;transform:translateY(20px);transition:opacity .25s,transform .25s;max-width:100%;line-height:1.4;}
+/* ── 토스트 색 규칙 ──────────────────────────────────────────────
+   원칙: 배경과 글자를 **한 쌍의 토큰으로 묶는다.**
+   배경만 테마와 무관한 고정값이고 글자만 토큰이면 한쪽 테마에서 반드시 묻힌다
+   (v2.60 이전: 배경 #252729 고정 + color:var(--label) → 라이트에서 대비 1.26:1, 읽을 수 없었음).
+   1) 라이트: 흰 배경 + 검은 글씨            (18.9:1)
+   2) 다크  : 어두운 배경 + 밝은 글씨         (12.4:1)
+   3) 상태(오류·성공·경고): 색 배경 + 흰 글씨 — 두 테마 공통, 전부 4.5:1 이상.
+      --red/--green을 그대로 쓰면 흰 글씨 대비가 2.1~4.1:1로 모자라 토스트 전용 색을 따로 둔다. */
+:root{ --toast-bg:#2C2E30; --toast-fg:#F2F4F8; --toast-bd:#3A3D41; --toast-act:#5BB0FF; }
+html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4D4D8; --toast-act:#0B63CE; }
+:root{ --toast-err:#C62828; --toast-ok:#1B7F4B; --toast-warn:#A66200; }
+
+.toast{background:var(--toast-bg);color:var(--toast-fg);border:1px solid var(--toast-bd);padding:12px 16px;border-radius:10px;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.18);pointer-events:auto;display:flex;align-items:center;gap:12px;opacity:0;transform:translateY(20px);transition:opacity .25s,transform .25s;max-width:100%;line-height:1.4;}
 .toast.show{opacity:1;transform:translateY(0);}
 .toast-msg{flex:1;}
-.toast-action{background:transparent;color:#5BB0FF;border:none;font-size:14px;font-weight:700;cursor:pointer;padding:0 4px;font-family:inherit;}
-.toast.error{background:var(--red);}
-.toast.success{background:var(--green);}
+.toast-action{background:transparent;color:var(--toast-act);border:none;font-size:14px;font-weight:700;cursor:pointer;padding:0 4px;font-family:inherit;}
+.toast.error{background:var(--toast-err);color:#fff;border-color:transparent;}
+.toast.success{background:var(--toast-ok);color:#fff;border-color:transparent;}
+.toast.warning,.toast.offline{background:var(--toast-warn);color:#fff;border-color:transparent;}
+.toast.error .toast-action,
+.toast.success .toast-action,
+.toast.warning .toast-action,
+.toast.offline .toast-action{color:#fff;text-decoration:underline;}
 
 /* ── MOBILE ── */
 @media(max-width:780px){
@@ -1869,6 +1886,9 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.60 — 토스트가 라이트 모드에서 글자와 배경이 같아 읽을 수 없던 것 수정.
+//         배경은 고정값(#252729)인데 글자만 var(--label)이라 라이트에서 대비 1.26:1이었다.
+//         배경·글자를 한 쌍의 토큰으로 묶고, 상태색은 흰 글씨 대비 4.5:1 이상으로 따로 정의.
 // v2.59 — 홈 화면 앱에서 헤더가 여전히 상태바에 가리던 것 수정. iOS가
 //         env(safe-area-inset-top)을 0으로 주는 경우가 있어(viewport-fit=cover에도)
 //         v2.56의 보정이 걸리지 않았다. standalone이면 최소 54px 여백을 따로 깐다.
@@ -1910,7 +1930,7 @@ svg{display:block;flex-shrink:0;}
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.59';
+const APP_VERSION='v2.60';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
