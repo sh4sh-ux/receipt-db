@@ -215,7 +215,9 @@ svg{display:block;flex-shrink:0;}
 .r-thumb{width:36px;height:36px;border-radius:8px;background:var(--fill);display:flex;align-items:center;justify-content:center;color:var(--label3);overflow:hidden;flex-shrink:0;}
 .r-thumb img{width:100%;height:100%;object-fit:cover;}
 .r-card-info{flex:1;min-width:0;}
+.r-card-store-row{display:flex;align-items:center;gap:6px;min-width:0;}
 .r-card-store{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.r-photo-error-dot{width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--red-bg);flex:0 0 7px;}
 .r-card-meta{font-size:11px;color:var(--label3);margin-top:2px;display:flex;gap:6px;align-items:center;}
 .r-card-amt{font-size:13px;font-weight:700;text-align:right;flex-shrink:0;white-space:nowrap;}
 
@@ -2032,7 +2034,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.69';
+// v2.70 — 사진 참조가 빠진 영수증도 표준 이미지 ID와 완료 JPG 파일에서 자동 복구한다.
+//         images/{imageId}.jpg가 없을 때 완료 JPG 탐색을 건너뛰던 조기 반환도 수정한다.
+const APP_VERSION='v2.70';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -2151,6 +2155,11 @@ function dbPut(store,obj){return txStore(store,'readwrite').then(s=>new Promise(
 function dbGet(store,id){return txStore(store,'readonly').then(s=>new Promise((res,rej)=>{const r=s.get(id);r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e.target.error);}));}
 function dbDel(store,id){return txStore(store,'readwrite').then(s=>new Promise((res,rej)=>{const r=s.delete(id);r.onsuccess=()=>res();r.onerror=e=>rej(e.target.error);}));}
 function dbAll(store){return txStore(store,'readonly').then(s=>new Promise((res,rej)=>{const r=s.getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=e=>rej(e.target.error);}));}
+function dbValidImageIds(){return txStore('images','readonly').then(s=>new Promise((res,rej)=>{
+  const ids=new Set(),r=s.openCursor();
+  r.onsuccess=()=>{const c=r.result;if(!c)return res(ids);const im=c.value;if(im&&(im.data||im.blob))ids.add(im.id);c.continue();};
+  r.onerror=e=>rej(e.target.error);
+}));}
 function dbClear(store){return txStore(store,'readwrite').then(s=>new Promise((res,rej)=>{const r=s.clear();r.onsuccess=()=>res();r.onerror=e=>rej(e.target.error);}));}
 
 // ════════════════════════════════════════════════════════════════
@@ -2163,6 +2172,7 @@ let pendingPhotoBlob=null;
 let pendingPhotoUrl=null;
 let viewMonth=_currentYM();  // 'YYYY-MM' — 가계부에서 보고 있는 월
 let _sideAllMonths=false;    // 왼쪽 목록만 전체 기간으로 전환
+let _localImageIds=new Set();// 실제 이미지 데이터가 이 기기에 있는 imageId
 function _currentYM(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 function _todayYMD(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
@@ -2184,7 +2194,10 @@ async function _ensureImgUrl(imageId,receipt=null){
       _imgDownloading.add(imageId);
       _dbxDownloadImage(imageId,receipt).then(url=>{
         _imgDownloading.delete(imageId);
-        if(url&&!_isDetailEditing())renderDetail();  // 편집 중인 입력·포커스는 보존
+        if(url){
+          renderSide();
+          if(!_isDetailEditing())renderDetail();  // 편집 중인 입력·포커스는 보존
+        }
       });
     }
     return null;
@@ -2199,6 +2212,39 @@ async function _ensureImgUrl(imageId,receipt=null){
   const url=URL.createObjectURL(rec.blob);
   _imgUrlCache.set(imageId,url);
   return url;
+}
+
+// 동기화된 영수증 메타데이터에서 imageId만 빠진 경우에도 사진 원본은 Dropbox의
+// images/ 또는 완료 JPG에 남아 있을 수 있다. 새 사진을 저장할 때 쓰는 표준 ID를
+// 다시 계산해 원본을 찾고, 성공한 경우에만 영수증 참조를 복구한다.
+async function _ensureReceiptImgUrl(receipt){
+  if(!receipt)return null;
+  if(receipt.imageId)return _ensureImgUrl(receipt.imageId,receipt);
+  if(!receipt.id)return null;
+  const imageId='img_'+String(receipt.id).replace(/^rec_/,'');
+  if(_imgDownloading.has(imageId))return null;
+  _imgDownloading.add(imageId);
+  try{
+    // 참조만 빠지고 로컬 이미지가 남은 경우에는 Dropbox 연결 없이도 복구한다.
+    const local=await dbGet('images',imageId);
+    const url=local?await _ensureImgUrl(imageId,receipt)
+      :(dbxIsConnected()?await _dbxDownloadImage(imageId,receipt):null);
+    if(!url)return null;
+    // 기다리는 동안 사용자가 직접 사진을 추가했다면 새 참조를 덮어쓰지 않는다.
+    const fresh=await dbGet('receipts',receipt.id);
+    if(!fresh||fresh.imageId)return fresh?.imageId?_ensureImgUrl(fresh.imageId,fresh):null;
+    fresh.imageId=imageId;
+    fresh.updatedAt=nowISO();
+    await dbPut('receipts',fresh);
+    receipt.imageId=imageId;
+    receipt.updatedAt=fresh.updatedAt;
+    _localImageIds.add(imageId);
+    renderSide();
+    dbxSyncUpload().catch(()=>{});
+    return url;
+  }finally{
+    _imgDownloading.delete(imageId);
+  }
 }
 function _revokeImgUrl(imageId){
   const u=_imgUrlCache.get(imageId);
@@ -2769,7 +2815,9 @@ function getAllCategories(){
 // LOAD & RENDER
 // ════════════════════════════════════════════════════════════════
 async function loadAll(){
-  receipts=(await dbAll('receipts')).map(r=>({...r,category:normalizeCategory(r.category)}));
+  const [storedReceipts,localImageIds]=await Promise.all([dbAll('receipts'),dbValidImageIds()]);
+  receipts=storedReceipts.map(r=>({...r,category:normalizeCategory(r.category)}));
+  _localImageIds=localImageIds;
   receipts.sort((a,b)=>{
     const k=(b.date||'')+(b.time||'')+b.id;
     const j=(a.date||'')+(a.time||'')+a.id;
@@ -3027,12 +3075,15 @@ function _cardHtml(r){
   const meta=[fmtDateKor(r.date)];
   if(r.paidBy)meta.push(escapeHtml(r.paidBy));
   if((r.participants||[]).length>0)meta.push(`${r.participants.length}명`);
+  const photoError=!r.imageId||!_localImageIds.has(r.imageId);
+  const photoErrorDot=photoError
+    ?`<span class="r-photo-error-dot" role="img" aria-label="사진 첨부 누락 또는 불러오기 오류" title="사진 첨부 누락 또는 불러오기 오류"></span>`:'';
   return `<div class="r-card${sel}${batchSel}" data-id="${r.id}" ${batchA11y}>
     <button class="r-card-check" type="button" tabindex="-1" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>
     </button>
     <div class="r-card-info">
-      <div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div>
+      <div class="r-card-store-row">${photoErrorDot}<div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div></div>
       <div class="r-card-meta">${meta.join(' · ')}</div>
     </div>
     <div class="r-card-amt${(r.total||0)<0?' amt-neg':''}">${fmtMoney(r.total)}원</div>
@@ -5335,7 +5386,7 @@ async function renderDetail(){
   _detailSetDirty(false);
 
   // 상세 카드에서 사용하는 사진 URL만 준비한다.
-  const _detailPhotoUrl=r.imageId?await _ensureImgUrl(r.imageId,r):null;
+  const _detailPhotoUrl=await _ensureReceiptImgUrl(r);
 
   const sum=(r.items||[]).reduce((s,i)=>s+(i.amount||0),0);
   const detailAmountAudit=getAmountAudit(r);
@@ -7007,6 +7058,7 @@ async function _dbxImportSyncImages(images){
       // inbox 이미지는 항상 덮어쓰기 (이미지 교정 지원)
       const blob=await base64ToBlob(im.data);
       await dbPut('images',{id:im.id,blob,mime:im.mime||blob.type||'image/jpeg'});
+      _localImageIds.add(im.id);
       _revokeImgUrl(im.id);
       imgN++;
     }catch(e){console.warn('dbx image import skip:',im&&im.id,e);}
@@ -7727,6 +7779,7 @@ async function dbxSyncDownload(){
     const changed=await _dbxMerge(data);
     const imgN=await _dbxImportSyncImages(data.images);
     if(imgN>0){
+      renderSide();
       if(!_isDetailEditing())renderDetail();
       if(!changed)toast(`☁ 사진 ${imgN}장 동기화됨`,{duration:2200});
     }
@@ -7744,6 +7797,7 @@ async function dbxSyncDownload(){
         if(inbox&&inbox.app==='receipt-db'&&Array.isArray(inbox.receipts)&&inbox.receipts.length){
           const inboxChanged=await _dbxMerge(inbox);
           const inboxImgN=await _dbxImportSyncImages(inbox.images);
+          if(inboxImgN>0)renderSide();
           if((inboxChanged>0||inboxImgN>0)&&!_isDetailEditing())renderDetail();
           if(inboxChanged>0)toast(`☁ inbox ${inboxChanged}건 추가됨`,{duration:2500});
         }
@@ -8191,6 +8245,7 @@ async function _dbxDownloadReceiptArchive(imgId,rec){
       if(!resp.ok)continue;
       const blob=await resp.blob();
       await dbPut('images',{id:imgId,blob,mime:blob.type||'image/jpeg'});
+      _localImageIds.add(imgId);
       if(!rec.scanPath){
         rec.scanPath=path;
         await dbPut('receipts',rec);
@@ -8215,13 +8270,17 @@ async function _dbxDownloadImage(imgId,rec=null){
         'Dropbox-API-Arg':_dbxApiArg({path:_dbxImagesDir()+'/'+imgId+'.jpg'}),
       },
     });
-    if(resp.status===404||resp.status===409)return null;
-    if(!resp.ok)return null;
-    const blob=await resp.blob();
-    await dbPut('images',{id:imgId,blob,mime:blob.type||'image/jpeg'});
-    const url=URL.createObjectURL(blob);
-    _imgUrlCache.set(imgId,url);
-    return url;
+    if(resp.ok){
+      const blob=await resp.blob();
+      await dbPut('images',{id:imgId,blob,mime:blob.type||'image/jpeg'});
+      _localImageIds.add(imgId);
+      const url=URL.createObjectURL(blob);
+      _imgUrlCache.set(imgId,url);
+      return url;
+    }
+    // images/ 사본이 없더라도 사람이 보는 완료 JPG 원본은 남아 있을 수 있다.
+    // 404/409에서 끝내지 말고 아래 보관본 복구 경로로 이어 간다.
+    if(resp.status!==404&&resp.status!==409)console.warn('img download err:',await resp.text());
   }catch(e){}
   return _dbxDownloadReceiptArchive(imgId,rec);
 }
