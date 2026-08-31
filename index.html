@@ -19,6 +19,16 @@
   const resolved=preference==='system'?(dark?'dark':'light'):preference;
   document.documentElement.dataset.theme=resolved;
   document.documentElement.dataset.themePreference=preference;
+
+  // 홈 화면에 추가한 앱(standalone)인지 첫 페인트 전에 표시해 둔다.
+  // standalone에서는 내용이 상태바 아래로 깔리는데 iOS가 env(safe-area-inset-top)을
+  // 0으로 주는 경우가 있어, CSS에서 최소 여백을 따로 깔기 위한 신호다.
+  // navigator.standalone은 iOS 전용, display-mode는 그 외 브라우저용.
+  try{
+    const standalone = window.navigator.standalone === true
+      || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+    if(standalone) document.documentElement.classList.add('is-standalone');
+  }catch(e){}
 })();
 </script>
 <style>
@@ -1013,6 +1023,19 @@ svg{display:block;flex-shrink:0;}
     box-sizing:border-box;
     padding-top:max(18px,calc(env(safe-area-inset-top,0px) + 12px));
   }
+  /* ⚠️ 홈 화면 앱(standalone)에서는 내용이 상태바 아래로 들어간다.
+     그때 여백은 env(safe-area-inset-top)이 대야 하는데, iOS에서 이 값이 0으로
+     오는 경우가 있어(viewport-fit=cover를 줬는데도) 헤더가 상태바에 가렸다.
+     env를 못 믿으므로 standalone일 때는 최소 바닥값(54px)을 따로 깐다.
+     env가 정상이면 max()로 그쪽이 이긴다. 브라우저 탭에서는 이 블록이 적용되지 않아
+     기존 18px 그대로다(브라우저 UI가 이미 상태바를 비켜 주므로). */
+  :root.is-standalone .side-top,
+  :root.is-standalone .main-top{
+    padding-top:max(54px,calc(env(safe-area-inset-top,0px) + 12px));
+  }
+  :root.is-standalone{
+    --mobile-brand-head-h:calc(90px + max(54px, env(safe-area-inset-top,0px) + 12px));
+  }
   .app-eye,.main-eye{font-size:11px;line-height:1.25;letter-spacing:.9px;margin-bottom:0;}
   .app-eye-row{align-items:baseline;margin-bottom:11px;}
   .main-eye{margin-bottom:11px;}
@@ -1846,6 +1869,9 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.59 — 홈 화면 앱에서 헤더가 여전히 상태바에 가리던 것 수정. iOS가
+//         env(safe-area-inset-top)을 0으로 주는 경우가 있어(viewport-fit=cover에도)
+//         v2.56의 보정이 걸리지 않았다. standalone이면 최소 54px 여백을 따로 깐다.
 // v2.58 — 붙여넣기/링크만으로 결제수단까지 채운다. 파서가 '결제수단:' 줄을 읽지 않아
 //         현금 영수증도 늘 기본값 '카드'로 남아 폰에서 손으로 고쳐야 했다.
 //         내장 프롬프트(GPT_PROMPT)에도 결제수단 줄을 추가.
@@ -1884,7 +1910,7 @@ svg{display:block;flex-shrink:0;}
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.58';
+const APP_VERSION='v2.59';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
