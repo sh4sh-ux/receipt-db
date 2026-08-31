@@ -1846,6 +1846,9 @@ svg{display:block;flex-shrink:0;}
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.58 — 붙여넣기/링크만으로 결제수단까지 채운다. 파서가 '결제수단:' 줄을 읽지 않아
+//         현금 영수증도 늘 기본값 '카드'로 남아 폰에서 손으로 고쳐야 했다.
+//         내장 프롬프트(GPT_PROMPT)에도 결제수단 줄을 추가.
 // v2.57 — 스캔함으로 등록된 영수증에 결제자가 비어 있던 것 수정. 수동 저장은
 //         payerInp||getMyName() 으로 '내 이름'을 기본값으로 쓰는데 스캔 등록만
 //         paidBy:'' 로 하드코딩돼 있었다. 같은 기본값을 쓰도록 통일.
@@ -1881,7 +1884,7 @@ svg{display:block;flex-shrink:0;}
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.57';
+const APP_VERSION='v2.58';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -2360,6 +2363,7 @@ const GPT_PROMPT=`이 영수증을 정확히 아래 형식으로만 정리해줘
 매장명: [브랜드명 + 정확한 지점명]
 일자: YYYY.MM.DD
 총액: ##,###원
+결제수단: 카드 또는 현금 또는 계좌이체
 
 품목명 | 수량 | 단가 | 금액
 
@@ -2396,7 +2400,7 @@ function _parseDate(s){
 }
 function parseReceiptText(raw){
   if(!raw||!raw.trim())return null;
-  const out={store:'',date:'',time:'',total:0,items:[]};
+  const out={store:'',date:'',time:'',total:0,items:[],payMethod:''};
   const lines=raw.split(/\r?\n/);
   let inItems=false;
   for(const ln of lines){
@@ -2421,6 +2425,16 @@ function parseReceiptText(raw){
     }
     if(/^총액\s*[:：]/.test(line)||/^합계\s*[:：]/.test(line)){
       out.total=_stripNum(line.replace(/^(총액|합계)\s*[:：]\s*/,''));continue;
+    }
+    // 결제수단 — 링크(#r=)나 붙여넣기만으로 폼이 완성되도록 읽는다.
+    // 이 줄이 없으면 항상 기본값 '카드'로 남아 현금 영수증을 손으로 고쳐야 했다.
+    if(/^결제수단\s*[:：]/.test(line)){
+      const v=line.replace(/^결제수단\s*[:：]\s*/,'').trim();
+      if(/현금/.test(v))out.payMethod='cash';
+      else if(/카드/.test(v))out.payMethod='card';
+      else if(/계좌|이체|송금/.test(v))out.payMethod='transfer';
+      else if(v)out.payMethod='other';
+      continue;
     }
     // 헤더 라인 무시
     if(/품목명\s*\|\s*수량\s*\|\s*단가\s*\|\s*금액/.test(line)){inItems=true;continue;}
@@ -3264,6 +3278,14 @@ function updatePreview(){
     const auto=autocategorize(p.store);
     if(auto && (catInpEl.value.trim()===''||_catAutoFilled)){
       _setCategoryValue(auto,{auto:true});
+    }
+  }
+  // 결제수단도 붙여넣기만으로 채운다 — 폰에서 손으로 고르는 단계를 없애기 위함.
+  if(p&&p.payMethod){
+    const sel=document.getElementById('payMethod');
+    if(sel&&sel.value!==p.payMethod){
+      sel.value=p.payMethod;
+      sel.dispatchEvent(new Event('change',{bubbles:true}));   // 결제상세 드롭다운 갱신
     }
   }
   if(!p){
