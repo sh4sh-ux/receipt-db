@@ -87,8 +87,28 @@ def parse_date_from_name(name):
     return f"{y:04d}-{mo:02d}-{d:02d}"
 
 
+def parse_verified_name(name):
+    """260809_영수증(5,900)_스타벅스.jpg 형식의 검증 정보를 읽는다."""
+    stem = Path(name).stem.strip()
+    m = re.match(r"^(\d{2})(\d{2})(\d{2})_영수증(?:\(([\d,]+)\))?(?:_(.+))?$", stem)
+    if not m:
+        return None
+    yy, mo, day, money, store = m.groups()
+    if not (1 <= int(mo) <= 12 and 1 <= int(day) <= 31):
+        return None
+    return {
+        "date": f"20{yy}-{mo}-{day}",
+        "total": int((money or "0").replace(",", "")),
+        "store": (store or "").strip(),
+        "sourceName": name,
+    }
+
+
 def file_date(path):
     """파일명 우선, 안 되면 파일 수정시각으로 날짜 결정."""
+    verified = parse_verified_name(path.name)
+    if verified:
+        return verified["date"]
     d = parse_date_from_name(path.name)
     if d:
         return d
@@ -150,18 +170,23 @@ def make_record(path, date_str):
     rec_id = f"rec_{date_str.replace('-', '')}_p{digest}"
     img_id = "img_" + rec_id[4:]  # 앱의 imageId 규칙: 'img_' + id의 'rec_' 뒷부분
     data_url, mime = encode_image(path)
+    stored_bytes = base64.b64decode(data_url.split(",", 1)[1])
+    image_hash = hashlib.sha1(stored_bytes).hexdigest()
+    claim = parse_verified_name(path.name)
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     receipt = {
         "id": rec_id,
         "date": date_str,
         "time": "",
-        "store": "",
+        "store": claim["store"] if claim else "",
         "category": "",
         "paymentMethod": "",
         "paymentDetail": "",
-        "total": 0,
+        "total": claim["total"] if claim else 0,
         "items": [],
         "imageId": img_id,
+        "imageHash": image_hash,
+        "photoClaim": claim,
         "notes": "스캔 자동등록 (PNG)",
         "tags": [],
         # 원본 파일 내용의 sha1. 앱(스캔함)이 같은 사진을 다른 날짜로 등록해
@@ -170,7 +195,7 @@ def make_record(path, date_str):
         "createdAt": now,
         "updatedAt": now,
     }
-    image = {"id": img_id, "mime": mime, "data": data_url}
+    image = {"id": img_id, "mime": mime, "data": data_url, "contentHash": image_hash}
     return receipt, image
 
 
