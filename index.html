@@ -1039,7 +1039,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   /* ⚠️ 높이를 height로 '고정'하지 말 것. padding-top이 safe-area에 따라 달라지므로
      고정 높이면 내용이 상자를 넘쳐 헤더 윗부분이 잘린다(v2.56).
      min-height로 두면 기준 높이는 지키면서 필요할 때만 늘어나 절대 잘리지 않는다. */
-  .side-top{min-height:var(--mobile-head-h);box-sizing:border-box;}
+  /* 내역 탭 헤더는 내용이 요구하는 만큼만 쓴다.
+     --mobile-head-h(124px)는 부제목이 두 줄인 추가 탭 기준이라
+     여기 걸면 24px이 빈 공간으로 남고 목록이 그만큼 밀린다.
+     ※ 그래서 내역 탭 구분선은 추가·설정과 높이가 다르다(의도된 것). */
+  .side-top{min-height:0;box-sizing:border-box;}
   .month-nav{min-height:var(--mobile-month-head-h);box-sizing:border-box;}
   /* ⚠️ min-height에 '브랜드+월네비' 높이를 쓰면 안 된다.
      그건 목록 탭 사이드바(브랜드 + 월 네비)와 높이를 맞추려던 값인데,
@@ -1904,6 +1908,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.65 — 내역 탭 헤더의 빈 공간 제거(124→100px). v2.64에서 모든 탭을 124px로
+//         묶었는데 그 값은 부제목이 두 줄인 추가 탭 기준이라, 내역 탭엔 24px이
+//         빈 공간으로 남고 목록이 그만큼 밀렸다. 목록 영역 427→451px.
+//         ※ 이 결과로 내역 탭 구분선(227)은 추가·설정(194)과 높이가 다르다 — 의도된 것.
+//           둘을 동시에 맞추려면 어느 쪽이든 빈 공간이 생겨, 사용자가 목록 공간을 택했다.
 // v2.64 — ① 상태바와 헤더 사이 여백을 1/4로(54→14px 바닥값). v2.59에서 넣은 54px이
 //            env가 0인 기기에서 그대로 빈 공간이 됐다.
 //         ② 탭마다 다르던 헤더 높이를 통일(내역 100·설정 107·추가 124 → 모두 124px).
@@ -1966,7 +1975,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.64';
+const APP_VERSION='v2.65';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
