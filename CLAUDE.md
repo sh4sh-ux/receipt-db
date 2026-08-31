@@ -94,6 +94,11 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v2.63` — 네비 **말꼬리가 좌측 패널에 가리던 것** 수정. `.icon-nav`와 `.side`가 둘 다
+  positioned + `z-index:auto`라 DOM상 뒤인 `.side`가 위에 그려졌다. 레일에 `z-index:100`.
+  (`#viewList>.main-top`이 70이므로 그보다 위여야 한다.)
+  ⚠️ 더치페이 `.app-rail`은 `position`이 없어 말꼬리의 `z-index:400`이 루트까지 올라가
+  이 문제가 없었다. **값만 베끼면 안 되고 쌓임 맥락(stacking context)까지 봐야 한다.**
 - `v2.62` — ① **추가·설정 탭 헤더의 빈 공간 제거.** `.main-top`의 `min-height`가
   `--mobile-main-head-h`(브랜드+월네비)여서, 월 네비가 없는 탭에서 39px이 빈 공간으로 남았다.
   모바일은 한 번에 한 화면만 보이므로 맞출 대상이 없다 → `min-height:0`.

@@ -124,7 +124,10 @@ svg{display:block;flex-shrink:0;}
 .app{background:var(--card);border-radius:22px;border:1px solid var(--sep);overflow:clip;box-shadow:var(--app-shadow);min-height:780px;display:grid;grid-template-columns:76px 360px minmax(0,1fr);}
 
 /* ── ICON NAV ── */
-.icon-nav{background:var(--nav-bg);border-right:1px solid var(--sep);display:flex;flex-direction:column;align-items:center;padding:20px 10px;gap:10px;position:sticky;top:0;height:calc(100vh - 30px);max-height:100vh;align-self:start;}
+/* ⚠️ z-index 필수 — 레일과 .side가 둘 다 positioned + z-index:auto 라
+   DOM상 뒤에 오는 .side가 위에 그려져 말꼬리가 가렸다.
+   #viewList>.main-top(z-index:70)보다도 위여야 한다. */
+.icon-nav{background:var(--nav-bg);border-right:1px solid var(--sep);display:flex;flex-direction:column;align-items:center;padding:20px 10px;gap:10px;position:sticky;top:0;z-index:100;height:calc(100vh - 30px);max-height:100vh;align-self:start;}
 .nav-brand{width:48px;height:48px;border:0;outline:0;appearance:none;-webkit-appearance:none;border-radius:15px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;letter-spacing:-.4px;margin-bottom:12px;box-shadow:0 8px 24px color-mix(in srgb,var(--blue) 28%,transparent);transition:transform .15s,filter .15s;flex-shrink:0;}
 .nav-brand:hover{filter:brightness(1.06);transform:translateY(-1px);}
 .nav-brand:active{transform:scale(.95);}
@@ -1892,6 +1895,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.63 — 네비 말꼬리가 좌측 패널에 가리던 것 수정. .icon-nav와 .side가 둘 다
+//         positioned + z-index:auto 라 DOM상 뒤인 .side가 위에 그려졌다.
+//         레일에 z-index:100을 줘서 올린다(#viewList>.main-top의 70보다 위).
+//         ※ 더치페이 .app-rail은 position이 없어 이 문제가 없었다.
 // v2.62 — ① 추가·설정 탭 헤더의 빈 공간 제거. .main-top의 min-height가 '브랜드+월네비'
 //            높이여서 월 네비가 없는 탭에서 39px이 그대로 빈 공간으로 남았다(204→178px).
 //         ② 네비 레일을 더치페이(.app-rail)와 동일하게 — 말꼬리 위치·반투명 배경,
@@ -1944,7 +1951,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.62';
+const APP_VERSION='v2.63';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
