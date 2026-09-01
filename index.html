@@ -2072,7 +2072,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 // v2.78 — 재설치 직후 Dropbox 사진을 아직 내려받지 않은 영수증을
 //         '사진 없음'으로 세던 것을 수정. 미다운로드 항목은 확인 중으로 두고,
 //         동기화 후 순차적으로 복구한 뒤 실제 실패한 항목만 사진 없음으로 표시한다.
-const APP_VERSION='v2.78';
+// v2.79 — 영수증 상세 헤더에서 버전이 '← 2026년 9월 가계부' 뒤에 붙던 것을 수정.
+//         뒤로가기 줄에서는 버전 칩을 숨기고, 요약 화면으로 복귀하면 다시 표시한다.
+const APP_VERSION='v2.79';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -5369,6 +5371,8 @@ async function renderDetail(){
   const body=document.getElementById('detailBody');
   body.classList.remove('mob-compact');
   const eye=document.getElementById('mainEye');
+  const detailVersion=eye.parentElement?.querySelector('.js-app-version');
+  if(detailVersion)detailVersion.hidden=!!selectedId;
   const title=document.getElementById('mainTitle');
   const sub=document.getElementById('mainSub');
   const actions=document.getElementById('detailActions');
