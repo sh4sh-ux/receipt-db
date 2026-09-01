@@ -378,7 +378,7 @@ svg{display:block;flex-shrink:0;}
 .cat-picker-trigger[aria-expanded="true"]{border-color:var(--blue);background:var(--card);box-shadow:0 0 0 3px var(--blue-bg);}
 .cat-picker-trigger-icon{width:24px;height:24px;border-radius:7px;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .cat-picker-trigger-icon svg{width:15px;height:15px;}
-.cat-icon-mask{display:block;flex-shrink:0;background:currentColor;-webkit-mask:var(--cat-icon) center / contain no-repeat;mask:var(--cat-icon) center / contain no-repeat;filter:url(#cat-icon-dilate);}
+.cat-icon-mask{display:block;flex-shrink:0;background:currentColor;-webkit-mask:var(--cat-icon) center / contain no-repeat;mask:var(--cat-icon) center / contain no-repeat;}
 .cat-icon-mask,.cat-icon-svg{transform:scale(var(--cat-scale,1));transform-origin:center;}
 .cat-picker-trigger-icon .cat-icon-mask{width:20px;height:20px;}
 .cat-picker-trigger-label{flex:1;font-size:13.5px;font-weight:550;}
@@ -1159,13 +1159,6 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 </style>
 </head>
 <body>
-<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;overflow:hidden">
-  <defs>
-    <filter id="cat-icon-dilate" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse">
-      <feMorphology in="SourceGraphic" operator="dilate" radius="0.45"/>
-    </filter>
-  </defs>
-</svg>
 
 <!-- 이 기기가 Dropbox에 연결 안 됐을 때. 저장은 되지만 다른 기기에 안 보이고
      사진도 완료 JPG로 정리되지 않는다 — 설정 탭에 들어가야만 알 수 있어서 항상 띄운다.
@@ -2103,7 +2096,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 // v2.88 — 사용자가 새로 전달한 16개 SVG를 원본 그대로 적용하고 별도 굵기 보정을 제거한다.
 // v2.89 — 아이콘별 단일 SVG 원본을 적용하고 작은 화면에서도 선명하도록 표시 크기를 확대한다.
 // v2.90 — 원본 SVG는 유지하면서 모든 카테고리 아이콘 외곽을 동일하게 보강한다.
-const APP_VERSION='v2.90';
+// v2.91 — 새 단일 SVG 원본을 적용하고 기기별 차이가 있던 표시 필터를 제거한다.
+const APP_VERSION='v2.91';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
