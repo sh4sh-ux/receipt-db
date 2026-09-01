@@ -12,12 +12,13 @@
 
 ## 현재 파일
 - `index.html` — 앱 전체 (HTML/CSS/JS 통합)
+- `sw.js` — network-first 탐색 + 오프라인 앱 셸 캐시
 - `README.md` — GitHub repo 첫 페이지용 한글 설명
 - `CLAUDE.md` — 이 파일
 - `icons/` — PWA 아이콘(`icon-192/512.png`, `apple-touch-icon.png`) + `icons/categories/*.png`
   (실제 사용 4개: bar·cafe·movie·golf. 나머지 7개는 SVG로 되돌린 뒤 남은 미참조 파일)
 - `scripts/receipt_png_to_receipt_db.py` — PNG/JPG 영수증 스크린샷 자동 등록 (맥에서 실행)
-- ⚠️ `receipt-db/` — repo 안에 커밋된 **옛 사본**(`index.html`이 v1.02). 앱이 참조하지 않는 화석. 정리 대상.
+- `scripts/check_app.py` — 버전·오프라인 파일·아이콘·정리 상태를 확인하는 릴리스 검사
 
 ## 버전 관리
 - 단일 상수 `APP_VERSION` (JS 상단)이 진실의 원천. DOM 두 군데(좌측 상단 칩, 설정 탭 앱 정보 카드)에 init 시 주입
@@ -94,6 +95,11 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v2.82` — **동시 편집·백업 복원·오프라인·유지보수 안전성 보강.**
+  Dropbox `rev`가 일치할 때만 sync JSON을 갱신하고, 충돌하면 최신 원격본을 다시 병합해
+  최대 3회 재시도. 백업·동기화의 레코드 구조·개수·이미지 데이터·파일 크기를 검증하고
+  비정상 항목을 격리. 온라인 최신 우선 서비스 워커와 릴리스 검사 스크립트를 추가하고,
+  repo 안의 v1.02 중복 폴더와 대체된 미사용 함수 5개를 제거.
 - `v2.81` — **사진 없음 아이콘·가져오기 안전성·접근성·초기화 안내 개선.**
   작은 카메라에서 아래로 처져 보이던 렌즈를 시각 중심으로 올리고, 필터와 목록 아이콘을
   동일하게 맞춤. 백업에서 가져온 영수증 ID를 HTML 속성에 안전하게 표시하고, 영수증

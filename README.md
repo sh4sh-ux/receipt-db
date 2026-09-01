@@ -1,4 +1,4 @@
-# 영수증 보관함 (Receipt DB) · v2.81
+# 영수증 보관함 (Receipt DB) · v2.82
 
 GPT로 정리한 영수증 텍스트를 영구 보관하고, 가계부처럼 들여다볼 수 있는
 **단일 HTML 앱**. 외부 CDN이나 빌드 의존성 없이 GitHub Pages에서 실행됩니다.
@@ -16,7 +16,8 @@ GPT로 정리한 영수증 텍스트를 영구 보관하고, 가계부처럼 들
 - **내 이름 기본 결제자**와 영수증 → 더치페이 새 모임 연결
 - **IndexedDB**에 영수증 + 사진 함께 영구 저장
 - **JSON 백업** 다운로드/복원 (사진까지 포함)
-- **Dropbox 자동 백업** — Full Dropbox 권한으로 OAuth 연결 후 `/01_Personal/영수증/Receipt_DB`에 영수증과 사진을 자동 동기화·백업
+- **Dropbox 자동 백업** — Full Dropbox 권한으로 OAuth 연결 후 `/07_Apps/영수증(RECEIPT-DB)`에 영수증과 사진을 충돌 감지 방식으로 동기화·백업
+- **오프라인 앱 셸** — 온라인에서는 최신 화면을 우선하고, 연결이 끊기면 마지막 설치 버전으로 실행
 
 ## 사용 방법
 
@@ -39,6 +40,7 @@ Dropbox 앱은 `Full Dropbox` 접근 유형으로 만들어야 이 경로에 쓸
 
 - 순수 HTML + CSS + Vanilla JS (단일 파일, 약 490KB)
 - IndexedDB v2 (`receipts` / `images` / `settings` stores)
+- 버전별 서비스 워커 앱 셸 + dependency-free 릴리스 검사
 - 외부 CDN·폰트·빌드 시스템 없음
 
 ## 자매 앱

@@ -55,6 +55,12 @@
     visualViewport.addEventListener('resize', () => setTimeout(되돌리기, 60));
   }
 })();
+
+// 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
+// 버전별 앱 셸 캐시로 되돌아간다. Dropbox API 요청은 서비스 워커가 가로채지 않는다.
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
+  addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('service worker:',e)));
+}
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -2080,7 +2086,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         복구한다. data URL 형식의 사진도 로컬·Dropbox JSON 백업에 빠짐없이 포함한다.
 // v2.81 — 사진 없음 카메라의 렌즈를 시각 중심으로 올리고, 가져온 영수증 ID를
 //         HTML 속성에 안전하게 표시한다. 목록 키보드 탐색과 기기 초기화 안내도 보강한다.
-const APP_VERSION='v2.81';
+// v2.82 — Dropbox rev 조건부 업로드와 충돌 재병합, 백업·동기화 스키마 및 용량
+//         검증, network-first 오프라인 셸을 추가하고 오래된 중복·미사용 코드를 정리한다.
+const APP_VERSION='v2.82';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -2878,12 +2886,6 @@ function _newId(date){
   for(const r of receipts){if(r.id&&r.id.indexOf(prefix)===0){const n=parseInt(r.id.slice(prefix.length),10);if(n>max)max=n;}}
   return prefix+String(max+1).padStart(3,'0');
 }
-function getAllCategories(){
-  const s=new Set();
-  for(const r of receipts){if(r.category)s.add(r.category);}
-  return [...s].sort();
-}
-
 // ════════════════════════════════════════════════════════════════
 // LOAD & RENDER
 // ════════════════════════════════════════════════════════════════
@@ -6097,20 +6099,6 @@ function _bindDetailItemTableEvents(r){
     _dTotalInp.addEventListener('input',()=>{_liveCommaFmt(_dTotalInp);_detailSetDirty(true);_refreshDetailAmountAudit(r);});
   }
 }
-function _reRenderDetailItems(r){
-  const tbl=document.getElementById('itemsTable');if(!tbl)return;
-  const tbody=tbl.querySelector('tbody');if(!tbody)return;
-  const sum=r.items.reduce((s,i)=>s+(i.amount||0),0);
-  tbody.innerHTML=r.items.map((it,idx)=>{const _ca=(it.quantity||0)!==0&&(it.unitPrice||0)!==0?Math.round((it.quantity||0)*(it.unitPrice||0)):null;const _m=_ca!==null&&_ca!==(it.amount||0);return`<tr data-idx="${idx}">
-    <td><input class="item-name-inp" data-f="name" value="${escapeHtml(it.name)}"/></td>
-    <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" maxlength="3" value="${it.quantity||0}"/></td>
-    <td><input class="item-num-inp" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/></td>
-    <td><input class="item-num-inp" data-f="amount" type="text" inputmode="numeric" value="${_fmtN(it.amount||0)}" style="${(it.amount||0)<0?'color:var(--red);':''}" ${_m?'data-manual="1"':''}></td>
-    <td style="text-align:right;"><button class="item-del" data-del="${idx}" title="삭제">×</button></td>
-  </tr>`;}).join('')+`<tr class="total-row"><td>합계</td><td></td><td colspan="2" class="detail-total-cell"><input id="dTotalAmt" class="item-num-inp" type="text" inputmode="numeric" value="${_fmtN(sum)}" style="font-weight:700;font-size:14px;text-align:right;${sum<0?'color:var(--red);':''}"/></td><td></td></tr>`;
-  _bindDetailItemTableEvents(r);
-}
-
 // ── DELETE ──
 document.getElementById('detailDeleteBtn').addEventListener('click',async()=>{
   if(!selectedId)return;
@@ -6155,6 +6143,79 @@ async function imageRecordToBase64(image){
 async function base64ToBlob(dataUrl){
   const res=await fetch(dataUrl);
   return await res.blob();
+}
+
+const _IMPORT_LIMITS={
+  fileBytes:512*1024*1024,
+  receipts:20000,
+  images:20000,
+  imageChars:64*1024*1024,
+  itemsPerReceipt:2000,
+};
+function _isPlainObject(v){return !!v&&typeof v==='object'&&!Array.isArray(v);}
+function _finiteImportNumber(v,fallback=0){const n=Number(v);return Number.isFinite(n)?n:fallback;}
+function _validateReceiptRecord(raw){
+  if(!_isPlainObject(raw))return null;
+  const id=typeof raw.id==='string'?raw.id.trim():'';
+  if(!id||id.length>200)return null;
+  if(raw.items!=null&&!Array.isArray(raw.items))return null;
+  if(raw.participants!=null&&!Array.isArray(raw.participants))return null;
+  if(raw.tags!=null&&!Array.isArray(raw.tags))return null;
+  if((raw.items||[]).length>_IMPORT_LIMITS.itemsPerReceipt)return null;
+  const items=(raw.items||[]).filter(_isPlainObject).map(it=>({
+    ...it,
+    name:String(it.name||''),
+    quantity:_finiteImportNumber(it.quantity),
+    unitPrice:_finiteImportNumber(it.unitPrice),
+    amount:_finiteImportNumber(it.amount),
+  }));
+  return {
+    ...raw,
+    id,
+    store:String(raw.store||''),
+    date:String(raw.date||''),
+    total:_finiteImportNumber(raw.total),
+    items,
+    participants:(raw.participants||[]).map(v=>String(v||'')).filter(Boolean),
+    tags:(raw.tags||[]).map(v=>String(v||'')).filter(Boolean),
+    paidBy:String(raw.paidBy||''),
+    notes:String(raw.notes||''),
+    imageId:raw.imageId==null?'':String(raw.imageId),
+  };
+}
+function _validateImageRecord(raw){
+  if(!_isPlainObject(raw)||typeof raw.id!=='string'||!raw.id.trim()||raw.id.length>200)return null;
+  if(typeof raw.data!=='string'||raw.data.length>_IMPORT_LIMITS.imageChars)return null;
+  if(!/^data:image\/[a-z0-9.+-]+;base64,/i.test(raw.data))return null;
+  return {id:raw.id.trim(),mime:String(raw.mime||'image/jpeg'),data:raw.data,contentHash:String(raw.contentHash||'')};
+}
+function _validateDataEnvelope(raw){
+  if(!_isPlainObject(raw)||raw.app!=='receipt-db'||!Array.isArray(raw.receipts))throw new Error('올바른 Receipt DB 데이터가 아니에요.');
+  if(raw.receipts.length>_IMPORT_LIMITS.receipts)throw new Error(`영수증이 너무 많아요 (최대 ${_IMPORT_LIMITS.receipts.toLocaleString()}건).`);
+  if(Array.isArray(raw.images)&&raw.images.length>_IMPORT_LIMITS.images)throw new Error(`사진이 너무 많아요 (최대 ${_IMPORT_LIMITS.images.toLocaleString()}장).`);
+  const receipts=raw.receipts.map(_validateReceiptRecord).filter(Boolean);
+  const images=Array.isArray(raw.images)?raw.images.map(_validateImageRecord).filter(Boolean):[];
+  if(raw.receipts.length&&!receipts.length)throw new Error('사용할 수 있는 영수증 기록이 없어요.');
+  const deletedIds=Array.isArray(raw.deletedIds)
+    ?raw.deletedIds.filter(id=>typeof id==='string'&&id.length>0&&id.length<=200).slice(-2000)
+    :[];
+  const cleanCatMap={};
+  if(_isPlainObject(raw.storeCatMap)){
+    for(const [k,v] of Object.entries(raw.storeCatMap).slice(0,5000)){
+      if(typeof k==='string'&&k.length<=300&&typeof v==='string'&&v.length<=100)cleanCatMap[k]=v;
+    }
+  }
+  return {
+    data:{...raw,receipts,images,deletedIds,storeCatMap:cleanCatMap},
+    skippedReceipts:raw.receipts.length-receipts.length,
+    skippedImages:(Array.isArray(raw.images)?raw.images.length:0)-images.length,
+  };
+}
+function _importSkippedLabel(checked){
+  const parts=[];
+  if(checked.skippedReceipts)parts.push(`비정상 영수증 ${checked.skippedReceipts}건 제외`);
+  if(checked.skippedImages)parts.push(`비정상 사진 ${checked.skippedImages}장 제외`);
+  return parts.join(' · ');
 }
 
 // ── PDF 내보내기 (브라우저 인쇄 → 'PDF로 저장') ──
@@ -6451,12 +6512,12 @@ document.getElementById('importInp').addEventListener('change',async e=>{
   const f=e.target.files&&e.target.files[0];
   if(!f)return;
   try{
+    if(f.size>_IMPORT_LIMITS.fileBytes)throw new Error('백업 파일이 너무 커서 안전하게 열 수 없어요 (최대 512MB).');
     const text=await f.text();
-    const data=JSON.parse(text);
-    if(!data||data.app!=='receipt-db'||!Array.isArray(data.receipts)){
-      toast('올바른 백업 파일이 아니에요',{type:'error'});return;
-    }
-    if(!confirm(`백업 파일에서 ${data.receipts.length}건의 영수증을 복원할까요?\n같은 ID는 덮어쓰여요.`))return;
+    const checked=_validateDataEnvelope(JSON.parse(text));
+    const data=checked.data;
+    const skipped=_importSkippedLabel(checked);
+    if(!confirm(`백업 파일에서 ${data.receipts.length}건의 영수증을 복원할까요?\n같은 ID는 덮어쓰여요.${skipped?'\n\n'+skipped:''}`))return;
     let added=0,imgN=0;
     for(const r of data.receipts){
       await dbPut('receipts',r);added++;
@@ -6475,7 +6536,7 @@ document.getElementById('importInp').addEventListener('change',async e=>{
       storeCatMap={...storeCatMap,...data.storeCatMap};
       await saveStoreCatMap();
     }
-    toast(`복원 완료 — ${added}건, 사진 ${imgN}장`,{type:'success'});
+    toast(`복원 완료 — ${added}건, 사진 ${imgN}장${skipped?' · '+skipped:''}`,{type:'success',duration:skipped?5200:3000});
     await loadAll();renderDetail();
   }catch(err){
     console.error(err);
@@ -6519,6 +6580,7 @@ const _K={  // localStorage 키 모음
   ACCOUNT:       'dbx_account',
   LAST_BACKUP:   'dbx_last_backup',
   LAST_SYNC:     'dbx_last_sync',      // 자동 동기화 마지막 시각 (ISO)
+  SYNC_REV:      'dbx_sync_rev',       // {path,rev} — 조건부 업로드 충돌 감지
   DELETED_IDS:   'dbx_deleted_ids',    // 삭제된 영수증 ID 목록 (JSON array)
   UPLOADED_IMGS: 'dbx_uploaded_imgs',  // Dropbox에 업로드된 imageId 목록 (JSON array)
   CODE_VERIFIER: 'dbx_code_verifier',
@@ -6565,7 +6627,7 @@ async function dbxConnect(){
     localStorage.removeItem(_K_DBX_MIGRATED);
     localStorage.setItem(_K_DBX_KEYCHANGED,'1');   // 옛 폴더 복사를 건너뛰라는 표시
     // 옛 키로 받은 refresh token은 새 키(client_id)로는 갱신되지 않는다 — 함께 버린다
-    [_K.ACCESS_TOKEN,_K.REFRESH_TOKEN].forEach(k=>_lsDel(k));
+    [_K.ACCESS_TOKEN,_K.REFRESH_TOKEN,_K.SYNC_REV].forEach(k=>_lsDel(k));
     _dbxRootPromise=null;
   }
   _lsSet(_K.APP_KEY,appKey);
@@ -6768,12 +6830,14 @@ async function _dbxRestore(path,name){
       },
     });
     if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
+    const contentLength=Number(resp.headers.get('content-length')||0);
+    if(contentLength>_IMPORT_LIMITS.fileBytes)throw new Error('백업 파일이 너무 커서 안전하게 열 수 없어요 (최대 512MB).');
     const text=await resp.text();
-    const data=JSON.parse(text);
-    if(!data||data.app!=='receipt-db'||!Array.isArray(data.receipts)){
-      throw new Error('올바른 백업 파일이 아니에요');
-    }
-    if(!confirm(`'${name}'\n\n영수증 ${data.receipts.length}건을 복원할까요?\n같은 ID의 영수증은 덮어쓰여요.`))return;
+    if(text.length>_IMPORT_LIMITS.fileBytes)throw new Error('백업 파일이 너무 커서 안전하게 열 수 없어요 (최대 512MB).');
+    const checked=_validateDataEnvelope(JSON.parse(text));
+    const data=checked.data;
+    const skipped=_importSkippedLabel(checked);
+    if(!confirm(`'${name}'\n\n영수증 ${data.receipts.length}건을 복원할까요?\n같은 ID의 영수증은 덮어쓰여요.${skipped?'\n\n'+skipped:''}`))return;
     let added=0,imgN=0;
     for(const r of data.receipts){await dbPut('receipts',r);added++;}
     if(Array.isArray(data.images)){
@@ -6790,7 +6854,7 @@ async function _dbxRestore(path,name){
       await saveStoreCatMap();
     }
     _dbxCloseModal();
-    toast(`복원 완료 — ${added}건, 사진 ${imgN}장`,{type:'success'});
+    toast(`복원 완료 — ${added}건, 사진 ${imgN}장${skipped?' · '+skipped:''}`,{type:'success',duration:skipped?5200:3000});
     await loadAll();renderDetail();
   }catch(e){
     if(e.message!=='DBX_TOKEN_EXPIRED'&&e.message!=='DBX_NO_TOKEN'){
@@ -6803,7 +6867,7 @@ async function _dbxRestore(path,name){
 // ── 연결 해제 ──────────────────────────────────────────────────
 function dbxDisconnect(){
   if(!confirm('Dropbox 연결을 해제할까요?\nDropbox의 백업 파일은 삭제되지 않아요.'))return;
-  [_K.ACCESS_TOKEN,_K.REFRESH_TOKEN,_K.EXPIRES_AT,
+  [_K.ACCESS_TOKEN,_K.REFRESH_TOKEN,_K.EXPIRES_AT,_K.SYNC_REV,
    _K.ACCOUNT,_K.LAST_BACKUP,_K.CODE_VERIFIER,_K.STATE].forEach(_lsDel);
   // App key는 보존 — 재연결 시 다시 입력 안 해도 되게
   toast('Dropbox 연결이 해제됐어요');
@@ -6840,6 +6904,21 @@ const _dbxBackupDir=()=>_DBX_DATA_DIR+'/backups';
 const _dbxImagesDir=()=>_DBX_DATA_DIR+'/images';   // 이미지 개별 파일 저장 폴더
 const _syncPath    =()=>_DBX_DATA_DIR+'/receipt-db_sync.json';
 const _inboxPath   =()=>_DBX_DATA_DIR+'/receipt-db_inbox.json';
+function _dbxSyncRev(){
+  try{
+    const saved=JSON.parse(_ls(_K.SYNC_REV)||'null');
+    return saved&&saved.path===_syncPath()&&typeof saved.rev==='string'?saved.rev:'';
+  }catch{return '';}
+}
+function _dbxSetSyncRev(rev){
+  if(rev)_lsSet(_K.SYNC_REV,JSON.stringify({path:_syncPath(),rev}));
+  else _lsDel(_K.SYNC_REV);
+}
+function _dbxUseDataDir(path){
+  if(_DBX_DATA_DIR===path)return;
+  _DBX_DATA_DIR=path;
+  _dbxSetSyncRev('');
+}
 
 // 스캔함 위치 — 기본값은 데이터 폴더 안(`/07_Apps/영수증(RECEIPT-DB)/스캔함`)이다.
 // v2.32에서 앱 최상단(`/스캔함`)으로 뺐던 이유는 옛 경로가
@@ -6876,7 +6955,7 @@ const _dbxScanDoneDir=isImg=>_DBX_DATA_DIR+(isImg?'/완료 JPG':'/완료 PDF');
 let _dbxRootPromise=null;
 function _dbxResolveRoot(){ return _dbxRootPromise||(_dbxRootPromise=_dbxResolveRootOnce()); }
 async function _dbxResolveRootOnce(){
-  if(localStorage.getItem(_K_DBX_MIGRATED)==='1'){ _DBX_DATA_DIR=_DBX_ROOT; return; }
+  if(localStorage.getItem(_K_DBX_MIGRATED)==='1'){ _dbxUseDataDir(_DBX_ROOT); return; }
   if(!dbxIsConnected())return;
   try{
     const token=await _dbxToken();
@@ -6889,7 +6968,7 @@ async function _dbxResolveRootOnce(){
       }catch(e){ return false; }
     };
     if(await meta(_DBX_ROOT)){                       // 이미 옮겨져 있음
-      _DBX_DATA_DIR=_DBX_ROOT; localStorage.setItem(_K_DBX_MIGRATED,'1'); return;
+      _dbxUseDataDir(_DBX_ROOT); localStorage.setItem(_K_DBX_MIGRATED,'1'); return;
     }
     await _dbxCreateFolder('/07_Apps');              // 있으면 conflict — _dbxCreateFolder가 무시
       // ⚠️ App key가 바뀐 직후에는 옛 폴더를 복사하지 않는다.
@@ -6904,16 +6983,16 @@ async function _dbxResolveRootOnce(){
         body:JSON.stringify({from_path:_DBX_OLD_ROOT,to_path:_DBX_ROOT,autorename:false})});
       if(!cp.ok){                                    // 실패 — 옛 위치로 계속, 다음 동기화에 재시도
         console.warn('dbx migrate:',await cp.text());
-        _DBX_DATA_DIR=_DBX_OLD_ROOT; _dbxRootPromise=null; return;
+        _dbxUseDataDir(_DBX_OLD_ROOT); _dbxRootPromise=null; return;
       }
       toast('Dropbox 데이터를 07_Apps로 옮겼어요 (옛 폴더는 그대로 보관)',{type:'success',duration:5000});
     }else{
       await _dbxCreateFolder(_DBX_ROOT);
     }
-    _DBX_DATA_DIR=_DBX_ROOT; localStorage.setItem(_K_DBX_MIGRATED,'1');
+    _dbxUseDataDir(_DBX_ROOT); localStorage.setItem(_K_DBX_MIGRATED,'1');
     localStorage.removeItem(_K_DBX_KEYCHANGED);
     _dbxFolderCache.clear();                         // 경로가 바뀌었으니 폴더 존재 캐시를 버린다
-  }catch(e){ _DBX_DATA_DIR=_DBX_OLD_ROOT; _dbxRootPromise=null; }
+  }catch(e){ _dbxUseDataDir(_DBX_OLD_ROOT); _dbxRootPromise=null; }
 }
 const _SCAN_IMG_EXTS=['.jpg','.jpeg','.png'];
 const _SCAN_DOC_EXTS=['.pdf'];
@@ -7366,26 +7445,15 @@ async function _dbxCreateFolder(path){
   throw new Error(txt);
 }
 
-async function _dbxCollectSyncImages(recs){
-  const ids=[...new Set((recs||[]).map(r=>r.imageId).filter(Boolean))];
-  const out=[];
-  for(const id of ids){
-    try{
-      const im=await dbGet('images',id);
-      if(!im)continue;
-      const data=await imageRecordToBase64(im);
-      if(data)out.push({id,mime:im.mime||im.blob?.type||'image/jpeg',data});
-    }catch(e){console.warn('dbx image export skip:',id,e);}
-  }
-  return out;
-}
-
 async function _dbxImportSyncImages(images){
   if(!Array.isArray(images))return 0;
+  if(images.length>_IMPORT_LIMITS.images)throw new Error(`동기화 사진이 너무 많아요 (최대 ${_IMPORT_LIMITS.images.toLocaleString()}장).`);
   let imgN=0;
-  for(const im of images){
+  let skipped=0;
+  for(const raw of images){
     try{
-      if(!im||!im.id||!im.data)continue;
+      const im=_validateImageRecord(raw);
+      if(!im){skipped++;continue;}
       // inbox 이미지는 항상 덮어쓰기 (이미지 교정 지원)
       const blob=await base64ToBlob(im.data);
       const contentHash=im.contentHash||await _photoContentHash(blob);
@@ -7394,8 +7462,9 @@ async function _dbxImportSyncImages(images){
       _localImageHashes.set(im.id,contentHash);
       _revokeImgUrl(im.id);
       imgN++;
-    }catch(e){console.warn('dbx image import skip:',im&&im.id,e);}
+    }catch(e){skipped++;console.warn('dbx image import skip:',raw&&raw.id,e);}
   }
+  if(skipped)console.warn(`dbx image import: 비정상 사진 ${skipped}장 제외`);
   if(imgN)_rebuildPhotoHashCounts();
   return imgN;
 }
@@ -7416,35 +7485,52 @@ let _dbxSyncErr=false;
 // 마지막 자동 다운로드 시각 (폴링 throttle)
 let _lastAutoSyncAt=0;
 
+async function _dbxBuildSyncPayload(){
+  const recs=await dbAll('receipts');
+  const deletedIds=JSON.parse(_ls(_K.DELETED_IDS)||'[]');
+  return JSON.stringify({
+    app:'receipt-db',
+    syncVersion:3,
+    exportedAt:nowISO(),
+    receipts:recs,
+    images:[],
+    storeCatMap,
+    deletedIds,
+  });
+}
+
 async function dbxSyncUpload(){
   if(!dbxIsConnected())return;
   try{
     const token=await _dbxToken();
     await _dbxEnsureFolder(_DBX_DATA_DIR);
-    const recs=await dbAll('receipts');
-    const deletedIds=JSON.parse(_ls(_K.DELETED_IDS)||'[]');
-    const payload=JSON.stringify({
-      app:'receipt-db',
-      syncVersion:2,
-      exportedAt:nowISO(),
-      receipts:recs,
-      images:[],
-      storeCatMap,
-      deletedIds,
-    });
-    const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{
-      method:'POST',
-      headers:{
-        'Authorization':'Bearer '+token,
-        'Dropbox-API-Arg':_dbxApiArg({path:_syncPath(),mode:'overwrite',mute:true}),
-        'Content-Type':'application/octet-stream',
-      },
-      body:payload,
-    });
-    if(!resp.ok){const txt=await resp.text();throw new Error(txt);}
-    _dbxSyncErr=false;
-    _lsSet(_K.LAST_SYNC,nowISO());
-    _dbxUpdateSyncBadge();
+    // Dropbox rev가 같은 파일만 갱신한다. 다른 기기가 먼저 썼다면 최신본을 다시
+    // 내려받아 updatedAt 기준으로 병합하고 새 rev로 재시도한다.
+    for(let attempt=0;attempt<3;attempt++){
+      const rev=_dbxSyncRev();
+      const mode=rev?{'.tag':'update',update:rev}:'add';
+      const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{
+        method:'POST',
+        headers:{
+          'Authorization':'Bearer '+token,
+          'Dropbox-API-Arg':_dbxApiArg({path:_syncPath(),mode,mute:true,autorename:false}),
+          'Content-Type':'application/octet-stream',
+        },
+        body:await _dbxBuildSyncPayload(),
+      });
+      if(resp.ok){
+        const meta=await resp.json();
+        if(meta?.rev)_dbxSetSyncRev(meta.rev);
+        _dbxSyncErr=false;
+        _lsSet(_K.LAST_SYNC,nowISO());
+        _dbxUpdateSyncBadge();
+        return true;
+      }
+      const txt=await resp.text();
+      if(resp.status!==409||attempt===2)throw new Error(txt||'Dropbox sync conflict');
+      const merged=await dbxSyncDownload();
+      if(merged===false)throw new Error('Dropbox 충돌 후 최신 데이터를 다시 받지 못했습니다.');
+    }
   }catch(e){
     if(e.message==='DBX_TOKEN_EXPIRED'||e.message==='DBX_NO_TOKEN')return;
     _dbxSyncErr=true;
@@ -7973,127 +8059,6 @@ async function tidyReceiptFolders(){
     +'  · /01_Personal/Apps\n  · /01_Personal/영수증/Receipt_DB\n  · /01_Personal/Dutch-Pay');
 }
 
-async function consolidateReceiptFolders(){
-  if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
-  await _dbxResolveRoot();
-  const t=toast('영수증 작업 폴더를 살펴보는 중…',{duration:60000});
-  let token,plan=[],counts={};
-  try{
-    token=await _dbxToken();
-    for(const sub of _WORK_SUBDIRS){
-      const from=`${_LEGACY_WORK_DIR}/${sub}`;
-      const all=await _dbxListAll(token,from);
-      if(!all)continue;                       // 그런 폴더가 없으면 건너뛴다
-      const files=all.filter(e=>e['.tag']==='file');
-      counts[sub]=files.length;
-      for(const f of files){
-        const rel=f.path_display.slice(from.length);   // '/2026-08/....jpg'
-        plan.push({from_path:f.path_display,to_path:`${_DBX_DATA_DIR}/${sub}${rel}`});
-      }
-    }
-  }catch(e){ t?.remove?.(); toast('살펴보기 실패: '+(e.message||e),{type:'error'}); return; }
-  t?.remove?.();
-
-  if(!plan.length){
-    alert(`${_LEGACY_WORK_DIR} 에서 옮길 파일을 찾지 못했습니다.\n\n`
-        +'· 이미 옮기셨다면 이 작업은 필요 없습니다.\n'
-        +'· Full Dropbox 권한으로 연결돼 있어야 이 폴더가 보입니다.');
-    return;
-  }
-  const summary=_WORK_SUBDIRS.filter(x=>counts[x]).map(x=>`  · ${x} ${counts[x]}개`).join('\n');
-  if(!confirm(`${_LEGACY_WORK_DIR} 에서 찾았습니다:\n\n${summary}\n\n`
-             +`모두 ${plan.length}개를 ${_DBX_DATA_DIR} 안으로 복사합니다.\n`
-             +'옛 폴더의 원본은 지우지 않습니다 — 확인하신 뒤 직접 지우세요.\n\n'
-             +'※ 받은함은 옮기지 않습니다 (스캔함에 넣으면 바로 등록되므로).\n'
-             +'※ 맥의 receipt_pdf_to_jpg.py 는 계속 옛 폴더에 씁니다.\n'
-             +'   그 스크립트의 경로도 새 위치로 고쳐 주세요.\n\n계속할까요?'))return;
-
-  const lt=toast(`복사하는 중… 0/${plan.length}`,{duration:600000});
-  let done=0,failed=0;
-  try{
-    for(const sub of _WORK_SUBDIRS)if(counts[sub])await _dbxEnsureFolder(`${_DBX_DATA_DIR}/${sub}`);
-    for(let i=0;i<plan.length;i+=900){
-      const entries=plan.slice(i,i+900);
-      const r=await fetch('https://api.dropboxapi.com/2/files/copy_batch_v2',{method:'POST',
-        headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-        body:JSON.stringify({entries,autorename:false})});
-      if(r.ok)done+=entries.length; else failed+=entries.length;
-      const el=document.querySelector('.toast-container .toast:last-child');
-      if(el)el.textContent=`복사하는 중… ${done}/${plan.length}`;
-    }
-  }catch(e){ lt?.remove?.(); toast('복사 실패: '+(e.message||e),{type:'error'}); return; }
-  lt?.remove?.();
-  renderDbxSettings();
-  if(failed)toast(`${done}개 복사, ${failed}개 실패 — 다시 눌러 주세요`,{type:'error',duration:6000});
-  else toast(`영수증 폴더를 통합했어요 — ${done}개 복사 (원본은 그대로)`,{type:'success',duration:6000});
-}
-
-async function importFromAppFolder(){
-  if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
-  await _dbxResolveRoot();
-  const t=toast('옛 앱 폴더를 찾는 중…',{duration:30000});
-  let hit=null,token;
-  try{ token=await _dbxToken(); hit=await _findLegacyReceiptDir(token); }
-  catch(e){ t?.remove?.(); toast('찾기 실패: '+(e.message||e),{type:'error'}); return; }
-  t?.remove?.();
-  if(!hit){
-    // 막다른 안내 대신 실제 상태를 확인해 무엇이 문제인지 짚어 준다.
-    // 여기서 막히는 경우는 거의 App key가 아직 옛 것(App folder)인 상황이다.
-    let diag='';
-    try{
-      const w=await _dbxWhereIsScanbox();
-      if(w.scope==='App folder'){
-        diag='지금 App key는 아직 옛 것(App folder 권한)입니다.\n'
-            +'App folder 권한은 다른 앱 폴더 안을 볼 수 없어서 찾을 수 없습니다.\n\n'
-            +'해결: 위 Dropbox 카드에서 [연결 해제] → App Key 칸의 값을\n'
-            +'Full Dropbox 앱의 키로 바꿔 넣고 [Dropbox 연결하기]\n'
-            +'⚠️ 연결 해제는 App key를 지우지 않으니, 칸의 값을 반드시 새 키로 고쳐야 합니다.';
-      }else{
-        diag='Full Dropbox 권한으로 연결돼 있는데도 찾지 못했습니다.\n'
-            +'이미 옮기셨다면 이 작업은 필요 없습니다.\n\n'
-            +'훑어본 앱 폴더: '+(_lastScannedAppDirs.join(', ')||'(앱 폴더 모음을 못 찾음)');
-      }
-      diag+='\n\nDropbox 최상위 목록: '+(w.names.join(', ')||'(비어 있음)');
-    }catch(e){ diag='상태 확인에 실패했습니다: '+(e.message||e); }
-    alert('Dropbox의 앱 폴더에서 영수증 데이터를 찾지 못했습니다.\n\n'+diag);
-    return;
-  }
-  // 사진 개수도 세어 보고 확인받는다
-  let imgs=[];
-  try{
-    const ir=await fetch('https://api.dropboxapi.com/2/files/list_folder',{method:'POST',
-      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-      body:JSON.stringify({path:hit.dir+'/images'})});
-    if(ir.ok)imgs=((await ir.json()).entries||[]).filter(e=>e['.tag']==='file');
-  }catch(e){}
-  if(!confirm(`찾았습니다:\n${hit.dir}\n\n영수증 ${hit.data.receipts.length}건 · 사진 ${imgs.length}장\n\n`
-             +'이 내용을 새 위치로 가져옵니다.\n'
-             +'기록은 지금 것과 합치고(같은 영수증은 최신 우선), 사진은 복사합니다.\n'
-             +'옛 폴더의 원본은 그대로 둡니다.\n\n계속할까요?'))return;
-
-  const lt=toast('가져오는 중…',{duration:120000});
-  let added=0;
-  try{
-    added=await _dbxMerge(hit.data);
-    const inbox=await _dbxJsonAt(token,hit.dir+'/receipt-db_inbox.json');
-    if(inbox&&inbox.app==='receipt-db'&&Array.isArray(inbox.receipts))added+=await _dbxMerge(inbox);
-    // 사진은 서버끼리 복사 — 이미 있으면 conflict가 나지만 무시하면 된다
-    for(let i=0;i<imgs.length;i+=900){
-      const entries=imgs.slice(i,i+900).map(f=>({from_path:f.path_display,
-        to_path:_dbxImagesDir()+'/'+f.name}));
-      if(!entries.length)continue;
-      await fetch('https://api.dropboxapi.com/2/files/copy_batch_v2',{method:'POST',
-        headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-        body:JSON.stringify({entries,autorename:false})}).catch(()=>{});
-    }
-    receipts=await dbAll('receipts');
-    await dbxSyncUpload();                    // 합친 결과를 새 위치에 올려 둔다
-  }catch(e){ lt?.remove?.(); toast('가져오기 실패: '+(e.message||e),{type:'error'}); return; }
-  lt?.remove?.();
-  renderSide(); if(!_isDetailEditing())renderDetail(); renderDbxSettings();
-  toast(`가져왔습니다 — 영수증 ${added}건 추가, 사진 ${imgs.length}장 복사`,{type:'success',duration:5000});
-}
-
 async function dbxSyncDownload(){
   if(!dbxIsConnected())return true;
   try{
@@ -8106,12 +8071,16 @@ async function dbxSyncDownload(){
         'Dropbox-API-Arg':_dbxApiArg({path:_syncPath()}),
       },
     });
-    if(resp.status===409||resp.status===404)return true;
+    if(resp.status===409||resp.status===404){_dbxSetSyncRev('');return true;}
     if(!resp.ok){const txt=await resp.text();console.warn('dbx download:',txt);return false;}
     const data=JSON.parse(await resp.text());
     if(!data||data.app!=='receipt-db'||!Array.isArray(data.receipts))return true;
     const changed=await _dbxMerge(data);
     const imgN=await _dbxImportSyncImages(data.images);
+    try{
+      const meta=JSON.parse(resp.headers.get('dropbox-api-result')||'{}');
+      if(meta.rev)_dbxSetSyncRev(meta.rev);
+    }catch(e){console.warn('dbx sync rev:',e.message||e);}
     if(imgN>0){
       renderSide();
       if(!_isDetailEditing())renderDetail();
@@ -8201,6 +8170,10 @@ setInterval(()=>dbxSyncNow(false,false),3*60*1000);
 
 // 머지 로직: 원격 + 로컬 → 최신 updatedAt 우선, 삭제 항목 적용
 async function _dbxMerge(remoteData){
+  const checked=_validateDataEnvelope(remoteData);
+  remoteData=checked.data;
+  const skipped=_importSkippedLabel(checked);
+  if(skipped)console.warn('dbx merge:',skipped);
   const remoteRecs=remoteData.receipts||[];
   const remoteDeletedIds=new Set(remoteData.deletedIds||[]);
   const localDeletedIds=new Set(JSON.parse(_ls(_K.DELETED_IDS)||'[]'));
