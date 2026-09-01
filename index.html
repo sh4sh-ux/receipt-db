@@ -1951,6 +1951,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         앱 폴더 안으로 모으는 '영수증 작업 폴더 통합' 추가 (복사만, 원본 보존).
 // v2.40 — '한번에 정리': 가져오기·모으기·대조·원본 삭제를 버튼 하나로.
 //         삭제는 파일 content_hash가 새 위치와 같을 때만 한다.
+// v2.69 — 스캔 파일 이름의 '문서'가 매장명으로 등록되던 것 수정. iOS 메모가 짓는
+//         '스캔 문서 3.pdf'에서 '스캔'만 걸러지고 '문서'가 남아 매장명이 됐다.
 // v2.68 — 가게명 자동 분류가 브랜드 상호를 못 읽던 것 수정. CAT_RULES에 일반명사만
 //         있어 '스타벅스 강남구청정문점'이 분류되지 않았다(#r= 링크·붙여넣기 공통).
 //         한 글자 키워드 '바'가 파리바게뜨·폴바셋을 술집으로 오분류하던 것도 함께 제거.
@@ -2036,7 +2038,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         새 위치에 확인된 것만 지운다 (아직 안 옮긴 앱은 그대로 둔다).
 // v2.41 — '남은 옛 폴더 치우기': 새 위치에 대체물이 있는 것만 골라 치운다.
 //         받은함과 /앱(아직 안 옮긴 앱의 데이터)은 대상에서 제외.
-const APP_VERSION='v2.68';
+const APP_VERSION='v2.69';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -6694,7 +6696,9 @@ function _parseOwnScanName(name){
   };
 }
 
-const _SCAN_NOISE=/^(사진|스크린샷|screenshot|screen[ _-]?shot|image|img|photo|pic|scan|스캔|kakaotalk|카카오톡|영수증|receipt|무제|untitled|다운로드|download|copy|복사본|at|on|of|the|and|pm|am|오전|오후)$/i;
+// 기기·앱이 붙이는 기본 이름 조각. 매장명으로 오해하면 안 되는 말들이다.
+// (iOS 메모의 '스캔 문서 3.pdf'가 매장명 '문서'로 등록되던 것을 v2.69에서 추가)
+const _SCAN_NOISE=/^(사진|스크린샷|screenshot|screen[ _-]?shot|image|img|photo|pic|scan|스캔|스캔본|문서|문서스캔|파일|documents?|docs?|files?|scanned|kakaotalk|카카오톡|영수증|receipt|무제|untitled|다운로드|download|copy|복사본|at|on|of|the|and|pm|am|오전|오후)$/i;
 function _scanStoreFromName(name){
   let t=String(name||'').replace(/\.[a-z0-9]+$/i,'');          // 확장자
   t=t.replace(/(20\d{2})[.\-\/년\s]+\d{1,2}[.\-\/월\s]+\d{1,2}일?/g,' ');  // 2026. 8. 30
