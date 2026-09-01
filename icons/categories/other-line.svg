@@ -1,5 +1,82 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z"/>
-  <path d="M14 2v6h6"/>
-  <circle cx="8" cy="15" r=".8" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r=".8" fill="currentColor" stroke="none"/><circle cx="16" cy="15" r=".8" fill="currentColor" stroke="none"/>
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="black" stroke="black" aria-hidden="true">
+  <defs>
+    <style>
+      .st0 {
+        stroke-width: 2.7px;
+      }
+
+      .st0, .st1, .st2 {
+        stroke-linejoin: round;
+      }
+
+      .st0, .st1, .st2, .st3, .st4, .st5, .st6, .st7, .st8, .st9, .st10, .st11, .st12 {
+        stroke: #000;
+      }
+
+      .st0, .st1, .st2, .st3, .st4, .st7, .st8, .st9, .st10, .st11, .st12 {
+        fill: none;
+      }
+
+      .st0, .st1, .st2, .st3, .st4, .st8, .st9, .st10, .st11 {
+        stroke-linecap: round;
+      }
+
+      .st1, .st9 {
+        stroke-width: 2.8px;
+      }
+
+      .st2 {
+        stroke-width: 3px;
+      }
+
+      .st3, .st4, .st5, .st6, .st7, .st8, .st9, .st10, .st11, .st12 {
+        stroke-miterlimit: 10;
+      }
+
+      .st3, .st7 {
+        stroke-width: 2px;
+      }
+
+      .st4 {
+        stroke-width: 2px;
+      }
+
+      .st5 {
+        stroke-width: .8px;
+      }
+
+      .st13, .st6 {
+        fill: #fff;
+      }
+
+      .st6 {
+        stroke-width: 2.3px;
+      }
+
+      .st8 {
+        stroke-width: 3.1px;
+      }
+
+      .st10, .st12 {
+        stroke-width: 2.5px;
+      }
+
+      .st11 {
+        stroke-width: 2.4px;
+      }
+
+      .st14 {
+        fill: #fdfdfd;
+      }
+    </style>
+  </defs>
+  <g>
+    <g>
+      <path class="st2" d="M58.5,39.9h18.1s-22.4-22.4-22.4-22.4v18.1c0,2.4,1.9,4.4,4.4,4.4Z" />
+      <path class="st2" d="M54.2,17.5h-24.2c-3.6,0-6.6,3-6.6,6.6v51.8c0,3.6,3,6.6,6.6,6.6h40c3.6,0,6.6-3,6.6-6.6v-36l-22.4-22.4Z" />
+      <line class="st0" x1="35.2" y1="57.8" x2="64.8" y2="57.8" />
+      <line class="st0" x1="35.2" y1="69.5" x2="64.8" y2="69.5" />
+    </g>
+  </g>
 </svg>

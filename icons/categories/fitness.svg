@@ -1,4 +1,85 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M8 10h8v4H8zM3 10h2v4H3zM19 10h2v4h-2z"/>
-  <rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/>
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="black" stroke="black" aria-hidden="true">
+  <defs>
+    <style>
+      .st0 {
+        stroke-width: 2.7px;
+      }
+
+      .st0, .st1, .st2 {
+        stroke-linejoin: round;
+      }
+
+      .st0, .st1, .st2, .st3, .st4, .st5, .st6, .st7, .st8, .st9, .st10, .st11, .st12 {
+        stroke: #000;
+      }
+
+      .st0, .st1, .st2, .st3, .st4, .st7, .st8, .st9, .st10, .st11, .st12 {
+        fill: none;
+      }
+
+      .st0, .st1, .st2, .st3, .st4, .st8, .st9, .st10, .st11 {
+        stroke-linecap: round;
+      }
+
+      .st1, .st9 {
+        stroke-width: 2.8px;
+      }
+
+      .st2 {
+        stroke-width: 3px;
+      }
+
+      .st3, .st4, .st5, .st6, .st7, .st8, .st9, .st10, .st11, .st12 {
+        stroke-miterlimit: 10;
+      }
+
+      .st3, .st7 {
+        stroke-width: 2px;
+      }
+
+      .st4 {
+        stroke-width: 2px;
+      }
+
+      .st5 {
+        stroke-width: .8px;
+      }
+
+      .st13, .st6 {
+        fill: #fff;
+      }
+
+      .st6 {
+        stroke-width: 2.3px;
+      }
+
+      .st8 {
+        stroke-width: 3.1px;
+      }
+
+      .st10, .st12 {
+        stroke-width: 2.5px;
+      }
+
+      .st11 {
+        stroke-width: 2.4px;
+      }
+
+      .st14 {
+        fill: #fdfdfd;
+      }
+    </style>
+  </defs>
+  <g>
+    <g>
+      <rect class="st7" x="17.5" y="47.4" width="65" height="5.2" rx="2.6" ry="2.6" />
+      <g>
+        <rect class="st6" x="28.3" y="33.7" width="6.5" height="32.7" rx="2" ry="2" />
+        <rect class="st6" x="21.8" y="38.3" width="6.5" height="24" rx="2" ry="2" />
+        <rect class="st6" x="65.2" y="33.7" width="6.5" height="32.7" rx="2" ry="2" transform="translate(136.8 100) rotate(-180)" />
+        <rect class="st6" x="71.7" y="38.3" width="6.5" height="24" rx="2" ry="2" transform="translate(149.9 100.5) rotate(-180)" />
+      </g>
+    </g>
+  </g>
 </svg>

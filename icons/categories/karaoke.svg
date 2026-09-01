@@ -1,5 +1,85 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-  <rect x="9" y="2" width="6" height="12" rx="3"/>
-  <path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/>
-  <path d="M19 3v4m0-3 2-.6M5 3.5v3m0-2.2 1.7-.5"/>
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="black" stroke="black" aria-hidden="true">
+  <defs>
+    <style>
+      .st0 {
+        stroke-width: 2.7px;
+      }
+
+      .st0, .st1, .st2 {
+        stroke-linejoin: round;
+      }
+
+      .st0, .st1, .st2, .st3, .st4, .st5, .st6, .st7, .st8, .st9, .st10, .st11, .st12 {
+        stroke: #000;
+      }
+
+      .st0, .st1, .st2, .st3, .st4, .st7, .st8, .st9, .st10, .st11, .st12 {
+        fill: none;
+      }
+
+      .st0, .st1, .st2, .st3, .st4, .st8, .st9, .st10, .st11 {
+        stroke-linecap: round;
+      }
+
+      .st1, .st9 {
+        stroke-width: 2.8px;
+      }
+
+      .st2 {
+        stroke-width: 3px;
+      }
+
+      .st3, .st4, .st5, .st6, .st7, .st8, .st9, .st10, .st11, .st12 {
+        stroke-miterlimit: 10;
+      }
+
+      .st3, .st7 {
+        stroke-width: 2px;
+      }
+
+      .st4 {
+        stroke-width: 2px;
+      }
+
+      .st5 {
+        stroke-width: .8px;
+      }
+
+      .st13, .st6 {
+        fill: #fff;
+      }
+
+      .st6 {
+        stroke-width: 2.3px;
+      }
+
+      .st8 {
+        stroke-width: 3.1px;
+      }
+
+      .st10, .st12 {
+        stroke-width: 2.5px;
+      }
+
+      .st11 {
+        stroke-width: 2.4px;
+      }
+
+      .st14 {
+        fill: #fdfdfd;
+      }
+    </style>
+  </defs>
+  <g>
+    <g>
+      <g>
+        <path class="st8" d="M30.4,52.5c0,10.8,8.8,19.6,19.6,19.6" />
+        <path class="st8" d="M50,72.1c10.8,0,19.6-8.8,19.6-19.6" />
+      </g>
+      <rect class="st8" x="38.9" y="18.5" width="22.2" height="45.2" rx="11.1" ry="11.1" />
+      <line class="st8" x1="50" y1="72.1" x2="50" y2="83.1" />
+      <line class="st8" x1="35.3" y1="83.5" x2="64.7" y2="83.5" />
+    </g>
+  </g>
 </svg>

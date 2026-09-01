@@ -18,6 +18,7 @@
 - `icons/` — PWA 아이콘(`icon-192/512.png`, `apple-touch-icon.png`) + 작은 화면용 `icons/categories/*.svg` 16종
 - `scripts/receipt_png_to_receipt_db.py` — PNG/JPG 영수증 스크린샷 자동 등록 (맥에서 실행)
 - `scripts/check_app.py` — 버전·오프라인 파일·아이콘·정리 상태를 확인하는 릴리스 검사
+- `scripts/extract_category_svgs.py` — Downloads의 사용자 Illustrator SVG에서 현재 아트보드 벡터만 원형 그대로 추출
 
 ## 버전 관리
 - 단일 상수 `APP_VERSION` (JS 상단)이 진실의 원천. DOM 두 군데(좌측 상단 칩, 설정 탭 앱 정보 카드)에 init 시 주입
@@ -94,10 +95,12 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v2.84` — **사용자 카테고리 SVG 원본 형태 복원.**
+  v2.83에서 임의로 다시 그린 24×24 아이콘을 모두 폐기. 전달받은 Illustrator SVG마다
+  현재 100×100 아트보드에 있는 실제 벡터 그룹을 그대로 추출하고, 흰 배경 사각형과
+  작업 영역 밖의 다른 아이콘만 제거. 표시 순서·명칭·테마 마스크·오프라인 지원은 유지.
 - `v2.83` — **사용자 제작 카테고리 아이콘 16종 적용.**
-  Illustrator 원본의 흰 배경·작업 영역 밖 도형을 제외하고 24×24 투명 단색 SVG로 정리.
-  문화 점선, 골프 딤플, 스파 욕조, 기타 말줄임표를 작은 모바일 크기에 맞게 보정하고
-  모든 아이콘을 `currentColor` 마스크로 표시해 라이트·다크 테마와 오프라인 셸에 통합.
+  카테고리 표시 순서와 명칭을 사용자 시안에 맞추고 SVG 자산·오프라인 셸 연결을 추가.
 - `v2.82` — **동시 편집·백업 복원·오프라인·유지보수 안전성 보강.**
   Dropbox `rev`가 일치할 때만 sync JSON을 갱신하고, 충돌하면 최신 원격본을 다시 병합해
   최대 3회 재시도. 백업·동기화의 레코드 구조·개수·이미지 데이터·파일 크기를 검증하고
@@ -455,7 +458,7 @@ P오플레 클래식 플레인 1+1 680.0g | 1 | 3,980 | 3,980
 - **계층 그룹** `CATEGORY_GROUPS`: 경조사 ← 부의금·축의금
 - **아이콘** — `getCatSvg(cat)` 하나로 통일해서 꺼냄:
   `CAT_ASSETS`의 24×24 투명 SVG를 `currentColor` 마스크로 표시하고, 알 수 없는 카테고리는 인라인 문서 아이콘으로 fallback.
-  모두 둥근 선형 스타일이며 `CAT_ICON_SCALES`로 시각 크기를 미세 보정.
+  원본 100×100 아트보드의 크기와 여백을 유지하며 `CAT_ICON_SCALES`는 비워 둔다.
 - **규칙 사전 (`CAT_RULES`)**: `{cat, kws}` 배열. 가게명에 키워드 포함 시 매칭
 - **사용자 학습 사전 (`storeCatMap`)**: `{"하나로마트 청담점": "마트", ...}`
   - IndexedDB `settings` store의 `storeCatMap` key에 저장

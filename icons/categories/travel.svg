@@ -1,5 +1,88 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-  <rect x="6" y="6" width="12" height="15" rx="2.5"/>
-  <path d="M9 6V3.5h6V6M9 10v7M15 10v7M8 21v1M16 21v1"/>
-  <rect x="5" y="3" width="14" height="2" rx="1"/>
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="black" stroke="black" aria-hidden="true">
+  <defs>
+    <style>
+      .st0 {
+        stroke-width: 2.7px;
+      }
+
+      .st0, .st1, .st2 {
+        stroke-linejoin: round;
+      }
+
+      .st0, .st1, .st2, .st3, .st4, .st5, .st6, .st7, .st8, .st9, .st10, .st11, .st12 {
+        stroke: #000;
+      }
+
+      .st0, .st1, .st2, .st3, .st4, .st7, .st8, .st9, .st10, .st11, .st12 {
+        fill: none;
+      }
+
+      .st0, .st1, .st2, .st3, .st4, .st8, .st9, .st10, .st11 {
+        stroke-linecap: round;
+      }
+
+      .st1, .st9 {
+        stroke-width: 2.8px;
+      }
+
+      .st2 {
+        stroke-width: 3px;
+      }
+
+      .st3, .st4, .st5, .st6, .st7, .st8, .st9, .st10, .st11, .st12 {
+        stroke-miterlimit: 10;
+      }
+
+      .st3, .st7 {
+        stroke-width: 2px;
+      }
+
+      .st4 {
+        stroke-width: 2px;
+      }
+
+      .st5 {
+        stroke-width: .8px;
+      }
+
+      .st13, .st6 {
+        fill: #fff;
+      }
+
+      .st6 {
+        stroke-width: 2.3px;
+      }
+
+      .st8 {
+        stroke-width: 3.1px;
+      }
+
+      .st10, .st12 {
+        stroke-width: 2.5px;
+      }
+
+      .st11 {
+        stroke-width: 2.4px;
+      }
+
+      .st14 {
+        fill: #fdfdfd;
+      }
+    </style>
+  </defs>
+  <g>
+    <g>
+      <rect class="st11" x="29" y="12" width="42" height="4" rx="2" ry="2" />
+      <g>
+        <rect class="st12" x="27.5" y="28" width="45" height="55" rx="5.4" ry="5.4" />
+        <line class="st4" x1="39" y1="39" x2="39" y2="72" />
+        <path class="st10" d="M36,83h6v3.1c0,1-.8,1.9-1.9,1.9h-2.2c-1,0-1.9-.8-1.9-1.9v-3.1h0Z" />
+        <path class="st10" d="M58,83h6v3.1c0,1-.8,1.9-1.9,1.9h-2.2c-1,0-1.9-.8-1.9-1.9v-3.1h0Z" />
+        <rect class="st3" x="33" y="20.5" width="12" height="3" transform="translate(17 61) rotate(-90)" />
+        <rect class="st3" x="55" y="20.5" width="12" height="3" transform="translate(39 83) rotate(-90)" />
+        <line class="st4" x1="61" y1="39" x2="61" y2="72" />
+      </g>
+    </g>
+  </g>
 </svg>
