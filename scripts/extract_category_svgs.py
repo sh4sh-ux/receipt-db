@@ -24,7 +24,7 @@ ASSETS = {
     "문화": "culture.svg",
     "교통": "transport.svg",
     "여행": "travel.svg",
-    "숙박": "lodging.svg",
+    # 숙박은 사용자가 새로 전달한 24×24 원본을 byte-for-byte 적용했으므로 제외한다.
     "골프": "golf-line.svg",
     "스파": "spa-line.svg",
     "운동": "fitness.svg",
