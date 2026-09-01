@@ -1,5 +1,5 @@
 const CACHE_PREFIX='receipt-db-shell-';
-const CACHE_NAME=CACHE_PREFIX+'v2.82';
+const CACHE_NAME=CACHE_PREFIX+'v2.83';
 const SHELL=[
   './',
   './index.html',
@@ -7,10 +7,22 @@ const SHELL=[
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',
-  './icons/categories/bar.png',
-  './icons/categories/cafe.png',
-  './icons/categories/movie.png',
-  './icons/categories/golf.png',
+  './icons/categories/dining.svg',
+  './icons/categories/cafe-line.svg',
+  './icons/categories/bar-line.svg',
+  './icons/categories/karaoke.svg',
+  './icons/categories/shopping.svg',
+  './icons/categories/culture.svg',
+  './icons/categories/transport.svg',
+  './icons/categories/travel.svg',
+  './icons/categories/lodging.svg',
+  './icons/categories/golf-line.svg',
+  './icons/categories/spa-line.svg',
+  './icons/categories/fitness.svg',
+  './icons/categories/celebration.svg',
+  './icons/categories/occasion.svg',
+  './icons/categories/medical.svg',
+  './icons/categories/other-line.svg',
 ];
 
 self.addEventListener('install',event=>{

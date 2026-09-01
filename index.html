@@ -378,9 +378,9 @@ svg{display:block;flex-shrink:0;}
 .cat-picker-trigger[aria-expanded="true"]{border-color:var(--blue);background:var(--card);box-shadow:0 0 0 3px var(--blue-bg);}
 .cat-picker-trigger-icon{width:24px;height:24px;border-radius:7px;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .cat-picker-trigger-icon svg{width:15px;height:15px;}
-.cat-icon-png{display:block;flex-shrink:0;background:currentColor;-webkit-mask:var(--cat-icon) center / contain no-repeat;mask:var(--cat-icon) center / contain no-repeat;}
-.cat-icon-png,.cat-icon-svg{transform:scale(var(--cat-scale,1));transform-origin:center;}
-.cat-picker-trigger-icon .cat-icon-png{width:15px;height:15px;}
+.cat-icon-mask{display:block;flex-shrink:0;background:currentColor;-webkit-mask:var(--cat-icon) center / contain no-repeat;mask:var(--cat-icon) center / contain no-repeat;}
+.cat-icon-mask,.cat-icon-svg{transform:scale(var(--cat-scale,1));transform-origin:center;}
+.cat-picker-trigger-icon .cat-icon-mask{width:15px;height:15px;}
 .cat-picker-trigger-label{flex:1;font-size:13.5px;font-weight:550;}
 .cat-picker-trigger-label.empty{color:var(--label3);font-weight:400;}
 .cat-picker-trigger-chevron{color:var(--label3);transition:transform .15s;}
@@ -390,7 +390,7 @@ svg{display:block;flex-shrink:0;}
 .cat-picker-title{grid-column:1/-1;margin:0 -12px 4px;padding:13px 16px;border-bottom:1px solid var(--sep);color:var(--label2);font-size:12px;font-weight:700;letter-spacing:-.1px;}
 .cat-picker-option{min-height:78px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--label2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-size:11.5px;font-weight:600;transition:background .12s,border-color .12s,color .12s;}
 .cat-picker-option svg{width:27px;height:27px;}
-.cat-picker-option .cat-icon-png{width:27px;height:27px;}
+.cat-picker-option .cat-icon-mask{width:27px;height:27px;}
 .cat-picker-option:hover{background:var(--fill);color:var(--label);}
 .cat-picker-option.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue-txt);}
 @media(max-width:520px){
@@ -398,7 +398,7 @@ svg{display:block;flex-shrink:0;}
   .cat-picker-title{margin:0 -6px 3px;padding:10px 12px;}
   .cat-picker-option{min-height:58px;gap:4px;padding:3px 0;font-size:9.5px;border-radius:9px;}
   .cat-picker-option svg{width:22px;height:22px;}
-  .cat-picker-option .cat-icon-png{width:22px;height:22px;}
+  .cat-picker-option .cat-icon-mask{width:22px;height:22px;}
   .detail-cat-popover{left:calc(-100% - 10px);width:calc(200% + 10px);}
 }
 
@@ -504,7 +504,7 @@ svg{display:block;flex-shrink:0;}
 .detail-cat-trigger{width:100%;min-height:28px;border:0;background:transparent;color:var(--label);display:flex;align-items:center;gap:9px;padding:0;text-align:left;font:inherit;}
 .detail-cat-trigger-icon{width:25px;height:25px;flex:0 0 25px;border-radius:7px;background:var(--blue-bg);color:var(--blue-txt);display:flex;align-items:center;justify-content:center;}
 .detail-cat-trigger-icon svg{width:16px;height:16px;}
-.detail-cat-trigger-icon .cat-icon-png{width:16px;height:16px;}
+.detail-cat-trigger-icon .cat-icon-mask{width:16px;height:16px;}
 .detail-cat-trigger-label{flex:1;font-size:14px;font-weight:600;}
 .detail-cat-trigger-chevron{color:var(--label3);transition:transform .15s;}
 .detail-cat-trigger[aria-expanded="true"] .detail-cat-trigger-chevron{transform:rotate(180deg);}
@@ -934,7 +934,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .det-hd-card:hover{background:var(--fill2);}
 .det-cat-box{width:48px;height:48px;border-radius:12px;background:var(--blue-bg);border:1px solid rgba(98,100,238,.25);display:flex;align-items:center;justify-content:center;color:var(--blue-txt);flex-shrink:0;}
 .det-cat-box svg{width:24px;height:24px;}
-.det-cat-box .cat-icon-png{width:24px;height:24px;}
+.det-cat-box .cat-icon-mask{width:24px;height:24px;}
 .det-hd-info{min-width:0;grid-column:1;}
 .det-hd-store{font-size:15px;font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
 .det-payer-badge{font-size:11px;font-weight:600;background:var(--blue-bg);color:var(--blue-txt);border-radius:20px;padding:2px 9px;flex-shrink:0;}
@@ -2088,7 +2088,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         HTML 속성에 안전하게 표시한다. 목록 키보드 탐색과 기기 초기화 안내도 보강한다.
 // v2.82 — Dropbox rev 조건부 업로드와 충돌 재병합, 백업·동기화 스키마 및 용량
 //         검증, network-first 오프라인 셸을 추가하고 오래된 중복·미사용 코드를 정리한다.
-const APP_VERSION='v2.82';
+// v2.83 — 사용자 제작 카테고리 16종을 작은 화면용 24×24 SVG로 정리하고,
+//         투명 단색 마스크로 통일해 라이트·다크 테마와 오프라인에서 동일하게 표시한다.
+const APP_VERSION='v2.83';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -2374,7 +2376,7 @@ async function _replaceReceiptImage(receipt,file){
 // ════════════════════════════════════════════════════════════════
 // CATEGORIES — 자동 분류 (가게명 → 카테고리)
 // ════════════════════════════════════════════════════════════════
-const BASE_CATEGORIES=['외식','카페','술집','케이크','노래방','교통','쇼핑','영화','숙박','골프','스파','운동','여행','병원·약국','경조사','기타'];
+const BASE_CATEGORIES=['외식','카페','술집','노래방','쇼핑','영화','교통','여행','숙박','골프','스파','운동','케이크','경조사','병원·약국','기타'];
 // 카테고리 계층 그룹 (대분류 → 소분류)
 const CATEGORY_GROUPS=[
   {group:'경조사', members:['경조사','부의금','축의금']},
@@ -2398,23 +2400,34 @@ const CAT_RULES=[
   {cat:'병원·약국', kws:['병원','약국','의원','치과','한의원','클리닉']},
 ];
 
-const CAT_PNGS={
-  // 선 굵기와 형태의 기준으로 선택한 네 아이콘은 원본 실루엣을 유지한다.
-  '술집':'icons/categories/bar.png',
-  '카페':'icons/categories/cafe.png',
-  '영화':'icons/categories/movie.png',
-  '골프':'icons/categories/golf.png',
+const CAT_ASSETS={
+  // 사용자 제작 원본을 작은 모바일 크기에 맞춰 24×24 단색 SVG로 정리한 세트.
+  '외식':'icons/categories/dining.svg',
+  '카페':'icons/categories/cafe-line.svg',
+  '술집':'icons/categories/bar-line.svg',
+  '케이크':'icons/categories/celebration.svg',
+  '노래방':'icons/categories/karaoke.svg',
+  '쇼핑':'icons/categories/shopping.svg',
+  '영화':'icons/categories/culture.svg',
+  '교통':'icons/categories/transport.svg',
+  '여행':'icons/categories/travel.svg',
+  '숙박':'icons/categories/lodging.svg',
+  '골프':'icons/categories/golf-line.svg',
+  '스파':'icons/categories/spa-line.svg',
+  '운동':'icons/categories/fitness.svg',
+  '경조사':'icons/categories/occasion.svg',
+  '병원·약국':'icons/categories/medical.svg',
+  '기타':'icons/categories/other-line.svg',
 };
 
-// 원본 PNG마다 투명 여백이 달라 보이는 크기가 흔들리므로 실제 실루엣 기준으로 보정한다.
-// 외식·교통 등 SVG에도 같은 배율 체계를 적용해 선택기와 정보 카드의 크기를 통일한다.
+// 도형의 종횡비가 달라도 선택기와 정보 카드에서 시각 크기가 같도록 미세 조정한다.
 const CAT_ICON_SCALES={
-  '외식':.9,'카페':1,'술집':.92,'케이크':.94,'노래방':1.05,'교통':.94,
-  '쇼핑':.94,'영화':.94,'숙박':.96,'골프':.94,'스파':.98,'운동':.9,
-  '여행':1.08,'병원·약국':.88,'경조사':.9,'기타':.94,
+  '외식':.96,'카페':.96,'술집':.94,'케이크':.94,'노래방':.92,'교통':.94,
+  '쇼핑':.94,'영화':.96,'숙박':.96,'골프':.92,'스파':.96,'운동':.96,
+  '여행':.94,'병원·약국':.94,'경조사':.96,'기타':.94,
 };
 
-// 기준 PNG와 시각적으로 같은 굵기가 되도록 SVG 선은 모두 1.55로 통일한다.
+// 이전 버전 데이터나 알 수 없는 확장 카테고리를 위한 인라인 SVG fallback.
 const CAT_SVGS={
   '외식':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>`,
   '술집':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 0 1 0-5c.78 0 1.57.5 2.5.5C9.44 3.5 10 3 11 3s1.44.5 3 .5 2.5-1 4-1 1.5 2.5 0 5-2.5.5-4 .5z"/><path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/></svg>`,
@@ -2439,18 +2452,18 @@ function normalizeCategory(cat){
   const aliases={'부의금':'경조사','축의금':'경조사','마트':'쇼핑','문화':'영화','배달':'외식','병원':'병원·약국','약국':'병원·약국'};
   return aliases[cat]||cat||'';
 }
-const CATEGORY_LABELS={'케이크':'기념','노래방':'노래','병원·약국':'의료','경조사':'경조'};
+const CATEGORY_LABELS={'케이크':'기념','영화':'문화','병원·약국':'의료','경조사':'경조'};
 function getCategoryLabel(cat){
   const normalized=normalizeCategory(cat);
   return CATEGORY_LABELS[normalized]||normalized||'';
 }
-function getCatPng(path,cat){
+function getCatMask(path,cat){
   const scale=CAT_ICON_SCALES[cat]||1;
-  return `<span class="cat-icon-png" style="--cat-icon:url('${path}');--cat-scale:${scale}" aria-hidden="true"></span>`;
+  return `<span class="cat-icon-mask" style="--cat-icon:url('${path}');--cat-scale:${scale}" aria-hidden="true"></span>`;
 }
 function getCatSvg(cat){
   const normalized=normalizeCategory(cat);
-  if(CAT_PNGS[normalized])return getCatPng(CAT_PNGS[normalized],normalized);
+  if(CAT_ASSETS[normalized])return getCatMask(CAT_ASSETS[normalized],normalized);
   const svg=CAT_SVGS[normalized]||`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
   return svg.replace('<svg ',`<svg class="cat-icon-svg" style="--cat-scale:${CAT_ICON_SCALES[normalized]||1}" `);
 }

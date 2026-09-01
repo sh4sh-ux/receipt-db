@@ -39,6 +39,19 @@ def main() -> int:
         if relative and not (ROOT / relative).is_file():
             errors.append(f"오프라인 셸 파일이 없습니다: {relative}")
 
+    category_assets = re.findall(r"'[^']+':'(icons/categories/[^']+\.svg)'", index)
+    if len(set(category_assets)) != 16:
+        errors.append(f"카테고리 SVG가 16종이 아닙니다: {len(set(category_assets))}종")
+    for relative in set(category_assets):
+        if not (ROOT / relative).is_file():
+            errors.append(f"카테고리 SVG가 없습니다: {relative}")
+    expected_order = "['외식','카페','술집','노래방','쇼핑','영화','교통','여행','숙박','골프','스파','운동','케이크','경조사','병원·약국','기타']"
+    if f"const BASE_CATEGORIES={expected_order}" not in index:
+        errors.append("카테고리 4×4 표시 순서가 디자인 순서와 다릅니다")
+    expected_labels = "{'케이크':'기념','영화':'문화','병원·약국':'의료','경조사':'경조'}"
+    if f"const CATEGORY_LABELS={expected_labels}" not in index:
+        errors.append("카테고리 표시 이름이 디자인 명칭과 다릅니다")
+
     if index.count('<circle cx="12" cy="13" r="3.5"/>') != 3:
         errors.append("사진 없음 렌즈 아이콘 세 위치가 서로 다릅니다")
     if '<circle cx="12" cy="14" r="4"/>' in index:
