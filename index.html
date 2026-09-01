@@ -2074,7 +2074,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         동기화 후 순차적으로 복구한 뒤 실제 실패한 항목만 사진 없음으로 표시한다.
 // v2.79 — 영수증 상세 헤더에서 버전이 '← 2026년 9월 가계부' 뒤에 붙던 것을 수정.
 //         뒤로가기 줄에서는 버전 칩을 숨기고, 요약 화면으로 복귀하면 다시 표시한다.
-const APP_VERSION='v2.79';
+// v2.80 — 재설치 복구 시 imageId 참조까지 빠진 스캔 사진도 표준 ID로 백그라운드
+//         복구한다. data URL 형식의 사진도 로컬·Dropbox JSON 백업에 빠짐없이 포함한다.
+const APP_VERSION='v2.80';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -2296,6 +2298,19 @@ async function _ensureReceiptImgUrl(receipt){
   }finally{
     _imgDownloading.delete(imageId);
   }
+}
+
+// imageId가 빠진 모든 영수증을 무작정 Dropbox에서 찾으면 애초에 사진을 첨부하지 않은
+// 수기 기록까지 여러 경로로 조회하게 된다. 표준 ID의 로컬 사진이나 완료 JPG 경로가
+// 남은 기록만 확실한 복구 후보로 보고, 새 사진 저장 때와 같은 ID를 다시 만든다.
+function _receiptRecoveryImageId(receipt){
+  if(!receipt)return '';
+  if(receipt.imageId)return receipt.imageId;
+  if(!receipt.id)return '';
+  const standardId='img_'+String(receipt.id).replace(/^rec_/,'');
+  if(_localImageIds.has(standardId))return standardId;
+  if(receipt.scanPath&&/\.(?:jpe?g|png|webp)$/i.test(String(receipt.scanPath)))return standardId;
+  return '';
 }
 function _revokeImgUrl(imageId){
   const u=_imgUrlCache.get(imageId);
@@ -6118,6 +6133,11 @@ async function blobToBase64(blob){
     r.readAsDataURL(blob);
   });
 }
+async function imageRecordToBase64(image){
+  if(image?.data)return image.data;
+  if(image?.blob)return blobToBase64(image.blob);
+  return '';
+}
 async function base64ToBlob(dataUrl){
   const res=await fetch(dataUrl);
   return await res.blob();
@@ -6382,8 +6402,11 @@ document.getElementById('exportBtn').addEventListener('click',async()=>{
     const imgs=await dbAll('images');
     const imgsOut=[];
     for(const im of imgs){
-      const b64=await blobToBase64(im.blob);
-      imgsOut.push({id:im.id,mime:im.mime||'image/jpeg',data:b64,contentHash:im.contentHash||''});
+      try{
+        const b64=await imageRecordToBase64(im);
+        if(b64)imgsOut.push({id:im.id,mime:im.mime||'image/jpeg',data:b64,contentHash:im.contentHash||''});
+        else console.warn('이미지 백업 건너뜀: 데이터 없음',im.id);
+      }catch(e){console.warn('이미지 백업 건너뜀:',im.id,e);}
     }
     const payload={
       app:'receipt-db',
@@ -6402,7 +6425,7 @@ document.getElementById('exportBtn').addEventListener('click',async()=>{
     a.download=`receipt-db_${new Date().toISOString().slice(0,10)}_${recs.length}건.json`;
     document.body.appendChild(a);a.click();
     setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},300);
-    toast(`백업 다운로드 완료 — ${recs.length}건, 사진 ${imgs.length}장`,{type:'success'});
+    toast(`백업 다운로드 완료 — ${recs.length}건, 사진 ${imgsOut.length}장`,{type:'success'});
   }catch(e){
     console.error(e);
     toast('백업 실패: '+(e.message||e),{type:'error'});
@@ -6666,7 +6689,7 @@ async function dbxBackup(){
     const imgsOut=[];
     for(const im of imgs){
       try{
-        const b64=await blobToBase64(im.blob);
+        const b64=await imageRecordToBase64(im);
         if(b64)imgsOut.push({id:im.id,mime:im.mime||'image/jpeg',data:b64,contentHash:im.contentHash||''});
       }catch(e){console.warn('이미지 백업 건너뜀:',im.id,e);}
     }
@@ -6939,7 +6962,11 @@ function _rebuildPhotoHashCounts(){
 }
 
 function _photoErrorReason(r){
-  if(!r.imageId)return '사진 첨부 누락';
+  if(!r.imageId){
+    const recoveryId=_receiptRecoveryImageId(r);
+    if(dbxIsConnected()&&recoveryId&&!_photoRecoveryChecked.has(recoveryId))return '';
+    return '사진 첨부 누락';
+  }
   // 재설치 후에는 영수증 메타데이터가 사진보다 먼저 복원된다.
   // Dropbox에 실제로 요청해 보기 전까지는 '누락'이 아니므로 개수에 포함하지 않는다.
   if(!_localImageIds.has(r.imageId)){
@@ -7328,9 +7355,9 @@ async function _dbxCollectSyncImages(recs){
   for(const id of ids){
     try{
       const im=await dbGet('images',id);
-      if(!im||!im.blob)continue;
-      const data=await blobToBase64(im.blob);
-      if(data)out.push({id,mime:im.mime||im.blob.type||'image/jpeg',data});
+      if(!im)continue;
+      const data=await imageRecordToBase64(im);
+      if(data)out.push({id,mime:im.mime||im.blob?.type||'image/jpeg',data});
     }catch(e){console.warn('dbx image export skip:',id,e);}
   }
   return out;
@@ -8587,7 +8614,10 @@ async function _dbxDownloadImage(imgId,rec=null){
 // Dropbox 동기화 후 미다운로드 사진을 순차적으로 복구한다.
 async function _dbxRecoverMissingImages(){
   if(_photoRecoveryRunning||!dbxIsConnected())return;
-  const targets=receipts.filter(r=>r.imageId&&!_localImageIds.has(r.imageId));
+  const targets=receipts.filter(r=>{
+    const recoveryId=_receiptRecoveryImageId(r);
+    return recoveryId&&!_localImageIds.has(recoveryId)&&!_photoRecoveryChecked.has(recoveryId);
+  });
   if(!targets.length)return;
   _photoRecoveryRunning=true;
   let restored=0,failed=0;
@@ -8596,12 +8626,17 @@ async function _dbxRecoverMissingImages(){
     for(let i=0;i<targets.length;i++){
       if(!dbxIsConnected())break;
       const r=targets[i];
-      if(_imgDownloading.has(r.imageId))continue;
-      _imgDownloading.add(r.imageId);
+      const recoveryId=_receiptRecoveryImageId(r);
+      if(!recoveryId||_imgDownloading.has(recoveryId))continue;
       let url=null;
-      try{url=await _dbxDownloadImage(r.imageId,r);}catch(e){console.warn('photo recovery:',r.imageId,e);}
-      finally{_imgDownloading.delete(r.imageId);}
-      _photoRecoveryChecked.add(r.imageId);
+      if(r.imageId){
+        _imgDownloading.add(recoveryId);
+        try{url=await _dbxDownloadImage(recoveryId,r);}catch(e){console.warn('photo recovery:',recoveryId,e);}
+        finally{_imgDownloading.delete(recoveryId);}
+      }else{
+        try{url=await _ensureReceiptImgUrl(r);}catch(e){console.warn('photo recovery:',recoveryId,e);}
+      }
+      _photoRecoveryChecked.add(recoveryId);
       if(url)restored++;else failed++;
       if((i+1)%4===0||i===targets.length-1){
         renderSide();
