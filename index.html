@@ -204,6 +204,7 @@ svg{display:block;flex-shrink:0;}
 .list-group{padding:8px 0 0;}
 .list-group-hd{padding:8px var(--pad-x) 4px;font-size:11px;font-weight:600;color:var(--label2);letter-spacing:.3px;text-transform:uppercase;}
 .r-card{padding:11px var(--pad-x);border-bottom:1px solid var(--sep);cursor:pointer;transition:background .12s;display:flex;align-items:flex-start;gap:10px;animation:rowIn .25s ease;touch-action:manipulation;}
+.r-card:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;background:var(--blue-bg);}
 @keyframes rowIn{from{opacity:0;transform:translateY(-3px);}to{opacity:1;transform:translateY(0);}}
 .r-card:hover{background:var(--fill);}
 .r-card.sel{background:var(--blue-bg);}
@@ -572,6 +573,7 @@ svg{display:block;flex-shrink:0;}
 .srch-table td{padding:10px 8px;border-bottom:1px solid var(--sep);font-size:13px;color:var(--label);}
 .srch-row{cursor:pointer;transition:background .1s;}
 .srch-row:hover{background:var(--fill);}
+.srch-row:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;background:var(--blue-bg);}
 .srch-total{text-align:right;font-size:13px;color:var(--label2);padding:10px 8px 0;}
 @media(max-width:780px){.srch-stats{gap:8px;}.srch-stat{padding:10px 8px;}.srch-stat-val{font-size:15px;}}
 
@@ -1229,7 +1231,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
           <span>확인 필요</span><span class="photo-filter-count" data-photo-count="problem">0</span>
         </button>
         <button class="photo-filter-chip" type="button" data-photo-filter="missing" aria-pressed="false">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="14" r="4"/><path d="M3.6 21.4 20.8 4.2"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="3.5"/><path d="M3.6 21.4 20.8 4.2"/></svg>
           <span>사진 없음</span><span class="photo-filter-count" data-photo-count="missing">0</span>
         </button>
       </div>
@@ -1256,7 +1258,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
             <span>확인 필요</span><span class="photo-filter-count" data-photo-count="problem">0</span>
           </button>
           <button class="photo-filter-chip" type="button" data-photo-filter="missing" aria-pressed="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="14" r="4"/><path d="M3.6 21.4 20.8 4.2"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="3.5"/><path d="M3.6 21.4 20.8 4.2"/></svg>
             <span>사진 없음</span><span class="photo-filter-count" data-photo-count="missing">0</span>
           </button>
         </div>
@@ -1707,12 +1709,12 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
           </div>
 
           <div class="setting-card">
-            <h3>전체 초기화</h3>
-            <p>저장된 모든 영수증과 사진을 영구히 삭제합니다. 이 작업은 되돌릴 수 없어요. 미리 백업을 받아두세요.</p>
+            <h3>이 기기 데이터 초기화</h3>
+            <p>현재 브라우저에 저장된 영수증과 사진만 삭제합니다. Dropbox 연결 중이면 다음 동기화 때 원격 기록이 다시 내려올 수 있어요.</p>
             <div class="setting-btn-row">
               <button class="danger" id="resetBtn">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                전체 삭제
+                이 기기 데이터 삭제
               </button>
             </div>
           </div>
@@ -2076,7 +2078,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         뒤로가기 줄에서는 버전 칩을 숨기고, 요약 화면으로 복귀하면 다시 표시한다.
 // v2.80 — 재설치 복구 시 imageId 참조까지 빠진 스캔 사진도 표준 ID로 백그라운드
 //         복구한다. data URL 형식의 사진도 로컬·Dropbox JSON 백업에 빠짐없이 포함한다.
-const APP_VERSION='v2.80';
+// v2.81 — 사진 없음 카메라의 렌즈를 시각 중심으로 올리고, 가져온 영수증 ID를
+//         HTML 속성에 안전하게 표시한다. 목록 키보드 탐색과 기기 초기화 안내도 보강한다.
+const APP_VERSION='v2.81';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -3182,7 +3186,7 @@ function _receiptStatusIconHtml(r){
   if(_photoErrorKind(r)!=='missing')return '';
   const other=_isOtherPayer(r);
   const reason=other?`${photoReason} · 다른 사람이 결제한 내역`:photoReason;
-  const svg=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="14" r="4"/><path d="M3.6 21.4 20.8 4.2"/></svg>`;
+  const svg=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="3.5"/><path d="M3.6 21.4 20.8 4.2"/></svg>`;
   return `<span class="r-photo-status missing${other?' other-payer':''}" role="img" aria-label="${escapeHtml(reason)}" title="${escapeHtml(reason)}">${svg}</span>`;
 }
 
@@ -3240,7 +3244,7 @@ function _cardHtml(r){
   if(r.paidBy)meta.push(escapeHtml(r.paidBy));
   if((r.participants||[]).length>0)meta.push(`${r.participants.length}명`);
   const photoStatusIcon=_receiptStatusIconHtml(r);
-  return `<div class="r-card${sel}${batchSel}" data-id="${r.id}" ${batchA11y}>
+  return `<div class="r-card${sel}${batchSel}" data-id="${escapeHtml(r.id)}" ${batchA11y} tabindex="0">
     <button class="r-card-check" type="button" tabindex="-1" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>
     </button>
@@ -3323,9 +3327,14 @@ function renderSide(){
   list.innerHTML=html.join('');
   // 이벤트 위임
   list.querySelectorAll('.r-card').forEach(el=>{
-    el.addEventListener('click',()=>{
+    const openCard=()=>{
       const id=el.dataset.id;
       if(_batchSelectMode)_toggleBatchReceipt(id);else selectReceipt(id);
+    };
+    el.addEventListener('click',openCard);
+    el.addEventListener('keydown',e=>{
+      if(e.key!=='Enter'&&e.key!==' ')return;
+      e.preventDefault();openCard();
     });
   });
   _updateBatchExportUi();
@@ -4532,7 +4541,7 @@ function renderSearchSummaryHtml(q, filtered){
     <table class="srch-table">
       <thead><tr><th>일자</th><th>매장명</th><th>품목명</th><th>수량</th>${hasUP?'<th>단가</th>':''}<th>금액</th></tr></thead>
       <tbody>${sorted.map(it=>`
-        <tr class="srch-row" data-id="${it.receiptId}">
+        <tr class="srch-row" data-id="${escapeHtml(it.receiptId)}" role="button" tabindex="0">
           <td style="white-space:nowrap;">${fmtDateKor(it.date)}</td>
           <td>${escapeHtml(it.store||'')}</td>
           <td>${escapeHtml(it.name||'')}</td>
@@ -4552,7 +4561,7 @@ function renderSearchSummaryHtml(q, filtered){
     <table class="srch-table">
       <thead><tr><th>일자</th><th>매장명</th><th>카테고리</th>${hasPayer?'<th>결제자</th>':''}<th>총액</th></tr></thead>
       <tbody>${sorted.map(r=>`
-        <tr class="srch-row" data-id="${r.id}">
+        <tr class="srch-row" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
           <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
           <td>${escapeHtml(r.store||'')}</td>
           <td>${escapeHtml(getCategoryLabel(r.category)||'—')}</td>
@@ -4630,7 +4639,7 @@ function renderPayerSummaryHtml(payerName, filtered){
     <table class="srch-table">
       <thead><tr><th>일자</th><th>매장명</th><th>총액</th></tr></thead>
       <tbody>${sorted.map(r=>`
-        <tr class="srch-row" data-id="${r.id}">
+        <tr class="srch-row" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
           <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
           <td>${escapeHtml(r.store||'')}</td>
           <td>${fmtMoney(r.total||0)}원</td>
@@ -4740,7 +4749,7 @@ function renderParticipantSummaryHtml(name, filtered){
       <tbody>${sorted.map(r=>{
         const cnt=(r.participants||[]).length||1;
         const share=Math.round((r.total||0)/cnt);
-        return `<tr class="srch-row" data-id="${r.id}">
+        return `<tr class="srch-row" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
           <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
           <td>${escapeHtml(r.store||'')}</td>
           <td style="text-align:right;">${cnt}명</td>
@@ -4789,7 +4798,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
       <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${amt/maxCat*100}%;background:var(--blue);"></div></div>
     </div>`).join('');
     const sorted=[...payerRecs].sort((a,b)=>b.date.localeCompare(a.date));
-    const rows=sorted.map(r=>`<tr class="srch-row" data-id="${r.id}">
+    const rows=sorted.map(r=>`<tr class="srch-row" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
       <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
       <td style="text-align:left;">${escapeHtml(r.store||'')}</td>
       <td>${fmtMoney(r.total||0)}원</td>
@@ -4813,7 +4822,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     const rows=sorted.map(r=>{
       const cnt=(r.participants||[]).length||1;
       const share=Math.round((r.total||0)/cnt);
-      return `<tr class="srch-row" data-id="${r.id}">
+      return `<tr class="srch-row" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
         <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
         <td>${escapeHtml(r.store||'')}</td>
         <td style="text-align:right;">${cnt}명</td>
@@ -5382,6 +5391,17 @@ function _ledgerFilterPillsHtml(f){
   return `<div class="ledger-filter-row"><select class="ledger-filter-sel" id="ledgerFilterSel">${opts}</select></div>`;
 }
 
+function _bindReceiptRows(root){
+  root.querySelectorAll('.srch-row[data-id]').forEach(row=>{
+    const openRow=()=>selectReceipt(row.dataset.id);
+    row.addEventListener('click',openRow);
+    row.addEventListener('keydown',e=>{
+      if(e.key!=='Enter'&&e.key!==' ')return;
+      e.preventDefault();openRow();
+    });
+  });
+}
+
 async function renderDetail(){
   const body=document.getElementById('detailBody');
   body.classList.remove('mob-compact');
@@ -5424,9 +5444,7 @@ async function renderDetail(){
           body.innerHTML=renderCrossYearMonthHtml(dq.month,filtered);
         }
         _bindSectionToggles(body);
-        body.querySelectorAll('.srch-row[data-id]').forEach(tr=>{
-          tr.addEventListener('click',()=>selectReceipt(tr.dataset.id));
-        });
+        _bindReceiptRows(body);
         return;
       }
 
@@ -5487,9 +5505,7 @@ async function renderDetail(){
         body.innerHTML=renderSearchSummaryHtml(qL,filtered);
         _bindSectionToggles(body);
       }
-      body.querySelectorAll('.srch-row[data-id]').forEach(tr=>{
-        tr.addEventListener('click',()=>selectReceipt(tr.dataset.id));
-      });
+      _bindReceiptRows(body);
       // 인물 패널 시간 필터 클릭
       body.querySelectorAll('.pf-pill').forEach(btn=>{
         btn.addEventListener('click',()=>{
@@ -5550,9 +5566,7 @@ async function renderDetail(){
       const clearCat=body.querySelector('#catFilterClearBtn');
       if(clearCat)clearCat.addEventListener('click',e=>{e.stopPropagation();_monthCatFilter=null;renderSide();renderDetail();});
       // srch-row 클릭 (연간/전체 요약 테이블)
-      body.querySelectorAll('.srch-row[data-id]').forEach(tr=>{
-        tr.addEventListener('click',()=>selectReceipt(tr.dataset.id));
-      });
+      _bindReceiptRows(body);
       const cta=body.querySelector('#budgetEmptyCta');
       if(cta)cta.addEventListener('click',()=>switchTab('input'));
     }
@@ -5692,7 +5706,7 @@ async function renderDetail(){
       ${memoFieldsHtml}`}
 
     <div style="font-size:11px;color:var(--label3);margin-top:14px;">
-      ID: ${r.id} · 생성 ${r.createdAt?r.createdAt.slice(0,16).replace('T',' '):'—'} · 수정 ${r.updatedAt?r.updatedAt.slice(0,16).replace('T',' '):'—'}
+      ID: ${escapeHtml(r.id)} · 생성 ${escapeHtml(r.createdAt?r.createdAt.slice(0,16).replace('T',' '):'—')} · 수정 ${escapeHtml(r.updatedAt?r.updatedAt.slice(0,16).replace('T',' '):'—')}
     </div>
   `;
 
@@ -6473,8 +6487,11 @@ document.getElementById('importInp').addEventListener('change',async e=>{
 
 document.getElementById('resetBtn').addEventListener('click',async()=>{
   if(!receipts.length){toast('이미 비어있어요');return;}
-  if(!confirm(`정말로 모든 데이터(${receipts.length}건)를 삭제할까요?\n복구할 수 없습니다.\n\n먼저 백업을 받으셨는지 확인해주세요.`))return;
-  if(!confirm('한 번 더 확인할게요. 정말 모두 삭제할까요?'))return;
+  const syncNote=dbxIsConnected()
+    ? '\n\nDropbox 연결은 유지됩니다. 다음 동기화 때 원격 기록이 다시 내려올 수 있어요.'
+    : '';
+  if(!confirm(`이 기기의 영수증과 사진(${receipts.length}건)을 삭제할까요?\n로컬 데이터는 복구할 수 없습니다.${syncNote}\n\n먼저 백업을 받으셨는지 확인해주세요.`))return;
+  if(!confirm('한 번 더 확인할게요. 이 기기의 데이터를 삭제할까요?'))return;
   await dbClear('receipts');
   await dbClear('images');
   await dbClear('settings');
@@ -6482,7 +6499,7 @@ document.getElementById('resetBtn').addEventListener('click',async()=>{
   for(const[id,url]of _imgUrlCache){URL.revokeObjectURL(url);}
   _imgUrlCache.clear();
   selectedId=null;
-  toast('모든 데이터가 삭제됐어요',{type:'success'});
+  toast(dbxIsConnected()?'이 기기 데이터를 삭제했어요 · Dropbox 기록은 유지됩니다':'이 기기 데이터를 삭제했어요',{type:'success'});
   await loadAll();renderDetail();
 });
 

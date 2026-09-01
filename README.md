@@ -1,7 +1,7 @@
-# 영수증 보관함 (Receipt DB) · v2.15
+# 영수증 보관함 (Receipt DB) · v2.81
 
 GPT로 정리한 영수증 텍스트를 영구 보관하고, 가계부처럼 들여다볼 수 있는
-**단일 HTML 앱**. 외부 의존성 없음, 오프라인 동작 가능.
+**단일 HTML 앱**. 외부 CDN이나 빌드 의존성 없이 GitHub Pages에서 실행됩니다.
 
 🔗 **사용하기**: <https://sh4sh-ux.github.io/receipt-db/>
 
@@ -31,13 +31,13 @@ GPT로 정리한 영수증 텍스트를 영구 보관하고, 가계부처럼 들
 브라우저 데이터를 지우면 함께 사라지니, **설정** 탭에서
 정기적으로 JSON 백업 파일을 받아두세요. 사진까지 한 파일에 들어갑니다.
 
-Dropbox 연결 시 자동 동기화 파일은 `/01_Personal/영수증/Receipt_DB/receipt-db_sync.json`,
-수동 백업 파일은 `/01_Personal/영수증/Receipt_DB/backups/` 아래에 저장됩니다.
+Dropbox 연결 시 자동 동기화 파일은 `/07_Apps/영수증(RECEIPT-DB)/receipt-db_sync.json`,
+수동 백업 파일은 `/07_Apps/영수증(RECEIPT-DB)/backups/` 아래에 저장됩니다.
 Dropbox 앱은 `Full Dropbox` 접근 유형으로 만들어야 이 경로에 쓸 수 있습니다.
 
 ## 기술
 
-- 순수 HTML + CSS + Vanilla JS (단일 파일, ~90KB)
+- 순수 HTML + CSS + Vanilla JS (단일 파일, 약 490KB)
 - IndexedDB v2 (`receipts` / `images` / `settings` stores)
 - 외부 CDN·폰트·빌드 시스템 없음
 
