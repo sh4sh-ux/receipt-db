@@ -45,6 +45,9 @@ def main() -> int:
     for relative in set(category_assets):
         if not (ROOT / relative).is_file():
             errors.append(f"카테고리 SVG가 없습니다: {relative}")
+    old_category_pngs = sorted((ROOT / "icons/categories").glob("*.png"))
+    if old_category_pngs:
+        errors.append("대체된 카테고리 PNG가 남아 있습니다: " + ", ".join(path.name for path in old_category_pngs))
     expected_order = "['외식','카페','술집','노래방','쇼핑','영화','교통','여행','숙박','골프','스파','운동','케이크','경조사','병원·약국','기타']"
     if f"const BASE_CATEGORIES={expected_order}" not in index:
         errors.append("카테고리 4×4 표시 순서가 디자인 순서와 다릅니다")
