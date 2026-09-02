@@ -9,15 +9,10 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 jobs:
-  patch-and-deploy:
+  patch-source:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -87,15 +82,3 @@ jobs:
             git commit -m "fix: apply category 8x2 layout and v2.92 directly"
             git push origin HEAD:main
           fi
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: '.'
-
-      - name: Deploy Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
