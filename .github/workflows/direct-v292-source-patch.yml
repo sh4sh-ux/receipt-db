@@ -1,0 +1,67 @@
+name: Direct Receipt DB v2.92 source patch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/direct-v292-source-patch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Patch actual source
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          original = text
+
+          old_grid = 'grid-template-columns:repeat(4,minmax(0,1fr));'
+          new_grid = 'grid-template-columns:repeat(8,minmax(0,1fr));'
+          if old_grid in text:
+              text = text.replace(old_grid, new_grid, 1)
+          elif new_grid not in text:
+              raise SystemExit('CATEGORY_GRID_ANCHOR_NOT_FOUND')
+
+          if "const APP_VERSION='v2.91';" in text:
+              text = text.replace("const APP_VERSION='v2.91';", "const APP_VERSION='v2.92';", 1)
+          elif "const APP_VERSION='v2.92';" not in text:
+              raise SystemExit('APP_VERSION_ANCHOR_NOT_FOUND')
+
+          if new_grid not in text:
+              raise SystemExit('CATEGORY_GRID_NOT_PATCHED')
+          if "const APP_VERSION='v2.92';" not in text:
+              raise SystemExit('APP_VERSION_NOT_PATCHED')
+
+          if text != original:
+              path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Validate source
+        shell: bash
+        run: |
+          grep -F "const APP_VERSION='v2.92';" index.html
+          grep -F "grid-template-columns:repeat(8,minmax(0,1fr));" index.html
+          git diff --check
+
+      - name: Commit actual source patch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "fix: set Receipt DB v2.92 and category grid 8x2"
+            git push origin HEAD:main
+          fi
