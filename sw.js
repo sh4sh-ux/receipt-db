@@ -1,5 +1,5 @@
 const CACHE_PREFIX='receipt-db-shell-';
-const CACHE_NAME=CACHE_PREFIX+'v2.91';
+const CACHE_NAME=CACHE_PREFIX+'v2.92';
 const SHELL=[
   './',
   './index.html',
@@ -43,14 +43,37 @@ self.addEventListener('activate',event=>{
   );
 });
 
+async function applyCategoryGridLayout(response){
+  if(!response)return response;
+  const contentType=response.headers.get('content-type')||'';
+  if(!contentType.includes('text/html'))return response;
+
+  const html=await response.text();
+  if(html.includes('id="category-grid-layout"')){
+    return new Response(html,{status:response.status,statusText:response.statusText,headers:response.headers});
+  }
+
+  const style='<style id="category-grid-layout">.cat-picker-popover{grid-template-columns:repeat(8,minmax(0,1fr))}</style>';
+  const transformed=html.includes('</head>')?html.replace('</head>',style+'</head>'):html;
+  const headers=new Headers(response.headers);
+  headers.delete('content-length');
+  headers.delete('content-encoding');
+  return new Response(transformed,{status:response.status,statusText:response.statusText,headers});
+}
+
 async function networkFirst(request){
   const cache=await caches.open(CACHE_NAME);
   try{
     const response=await fetch(request);
-    if(response&&response.ok)await cache.put('./index.html',response.clone());
+    if(response&&response.ok){
+      const transformed=await applyCategoryGridLayout(response.clone());
+      await cache.put('./index.html',transformed.clone());
+      return transformed;
+    }
     return response;
   }catch(error){
-    return (await cache.match('./index.html'))||(await cache.match('./'))||Response.error();
+    const cached=(await cache.match('./index.html'))||(await cache.match('./'));
+    return cached?applyCategoryGridLayout(cached):Response.error();
   }
 }
 
