@@ -49,12 +49,12 @@ async function applyCategoryGridLayout(response){
   if(!contentType.includes('text/html'))return response;
 
   const html=await response.text();
-  if(html.includes('id="category-grid-layout"')){
-    return new Response(html,{status:response.status,statusText:response.statusText,headers:response.headers});
-  }
-
   const style='<style id="category-grid-layout">.cat-picker-popover{grid-template-columns:repeat(8,minmax(0,1fr))}</style>';
-  const transformed=html.includes('</head>')?html.replace('</head>',style+'</head>'):html;
+  let transformed=html.includes('id="category-grid-layout"')
+    ? html
+    : (html.includes('</head>')?html.replace('</head>',style+'</head>'):html);
+  transformed=transformed.replace("const APP_VERSION='v2.91';","const APP_VERSION='v2.92';");
+
   const headers=new Headers(response.headers);
   headers.delete('content-length');
   headers.delete('content-encoding');
