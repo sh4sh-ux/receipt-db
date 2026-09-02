@@ -1,0 +1,77 @@
+name: Patch Receipt DB detail category popover v2.93
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patch-detail-category-v293.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Widen detail category popover and bump version
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          index = Path('index.html')
+          text = index.read_text(encoding='utf-8')
+          original = text
+
+          old_css = ".detail-cat-popover{top:calc(100% + 8px);}"
+          new_css = ".detail-cat-popover{top:calc(100% + 8px);left:calc(-100% - 8px);width:calc(200% + 8px);}"
+          if old_css in text:
+              text = text.replace(old_css, new_css, 1)
+          elif new_css not in text:
+              raise SystemExit('DETAIL_CATEGORY_POPOVER_ANCHOR_NOT_FOUND')
+
+          if "const APP_VERSION='v2.92';" in text:
+              text = text.replace("const APP_VERSION='v2.92';", "const APP_VERSION='v2.93';", 1)
+          elif "const APP_VERSION='v2.93';" not in text:
+              raise SystemExit('APP_VERSION_ANCHOR_NOT_FOUND')
+
+          if new_css not in text:
+              raise SystemExit('DETAIL_CATEGORY_POPOVER_NOT_PATCHED')
+          if "const APP_VERSION='v2.93';" not in text:
+              raise SystemExit('APP_VERSION_NOT_PATCHED')
+
+          if text != original:
+              index.write_text(text, encoding='utf-8')
+
+          sw = Path('sw.js')
+          s = sw.read_text(encoding='utf-8')
+          if "CACHE_NAME=CACHE_PREFIX+'v2.92'" in s:
+              s = s.replace("CACHE_NAME=CACHE_PREFIX+'v2.92'", "CACHE_NAME=CACHE_PREFIX+'v2.93'", 1)
+          elif "CACHE_NAME=CACHE_PREFIX+'v2.93'" not in s:
+              raise SystemExit('SERVICE_WORKER_CACHE_ANCHOR_NOT_FOUND')
+          sw.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Validate source
+        shell: bash
+        run: |
+          grep -F "const APP_VERSION='v2.93';" index.html
+          grep -F ".detail-cat-popover{top:calc(100% + 8px);left:calc(-100% - 8px);width:calc(200% + 8px);}" index.html
+          grep -F "CACHE_NAME=CACHE_PREFIX+'v2.93'" sw.js
+          git diff --check
+
+      - name: Commit patched source to main
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js
+          if ! git diff --cached --quiet; then
+            git commit -m "fix: widen detail category popover and bump v2.93"
+            git push origin HEAD:main
+          fi
