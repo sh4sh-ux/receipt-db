@@ -1,0 +1,102 @@
+name: Fix Receipt DB category grid and v2.92
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-category-v292.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+environment:
+  name: github-pages
+  url: ${{ steps.deployment.outputs.page_url }}
+
+jobs:
+  patch-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Patch index.html and clean service worker workaround
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          index = Path('index.html')
+          text = index.read_text(encoding='utf-8')
+
+          old_grid = 'grid-template-columns:repeat(4,minmax(0,1fr));'
+          new_grid = 'grid-template-columns:repeat(8,minmax(0,1fr));'
+          if old_grid not in text and new_grid not in text:
+              raise SystemExit('CATEGORY_GRID_ANCHOR_NOT_FOUND')
+          text = text.replace(old_grid, new_grid, 1)
+
+          if "const APP_VERSION='v2.91';" in text:
+              text = text.replace("const APP_VERSION='v2.91';", "const APP_VERSION='v2.92';", 1)
+          elif "const APP_VERSION='v2.92';" not in text:
+              raise SystemExit('APP_VERSION_ANCHOR_NOT_FOUND')
+
+          if new_grid not in text:
+              raise SystemExit('CATEGORY_GRID_NOT_PATCHED')
+          if "const APP_VERSION='v2.92';" not in text:
+              raise SystemExit('APP_VERSION_NOT_PATCHED')
+          index.write_text(text, encoding='utf-8')
+
+          sw = Path('sw.js')
+          s = sw.read_text(encoding='utf-8')
+
+          workaround = '''\nasync function applyCategoryGridLayout(response){\n  if(!response)return response;\n  const contentType=response.headers.get('content-type')||'';\n  if(!contentType.includes('text/html'))return response;\n\n  const html=await response.text();\n  const style='<style id="category-grid-layout">.cat-picker-popover{grid-template-columns:repeat(8,minmax(0,1fr))}</style>';\n  let transformed=html.includes('id="category-grid-layout"')\n    ? html\n    : (html.includes('</head>')?html.replace('</head>',style+'</head>'):html);\n  transformed=transformed.replace("const APP_VERSION='v2.91';","const APP_VERSION='v2.92';");\n\n  const headers=new Headers(response.headers);\n  headers.delete('content-length');\n  headers.delete('content-encoding');\n  return new Response(transformed,{status:response.status,statusText:response.statusText,headers});\n}\n'''
+          s = s.replace(workaround, '\n')
+
+          old_network = '''async function networkFirst(request){\n  const cache=await caches.open(CACHE_NAME);\n  try{\n    const response=await fetch(request);\n    if(response&&response.ok){\n      const transformed=await applyCategoryGridLayout(response.clone());\n      await cache.put('./index.html',transformed.clone());\n      return transformed;\n    }\n    return response;\n  }catch(error){\n    const cached=(await cache.match('./index.html'))||(await cache.match('./'));\n    return cached?applyCategoryGridLayout(cached):Response.error();\n  }\n}\n'''
+          new_network = '''async function networkFirst(request){\n  const cache=await caches.open(CACHE_NAME);\n  try{\n    const response=await fetch(request);\n    if(response&&response.ok)await cache.put('./index.html',response.clone());\n    return response;\n  }catch(error){\n    return (await cache.match('./index.html'))||(await cache.match('./'))||Response.error();\n  }\n}\n'''
+          if old_network in s:
+              s = s.replace(old_network, new_network, 1)
+          elif 'applyCategoryGridLayout' in s:
+              raise SystemExit('SERVICE_WORKER_WORKAROUND_NOT_REMOVED')
+
+          if 'applyCategoryGridLayout' in s:
+              raise SystemExit('SERVICE_WORKER_WORKAROUND_STILL_PRESENT')
+          if "CACHE_NAME=CACHE_PREFIX+'v2.92'" not in s:
+              raise SystemExit('SERVICE_WORKER_CACHE_VERSION_MISMATCH')
+          sw.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Validate patched source
+        shell: bash
+        run: |
+          grep -F "const APP_VERSION='v2.92';" index.html
+          grep -F "grid-template-columns:repeat(8,minmax(0,1fr));" index.html
+          ! grep -F "applyCategoryGridLayout" sw.js
+          git diff --check
+
+      - name: Commit patched source to main
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js
+          if ! git diff --cached --quiet; then
+            git commit -m "fix: apply category 8x2 layout and v2.92 directly"
+            git push origin HEAD:main
+          fi
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: '.'
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
