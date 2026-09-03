@@ -2097,7 +2097,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 // v2.89 — 아이콘별 단일 SVG 원본을 적용하고 작은 화면에서도 선명하도록 표시 크기를 확대한다.
 // v2.90 — 원본 SVG는 유지하면서 모든 카테고리 아이콘 외곽을 동일하게 보강한다.
 // v2.91 — 새 단일 SVG 원본을 적용하고 기기별 차이가 있던 표시 필터를 제거한다.
-const APP_VERSION='v2.93';
+const APP_VERSION='v2.94';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -2473,7 +2473,26 @@ function getCatSvg(cat){
 // 같은 출처의 더치페이에 영수증 묶음을 원자적으로 전달한다.
 // 더치페이 주 저장소를 여기서 직접 수정하면 시작 시 Dropbox 동기화와 충돌할 수 있으므로,
 // 별도 일회성 봉투를 저장하고 더치페이 쪽에서 전체 묶음을 한 번에 병합한다.
-function sendReceiptsToDutchPay(records,{single=false}={}){
+// 더치페이 전송용: 이미지 URL(data URL/objectURL)을 압축 JPEG data URL로 변환
+function _compressToJpegDataUrl(srcUrl,maxDim,quality){
+  return new Promise((resolve)=>{
+    try{
+      const img=new Image();
+      img.onload=function(){
+        let w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+        if(!w||!h){resolve('');return;}
+        if(w>maxDim||h>maxDim){const s=Math.min(maxDim/w,maxDim/h);w=Math.round(w*s);h=Math.round(h*s);}
+        const c=document.createElement('canvas');c.width=w;c.height=h;
+        const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+        try{resolve(c.toDataURL('image/jpeg',quality));}catch(_){resolve('');}
+      };
+      img.onerror=function(){resolve('');};
+      img.crossOrigin='anonymous';
+      img.src=srcUrl;
+    }catch(_){resolve('');}
+  });
+}
+async function sendReceiptsToDutchPay(records,{single=false}={}){
   const sourceRecords=(records||[]).filter(Boolean);
   if(!sourceRecords.length){toast('보낼 영수증을 선택해주세요',{type:'error'});return false;}
   const now=new Date().toISOString();
@@ -2496,15 +2515,30 @@ function sendReceiptsToDutchPay(records,{single=false}={}){
   }
   try{
     const batchId=`rb_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
-    const entries=prepared.map(({r,payer,people})=>({
-      sourceId:String(r.id),store:r.store||'영수증',date:r.date||new Date().toISOString().slice(0,10),
-      total:Number(r.total)||0,payer:payer||people[0],people,
-      items:(r.items||[]).map(it=>({name:it.name||'',quantity:Number(it.quantity)||1,unitPrice:Number(it.unitPrice)||0,amount:Number(it.amount)||0}))
+    const dutchUrl=`/dutch-pay/?from=receipt-db&batch=${encodeURIComponent(batchId)}`;
+    // 팝업 차단 방지: 사용자 제스처 안에서 창을 먼저 열고, 이미지 처리 후 채운다
+    const win=window.open('','_blank');
+    if(win){try{win.document.write('<!doctype html><meta charset="utf-8"><title>더치페이</title><body style="font:15px -apple-system,BlinkMacSystemFont,sans-serif;color:#555;padding:44px 24px;text-align:center">영수증을 더치페이로 보내는 중…</body>');}catch(_){}}
+    // 각 영수증 사진을 압축해 함께 전송 → 더치페이에서 자동 첨부
+    const entries=await Promise.all(prepared.map(async ({r,payer,people})=>{
+      let receiptImage='';
+      try{
+        const imgUrl=await _ensureReceiptImgUrl(r);
+        if(imgUrl){const comp=await _compressToJpegDataUrl(imgUrl,1400,0.72);if(comp&&comp.length<1500000)receiptImage=comp;}
+      }catch(_){}
+      return {sourceId:String(r.id),store:r.store||'영수증',date:r.date||new Date().toISOString().slice(0,10),
+        total:Number(r.total)||0,payer:payer||people[0],people,
+        items:(r.items||[]).map(it=>({name:it.name||'',quantity:Number(it.quantity)||1,unitPrice:Number(it.unitPrice)||0,amount:Number(it.amount)||0})),
+        receiptImage};
     }));
-    const envelope={version:1,batchId,createdAt:now,entries};
-    localStorage.setItem(DUTCH_PAY_TRANSFER_KEY,JSON.stringify(envelope));
+    const writeEnvelope=(withImg)=>{
+      const env={version:1,batchId,createdAt:now,entries:withImg?entries:entries.map(e=>Object.assign({},e,{receiptImage:''}))};
+      localStorage.setItem(DUTCH_PAY_TRANSFER_KEY,JSON.stringify(env));
+    };
+    // 이미지 포함본이 용량 초과면 이미지 없이 폴백(기존 동작)
+    try{writeEnvelope(true);}catch(quota){writeEnvelope(false);}
     if(getMyName())localStorage.setItem(DUTCH_PAY_NAME_KEY,getMyName());
-    window.open(`/dutch-pay/?from=receipt-db&batch=${encodeURIComponent(batchId)}`,'_blank','noopener');
+    if(win){win.location.href=dutchUrl;}else{window.open(dutchUrl,'_blank','noopener');}
     if(single)toast('더치페이로 영수증을 보냈어요',{type:'success'});
     else toast(`더치페이로 영수증 ${sourceRecords.length}건을 한 번에 보냈어요`,{type:'success'});
     return true;
@@ -3365,7 +3399,7 @@ document.getElementById('batchSelectToggle').addEventListener('click',()=>_setBa
 document.getElementById('batchExportCancel').addEventListener('click',()=>_setBatchSelectMode(false));
 document.getElementById('batchExportSend').addEventListener('click',()=>{
   const selected=receipts.filter(r=>_batchSelectedIds.has(r.id));
-  if(sendReceiptsToDutchPay(selected))_setBatchSelectMode(false);
+  sendReceiptsToDutchPay(selected).then(ok=>{if(ok)_setBatchSelectMode(false);});
 });
 
 function updateStats(){
