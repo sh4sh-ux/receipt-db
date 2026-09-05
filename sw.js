@@ -1,5 +1,5 @@
 const CACHE_PREFIX='receipt-db-shell-';
-const CACHE_NAME=CACHE_PREFIX+'v2.95';
+const CACHE_NAME=CACHE_PREFIX+'v2.96';
 const SHELL=[
   './',
   './index.html',
