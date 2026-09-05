@@ -2111,7 +2111,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         (내용 완전 동일) 파일만 하나만 남기고 삭제한다. 서로 다른 사진은 절대 안 지우고,
 //         미리보기(확인) 후에만 실행하며, 삭제된 경로를 참조하던 영수증은 남긴 파일로 재연결한다.
 //         v2.95의 재발 방지와 짝을 이루는 '기존에 쌓인 중복' 청소 도구.
-const APP_VERSION='v2.96';
+// v2.97 — 완료본 재사용 시 파일명뿐 아니라 Dropbox content_hash까지 확인한다. 이름이 같지만
+//         내용이 다른 영수증은 ID가 포함된 고유 이름으로 보존한다. 중복 삭제 실패도 숨기지 않는다.
+const APP_VERSION='v2.97';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -7299,7 +7301,7 @@ function _scanFileName(rec){
 // rec.scanPath 에 현재 경로를 들고 다니며, 바뀐 경로를 다시 적어 둔다.
 // Dropbox에 이 경로의 파일이 실제로 있는지 확인(있으면 실제 경로, 없으면 false).
 // 완료본 중복 업로드를 막기 위해 '올리기 전에 이미 있나' 검사에 쓴다.
-async function _dbxPathExists(path){
+async function _dbxFileMeta(path){
   if(!path)return false;
   try{
     const token=await _dbxToken();
@@ -7308,8 +7310,29 @@ async function _dbxPathExists(path){
       body:JSON.stringify({path})});
     if(!r.ok)return false;
     const m=await r.json();
-    return m&&m['.tag']==='file'?(m.path_display||path):false;
+    return m&&m['.tag']==='file'?m:false;
   }catch(e){return false;}
+}
+async function _dbxPathExists(path){const m=await _dbxFileMeta(path);return m?(m.path_display||path):false;}
+async function _dropboxContentHash(data){
+  let bytes;
+  if(data instanceof Blob)bytes=new Uint8Array(await data.arrayBuffer());
+  else if(data instanceof ArrayBuffer)bytes=new Uint8Array(data);
+  else if(ArrayBuffer.isView(data))bytes=new Uint8Array(data.buffer,data.byteOffset,data.byteLength);
+  else return '';
+  const blockSize=4*1024*1024,parts=[];
+  for(let i=0;i<bytes.length;i+=blockSize)parts.push(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes.slice(i,i+blockSize))));
+  const joined=new Uint8Array(parts.length*32);parts.forEach((p,i)=>joined.set(p,i*32));
+  const final=new Uint8Array(await crypto.subtle.digest('SHA-256',joined));
+  return [...final].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function _receiptDropboxHash(rec){
+  if(!rec||!rec.imageId)return '';
+  const img=await dbGet('images',rec.imageId);
+  if(!img)return '';
+  if(img.blob)return _dropboxContentHash(img.blob);
+  if(img.data){const b64=img.data.replace(/^data:[^;]+;base64,/,'');const bin=atob(b64);const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return _dropboxContentHash(bytes);}
+  return '';
 }
 async function _dbxRenameScanFile(rec){
   if(!rec||!rec.scanPath||!dbxIsConnected())return false;
@@ -7334,8 +7357,9 @@ async function _dbxRenameScanFile(rec){
         // 원본이 없다 — 다른 기기가 이미 새 이름으로 옮겼거나 사용자가 옮긴 경우.
         // 새 이름(want)에 파일이 이미 있으면 그걸 채택(재업로드로 중복을 만들지 않음),
         // 진짜로 없을 때만 scanPath를 비운다.
-        const existing=await _dbxPathExists(want);
-        if(existing){ rec.scanPath=existing; return true; }
+        const existing=await _dbxFileMeta(want);
+        const expectedHash=await _receiptDropboxHash(rec);
+        if(existing&&expectedHash&&existing.content_hash===expectedHash){ rec.scanPath=existing.path_display||want; return true; }
         rec.scanPath=''; return false;
       }
       if(txt.includes('to/conflict'))continue;
@@ -7907,16 +7931,18 @@ async function cleanupDuplicateCompleted(){
     +(groups.length>6?`\n  … 외 ${groups.length-6}그룹`:'')+'\n\n계속할까요?'))return;
 
   const lt=toast('중복 삭제 중…',{duration:300000});
-  const keeperFor=new Map();  // 삭제되는 경로 → 남긴 경로
-  for(const g of groups)for(const r of g.remove)keeperFor.set(r.path_display,g.keep.path_display);
+  const plannedKeeperFor=new Map();
+  for(const g of groups)for(const r of g.remove)plannedKeeperFor.set(r.path_display,g.keep.path_display);
+  const keeperFor=new Map();  // 실제 삭제에 성공한 경로 → 남긴 경로
   let done=0;
   for(const f of removeAll){
     try{
       const r=await fetch('https://api.dropboxapi.com/2/files/delete_v2',{method:'POST',
         headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
         body:JSON.stringify({path:f.path_display})});
-      if(r.ok)done++;
-    }catch(e){}
+      if(r.ok){done++;keeperFor.set(f.path_display,plannedKeeperFor.get(f.path_display));}
+      else console.warn('dedup delete:',f.path_display,await r.text());
+    }catch(e){console.warn('dedup delete:',f.path_display,e.message||e);}
   }
   // 삭제된 파일을 참조하던 영수증은 남긴 파일로 다시 연결(끊긴 참조 방지)
   let fixed=0;
@@ -7926,7 +7952,8 @@ async function cleanupDuplicateCompleted(){
   lt?.remove?.();
   receipts=await dbAll('receipts');
   await dbxSyncUpload();
-  toast(`중복 ${done}개 정리 완료${fixed?` · 참조 ${fixed}건 갱신`:''} ✓`,{type:'success',duration:6000});
+  const failed=removeAll.length-done;
+  toast(failed?`중복 ${done}개 정리 · ${failed}개 실패(다시 시도해 주세요)`:`중복 ${done}개 정리 완료${fixed?` · 참조 ${fixed}건 갱신`:''} ✓`,{type:failed?'error':'success',duration:failed?9000:6000});
 }
 
 async function cleanupOldFolders(){
@@ -8364,7 +8391,13 @@ async function _dbxMerge(remoteData){
       // 같은 ID — updatedAt 최신 것 사용
       const lt=new Date(local.updatedAt||local.createdAt||0).getTime();
       const rt=new Date(remote.updatedAt||remote.createdAt||0).getTime();
-      if(rt>lt){await dbPut('receipts',remote);changed++;}
+      if(rt>lt){
+        // 사진 경로 같은 메타데이터만 최신인 예전 기기가 빈 items를 올려
+        // 이 기기의 상세 품목 전체를 지우지 못하게 한다. 새 품목이 하나라도 있으면 원격본을 존중한다.
+        const safeRemote={...remote};
+        if((!Array.isArray(safeRemote.items)||!safeRemote.items.length)&&Array.isArray(local.items)&&local.items.length)safeRemote.items=local.items;
+        await dbPut('receipts',safeRemote);changed++;
+      }
     }
   }
 
@@ -8604,10 +8637,22 @@ async function _dbxArchiveReceiptPhoto(rec){
     const ext=isPdf?'.pdf':(mime.includes('png')?'.png':'.jpg');
     const dir=_dbxScanDoneDir(!isPdf);
     await _dbxEnsureFolder(dir);
-    const path=dir+'/'+_scanFileName(rec)+ext;
-    // 이미 같은 이름의 완료본이 있으면 새로 올리지 않고 그걸 채택한다(중복 업로드 방지).
-    const existing=await _dbxPathExists(path);
-    if(existing){ rec.scanPath=existing; await dbPut('receipts',rec); return true; }
+    const base=_scanFileName(rec);
+    let path=dir+'/'+base+ext;
+    const localContentHash=await _dropboxContentHash(body);
+    // 이름뿐 아니라 파일 내용도 같을 때만 기존 완료본을 채택한다.
+    // 날짜·금액·매장이 우연히 같은 다른 영수증이면 영수증 ID를 붙인 고유 이름으로 보존한다.
+    let existing=await _dbxFileMeta(path);
+    if(existing&&existing.content_hash===localContentHash){ rec.scanPath=existing.path_display||path; await dbPut('receipts',rec); return true; }
+    if(existing){
+      const tokenPart=String(rec.id||'receipt').replace(/[^a-zA-Z0-9_-]/g,'').slice(-14)||'receipt';
+      for(let n=1;n<=100;n++){
+        const candidate=dir+'/'+base+'-'+tokenPart+(n===1?'':'-'+n)+ext;
+        existing=await _dbxFileMeta(candidate);
+        if(existing&&existing.content_hash===localContentHash){rec.scanPath=existing.path_display||candidate;await dbPut('receipts',rec);return true;}
+        if(!existing){path=candidate;break;}
+      }
+    }
     const token=await _dbxToken();
     const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{
       method:'POST',
