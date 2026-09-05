@@ -2097,7 +2097,13 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 // v2.89 — 아이콘별 단일 SVG 원본을 적용하고 작은 화면에서도 선명하도록 표시 크기를 확대한다.
 // v2.90 — 원본 SVG는 유지하면서 모든 카테고리 아이콘 외곽을 동일하게 보강한다.
 // v2.91 — 새 단일 SVG 원본을 적용하고 기기별 차이가 있던 표시 필터를 제거한다.
-const APP_VERSION='v2.94';
+// v2.95 — 사진 오연결·중복 근본 수정. (1) _newId가 rec_YYYYMMDD_NNN 뒤에 기기별 난스를
+//         붙여 전역 고유 ID를 만든다 — 폰·데스크탑이 같은 날짜에 만든 영수증이 같은 ID→같은
+//         imageId가 되어 사진이 서로 덮이던('엉뚱한 영수증') 근본 원인 제거(기존 데이터·파싱 무영향).
+//         (2) 완료본 중복 업로드 방지: _dbxArchiveReceiptPhoto가 올리기 전 _dbxPathExists로 존재를
+//         확인해 있으면 채택하고, autorename:true→false로 조용한 '(1)' 사본을 막는다. _dbxRenameScanFile은
+//         원본 not_found일 때 scanPath를 무작정 비우지 않고 새 이름에 파일이 있으면 채택(재업로드 방지).
+const APP_VERSION='v2.95';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -2928,12 +2934,17 @@ function fmtDateGroup(iso){
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function nowISO(){return new Date().toISOString();}
 function _newId(date){
-  // rec_YYYYMMDD_NNN — 같은 날짜 중 가장 큰 NNN +1
+  // rec_YYYYMMDD_NNN_<rand> — 같은 날짜 중 가장 큰 NNN +1 뒤에 기기별 난스를 붙인다.
+  // NNN만 쓰면 폰·데스크탑이 같은 날짜에(동기화 전) 각각 만들 때 둘 다 _001이 되어 ID가
+  // 겹치고, imageId(='img_'+id.slice(4))까지 같아져 사진이 서로 덮이는 '엉뚱한 영수증'이
+  // 생겼다. 난스를 붙여 전역 고유로 만든다(기존 ID·파싱은 그대로 — 날짜는 r.date에서 뽑고
+  // NNN 파싱은 '_' 앞에서 멈추며, 스캔함은 별도로 내용해시 rec_date_p<hash>를 쓴다).
   const ymd=(date||new Date().toISOString().slice(0,10)).replace(/-/g,'');
   const prefix=`rec_${ymd}_`;
   let max=0;
   for(const r of receipts){if(r.id&&r.id.indexOf(prefix)===0){const n=parseInt(r.id.slice(prefix.length),10);if(n>max)max=n;}}
-  return prefix+String(max+1).padStart(3,'0');
+  const rand=Math.random().toString(36).slice(2,6);
+  return prefix+String(max+1).padStart(3,'0')+'_'+rand;
 }
 // ════════════════════════════════════════════════════════════════
 // LOAD & RENDER
@@ -7277,6 +7288,20 @@ function _scanFileName(rec){
 
 // 영수증 내용이 바뀌면 완료 폴더의 파일 이름도 따라 바꾼다.
 // rec.scanPath 에 현재 경로를 들고 다니며, 바뀐 경로를 다시 적어 둔다.
+// Dropbox에 이 경로의 파일이 실제로 있는지 확인(있으면 실제 경로, 없으면 false).
+// 완료본 중복 업로드를 막기 위해 '올리기 전에 이미 있나' 검사에 쓴다.
+async function _dbxPathExists(path){
+  if(!path)return false;
+  try{
+    const token=await _dbxToken();
+    const r=await fetch('https://api.dropboxapi.com/2/files/get_metadata',{method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({path})});
+    if(!r.ok)return false;
+    const m=await r.json();
+    return m&&m['.tag']==='file'?(m.path_display||path):false;
+  }catch(e){return false;}
+}
 async function _dbxRenameScanFile(rec){
   if(!rec||!rec.scanPath||!dbxIsConnected())return false;
   const cur=rec.scanPath;
@@ -7296,7 +7321,14 @@ async function _dbxRenameScanFile(rec){
         return true;
       }
       const txt=await r.text();
-      if(txt.includes('from_lookup/not_found')){ rec.scanPath=''; return false; }  // 사용자가 옮김
+      if(txt.includes('from_lookup/not_found')){
+        // 원본이 없다 — 다른 기기가 이미 새 이름으로 옮겼거나 사용자가 옮긴 경우.
+        // 새 이름(want)에 파일이 이미 있으면 그걸 채택(재업로드로 중복을 만들지 않음),
+        // 진짜로 없을 때만 scanPath를 비운다.
+        const existing=await _dbxPathExists(want);
+        if(existing){ rec.scanPath=existing; return true; }
+        rec.scanPath=''; return false;
+      }
       if(txt.includes('to/conflict'))continue;
       console.warn('rename scan file:',txt);
       return false;
@@ -8498,11 +8530,16 @@ async function _dbxArchiveReceiptPhoto(rec){
     const dir=_dbxScanDoneDir(!isPdf);
     await _dbxEnsureFolder(dir);
     const path=dir+'/'+_scanFileName(rec)+ext;
+    // 이미 같은 이름의 완료본이 있으면 새로 올리지 않고 그걸 채택한다(중복 업로드 방지).
+    const existing=await _dbxPathExists(path);
+    if(existing){ rec.scanPath=existing; await dbPut('receipts',rec); return true; }
     const token=await _dbxToken();
     const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{
       method:'POST',
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/octet-stream',
-        'Dropbox-API-Arg':_dbxApiArg({path,mode:'add',autorename:true,mute:true})},
+        // autorename:false — 충돌 시 조용히 '(1)' 사본을 만들지 않고 실패시켜, 다음 동기화에서
+        // 존재 확인을 거쳐 채택하게 한다(중복 방지). mute로 알림만 끈다.
+        'Dropbox-API-Arg':_dbxApiArg({path,mode:'add',autorename:false,mute:true})},
       body,
     });
     if(!resp.ok){console.warn('archive photo:',await resp.text());return false;}
