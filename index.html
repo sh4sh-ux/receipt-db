@@ -2097,7 +2097,13 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 // v2.89 — 아이콘별 단일 SVG 원본을 적용하고 작은 화면에서도 선명하도록 표시 크기를 확대한다.
 // v2.90 — 원본 SVG는 유지하면서 모든 카테고리 아이콘 외곽을 동일하게 보강한다.
 // v2.91 — 새 단일 SVG 원본을 적용하고 기기별 차이가 있던 표시 필터를 제거한다.
-const APP_VERSION='v2.94';
+// v2.95 — 사진 오연결·완료본 중복의 근본 수정. (1) 영수증 ID를 기기 간 고유하게 —
+//         rec_YYYYMMDD_NNN(기기별 순번)에 무작위 꼬리표를 붙여, 같은 날 다른 기기가
+//         저장해도 ID·파생 imageId가 겹치지 않게 했다(겹치면 사진이 서로 덮이거나
+//         머지에서 한 영수증이 통째로 사라졌다). (2) 완료 JPG/PDF 업로드를 멱등으로 —
+//         autorename:false로 바꿔 같은 이름이 이미 있으면 사본을 만들지 않고 그 파일을
+//         채택한다(중복 ' (1).jpg' 누적 방지). 원본 사진은 images/{imageId}.jpg에 보존.
+const APP_VERSION='v2.95';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -2927,13 +2933,22 @@ function fmtDateGroup(iso){
 }
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function nowISO(){return new Date().toISOString();}
+// 기기 간 충돌을 막는 짧은 무작위 꼬리표. NNN은 이 기기 안의 순번일 뿐이라
+// 폰·데스크탑이 같은 날 각자 저장하면 같은 NNN이 나와 ID가 겹쳤고,
+// 그러면 파생 imageId('img_'+id.slice(4))까지 겹쳐 사진이 서로 덮였다.
+// (동기화 머지는 ID로 합치므로 다른 영수증이 같은 ID면 한쪽이 통째로 사라졌다.)
+function _uniqTail(){
+  return Date.now().toString(36).slice(-4)+Math.random().toString(36).slice(2,6);
+}
 function _newId(date){
-  // rec_YYYYMMDD_NNN — 같은 날짜 중 가장 큰 NNN +1
+  // rec_YYYYMMDD_NNN_xxxx — NNN은 사람이 읽기 좋은 이 기기 안 순번,
+  // xxxx는 기기 간 충돌을 원천 차단하는 무작위 꼬리표.
   const ymd=(date||new Date().toISOString().slice(0,10)).replace(/-/g,'');
   const prefix=`rec_${ymd}_`;
   let max=0;
+  // parseInt는 '_xxxx'·'p해시'에서 멈추므로 숫자 순번만 골라 최대값을 찾는다.
   for(const r of receipts){if(r.id&&r.id.indexOf(prefix)===0){const n=parseInt(r.id.slice(prefix.length),10);if(n>max)max=n;}}
-  return prefix+String(max+1).padStart(3,'0');
+  return prefix+String(max+1).padStart(3,'0')+'_'+_uniqTail();
 }
 // ════════════════════════════════════════════════════════════════
 // LOAD & RENDER
@@ -4184,7 +4199,7 @@ saveBtn.addEventListener('click',async()=>{
   let imageId=null;
   let imageHash='',photoClaim=null;
   if(pendingPhotoBlob){
-    imageId='img_'+id.slice(4);  // img_YYYYMMDD_NNN
+    imageId='img_'+id.slice(4);  // img_YYYYMMDD_NNN_xxxx — id와 함께 기기 간 고유
     const meta=await _photoMetaForFile(pendingPhotoBlob);
     imageHash=meta.contentHash;photoClaim=meta.claim;
     await dbPut('images',{id:imageId,blob:pendingPhotoBlob,mime:pendingPhotoBlob.type||'image/jpeg',contentHash:imageHash});
@@ -8499,13 +8514,22 @@ async function _dbxArchiveReceiptPhoto(rec){
     await _dbxEnsureFolder(dir);
     const path=dir+'/'+_scanFileName(rec)+ext;
     const token=await _dbxToken();
+    // autorename:false — 같은 이름이 이미 있으면 사본(' (1).jpg')을 만들지 않는다.
+    // 다른 기기가 scanPath를 아직 못 받았거나 재저장/재시도로 같은 파일을 두 번
+    // 올리려 할 때 완료 JPG/PDF 폴더에 중복이 쌓이던 원인이었다.
     const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{
       method:'POST',
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/octet-stream',
-        'Dropbox-API-Arg':_dbxApiArg({path,mode:'add',autorename:true,mute:true})},
+        'Dropbox-API-Arg':_dbxApiArg({path,mode:'add',autorename:false,mute:true})},
       body,
     });
-    if(!resp.ok){console.warn('archive photo:',await resp.text());return false;}
+    if(!resp.ok){
+      const txt=await resp.text();
+      // 같은 이름의 완료본이 이미 있으면 사본을 만들지 말고 그 파일을 그대로 채택한다(멱등).
+      // 사진 원본은 images/{imageId}.jpg에 고유 ID로 따로 보관되므로 유실이 없다.
+      if(txt.includes('conflict')){rec.scanPath=path;await dbPut('receipts',rec);return true;}
+      console.warn('archive photo:',txt);return false;
+    }
     const meta=await resp.json();
     rec.scanPath=meta?.path_display||path;
     await dbPut('receipts',rec);
