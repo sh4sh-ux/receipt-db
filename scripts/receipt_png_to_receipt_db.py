@@ -82,7 +82,9 @@ def parse_date_from_name(name):
     if not m:
         return None
     y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
-    if not (1 <= mo <= 12 and 1 <= d <= 31):
+    try:
+        datetime(y, mo, d)
+    except ValueError:
         return None
     return f"{y:04d}-{mo:02d}-{d:02d}"
 
@@ -94,7 +96,9 @@ def parse_verified_name(name):
     if not m:
         return None
     yy, mo, day, money, store = m.groups()
-    if not (1 <= int(mo) <= 12 and 1 <= int(day) <= 31):
+    try:
+        datetime(2000 + int(yy), int(mo), int(day))
+    except ValueError:
         return None
     return {
         "date": f"20{yy}-{mo}-{day}",
