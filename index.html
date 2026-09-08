@@ -2166,7 +2166,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         내용이 다른 영수증은 ID가 포함된 고유 이름으로 보존한다. 중복 삭제 실패도 숨기지 않는다.
 // v2.98 — 모바일 추가 화면에서 목록/입력 화면이 함께 보이는 전환 상태를 보강하고,
 //         붙여넣기 박스와 하단 저장 영역을 줄여 저장 가능 상태를 바로 보이게 한다.
-const APP_VERSION='v3.00';
+const APP_VERSION='v3.01';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -5464,6 +5464,65 @@ let _ledgerTimeFilter={type:'month'};
 // 월간 카테고리 필터 (카테고리 막대 클릭 시 사이드바 필터링)
 let _monthCatFilter=null;
 let _returnToStats=false;
+
+// Record navigation after click/change handlers finish, not intermediate renders.
+let _navigationTimer=null;
+let _restoringNavigation=false;
+function _navigationSnapshot(){
+  return {
+    route:{tab:_activeTabName(),selectedId,viewMonth,searchQuery,
+      mobileMode:_mobileListMode,allMonths:_sideAllMonths,
+      category:_monthCatFilter,period:{..._ledgerTimeFilter},
+      personPeriod:{..._personTimeFilter},photoFilter:_photoListFilter,
+      stats:document.getElementById('navLedgerBtn')?.classList.contains('on')||false},
+    scroll:[...document.querySelectorAll('#sideList,#detailBody,.main')].map(el=>({id:el.id,main:el.classList.contains('main'),top:el.scrollTop})),
+    pageY:window.scrollY
+  };
+}
+function _captureNavigation(event){
+  if(_restoringNavigation||_navigationTimer!==null)return;
+  if(event.target.closest?.('#backToSummaryBtn')&&history.state?.receiptNavigation?.index>0){
+    event.preventDefault();event.stopImmediatePropagation();history.back();return;
+  }
+  const before=_navigationSnapshot();
+  _navigationTimer=setTimeout(()=>{
+    _navigationTimer=null;
+    const after=_navigationSnapshot();
+    if(JSON.stringify(before.route)===JSON.stringify(after.route))return;
+    const index=history.state?.receiptNavigation?.index||0;
+    history.replaceState({...history.state,receiptNavigation:{index,...before}},'');
+    history.pushState({receiptNavigation:{index:index+1,...after}},'');
+  },0);
+}
+document.addEventListener('click',_captureNavigation,true);
+document.addEventListener('change',_captureNavigation,true);
+addEventListener('popstate',event=>{
+  const state=event.state?.receiptNavigation;
+  if(!state)return;
+  if(_navigationTimer!==null){clearTimeout(_navigationTimer);_navigationTimer=null;}
+  _restoringNavigation=true;
+  try{
+    const r=state.route;
+    selectedId=receipts.some(item=>item.id===r.selectedId)?r.selectedId:null;
+    viewMonth=r.viewMonth;searchQuery=r.searchQuery;
+    _mobileListMode=r.mobileMode;_sideAllMonths=r.allMonths;
+    _monthCatFilter=r.category;_ledgerTimeFilter={...r.period};
+    _personTimeFilter={...r.personPeriod};_photoListFilter=r.photoFilter;
+    searchInp.value=searchQuery;_updateSearchClear();
+    switchTab(r.tab);renderSide();renderDetail();
+    if(r.stats){
+      document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+      document.getElementById('navLedgerBtn')?.classList.add('on');
+    }
+    requestAnimationFrame(()=>{
+      for(const s of state.scroll||[]){
+        const el=s.main?document.querySelector('.main'):document.getElementById(s.id);
+        if(el)el.scrollTop=s.top;
+      }
+      window.scrollTo(0,state.pageY||0);
+    });
+  }finally{_restoringNavigation=false;}
+});
 
 function _applyPersonTimeFilter(recs,f){
   if(f.type==='year') return recs.filter(r=>(r.date||'').startsWith(f.value+'-'));
