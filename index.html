@@ -330,6 +330,9 @@ svg{display:block;flex-shrink:0;}
 .input-row.actions .ghost-btn{margin-top:0;min-height:36px;padding:0 32px;width:auto;white-space:nowrap;flex-shrink:0;}
 .actions-shortcut{font-size:11px;color:var(--label3);margin-right:auto;display:flex;align-items:center;gap:5px;}
 .actions-shortcut kbd{background:var(--fill2);border:1px solid var(--sep2);border-radius:5px;padding:2px 8px;font-size:13px;font-family:monospace;color:var(--label2);line-height:1.4;}
+.save-hint{margin-right:auto;font-size:12px;color:var(--label3);line-height:1.35;min-width:0;}
+.save-hint.ready{color:var(--green-txt);font-weight:650;}
+.save-hint.warn{color:var(--amber);}
 @media(max-width:900px){
   .input-row.top,.input-row.options{grid-template-columns:1fr;}
 }
@@ -862,6 +865,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .app.mobile-stats-view .main,
   .app.mobile-content-view .main,
   .app.mobile-detail-view .main{display:block;order:0;}
+  .app:has(#viewInput.on) .side,
+  .app:has(#viewSettings.on) .side{display:none;}
+  .app:has(#viewInput.on) .main,
+  .app:has(#viewSettings.on) .main{display:block;order:0;}
   .side-top{padding:max(14px,calc(env(safe-area-inset-top,0px) + 6px)) 18px 10px;}
   .side-search,.side-list,.side-foot{padding-left:18px;padding-right:18px;}
   .side-search{padding-bottom:10px;}
@@ -877,19 +884,22 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
      밀려나 '저장 버튼이 사라지는' 증상이 났다(붙여넣기 = 키보드 사용).
      sticky는 스크롤 컨테이너(.main-body) 기준이라 뷰포트 계산과 무관하다.
      ※ 다시 fixed로 바꾸지 말 것. */
-  .input-row.actions{margin:0;padding:9px 18px;}
+  .input-row.actions{margin:0;padding:8px 18px 10px;gap:8px;flex-wrap:wrap;}
   /* Cmd+Enter는 폰에서 쓸 수 없고, 좁은 폭에서 '저 장'으로 줄바꿈돼 깨진다 */
   .actions-shortcut{display:none;}
+  .save-hint{order:-1;flex:1 0 100%;margin:0;font-size:11.5px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .input-row.actions .ghost-btn,
+  .input-row.actions .primary-btn{flex:1 1 0;min-width:0;min-height:38px;padding:0 12px;}
   :root{--pad-x:18px;}
   .input-grid{grid-template-columns:1fr;gap:14px;}
   .input-stack,#gptModeArea{gap:14px;}
   .input-row.top{gap:12px;}
-  .input-row.top .field-ta,.input-row.top .photo-zone{height:156px;min-height:156px;}
+  .input-row.top .field-ta,.input-row.top .photo-zone{height:136px;min-height:136px;}
   .input-row.top .photo-preview{object-fit:cover;object-position:center top;}
-  #viewInput .main-top{padding-bottom:12px;}
+  #viewInput .main-top{min-height:calc(94px + max(14px, env(safe-area-inset-top,0px) + 6px));padding-bottom:12px;}
   /* sticky는 문서 흐름에 남아 있으므로 fixed 시절의 보정 여백(63px)이 필요 없다 */
-  #viewInput .main-body{padding-top:14px;padding-bottom:0;}
-  #viewInput .input-mode-row{margin-bottom:12px;}
+  #viewInput .main-body{padding-top:12px;padding-bottom:12px;}
+  #viewInput .input-mode-row{margin-bottom:10px;}
   #viewInput .prompt-tools-row{margin-bottom:-2px;}
   .row-3{grid-template-columns:1fr;}
   /* 모바일 컴팩트 요약 — 부가 섹션 접기 */
@@ -1474,6 +1484,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
              fixed는 iOS 키보드가 열리면 화면 밖으로 밀려난다(v2.24→v2.30에서 확인). -->
         <div class="input-row actions">
           <span class="actions-shortcut"><kbd>⌘</kbd>+<kbd>↵</kbd> 저장</span>
+          <span class="save-hint" id="saveHint" aria-live="polite">AI 정리 결과를 붙여넣으면 저장할 수 있어요.</span>
           <button class="ghost-btn" id="clearBtn">초기화</button>
           <button class="primary-btn" id="saveBtn" disabled>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -2113,7 +2124,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         v2.95의 재발 방지와 짝을 이루는 '기존에 쌓인 중복' 청소 도구.
 // v2.97 — 완료본 재사용 시 파일명뿐 아니라 Dropbox content_hash까지 확인한다. 이름이 같지만
 //         내용이 다른 영수증은 ID가 포함된 고유 이름으로 보존한다. 중복 삭제 실패도 숨기지 않는다.
-const APP_VERSION='v2.97';
+// v2.98 — 모바일 추가 화면에서 목록/입력 화면이 함께 보이는 전환 상태를 보강하고,
+//         붙여넣기 박스와 하단 저장 영역을 줄여 저장 가능 상태를 바로 보이게 한다.
+const APP_VERSION='v2.98';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -3439,7 +3452,10 @@ function updateCatList(){
 // ════════════════════════════════════════════════════════════════
 let _mobileListMode='list';
 function _isMobileLayout(){return window.matchMedia('(max-width:780px)').matches;}
-function _syncMobileSurface(name){
+function _activeTabName(){
+  return document.querySelector('.tab.on[data-tab]')?.dataset.tab||'list';
+}
+function _syncMobileSurface(name=_activeTabName()){
   const app=document.querySelector('.app');if(!app)return;
   app.classList.remove('mobile-list-view','mobile-stats-view','mobile-content-view','mobile-detail-view');
   if(!_isMobileLayout())return;
@@ -3448,6 +3464,8 @@ function _syncMobileSurface(name){
   else if(_mobileListMode==='stats')app.classList.add('mobile-stats-view');
   else app.classList.add('mobile-list-view');
 }
+addEventListener('resize',()=>_syncMobileSurface());
+addEventListener('orientationchange',()=>setTimeout(()=>_syncMobileSurface(),80));
 function switchTab(name){
   if(name!=='list'&&_batchSelectMode)_setBatchSelectMode(false,{render:false});
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===name));
@@ -3631,12 +3649,28 @@ async function _applyReceiptLink(){
 
 const previewArea=document.getElementById('previewArea');
 const saveBtn=document.getElementById('saveBtn');
+const saveHint=document.getElementById('saveHint');
 const photoZone=document.getElementById('photoZone');
 const photoInp=document.getElementById('photoInp');
 
 let _currentParsed=null;
 let _pasteComposing=false;
 let _catAutoFilled=false;  // 카테고리가 자동 채워진 상태인지
+
+function _setSaveState(disabled,message,{warn=false}={}){
+  saveBtn.disabled=disabled;
+  if(!saveHint)return;
+  saveHint.textContent=message||(disabled?'필수 입력을 채우면 저장할 수 있어요.':'저장할 준비가 됐어요.');
+  saveHint.classList.toggle('ready',!disabled&&!warn);
+  saveHint.classList.toggle('warn',!disabled&&warn);
+}
+
+function _saveMessageFromValidation(v){
+  if(v.errors.length)return {disabled:true,message:v.errors.join(' · ')};
+  if(v.warnings.length)return {disabled:false,message:'확인할 내용이 있지만 저장할 수 있어요.',warn:true};
+  return {disabled:false,message:'저장할 준비가 됐어요.'};
+}
+
 pasteTa.addEventListener('compositionstart',()=>{_pasteComposing=true;});
 pasteTa.addEventListener('compositionend',()=>{_pasteComposing=false;updatePreview();});
 pasteTa.addEventListener('input',()=>{if(!_pasteComposing)updatePreview();});
@@ -3718,7 +3752,7 @@ function updatePreview(){
   if(!v.trim()){
     _currentParsed=null;
     previewArea.innerHTML=`<div class="empty-state" style="padding:32px 16px;background:var(--fill2);border-radius:var(--rm);border:1px dashed var(--sep2);">텍스트를 붙여넣으면 자동으로 파싱되어 표시됩니다.<br/><span style="font-size:11px;">붙여넣기 후 미리보기에서 직접 수정 가능해요.</span></div>`;
-    saveBtn.disabled=true;
+    _setSaveState(true,'AI 정리 결과를 붙여넣으면 저장할 수 있어요.');
     return;
   }
   const p=parseReceiptText(v);
@@ -3746,7 +3780,7 @@ function updatePreview(){
   }
   if(!p){
     previewArea.innerHTML=`<div class="alert err"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>형식을 인식하지 못했어요. 프롬프트 형식을 확인해주세요.</div></div>`;
-    saveBtn.disabled=true;
+    _setSaveState(true,'인식할 수 있는 영수증 형식이 필요해요.');
     return;
   }
   renderPreviewForm();
@@ -3822,7 +3856,8 @@ function renderPreviewForm(){
   `;
 
   bindPreviewFormEvents();
-  saveBtn.disabled=v2.errors.length>0;
+  const saveState=_saveMessageFromValidation(v2);
+  _setSaveState(saveState.disabled,saveState.message,{warn:saveState.warn});
 }
 
 // 합계·검증·저장 활성화만 부분 갱신 — input 포커스를 깨지 않기 위함
@@ -3855,7 +3890,8 @@ function _refreshPreviewSummary(){
     html+=amountAuditAlertHtml(p);
     alerts.innerHTML=html;
   }
-  saveBtn.disabled=v2.errors.length>0;
+  const saveState=_saveMessageFromValidation(v2);
+  _setSaveState(saveState.disabled,saveState.message,{warn:saveState.warn});
 }
 
 function bindPreviewFormEvents(){
@@ -4300,7 +4336,7 @@ function clearInputs(){
   if(dd)dd.value=new Date().toISOString().slice(0,10);
   if(dt)dt.value='';
   _clearDirectPhoto();
-  if(_inputMode==='direct')saveBtn.disabled=true;
+  if(_inputMode==='direct')_setSaveState(true,'상호명과 금액을 입력하면 저장할 수 있어요.');
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -4349,7 +4385,8 @@ function _updateDirectSaveBtn(){
   if(_inputMode!=='direct')return;
   const store=(document.getElementById('directStore').value||'').trim();
   const total=(document.getElementById('directTotal').value||'').trim();
-  saveBtn.disabled=!((store||_gjComposed())&&total);
+  const ready=!!((store||_gjComposed())&&total);
+  _setSaveState(!ready,ready?'저장할 준비가 됐어요.':'상호명과 금액을 입력하면 저장할 수 있어요.');
 }
 
 function _setInputMode(mode){
@@ -4366,8 +4403,11 @@ function _setInputMode(mode){
     :'상호명과 금액만 입력하면 저장됩니다. 부고장·청첩장 등 참고 이미지를 첨부할 수 있어요.';
   if(mode==='direct'){
     _updateDirectSaveBtn();
+  } else if(!_currentParsed){
+    _setSaveState(true,'AI 정리 결과를 붙여넣으면 저장할 수 있어요.');
   } else {
-    saveBtn.disabled=!_currentParsed||validateParsed(_currentParsed).errors.length>0;
+    const saveState=_saveMessageFromValidation(validateParsed(_currentParsed));
+    _setSaveState(saveState.disabled,saveState.message,{warn:saveState.warn});
   }
 }
 
@@ -5602,7 +5642,7 @@ async function renderDetail(){
       }else{
         eye.textContent='Receipt DB';
         title.textContent=ymLabel(viewMonth);
-        sub.textContent='목록에서 영수증을 선택하면 상세가 표시됩니다.';
+        sub.textContent='이번 달 지출 흐름과 카테고리를 요약합니다.';
         body.innerHTML=pillsHtml+renderMonthSummaryHtml(viewMonth);
         if(_isTouch) body.classList.add('mob-compact');
       }
