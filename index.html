@@ -1195,8 +1195,6 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .stats-cat:focus-visible,.stats-receipt:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 @media(min-width:781px){
-  .app:has(#navLedgerBtn.on):has(#viewList.on .stats-redesign){grid-template-columns:76px minmax(0,1fr);}
-  .app:has(#navLedgerBtn.on):has(#viewList.on .stats-redesign) .side{display:none;}
 }
 @media(max-width:1100px){.stats-split{grid-template-columns:1fr;}.stats-category-panel{border-left:0;border-bottom:1px solid var(--sep);padding:0 0 24px;grid-row:1;}}
 @media(max-width:780px){
@@ -2168,7 +2166,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         내용이 다른 영수증은 ID가 포함된 고유 이름으로 보존한다. 중복 삭제 실패도 숨기지 않는다.
 // v2.98 — 모바일 추가 화면에서 목록/입력 화면이 함께 보이는 전환 상태를 보강하고,
 //         붙여넣기 박스와 하단 저장 영역을 줄여 저장 가능 상태를 바로 보이게 한다.
-const APP_VERSION='v2.99';
+const APP_VERSION='v3.00';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -3399,7 +3397,7 @@ function renderSide(){
   }
 
   const list=document.getElementById('sideList');
-  let _base=getFiltered();
+  let _base=_monthCatFilter&&!searchQuery?_statsPeriodReceipts():getFiltered();
   if(_photoListFilter==='problem')_base=_base.filter(r=>_receiptCheckReasons(r).length>0);
   else if(_photoListFilter==='missing')_base=_base.filter(r=>_photoErrorKind(r)==='missing');
   _updatePhotoFilterUi();
@@ -5572,31 +5570,12 @@ function _enhanceStats(body){
     const cards=body.querySelectorAll('.sum-card');
     if(cards[2])cards[2].innerHTML=`<div class="sum-lbl">건당 평균</div><div class="sum-val">${fmtMoney(recs.length?Math.round(total/recs.length):0)}<span class="sum-unit">원</span></div><div class="sum-diff">${recs.length}건 기준</div>`;
   }
-  if(!_monthCatFilter)return;
-  const group=CATEGORY_GROUPS.find(g=>g.group===_monthCatFilter);
-  const matches=recs.filter(r=>{
-    const cat=(r.category||'').trim()||'(미분류)';
-    return cat===_monthCatFilter||!!group?.members.includes(cat);
-  }).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  const amount=matches.reduce((s,r)=>s+(r.total||0),0);
-  const panel=document.createElement('section');
-  panel.id='statsCategoryPanel';panel.className='stats-category-panel';
-  panel.innerHTML=`<div class="stats-panel-heading"><h3>${escapeHtml(getCategoryLabel(_monthCatFilter))} 내역</h3><button type="button" class="ghost-btn" id="statsClose" aria-label="카테고리 필터 해제">×</button></div><p>${escapeHtml(period)} · ${matches.length}건</p><strong class="stats-panel-total">${fmtMoney(amount)}원</strong><label class="sr-only" for="statsSearch">선택한 카테고리 내역 검색</label><input class="field-inp" id="statsSearch" type="search" placeholder="내역 검색"/><div id="statsMatchCount" aria-live="polite"></div><div id="statsReceiptList"></div>`;
-  const layout=document.createElement('div');layout.className='stats-split';
-  const charts=document.createElement('div');charts.className='stats-charts';
-  while(body.firstChild)charts.appendChild(body.firstChild);
-  layout.append(charts,panel);body.append(layout);
-  const list=panel.querySelector('#statsReceiptList');
-  const renderMatches=()=>{
-    const q=panel.querySelector('#statsSearch').value.trim().toLocaleLowerCase();
-    const found=matches.filter(r=>[r.store,r.date,r.payer,r.note].some(v=>String(v||'').toLocaleLowerCase().includes(q)));
-    panel.querySelector('#statsMatchCount').textContent=q?`${found.length}건 · ${fmtMoney(found.reduce((s,r)=>s+(r.total||0),0))}원`:'';
-    list.innerHTML=found.length?found.map(r=>`<button type="button" class="stats-receipt srch-row" data-id="${escapeHtml(r.id)}"><span><b>${escapeHtml(r.store||'(매장명 없음)')}</b><small>${escapeHtml(r.date||'날짜 없음')}</small></span><strong>${fmtMoney(r.total||0)}원</strong><span aria-hidden="true">›</span></button>`).join(''):'<p>해당 내역이 없어요.</p>';
-    _bindReceiptRows(list);
-  };
-  panel.querySelector('#statsSearch').addEventListener('input',renderMatches);
-  panel.querySelector('#statsClose').addEventListener('click',()=>{_monthCatFilter=null;renderSide();renderDetail();});
-  renderMatches();
+  if(_monthCatFilter){
+    const filter=document.createElement('div');
+    filter.className='cat-filter-bar';
+    filter.innerHTML=`<span>${escapeHtml(period)} · ${escapeHtml(getCategoryLabel(_monthCatFilter))}</span><button type="button" id="catFilterClearBtn" class="cat-filter-bar-x" aria-label="카테고리 필터 해제">×</button>`;
+    body.prepend(filter);
+  }
 }
 
 function _bindReceiptRows(root){
@@ -5773,7 +5752,10 @@ async function renderDetail(){
           const cat=row.dataset.cat;
           _monthCatFilter=(_monthCatFilter===cat)?null:cat;
           renderSide();renderDetail();
-          if(_isMobileLayout())document.getElementById('statsCategoryPanel')?.scrollIntoView({block:'start'});
+          if(_isMobileLayout()&&_monthCatFilter){
+            _mobileListMode='list';
+            switchTab('list');
+          }
         });
       });
       const clearCat=body.querySelector('#catFilterClearBtn');
