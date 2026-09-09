@@ -1,6 +1,8 @@
 const CACHE_PREFIX='receipt-db-shell-';
-const CACHE_NAME=CACHE_PREFIX+'v3.01';
+const CACHE_NAME=CACHE_PREFIX+'v3.02';
 const SHELL=[
+  './prepaid.js',
+  './prepaid.css',
   './',
   './index.html',
   './manifest.webmanifest',

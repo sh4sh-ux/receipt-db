@@ -1,0 +1,46 @@
+const fs=require('node:fs');
+const vm=require('node:vm');
+const assert=require('node:assert/strict');
+const ctx=vm.createContext({});
+vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../prepaid.js'),'utf8'),ctx);
+const {ppTotals,ppBuildEvent,ppValidateRecords,ppMoney}=ctx;
+const wallet={key:'prepaid:wallet_test',id:'wallet_test',type:'wallet',name:'미용실',category:'스파',expiresOn:'2027-01-01'};
+let serial=0;
+function make(rows,kind,amount,paid=0,extra={}){
+  serial++;
+  return ppBuildEvent(rows,wallet,{id:'event_'+serial,kind,amount,paid,date:'2026-09-08',createdAt:'2026-09-08T00:00:'+String(serial).padStart(2,'0')+'Z',...extra},extra.receipt);
+}
+const charge=make([],'charge',330000,300000);
+assert.equal(charge.cash,300000);
+const use=make([charge.event],'use',50000);
+assert.equal(use.cash,0);
+const rows=[charge.event,use.event];
+assert.equal(ppTotals(rows,wallet.id).balance,280000);
+assert.equal(ppTotals(rows,wallet.id).paid,300000);
+assert.throws(()=>make(rows,'use',280001),/잔액/);
+assert.throws(()=>make(rows,'use',1,0,{date:'2027-01-02'}),/유효기간/);
+assert.throws(()=>make(rows,'void',0,0,{reverses:charge.event.id}),/최근/);
+const undo=make(rows,'void',0,0,{reverses:use.event.id});
+assert.equal(undo.cash,0);
+assert.equal(ppTotals([...rows,undo.event],wallet.id).balance,330000);
+assert.throws(()=>make([...rows,undo.event],'void',0,0,{reverses:use.event.id}),/취소/);
+const refund=make(rows,'refund',100000,90000);
+assert.equal(refund.cash,-90000);
+assert.equal(ppTotals([...rows,refund.event],wallet.id).balance,180000);
+assert.equal(make([...rows,refund.event],'void',0,0,{reverses:refund.event.id}).cash,90000);
+assert.throws(()=>make(rows,'refund',100000,300001),/환불액/);
+const linked=make([],'charge',330000,300000,{receiptId:'r1',receipt:{id:'r1',total:300000}});
+assert.equal(linked.cash,0);
+assert.throws(()=>make([linked.event],'charge',330000,300000,{receiptId:'r1',receipt:{id:'r1',total:300000}}),/이미/);
+assert.throws(()=>make([],'charge',330000,300000,{receiptId:'r1',receipt:{id:'r1',total:290000}}),/같아야/);
+const opening=make([],'opening',100000);
+assert.equal(opening.cash,0);
+assert.equal(ppTotals([opening.event],wallet.id).balance,100000);
+assert.equal(make([opening.event],'expire',100000).cash,0);
+assert.equal(ppValidateRecords(JSON.parse(JSON.stringify([wallet,...rows,undo.event]))).length,4);
+assert.throws(()=>ppValidateRecords([{...wallet,key:'other'}]),/ID/);
+for(const n of [-1,1.5,NaN,Infinity,Number.MAX_SAFE_INTEGER])assert.throws(()=>ppMoney(n));
+// Separate wallets and out-of-order sync must not alter the balance calculation.
+assert.equal(ppTotals([...rows,{...charge.event,walletId:'other'}],wallet.id).balance,280000);
+assert.equal(ppTotals([undo.event,use.event,charge.event],wallet.id).balance,330000);
+console.log('OK: prepaid balance, expense, linking, refund, undo, expiry, validation and round-trip checks');
