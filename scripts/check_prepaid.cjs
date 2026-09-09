@@ -3,8 +3,8 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const ctx=vm.createContext({});
 vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../prepaid.js'),'utf8'),ctx);
-const {ppTotals,ppBuildEvent,ppValidateRecords,ppMoney}=ctx;
-const wallet={key:'prepaid:wallet_test',id:'wallet_test',type:'wallet',name:'미용실',category:'스파',expiresOn:'2027-01-01',defaultUseAmount:50000};
+const {ppTotals,ppBuildEvent,ppValidateRecords,ppMoney,ppDiscountedAmount}=ctx;
+const wallet={key:'prepaid:wallet_test',id:'wallet_test',type:'wallet',name:'미용실',category:'스파',expiresOn:'2027-01-01',regularPrice:23000,discountRate:10,defaultUseAmount:20700};
 let serial=0;
 function make(rows,kind,amount,paid=0,extra={}){
   serial++;
@@ -44,6 +44,7 @@ assert.equal(ppValidateRecords(JSON.parse(JSON.stringify([wallet,...rows,undo.ev
 assert.throws(()=>ppValidateRecords([{...wallet,key:'other'}]),/ID/);
 for(const n of [-1,1.5,NaN,Infinity,Number.MAX_SAFE_INTEGER])assert.throws(()=>ppMoney(n));
 assert.equal(ppMoney('300,000'),300000);
+assert.equal(ppDiscountedAmount(23000,10),20700);
 // Separate wallets and out-of-order sync must not alter the balance calculation.
 assert.equal(ppTotals([...rows,{...charge.event,walletId:'other'}],wallet.id).balance,280000);
 assert.equal(ppTotals([undo.event,use.event,charge.event],wallet.id).balance,330000);
