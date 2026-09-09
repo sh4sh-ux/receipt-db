@@ -1207,6 +1207,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .stats-redesign.mob-compact .budget-section{display:block;}
 }
 </style>
+<link rel="stylesheet" href="prepaid.css">
 </head>
 <body>
 
@@ -1236,6 +1237,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
       <button class="nav-btn tab" data-tab="input" data-nav="input" data-nav-label="추가" aria-label="추가">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         <span class="nav-mobile-label">추가</span>
+      </button>
+      <button class="nav-btn tab" data-tab="prepaid" data-nav="prepaid" data-nav-label="선불권" aria-label="선불권">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h3"/></svg>
+        <span class="nav-mobile-label">선불권</span>
       </button>
       <div class="nav-spacer"></div>
       <button class="nav-btn tab" data-tab="settings" data-nav="settings" data-nav-label="설정" aria-label="설정">
@@ -1324,6 +1329,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
     <!-- ── RIGHT MAIN PANEL ── -->
     <main class="main">
 
+      <section class="view" id="viewPrepaid">
+        <div class="main-top"><div><button type="button" class="ghost-btn" id="prepaidBack" hidden>‹ 선불권 목록</button><div class="main-title" id="prepaidTitle">선불권·충전금</div></div><button type="button" class="primary-btn" id="prepaidNew">선불권 등록</button></div>
+        <div class="main-body" id="prepaidBody"></div>
+      </section>
       <!-- LIST VIEW (default empty / detail) -->
       <section class="view on" id="viewList">
         <div class="main-top">
@@ -1835,6 +1844,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   </div>
 </div>
 
+<script src="prepaid.js"></script>
 <script>
 'use strict';
 
@@ -2166,7 +2176,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         내용이 다른 영수증은 ID가 포함된 고유 이름으로 보존한다. 중복 삭제 실패도 숨기지 않는다.
 // v2.98 — 모바일 추가 화면에서 목록/입력 화면이 함께 보이는 전환 상태를 보강하고,
 //         붙여넣기 박스와 하단 저장 영역을 줄여 저장 가능 상태를 바로 보이게 한다.
-const APP_VERSION='v3.01';
+// v3.02 — 선불권 충전·사용·환불·잔액을 관리한다. 실결제만 영수증 지출로 기록하고
+//         사용 차감은 선불권 원장에만 남겨 지출이 두 번 집계되지 않게 한다.
+const APP_VERSION='v3.02';
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';
@@ -3013,6 +3025,7 @@ function _newId(date){
 // LOAD & RENDER
 // ════════════════════════════════════════════════════════════════
 async function loadAll(){
+  await ppLoad();
   const [storedReceipts,imageState]=await Promise.all([dbAll('receipts'),dbImageState()]);
   receipts=storedReceipts.map(r=>({...r,category:normalizeCategory(r.category)}));
   _localImageIds=imageState.ids;
@@ -3499,7 +3512,7 @@ function _syncMobileSurface(name=_activeTabName()){
   const app=document.querySelector('.app');if(!app)return;
   app.classList.remove('mobile-list-view','mobile-stats-view','mobile-content-view','mobile-detail-view');
   if(!_isMobileLayout())return;
-  if(name==='input'||name==='settings')app.classList.add('mobile-content-view');
+  if(name==='input'||name==='settings'||name==='prepaid')app.classList.add('mobile-content-view');
   else if(selectedId||_mobileListMode==='detail')app.classList.add('mobile-detail-view');
   else if(_mobileListMode==='stats')app.classList.add('mobile-stats-view');
   else app.classList.add('mobile-list-view');
@@ -3514,6 +3527,7 @@ function switchTab(name){
   document.getElementById('viewList').classList.toggle('on',name==='list');
   document.getElementById('viewInput').classList.toggle('on',name==='input');
   document.getElementById('viewSettings').classList.toggle('on',name==='settings');
+  document.getElementById('viewPrepaid').classList.toggle('on',name==='prepaid');
   // 데스크탑에서는 오른쪽 제목 하단선과 같은 높이를 유지하는 기준선으로 남긴다.
   document.getElementById('monthNav').classList.toggle('context-spacer',name!=='list');
   document.querySelector('.side').classList.toggle('non-list-context',name!=='list');
@@ -3521,7 +3535,10 @@ function switchTab(name){
   _syncMobileSurface(name);
   if(name==='input'){setTimeout(()=>document.getElementById('pasteTa').focus(),50);}
   if(name==='settings'){renderDbxSettings();}
+  if(name==='prepaid'){renderPrepaid();}
 }
+document.getElementById('prepaidNew').addEventListener('click',()=>ppWalletForm());
+document.getElementById('prepaidBack').addEventListener('click',()=>ppOpen(null));
 document.querySelectorAll('.tab').forEach(t=>{
   t.addEventListener('click',()=>{
     if(_isMobileLayout()&&t.dataset.tab==='list'){
@@ -5470,7 +5487,7 @@ let _navigationTimer=null;
 let _restoringNavigation=false;
 function _navigationSnapshot(){
   return {
-    route:{tab:_activeTabName(),selectedId,viewMonth,searchQuery,
+    route:{tab:_activeTabName(),selectedId,viewMonth,searchQuery,prepaidId:prepaidSelectedId,
       mobileMode:_mobileListMode,allMonths:_sideAllMonths,
       category:_monthCatFilter,period:{..._ledgerTimeFilter},
       personPeriod:{..._personTimeFilter},photoFilter:_photoListFilter,
@@ -5505,6 +5522,7 @@ addEventListener('popstate',event=>{
     const r=state.route;
     selectedId=receipts.some(item=>item.id===r.selectedId)?r.selectedId:null;
     viewMonth=r.viewMonth;searchQuery=r.searchQuery;
+    prepaidSelectedId=r.prepaidId||null;
     _mobileListMode=r.mobileMode;_sideAllMonths=r.allMonths;
     _monthCatFilter=r.category;_ledgerTimeFilter={...r.period};
     _personTimeFilter={...r.personPeriod};_photoListFilter=r.photoFilter;
@@ -5971,6 +5989,15 @@ async function renderDetail(){
     </div>
   `;
 
+  // 선불권 결제 영수증은 원장에서 금액을 관리한다. 일반 상세에서 핵심 필드를
+  // 바꾸면 잔액과 지출이 달라지므로 읽기 전용으로 두고 메모·사진만 편집한다.
+  const prepaidLink=prepaidRecords.find(e=>e.type==='event'&&e.receiptId===r.id);
+  if(prepaidLink){
+    body.querySelectorAll('[data-field="store"],[data-field="date"],[data-field="category"],[data-field="paymentMethod"],#dTotalAmt,#addItemBtn,.item-del,.item-name-inp,.item-num-inp').forEach(el=>el.disabled=true);
+    body.querySelector('.detail-cat-trigger')?.setAttribute('disabled','');
+    body.querySelector('.detail-expense-block')?.insertAdjacentHTML('beforebegin','<div class="alert">선불권 결제 기록입니다. 금액·날짜는 선불권에서 관리해 주세요.</div>');
+  }
+
   // Dutch Pay 지출 상세처럼 요약 행에서 품목 표를 바로 접고 펼친다.
   const detailItemsToggle=document.getElementById('detailItemsToggle');
   const detailItemsHeader=document.getElementById('detailItemsHeader');
@@ -6363,6 +6390,10 @@ document.getElementById('detailDeleteBtn').addEventListener('click',async()=>{
   if(!selectedId)return;
   const r=receipts.find(x=>x.id===selectedId);
   if(!r)return;
+  if(prepaidRecords.some(e=>e.type==='event'&&e.receiptId===r.id)){
+    toast('선불권 결제 기록은 선불권 화면에서 입력 취소 또는 환불해 주세요.',{type:'warning',duration:5000});
+    return;
+  }
   if(!confirm(`'${r.store||'영수증'}'을(를) 삭제할까요? 사진도 함께 삭제됩니다.`))return;
   if(r.imageId){await dbDel('images',r.imageId);_revokeImgUrl(r.imageId);}
   _dbxMarkDeleted(r.id);   // 삭제 추적 → 동기화 시 상대 기기에서도 삭제됨
@@ -6465,7 +6496,7 @@ function _validateDataEnvelope(raw){
     }
   }
   return {
-    data:{...raw,receipts,images,deletedIds,storeCatMap:cleanCatMap},
+    data:{...raw,receipts,images,deletedIds,storeCatMap:cleanCatMap,prepaidRecords:ppValidateRecords(raw.prepaidRecords)},
     skippedReceipts:raw.receipts.length-receipts.length,
     skippedImages:(Array.isArray(raw.images)?raw.images.length:0)-images.length,
   };
@@ -6751,6 +6782,7 @@ document.getElementById('exportBtn').addEventListener('click',async()=>{
       receipts:recs,
       images:imgsOut,
       storeCatMap,          // 카테고리 학습 사전
+      prepaidRecords:await ppExport(),
     };
     const json=JSON.stringify(payload,null,2);
     const blob=new Blob([json],{type:'application/json'});
@@ -6796,6 +6828,7 @@ document.getElementById('importInp').addEventListener('change',async e=>{
       storeCatMap={...storeCatMap,...data.storeCatMap};
       await saveStoreCatMap();
     }
+    await ppMerge(data.prepaidRecords);
     toast(`복원 완료 — ${added}건, 사진 ${imgN}장${skipped?' · '+skipped:''}`,{type:'success',duration:skipped?5200:3000});
     await loadAll();renderDetail();
   }catch(err){
@@ -7035,6 +7068,7 @@ async function dbxBackup(){
     const payload={
       app:'receipt-db',appVersion:APP_VERSION,version:2,
       exportedAt:nowISO(),receipts:recs,images:imgsOut,storeCatMap,
+      prepaidRecords:await ppExport(),
     };
     const json=JSON.stringify(payload,null,2);
     const filename=`receipt-db_${new Date().toISOString().slice(0,10)}_${recs.length}items.json`;
@@ -7114,6 +7148,7 @@ async function _dbxRestore(path,name){
       await saveStoreCatMap();
     }
     _dbxCloseModal();
+    await ppMerge(data.prepaidRecords);
     toast(`복원 완료 — ${added}건, 사진 ${imgN}장${skipped?' · '+skipped:''}`,{type:'success',duration:skipped?5200:3000});
     await loadAll();renderDetail();
   }catch(e){
@@ -7794,6 +7829,7 @@ async function _dbxBuildSyncPayload(){
   return JSON.stringify({
     app:'receipt-db',
     syncVersion:3,
+    prepaidRecords:await ppExport(),
     exportedAt:nowISO(),
     receipts:recs,
     images:[],
@@ -8590,6 +8626,7 @@ async function _dbxMerge(remoteData){
     }
   }
 
+  changed+=await ppMerge(remoteData.prepaidRecords);
   // ③ storeCatMap 머지 (로컬에 없는 것만 추가)
   if(remoteData.storeCatMap&&typeof remoteData.storeCatMap==='object'){
     let catChanged=false;
