@@ -11,6 +11,14 @@ function ppMoney(value){
   if(!Number.isSafeInteger(n)||n<0||n>1000000000000)throw new Error('금액은 0 이상의 정수로 입력해 주세요.');
   return n;
 }
+function ppDiscountRate(value){
+  const n=Number(value||0);
+  if(!Number.isFinite(n)||n<0||n>100)throw new Error('할인율은 0부터 100 사이로 입력해 주세요.');
+  return Math.round(n*10)/10;
+}
+function ppDiscountedAmount(regularPrice,discountRate){
+  return Math.round(ppMoney(regularPrice)*(100-ppDiscountRate(discountRate))/100);
+}
 function ppDate(value,optional=false){
   if(optional&&!value)return '';
   if(!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(Date.parse(value))||new Date(value).toISOString().slice(0,10)!==value)throw new Error('날짜를 확인해 주세요.');
@@ -23,7 +31,7 @@ function ppValidateRecords(rows){
     if(!r||typeof r.id!=='string'||!/^[a-zA-Z0-9_-]{1,160}$/.test(r.id)||r.key!==PP_PREFIX+r.id)throw new Error('선불권 기록 ID가 올바르지 않아요.');
     if(r.type==='wallet'){
       if(typeof r.name!=='string'||!r.name.trim()||r.name.length>200)throw new Error('선불권 매장명을 확인해 주세요.');
-      return {key:r.key,id:r.id,type:r.type,name:r.name.trim(),category:String(r.category||'기타').slice(0,100),expiresOn:ppDate(r.expiresOn,true),defaultUseAmount:ppMoney(r.defaultUseAmount||0),updatedAt:String(r.updatedAt||''),createdAt:String(r.createdAt||'')};
+      return {key:r.key,id:r.id,type:r.type,name:r.name.trim(),category:String(r.category||'기타').slice(0,100),expiresOn:ppDate(r.expiresOn,true),regularPrice:ppMoney(r.regularPrice||0),discountRate:ppDiscountRate(r.discountRate||0),defaultUseAmount:ppMoney(r.defaultUseAmount||0),updatedAt:String(r.updatedAt||''),createdAt:String(r.createdAt||'')};
     }
     if(r.type!=='event'||!PP_KINDS.includes(r.kind)||typeof r.walletId!=='string')throw new Error('선불권 거래 형식이 올바르지 않아요.');
     if(r.kind==='void'&&(typeof r.reverses!=='string'||r.id!=='void_'+r.reverses))throw new Error('취소 기록을 확인해 주세요.');
@@ -124,6 +132,9 @@ async function ppCommit(walletInput,values){
 
 function ppWallets(){return prepaidRecords.filter(r=>r.type==='wallet');}
 function ppOpen(id){prepaidSelectedId=id;renderPrepaid();}
+function ppLatestUse(totals){return totals.active.filter(e=>e.kind==='use').sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id))[0]||null;}
+function ppSuggestedUseAmount(wallet,totals){return wallet.defaultUseAmount||ppLatestUse(totals)?.amount||0;}
+function ppDisplayDate(date){return String(date||'').replace(/-/g,'. ') +(date?'\.':'');}
 function renderPrepaid(){
   const root=document.getElementById('prepaidBody');if(!root)return;
   const wallets=ppWallets(),wallet=wallets.find(w=>w.id===prepaidSelectedId);
@@ -134,20 +145,22 @@ function renderPrepaid(){
   if(!wallet){
     root.innerHTML=`<div class="pp-summary"><span>총 남은 잔액</span><strong>${money(wallets.reduce((s,w)=>s+ppTotals(prepaidRecords,w.id).balance,0))}</strong><small>${wallets.length}개 선불권</small></div><div class="pp-wallets">${wallets.map(w=>{
       const t=ppTotals(prepaidRecords,w.id),expired=w.expiresOn&&w.expiresOn<_todayYMD();
-      const uses=t.active.filter(e=>e.kind==='use').length,remaining=w.defaultUseAmount?Math.floor(t.balance/w.defaultUseAmount):null;
-      return `<button class="pp-wallet" type="button" data-wallet="${esc(w.id)}">${getCatSvg(w.category)}<span><b>${esc(w.name)}</b><small>${expired?'유효기간 지남':w.expiresOn?'유효기간 '+esc(w.expiresOn):'유효기간 없음'}${w.defaultUseAmount?` · 1회 ${money(w.defaultUseAmount)}`:''}</small><small>사용 ${uses}회${remaining!==null?` · 약 ${remaining}회 남음`:''}</small></span><strong>${money(t.balance)}</strong><span aria-hidden="true">›</span></button>`;
+      const uses=t.active.filter(e=>e.kind==='use').length,suggested=ppSuggestedUseAmount(w,t),remaining=suggested?Math.floor(t.balance/suggested):null;
+      return `<button class="pp-wallet" type="button" data-wallet="${esc(w.id)}">${getCatSvg(w.category)}<span><b>${esc(w.name)}</b><small>${expired?'유효기간 지남':w.expiresOn?'유효기간 '+esc(w.expiresOn):'유효기간 없음'}${suggested?` · 1회 ${money(suggested)}`:''}</small><small>사용 ${uses}회${remaining!==null?` · 약 ${remaining}회 남음`:''}</small></span><strong>${money(t.balance)}</strong><span aria-hidden="true">›</span></button>`;
     }).join('')}</div>${!wallets.length?'<div class="empty-state">등록된 선불권이 없어요.</div>':''}`;
     root.querySelectorAll('[data-wallet]').forEach(b=>b.addEventListener('click',()=>ppOpen(b.dataset.wallet)));return;
   }
   const t=ppTotals(prepaidRecords,wallet.id),expired=wallet.expiresOn&&wallet.expiresOn<_todayYMD();
-  const uses=t.active.filter(e=>e.kind==='use').length,remaining=wallet.defaultUseAmount?Math.floor(t.balance/wallet.defaultUseAmount):null;
-  root.innerHTML=`<div class="pp-summary"><span>남은 잔액</span><strong>${money(t.balance)}</strong><small>${expired?'유효기간 지남 · ':''}${wallet.expiresOn?'유효기간 '+esc(wallet.expiresOn):'유효기간 없음'}</small>${wallet.defaultUseAmount?`<small class="pp-default">기본 1회 ${money(wallet.defaultUseAmount)} · 약 ${remaining}회 남음</small>`:''}</div>
+  const uses=t.active.filter(e=>e.kind==='use').length,latestUse=ppLatestUse(t),suggested=ppSuggestedUseAmount(wallet,t),remaining=suggested?Math.floor(t.balance/suggested):null;
+  const priceInfo=wallet.regularPrice?`정가 ${money(wallet.regularPrice)}${wallet.discountRate?` · ${wallet.discountRate}% 할인`:''} · `:'';
+  root.innerHTML=`<div class="pp-summary"><span>남은 잔액</span><strong>${money(t.balance)}</strong><small>${expired?'유효기간 지남 · ':''}${wallet.expiresOn?'유효기간 '+esc(wallet.expiresOn):'유효기간 없음'}</small>${suggested?`<small class="pp-default">${priceInfo}${wallet.defaultUseAmount?'기본':'최근 기준'} 1회 ${money(suggested)} · 약 ${remaining}회 남음</small>`:''}</div>
     ${t.balance<0?'<p class="alert err">동기화된 사용 기록이 잔액을 초과했어요. 최근 기록을 확인해 주세요.</p>':''}
-    <div class="pp-metrics"><span>실결제 누계 <b>${money(t.paid)}</b></span><span>사용 누계 <b>${money(t.used)}</b></span><span>사용 횟수 <b>${uses}회</b></span></div>
-    <div class="pp-actions"><button class="primary-btn" data-kind="use">${wallet.defaultUseAmount?`1회 사용 · ${money(wallet.defaultUseAmount)}`:'사용 기록'}</button><button class="ghost-btn" data-kind="charge">충전</button><button class="ghost-btn" data-kind="refund">환불</button><button class="ghost-btn" data-kind="expire">만료 차감</button><button class="ghost-btn" id="ppEdit">정보 수정</button></div>
+    <div class="pp-metrics"><span>실결제 누계 <b>${money(t.paid)}</b></span><span>사용 누계 <b>${money(t.used)}</b></span><span>사용 횟수 <b>${uses}회</b></span>${latestUse?`<span>최근 방문 <b>${esc(ppDisplayDate(latestUse.date))}</b></span>`:''}</div>
+    <div class="pp-actions"><button class="primary-btn" data-kind="use">${suggested?`1회 사용 · ${money(suggested)}`:'사용 기록'}</button><button class="ghost-btn" data-kind="charge">충전</button><button class="ghost-btn" data-kind="refund">환불</button><button class="ghost-btn" data-kind="expire">만료 차감</button><button class="ghost-btn" id="ppEdit">정보 수정</button></div>
     <h3 class="pp-section-title">충전·사용 내역 <span>${t.active.length}건</span></h3><div class="pp-events">${t.active.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id)).map(e=>{
       const positive=e.kind==='charge'||e.kind==='opening';
-      return `<div class="pp-event"><div><b>${PP_LABELS[e.kind]}</b><small>${esc(e.date)}${e.description?' · '+esc(e.description):''}</small>${e.paid?`<small>실결제 ${money(e.paid)}</small>`:''}</div><strong>${positive?'+':'−'}${money(e.amount)}</strong><div class="pp-row-actions">${e.receiptId?`<button class="ghost-btn" data-receipt="${esc(e.receiptId)}">영수증</button>`:''}<button class="ghost-btn danger" data-void="${esc(e.id)}">삭제</button></div></div>`;
+      const dateLabel=e.kind==='use'?'방문일자':e.kind==='charge'||e.kind==='opening'?'충전일자':'처리일자';
+      return `<div class="pp-event"><div><b>${PP_LABELS[e.kind]}</b><small><span class="pp-date-label">${dateLabel}</span> ${esc(ppDisplayDate(e.date))}${e.description?' · '+esc(e.description):''}</small>${e.paid?`<small>실결제 ${money(e.paid)}</small>`:''}</div><strong>${positive?'+':'−'}${money(e.amount)}</strong><div class="pp-row-actions">${e.receiptId?`<button class="ghost-btn" data-receipt="${esc(e.receiptId)}">영수증</button>`:''}<button class="ghost-btn danger" data-void="${esc(e.id)}">삭제</button></div></div>`;
     }).join('')||'<div class="empty-state">충전 또는 사용 기록이 없어요.</div>'}</div>`;
   root.querySelectorAll('[data-kind]').forEach(b=>b.addEventListener('click',()=>ppEventForm(b.dataset.kind)));
   root.querySelector('#ppEdit').addEventListener('click',()=>ppWalletForm(wallet));
@@ -182,13 +195,22 @@ function ppDialog(title,html,onSave){
 }
 function ppWalletForm(wallet=null){
   const esc=escapeHtml;
-  ppDialog(wallet?'선불권 정보 수정':'선불권 등록',`<label>매장명<input name="name" required maxlength="200" value="${esc(wallet?.name||'')}" placeholder="예: 단골 미용실"></label><label>카테고리<select name="category">${BASE_CATEGORIES.map(c=>`<option value="${esc(c)}"${c===(wallet?.category||'스파')?' selected':''}>${esc(getCategoryLabel(c))}</option>`).join('')}</select></label><label>유효기간 (선택)<input name="expiresOn" type="date" value="${esc(wallet?.expiresOn||'')}"></label><label>기본 1회 차감액 (선택)<input name="defaultUseAmount" type="text" inputmode="numeric" data-money value="${wallet?.defaultUseAmount||''}" placeholder="예: 50,000"></label>${wallet?'':'<label>기존 남은 잔액 (지출 제외)<input name="opening" type="text" inputmode="numeric" data-money value="0" required></label>'}`,async form=>{
+  const dialog=ppDialog(wallet?'선불권 정보 수정':'선불권 등록',`<label>매장명<input name="name" required maxlength="200" value="${esc(wallet?.name||'')}" placeholder="예: 단골 미용실"></label><label>카테고리<select name="category">${BASE_CATEGORIES.map(c=>`<option value="${esc(c)}"${c===(wallet?.category||'스파')?' selected':''}>${esc(getCategoryLabel(c))}</option>`).join('')}</select></label><label>유효기간 (선택)<input name="expiresOn" type="date" value="${esc(wallet?.expiresOn||'')}"></label><div class="pp-price-grid"><label>서비스 정가 (선택)<input name="regularPrice" type="text" inputmode="numeric" data-money value="${wallet?.regularPrice||''}" placeholder="예: 23,000"></label><label>할인율 (%)<input name="discountRate" type="number" min="0" max="100" step="0.1" value="${wallet?.discountRate||0}"></label></div><label>실제 1회 차감액 (선택)<input name="defaultUseAmount" type="text" inputmode="numeric" data-money value="${wallet?.defaultUseAmount||''}" placeholder="정가와 할인율로 자동 계산"></label><p class="pp-calc" aria-live="polite"></p>${wallet?'':'<label>기존 남은 잔액 (지출 제외)<input name="opening" type="text" inputmode="numeric" data-money value="0" required></label>'}`,async form=>{
     const now=nowISO(),id=wallet?.id||'wallet_'+crypto.randomUUID();
-    const row={key:PP_PREFIX+id,id,type:'wallet',name:String(form.get('name')).trim(),category:form.get('category'),expiresOn:form.get('expiresOn'),defaultUseAmount:ppMoney(form.get('defaultUseAmount')||0),createdAt:wallet?.createdAt||now,updatedAt:now};
+    const row={key:PP_PREFIX+id,id,type:'wallet',name:String(form.get('name')).trim(),category:form.get('category'),expiresOn:form.get('expiresOn'),regularPrice:ppMoney(form.get('regularPrice')||0),discountRate:ppDiscountRate(form.get('discountRate')),defaultUseAmount:ppMoney(form.get('defaultUseAmount')||0),createdAt:wallet?.createdAt||now,updatedAt:now};
     const amount=wallet?0:ppMoney(form.get('opening'));
     await ppCommit(row,amount?{id:'event_'+crypto.randomUUID(),kind:'opening',date:_todayYMD(),amount,paid:0,createdAt:now,description:'등록 시 잔액'}:null);
     ppOpen(id);
   });
+  const regular=dialog.querySelector('[name=regularPrice]'),rate=dialog.querySelector('[name=discountRate]'),amount=dialog.querySelector('[name=defaultUseAmount]'),calc=dialog.querySelector('.pp-calc');
+  const updatePrice=()=>{
+    const price=Number(regular.value.replace(/,/g,'')),discount=Number(rate.value||0);
+    if(!price||!Number.isFinite(discount)||discount<0||discount>100){calc.textContent='';return;}
+    const discounted=Math.round(price*(100-discount)/100);
+    amount.value=fmtMoney(discounted);
+    calc.textContent=`${fmtMoney(price)}원에서 ${discount}% 할인 · 1회 ${fmtMoney(discounted)}원 차감`;
+  };
+  regular.addEventListener('input',updatePrice);rate.addEventListener('input',updatePrice);updatePrice();
 }
 function ppEventForm(kind){
   const wallet=ppWallets().find(w=>w.id===prepaidSelectedId);if(!wallet)return;
@@ -196,7 +218,7 @@ function ppEventForm(kind){
   const linked=new Set(prepaidRecords.filter(e=>e.type==='event'&&e.kind==='charge').map(e=>e.receiptId));
   const options=receipts.filter(r=>r.total>0&&!linked.has(r.id)&&!r.prepaidEventId);
   const cash=kind==='charge'||kind==='refund';
-  const initialAmount=kind==='expire'?Math.max(0,t.balance):kind==='use'?(wallet.defaultUseAmount||''):'';
+  const initialAmount=kind==='expire'?Math.max(0,t.balance):kind==='use'?(ppSuggestedUseAmount(wallet,t)||''):'';
   const dialog=ppDialog(PP_LABELS[kind],`<label>날짜<input name="date" type="date" value="${_todayYMD()}" required></label><label>${kind==='charge'?'충전액 (보너스 포함)':'잔액 차감액'}<input name="amount" type="text" inputmode="numeric" data-money value="${initialAmount}" required></label>${cash?`<label>${kind==='charge'?'실제 결제액 (지출 반영)':'실제 환불액 (지출 차감)'}<input name="paid" type="text" inputmode="numeric" data-money required></label><label>결제수단<select name="paymentMethod"><option>카드</option><option>현금</option><option>계좌이체</option><option>기타</option></select></label>`:''}${kind==='charge'?`<label>결제 기록<select name="receiptId"><option value="">새 영수증 등록</option>${options.map(r=>`<option value="${esc(r.id)}">기존 연결 · ${esc(r.date)} · ${esc(r.store)} · ${fmtMoney(r.total)}원</option>`).join('')}</select></label>`:''}<label>${kind==='use'?'시술명·사용 내용':'메모'}<input name="description" maxlength="1000" ${kind==='use'?'required':''} placeholder="${kind==='use'?'예: 커트, 염색':''}"></label>`,async form=>{
     await ppCommit(null,{walletId:wallet.id,id:'event_'+crypto.randomUUID(),kind,date:form.get('date'),amount:ppMoney(form.get('amount')),paid:cash?ppMoney(form.get('paid')):0,paymentMethod:form.get('paymentMethod'),receiptId:form.get('receiptId')||'',description:form.get('description'),createdAt:nowISO()});
   });
