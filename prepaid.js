@@ -139,7 +139,9 @@ function renderPrepaid(){
   const root=document.getElementById('prepaidBody');if(!root)return;
   const wallets=ppWallets(),wallet=wallets.find(w=>w.id===prepaidSelectedId);
   const money=n=>fmtMoney(n)+'원',esc=escapeHtml;
-  document.getElementById('prepaidTitle').textContent=wallet?wallet.name:'선불권·충전금';
+  document.getElementById('viewPrepaid').classList.toggle('pp-detail-view',!!wallet);
+  document.getElementById('prepaidEyebrow').textContent=wallet?'선불권':'Receipt DB';
+  document.getElementById('prepaidTitle').textContent=wallet?wallet.name:'선불권';
   document.getElementById('prepaidNew').hidden=!!wallet;
   document.getElementById('prepaidBack').hidden=!wallet;
   if(!wallet){
