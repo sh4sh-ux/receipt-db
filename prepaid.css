@@ -6,7 +6,7 @@
 #prepaidBody{max-width:1100px;width:100%;margin:0 auto}
 #prepaidBack[hidden],#prepaidNew[hidden]{display:none}
 .pp-summary{padding:12px 0 26px;border-bottom:1px solid var(--sep);display:flex;flex-direction:column;gap:10px}
-.pp-summary>span,.pp-summary small{color:var(--label3);font-size:13px}
+.pp-summary>span,.pp-summary small{color:var(--label3);font-size:13px}.pp-summary .pp-default{color:var(--accent);font-weight:600}
 .pp-summary>strong{font-size:34px;overflow-wrap:anywhere}
 .pp-wallets{margin-top:16px}
 .pp-wallet{width:100%;display:grid;grid-template-columns:32px minmax(0,1fr) auto 12px;gap:16px;align-items:center;padding:22px 8px;border:0;border-bottom:1px solid var(--sep);background:transparent;color:var(--label);font:inherit;text-align:left;cursor:pointer}
@@ -18,18 +18,19 @@
 .pp-metrics{display:flex;gap:30px;padding:20px 0;flex-wrap:wrap;font-size:13px;color:var(--label2)}
 .pp-metrics b{margin-left:8px;color:var(--label)}
 .pp-actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 0 24px;border-bottom:1px solid var(--sep)}
+.pp-actions .primary-btn{width:auto;min-width:220px}
 .pp-actions .ghost-btn,.pp-row-actions .ghost-btn{margin:0;width:auto;min-height:40px}
 .pp-section-title{font-size:16px;margin:24px 0 8px}.pp-section-title span{font-size:12px;color:var(--label3);font-weight:400;margin-left:8px}
 .pp-event{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:16px;align-items:center;border-bottom:1px solid var(--sep);padding:18px 0;font-size:14px}
 .pp-event small{display:block;color:var(--label3);font-size:12px;line-height:1.6;margin-top:5px;overflow-wrap:anywhere}
 .pp-event strong{white-space:nowrap}.pp-voided>div:first-child{text-decoration:line-through;color:var(--label3)}
-.pp-row-actions{display:flex;gap:8px}.pp-row-actions:empty{display:none}
-.pp-dialog{width:min(460px,calc(100% - 32px));max-height:85dvh;overflow:auto;padding:24px;border:1px solid var(--sep);border-radius:8px;background:var(--card);color:var(--label);box-shadow:var(--app-shadow)}
+.pp-row-actions{display:flex;gap:8px}.pp-row-actions:empty{display:none}.pp-row-actions .danger{color:var(--red)}
+.pp-dialog{position:fixed;inset:0;margin:auto!important;box-sizing:border-box;width:min(460px,calc(100% - 32px));max-height:min(85dvh,760px);overflow:auto;padding:24px;border:1px solid var(--sep);border-radius:8px;background:var(--card);color:var(--label);box-shadow:var(--app-shadow)}
 .pp-dialog::backdrop{background:rgba(0,0,0,.45)}
 .pp-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.pp-dialog h2{font-size:20px;margin:0}
 .pp-dialog label{display:flex;flex-direction:column;gap:7px;font-size:13px;margin:14px 0}
 .pp-dialog input,.pp-dialog select{width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid var(--sep2);border-radius:6px;background:var(--fill2);color:var(--label);font:inherit}
-.pp-dialog-actions{display:flex;gap:10px;justify-content:flex-end}.pp-dialog-actions .ghost-btn{width:auto;margin:0}
+.pp-dialog-actions{display:grid;grid-template-columns:88px minmax(0,1fr);gap:10px}.pp-dialog-actions .ghost-btn,.pp-dialog-actions .primary-btn{width:100%;min-width:0;margin:0;white-space:nowrap}
 .pp-error{font-size:13px;color:var(--red);line-height:1.5}
 @media(max-width:780px){
  .app:has(#viewPrepaid.on){grid-template-columns:1fr}
@@ -40,5 +41,6 @@
  .pp-summary>strong{font-size:30px}
  .pp-wallet{grid-template-columns:24px minmax(0,1fr) auto 10px;gap:10px}.pp-wallet strong{font-size:16px}
  .pp-event{grid-template-columns:minmax(0,1fr) auto;gap:10px}.pp-row-actions{grid-column:1/-1;justify-content:flex-end}
- .pp-actions .primary-btn,.pp-actions .ghost-btn{flex:1 1 auto;min-height:44px}
+ .pp-actions .primary-btn,.pp-actions .ghost-btn{flex:1 1 auto;min-width:0;min-height:44px}
+ .pp-dialog{width:calc(100% - 24px);max-height:calc(100dvh - 24px);padding:20px}
 }

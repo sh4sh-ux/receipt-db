@@ -2176,9 +2176,17 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         내용이 다른 영수증은 ID가 포함된 고유 이름으로 보존한다. 중복 삭제 실패도 숨기지 않는다.
 // v2.98 — 모바일 추가 화면에서 목록/입력 화면이 함께 보이는 전환 상태를 보강하고,
 //         붙여넣기 박스와 하단 저장 영역을 줄여 저장 가능 상태를 바로 보이게 한다.
-// v3.02 — 선불권 충전·사용·환불·잔액을 관리한다. 실결제만 영수증 지출로 기록하고
+// v3.03 — 선불권 기본 차감액·횟수·삭제와 입력 UI를 다듬는다. 실결제만 영수증 지출로 기록하고
 //         사용 차감은 선불권 원장에만 남겨 지출이 두 번 집계되지 않게 한다.
-const APP_VERSION='v3.02';
+const APP_VERSION='v3.03';
+
+// 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
+document.addEventListener('click',e=>{
+  const direct=e.target instanceof Element&&e.target.matches('input[type="date"]')?e.target:null;
+  const input=direct||(e.target instanceof Element?e.target.closest('label')?.querySelector('input[type="date"]'):null);
+  if(!input||input.disabled||input.readOnly||typeof input.showPicker!=='function')return;
+  try{input.showPicker();}catch(_){/* iOS 등 showPicker 미지원 환경은 기본 동작 사용 */}
+});
 const THEME_STORAGE_KEY='receiptDbTheme';
 const MY_NAME_STORAGE_KEY='receiptDbMyName';
 const DUTCH_PAY_NAME_KEY='dutchpay_my_name';

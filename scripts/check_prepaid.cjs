@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const ctx=vm.createContext({});
 vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../prepaid.js'),'utf8'),ctx);
 const {ppTotals,ppBuildEvent,ppValidateRecords,ppMoney}=ctx;
-const wallet={key:'prepaid:wallet_test',id:'wallet_test',type:'wallet',name:'미용실',category:'스파',expiresOn:'2027-01-01'};
+const wallet={key:'prepaid:wallet_test',id:'wallet_test',type:'wallet',name:'미용실',category:'스파',expiresOn:'2027-01-01',defaultUseAmount:50000};
 let serial=0;
 function make(rows,kind,amount,paid=0,extra={}){
   serial++;
@@ -19,7 +19,10 @@ assert.equal(ppTotals(rows,wallet.id).balance,280000);
 assert.equal(ppTotals(rows,wallet.id).paid,300000);
 assert.throws(()=>make(rows,'use',280001),/잔액/);
 assert.throws(()=>make(rows,'use',1,0,{date:'2027-01-02'}),/유효기간/);
-assert.throws(()=>make(rows,'void',0,0,{reverses:charge.event.id}),/최근/);
+assert.throws(()=>make(rows,'void',0,0,{reverses:charge.event.id}),/잔액/);
+const laterUse=make(rows,'use',10000).event;
+const removeOlderUse=make([...rows,laterUse],'void',0,0,{reverses:use.event.id});
+assert.equal(ppTotals([...rows,laterUse,removeOlderUse.event],wallet.id).balance,320000);
 const undo=make(rows,'void',0,0,{reverses:use.event.id});
 assert.equal(undo.cash,0);
 assert.equal(ppTotals([...rows,undo.event],wallet.id).balance,330000);
@@ -40,6 +43,7 @@ assert.equal(make([opening.event],'expire',100000).cash,0);
 assert.equal(ppValidateRecords(JSON.parse(JSON.stringify([wallet,...rows,undo.event]))).length,4);
 assert.throws(()=>ppValidateRecords([{...wallet,key:'other'}]),/ID/);
 for(const n of [-1,1.5,NaN,Infinity,Number.MAX_SAFE_INTEGER])assert.throws(()=>ppMoney(n));
+assert.equal(ppMoney('300,000'),300000);
 // Separate wallets and out-of-order sync must not alter the balance calculation.
 assert.equal(ppTotals([...rows,{...charge.event,walletId:'other'}],wallet.id).balance,280000);
 assert.equal(ppTotals([undo.event,use.event,charge.event],wallet.id).balance,330000);
