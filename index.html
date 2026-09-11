@@ -2188,7 +2188,13 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         붙여넣기 박스와 하단 저장 영역을 줄여 저장 가능 상태를 바로 보이게 한다.
 // v3.05 — 선불권 목록·상세 헤더와 동작 버튼 비율을 정돈한다. 실결제만 영수증 지출로 기록하고
 //         사용 차감은 선불권 원장에만 남겨 지출이 두 번 집계되지 않게 한다.
-const APP_VERSION='v3.05';
+// v3.06 — 완료본 파일 이름 자동 정리. 맥 스크립트(receipt_pdf_to_jpg.py)가 옮겨 둔 완료본은
+//         scanPath가 없어, 매장명·금액을 채워도 원본 이름(예: 20260912_01)이 그대로 남았다.
+//         수동 '일괄 변경'의 매칭·안전 규칙(단일 날짜 후보 + 내용 있을 때만)을 _buildScanRenamePlan
+//         으로 분리해, 영수증 저장 때와 동기화 때 확인창 없이 자동으로 새 이름(260912_영수증(금액)_매장명)
+//         으로 바로잡는다. 저장 시 완료본을 먼저 채택해 scanPath를 확보하므로 보관본 사본도 안 생긴다.
+//         맥 스크립트의 자동 이름짓기는 repo 밖이라 손대지 않는다 — 앱이 채운 정보로 대신 정리한다.
+const APP_VERSION='v3.06';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6210,12 +6216,17 @@ async function renderDetail(){
     }
     r.updatedAt=nowISO();
     if(r.store&&r.category) await learnCategory(r.store,r.category);
-    // 매장명·금액이 채워졌으니 완료 폴더 쪽도 맞춘다.
-    // 보관본이 아직 없으면(앱에서 사진만 붙인 영수증) 이때 올리고, 있으면 이름만 고친다.
-    const archived=r.imageId&&!r.scanPath?await _dbxArchiveReceiptPhoto(r):false;
-    const renamed=archived||await _dbxRenameScanFile(r);
+    await dbPut('receipts',r);   // 먼저 저장 — 이름 계산에 매장명·금액이 필요하다
+    // 매장명·금액이 채워졌으니 완료 폴더 쪽 이름도 맞춘다.
+    //  · 맥 스크립트가 옮겨 둔(scanPath 없는) 완료본은 완료 폴더에서 날짜로 찾아 먼저 바로잡는다.
+    //    이때 scanPath 가 채워지면, 아래 사진 보관본 업로드가 사본을 새로 만들지 않는다.
+    let renamed=(await _autoRenameCompleted())>0;
+    const _cur=receipts.find(x=>x.id===r.id); if(_cur&&_cur.scanPath)r.scanPath=_cur.scanPath;
+    if(r.scanPath){ if(await _dbxRenameScanFile(r))renamed=true; }
+    // 완료본이 아직 없으면(앱에서 사진만 붙인 영수증) 이때 보관본을 올린다.
+    else if(r.imageId){ if(await _dbxArchiveReceiptPhoto(r))renamed=true; }
     await dbPut('receipts',r);
-    toast(renamed?'수정됨 · 사진 파일 이름도 바꿨어요':'수정됨',{type:'success'});
+    toast(renamed?'수정됨 · 완료본 파일 이름도 정리했어요':'수정됨',{type:'success'});
     await loadAll();await renderDetail();
     dbxSyncNow(true);
   };
@@ -8068,49 +8079,39 @@ async function _rescueAppFolder(token,appDir,needPath){
 }
 
 
-// 완료 폴더의 파일 이름을 지금 규칙으로 한 번에 다시 짓는다.
-// scanPath 가 없는(옛 규칙으로 옮겨진) 파일은 파일명의 날짜로 영수증을 찾아 짝짓는다.
-async function renameScanFilesAll(){
-  if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
-  await _dbxResolveRoot();
-  const token=await _dbxToken();
-  const t=toast('완료 폴더를 살펴보는 중…',{duration:60000});
+// 완료 폴더에서 지금 규칙과 다른 이름의 파일을 찾아 영수증과 짝지어 새 이름으로 옮길 계획을 만든다.
+// scanPath 가 없는(맥 스크립트가 옮겼거나 옛 규칙으로 옮겨진) 파일은 파일명의 날짜로 영수증을 찾는다.
+// 수동 일괄 변경(renameScanFilesAll)과 자동 보정(_autoRenameCompleted)이 같은 안전 규칙을 공유한다.
+async function _buildScanRenamePlan(token){
   const plan=[];
-  try{
-    receipts=await dbAll('receipts');
-    const byPath=new Map();
-    for(const r of receipts)if(r.scanPath)byPath.set(r.scanPath,r);
-    for(const isImg of [true,false]){
-      const all=await _dbxListAll(token,_dbxScanDoneDir(isImg));
-      for(const f of (all||[]).filter(e=>e['.tag']==='file')){
-        const cur=f.path_display;
-        const nm=cur.slice(cur.lastIndexOf('/')+1);
-        const ext=nm.slice(nm.lastIndexOf('.'));
-        // ① 경로로 짝을 찾고, 없으면 ② 파일명의 날짜로 찾는다
-        let rec=byPath.get(cur);
-        if(!rec){
-          const d=_scanDateFromName(nm);
-          if(!d)continue;
-          const cands=receipts.filter(r=>r.date===d&&r.store);
-          if(cands.length!==1)continue;      // 그 날짜에 후보가 여럿이면 건드리지 않는다
-          rec=cands[0];
-        }
-        if(!rec.store&&!rec.total)continue;  // 아직 채울 내용이 없다
-        const dir=cur.slice(0,cur.lastIndexOf('/'));
-        const want=dir+'/'+_scanFileName(rec)+ext;
-        if(want!==cur)plan.push({from:cur,to:want,rec});
+  receipts=await dbAll('receipts');
+  const byPath=new Map();
+  for(const r of receipts)if(r.scanPath)byPath.set(r.scanPath,r);
+  for(const isImg of [true,false]){
+    const all=await _dbxListAll(token,_dbxScanDoneDir(isImg));
+    for(const f of (all||[]).filter(e=>e['.tag']==='file')){
+      const cur=f.path_display;
+      const nm=cur.slice(cur.lastIndexOf('/')+1);
+      const ext=nm.slice(nm.lastIndexOf('.'));
+      // ① 경로로 짝을 찾고, 없으면 ② 파일명의 날짜로 찾는다
+      let rec=byPath.get(cur);
+      if(!rec){
+        const d=_scanDateFromName(nm);
+        if(!d)continue;
+        const cands=receipts.filter(r=>r.date===d&&r.store);
+        if(cands.length!==1)continue;      // 그 날짜에 후보가 여럿이면 건드리지 않는다
+        rec=cands[0];
       }
+      if(!rec.store&&!rec.total)continue;  // 아직 채울 내용이 없다
+      const dir=cur.slice(0,cur.lastIndexOf('/'));
+      const want=dir+'/'+_scanFileName(rec)+ext;
+      if(want!==cur)plan.push({from:cur,to:want,rec});
     }
-  }catch(e){ t?.remove?.(); toast('살펴보기 실패: '+(e.message||e),{type:'error'}); return; }
-  t?.remove?.();
-
-  if(!plan.length){ alert('바꿀 파일 이름이 없습니다.\n이미 다 정리돼 있거나, 매장명·금액이 아직 비어 있습니다.'); return; }
-  const sample=plan.slice(0,5).map(x=>'  · '+x.from.slice(x.from.lastIndexOf('/')+1)
-    +'\n     → '+x.to.slice(x.to.lastIndexOf('/')+1)).join('\n');
-  if(!confirm(`완료 폴더의 파일 이름 ${plan.length}개를 다시 짓습니다.\n\n${sample}`
-    +(plan.length>5?`\n  … 외 ${plan.length-5}개`:'')+'\n\n계속할까요?'))return;
-
-  const lt=toast('이름 바꾸는 중…',{duration:300000});
+  }
+  return plan;
+}
+// 계획대로 완료 폴더 파일을 새 이름으로 옮긴다. 같은 이름이 있으면 autorename 으로 덮어쓰지 않는다.
+async function _execScanRenamePlan(plan,token){
   let done=0;
   for(const x of plan){
     try{
@@ -8124,6 +8125,43 @@ async function renameScanFilesAll(){
       }
     }catch(e){}
   }
+  return done;
+}
+// 매장명·금액이 채워진 뒤, 맥 스크립트가 옮겨 둔(scanPath 없는) 완료본까지 확인창 없이 조용히
+// 새 이름으로 바로잡는다. 수동 일괄 변경과 완전히 같은 안전 규칙(단일 날짜 후보 + 내용 있을 때만).
+let _autoRenameBusy=false;
+async function _autoRenameCompleted(){
+  if(!dbxIsConnected()||_autoRenameBusy)return 0;
+  _autoRenameBusy=true;
+  let done=0;
+  try{
+    const token=await _dbxToken();
+    const plan=await _buildScanRenamePlan(token);
+    if(plan.length){ done=await _execScanRenamePlan(plan,token); if(done)receipts=await dbAll('receipts'); }
+  }catch(e){console.warn('auto rename completed:',e.message||e);}
+  finally{_autoRenameBusy=false;}
+  return done;
+}
+
+// 완료 폴더의 파일 이름을 지금 규칙으로 한 번에 다시 짓는다 (⋯ 메뉴에서 수동 실행).
+async function renameScanFilesAll(){
+  if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
+  await _dbxResolveRoot();
+  const token=await _dbxToken();
+  const t=toast('완료 폴더를 살펴보는 중…',{duration:60000});
+  let plan;
+  try{ plan=await _buildScanRenamePlan(token); }
+  catch(e){ t?.remove?.(); toast('살펴보기 실패: '+(e.message||e),{type:'error'}); return; }
+  t?.remove?.();
+
+  if(!plan.length){ alert('바꿀 파일 이름이 없습니다.\n이미 다 정리돼 있거나, 매장명·금액이 아직 비어 있습니다.'); return; }
+  const sample=plan.slice(0,5).map(x=>'  · '+x.from.slice(x.from.lastIndexOf('/')+1)
+    +'\n     → '+x.to.slice(x.to.lastIndexOf('/')+1)).join('\n');
+  if(!confirm(`완료 폴더의 파일 이름 ${plan.length}개를 다시 짓습니다.\n\n${sample}`
+    +(plan.length>5?`\n  … 외 ${plan.length-5}개`:'')+'\n\n계속할까요?'))return;
+
+  const lt=toast('이름 바꾸는 중…',{duration:300000});
+  const done=await _execScanRenamePlan(plan,token);
   lt?.remove?.();
   receipts=await dbAll('receipts');
   await dbxSyncUpload();
@@ -8575,6 +8613,8 @@ async function dbxSyncNow(force=false,upload=true){
     if(downloadOk!==false){
       const archived=await _dbxArchivePending();
       if(archived>0)toast(`사진 ${archived}장을 완료 JPG·PDF로 정리했어요`,{type:'success',duration:4000});
+      // 맥 스크립트가 옮겨 둔 완료본 이름도 조용히 바로잡는다(매장명·금액이 있는 것만).
+      await _autoRenameCompleted();
     }
     if((upload||scanned>0)&&downloadOk!==false)await dbxSyncUpload(); // 로컬 최신본 올리기
   }finally{
