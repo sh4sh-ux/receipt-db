@@ -95,6 +95,15 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.14` — **'전체 내역' 분석 패널 확장.** ① 카테고리 색을 **밝은 파스텔 팔레트**로 교체
+  (`CAT_COLORS` 한 곳, 앱 전체 동일 색). ② **모든 기간(이번 달·올해·전체·범위) 동일 리치 패널**
+  통합(`renderLedgerPanel`) — 기간 변경 시 요약·추이·도넛·카테고리가 함께 갱신. ③ 기간 UI를
+  `[이번 달][올해][전체][📅 범위]`로 정리(임의 과거 월/연도는 범위로). ④ **날짜 범위 직접 선택(신규)**:
+  `_ledgerTimeFilter={type:'range',from,to}` + `_statsPeriodReceipts` 확장 + 달력 팝오버(시작/종료/초기화/적용).
+  ⑤ **카테고리 정렬 드롭다운**(`_ledgerCatSort`: 금액 높은/낮은/이름). 금액순=비율순이라 비율순은 두지 않음.
+  ⑥ 추이 막대 sky blue, 기간별 일/월 granularity 자동. 전역 Primary·이름/로고/버전·저장·검색·Dropbox·
+  아이콘 자산 불변. 변경: `CAT_COLORS`·`_ledgerFilterPillsHtml`·`_statsPeriodReceipts`·신규 `renderLedgerPanel`
+  /`_ledgerTrend`·renderDetail 가계부 분기. `_enhanceStats`는 미사용이 됨(삭제하지 않고 남김).
 - `v3.13` — **'전체 내역' 데스크톱 분석 레이아웃 개선(그 화면에만).** ① 상단 요약 타일 4개
   (총 지출·영수증·가장 많이 쓴 카테고리·가장 많이 간 곳) — 전부 현재 데이터 계산(하드코딩 없음).
   ② 기간 세그먼트 필(전체·연도·월) + 세부 선택 드롭다운은 기존 `#ledgerFilterSel` 로직 재사용.

@@ -777,6 +777,27 @@ svg{display:block;flex-shrink:0;}
 .lp-seg button{border:0;background:none;color:var(--label2);font:inherit;font-size:12.5px;font-weight:600;padding:6px 14px;border-radius:7px;cursor:pointer;transition:background .12s,color .12s;}
 .lp-seg button:hover{color:var(--label);}
 .lp-seg button.on{background:var(--blue);color:#fff;}
+.lp-seg button.lp-cal{display:inline-flex;align-items:center;justify-content:center;padding:6px 9px;}
+.lp-seg button.lp-cal svg{display:block;}
+/* 기간 범위 칩 + 직접 선택 팝오버 */
+.lp-range-chip{font-size:12px;font-weight:600;color:var(--blue-txt);background:var(--blue-bg);border-radius:7px;padding:5px 10px;font-variant-numeric:tabular-nums;}
+.lp-cal-wrap{position:relative;}
+.lp-range-pop{position:absolute;right:0;top:calc(100% + 8px);z-index:45;width:230px;background:var(--card);border:1px solid var(--sep2);border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,.10);padding:14px;text-align:left;}
+.lp-range-pop[hidden]{display:none;}
+.lp-range-title{font-size:12px;font-weight:700;color:var(--label2);margin-bottom:10px;}
+.lp-range-field{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--label2);margin-bottom:8px;}
+.lp-range-field input{border:1px solid var(--sep2);border-radius:7px;padding:6px 8px;font:inherit;font-size:12.5px;background:var(--bg);color:var(--label);}
+.lp-range-actions{display:flex;justify-content:space-between;gap:8px;margin-top:12px;}
+.lp-range-actions button{border-radius:7px;padding:7px 14px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid var(--sep2);}
+.lp-range-reset{background:var(--card);color:var(--label2);}
+.lp-range-apply{background:var(--blue);color:#fff;border-color:var(--blue);}
+/* 카테고리 정렬 드롭다운 */
+.hd-cat-tools{display:inline-flex;align-items:center;gap:10px;}
+.cat-sort-sel{border:1px solid var(--sep2);border-radius:7px;padding:4px 24px 4px 9px;font:inherit;font-size:11.5px;font-weight:600;color:var(--label);background:var(--card) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 7px center;appearance:none;-webkit-appearance:none;cursor:pointer;text-transform:none;letter-spacing:0;}
+.cat-sort-sel:focus{border-color:var(--blue);outline:none;}
+/* 지출 추이 sky blue 막대 */
+.spark-bar.sky.has{background:#60A5FA;opacity:.9;}
+.spark-bar.sky.has:hover{opacity:1;}
 /* 지출 추이 + 도넛 두 칼럼 래퍼 */
 .stats-two{display:flex;flex-direction:column;gap:22px;}
 /* 도넛 */
@@ -2262,7 +2283,13 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         ④ 카테고리별 지출 데스크톱 2열 + 기존 아이콘(getCatSvg) 재사용 + muted 색. ⑤ CSS conic-gradient
 //         도넛(상위 6 + 기타). 카테고리 색은 CAT_COLORS 한 곳에서 관리(getCatColor). 데이터·검색·아이콘·
 //         저장·모바일·이름/로고/버전 방식은 불변. 모바일은 새 요소가 자동 1열로 내려감. 새 의존성 없음.
-const APP_VERSION='v3.13';
+// v3.14 — '전체 내역' 분석 패널 확장. ① 카테고리 색을 밝은 파스텔 팔레트로 교체(CAT_COLORS 한 곳).
+//         ② 모든 기간(이번 달·올해·전체·범위) 동일 리치 패널 통합(renderLedgerPanel) — 기간 변경 시
+//         요약·추이·도넛·카테고리가 함께 갱신. ③ 기간 UI를 [이번 달][올해][전체][📅 범위]로 정리.
+//         ④ 날짜 범위 직접 선택(신규): _ledgerTimeFilter type:'range'{from,to} + 달력 팝오버.
+//         ⑤ 카테고리 정렬 드롭다운(금액 높은/낮은/이름). ⑥ 추이 막대 sky blue, 기간별 일/월 자동 전환.
+//         전역 Primary·이름/로고/버전·저장·검색·Dropbox·아이콘 자산 불변. 새 의존성 없음.
+const APP_VERSION='v3.14';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -2632,18 +2659,18 @@ function getCategoryLabel(cat){
   const normalized=normalizeCategory(cat);
   return CATEGORY_LABELS[normalized]||normalized||'';
 }
-// v3.13 — 카테고리 색상 단일 관리(muted palette). 키는 정규화된 저장 카테고리명.
+// v3.14 — 카테고리 색상 단일 관리(밝은 파스텔 팔레트). 키는 정규화된 저장 카테고리명.
 // 앱 전체에서 같은 카테고리는 항상 같은 색을 쓰도록 여기 한 곳에서만 정의한다.
 const CAT_COLORS={
-  '술집':'#5965D8','경조사':'#A36F9D','외식':'#C97855','쇼핑':'#627DAA',
-  '노래방':'#C99347','숙박':'#7C72A8','스파':'#6E9A83','카페':'#B9855B',
-  '교통':'#668A9D','선물':'#B97878','외주용역비':'#438C87','(미분류)':'#A8ADB7',
-  // 팔레트에 없던 기본 카테고리는 톤을 맞춘 muted 색으로 보완
-  '영화':'#8D7BB0','여행':'#5E8DA8','골프':'#7E9E63','운동':'#B27E52',
-  '케이크':'#C58BA6','병원·약국':'#6F94A6','기타':'#9AA0AB'
+  '외주용역비':'#34D399','쇼핑':'#60A5FA','술집':'#818CF8','외식':'#FB923C',
+  '숙박':'#A78BFA','경조사':'#E472B6','노래방':'#FBBF24','교통':'#38BDF8',
+  '선물':'#FCA5A5','카페':'#D6A679','(미분류)':'#CBD5E1','기타':'#CBD5E1',
+  // 팔레트에 없던 기본 카테고리도 같은 계열의 파스텔로 보완
+  '영화':'#C084FC','여행':'#22D3EE','골프':'#4ADE80','운동':'#F472B6',
+  '케이크':'#F0ABFC','스파':'#5EEAD4','병원·약국':'#7DD3FC'
 };
-// 위 목록에 없는 사용자 정의 카테고리는 이름 해시로 안정적인 muted 색을 배정
-const CAT_FALLBACK_COLORS=['#6E8FA6','#A88BB0','#8FA36E','#B08A6E','#6E9A8F','#9A8AA8','#A0949E'];
+// 위 목록에 없는 사용자 정의 카테고리는 이름 해시로 안정적인 파스텔 색을 배정
+const CAT_FALLBACK_COLORS=['#60A5FA','#A78BFA','#4ADE80','#FB923C','#38BDF8','#F472B6','#FBBF24'];
 function getCatColor(cat){
   const n=normalizeCategory(cat)||cat||'(미분류)';
   if(CAT_COLORS[n])return CAT_COLORS[n];
@@ -5311,6 +5338,155 @@ function renderAllSummaryHtml(recs){
   return summaryHtml+twoHtml+_catBarsHtml(cats)+yearHtml;
 }
 
+// v3.14 — 전체 내역 통합 분석 패널(모든 기간: 이번 달/올해/전체/범위 동일 레이아웃).
+// 선택 기간의 recs만 받아 요약·추이·도넛·카테고리(2열·정렬)를 한 번에 렌더한다.
+function _ledgerTrend(recs){
+  const t=_ledgerTimeFilter.type;
+  let mode='month';
+  if(t==='month')mode='day';
+  else if(t==='range'){
+    const {from,to}=_ledgerTimeFilter;
+    if(from&&to){const dd=(new Date(to)-new Date(from))/86400000;mode=dd<=62?'day':'month';}
+  }
+  if(mode==='day'){
+    // 일별 버킷
+    let start,end;
+    if(t==='month'){start=viewMonth+'-01';end=viewMonth+'-'+String(daysInMonth(viewMonth)).padStart(2,'0');}
+    else {start=_ledgerTimeFilter.from;end=_ledgerTimeFilter.to;}
+    const map=new Map();
+    for(const r of recs){const d=r.date||'';if(d)map.set(d,(map.get(d)||0)+(r.total||0));}
+    const bars=[];const s=new Date(start),e=new Date(end);
+    for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1)){
+      const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      bars.push({lbl:`${d.getMonth()+1}월 ${d.getDate()}일`,amt:map.get(key)||0});
+    }
+    const ax=bars.length?[bars[0].lbl,bars[Math.floor(bars.length/2)].lbl,bars[bars.length-1].lbl]:['','',''];
+    return {bars,axis:ax,note:'일별'};
+  }
+  // 월별 버킷
+  const map=new Map();
+  for(const r of recs){const d=r.date||'';if(d)map.set(d.slice(0,7),(map.get(d.slice(0,7))||0)+(r.total||0));}
+  let yms=[];
+  if(t==='year'){for(let m=1;m<=12;m++)yms.push(`${_ledgerTimeFilter.value}-${String(m).padStart(2,'0')}`);}
+  else if(t==='range'&&_ledgerTimeFilter.from&&_ledgerTimeFilter.to){
+    let cur=_ledgerTimeFilter.from.slice(0,7);const last=_ledgerTimeFilter.to.slice(0,7);let guard=0;
+    while(cur<=last&&guard++<240){yms.push(cur);cur=ymOffset(cur,1);}
+  } else { // all
+    const keys=[...map.keys()].sort();
+    if(keys.length){const lastYm=keys[keys.length-1];for(let i=11;i>=0;i--)yms.push(ymOffset(lastYm,-i));}
+  }
+  const bars=yms.map(ym=>({lbl:ymLabel(ym),amt:map.get(ym)||0,ym}));
+  const short=ym=>{const[y,m]=ym.split('-');return `${y.slice(2)}.${parseInt(m,10)}`;};
+  const ax=bars.length?[short(bars[0].ym),short(bars[Math.floor(bars.length/2)].ym),short(bars[bars.length-1].ym)]:['','',''];
+  return {bars,axis:ax,note:t==='all'?'최근 12개월':'월별'};
+}
+
+function renderLedgerPanel(recs){
+  const periodLabel=_ledgerPeriodLabel();
+  if(!recs.length) return `<div class="budget-empty-state">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h12a2 2 0 0 1 2 2v15l-3-2-3 2-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2z"/></svg>
+    <div><b>${escapeHtml(periodLabel)}</b>에 저장된 영수증이 없어요</div></div>`;
+
+  const total=recs.reduce((s,r)=>s+(r.total||0),0);
+  const count=recs.length;
+  const cats=_calcCats(recs);
+  const topCat=cats[0]||null;
+  const yset=[...new Set(recs.map(r=>(r.date||'').slice(0,4)).filter(Boolean))].sort();
+
+  const storeMap=new Map();
+  for(const r of recs){const s=(r.store||'').trim();if(!s)continue;storeMap.set(s,(storeMap.get(s)||0)+1);}
+  let topStore=null,topStoreN=0;
+  for(const [s,n] of storeMap){if(n>topStoreN){topStoreN=n;topStore=s;}}
+
+  const summaryHtml=`<div class="budget-section"><div class="summary-grid summary-grid--4">
+    <div class="sum-card">
+      <div class="sum-lbl">총 지출</div>
+      <div class="sum-val${total<0?' amt-neg':''}">${fmtMoney(total)}<span class="sum-unit">원</span></div>
+      <div class="sum-sub">${count}건 · ${escapeHtml(periodLabel)}</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-lbl">영수증</div>
+      <div class="sum-val">${count}<span class="sum-unit">건</span></div>
+      <div class="sum-sub">${yset.join(' · ')||'—'}</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-lbl">가장 많이 쓴 카테고리</div>
+      <div class="sum-val sm">${topCat?escapeHtml(getCategoryLabel(topCat.cat)):'—'}</div>
+      <div class="sum-sub">${topCat?`${topCat.pct.toFixed(1)}% · ${fmtMoney(topCat.amt)}원`:'데이터 없음'}</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-lbl">가장 많이 간 곳</div>
+      <div class="sum-val sm">${topStore?escapeHtml(topStore):'—'}</div>
+      <div class="sum-sub">${topStore?`${topStoreN}회 방문`:'데이터 없음'}</div>
+    </div>
+  </div></div>`;
+
+  // 지출 추이
+  const tr=_ledgerTrend(recs);
+  const peak=Math.max(0,...tr.bars.map(b=>b.amt));
+  const trendHtml=`<div class="budget-section">
+    <div class="budget-section-hd">지출 추이 <span class="hd-sub">${tr.note}</span></div>
+    <div class="sparkline">
+      <div class="spark-bars">
+        ${tr.bars.map(b=>{const h=peak>0?Math.max(2,Math.round(b.amt/peak*100)):2;return `<div class="spark-bar sky ${b.amt>0?'has':''}" style="height:${h}%;" data-lbl="${escapeHtml(b.lbl)}" data-amt="${fmtMoney(b.amt)}"></div>`;}).join('')}
+      </div>
+      <div class="spark-axis"><span>${escapeHtml(tr.axis[0])}</span><span>${escapeHtml(tr.axis[1])}</span><span>${escapeHtml(tr.axis[2])}</span></div>
+    </div>
+  </div>`;
+
+  // 카테고리 구성 도넛
+  let donutHtml='';
+  if(cats.length>=2){
+    const TOPN=6;const top=cats.slice(0,TOPN);
+    const restAmt=cats.slice(TOPN).reduce((s,c)=>s+c.amt,0);
+    const restPct=cats.slice(TOPN).reduce((s,c)=>s+c.pct,0);
+    const slices=top.map(c=>({label:getCategoryLabel(c.cat),color:getCatColor(c.cat),pct:c.pct}));
+    if(restAmt>0)slices.push({label:'기타',color:'#CBD5E1',pct:restPct});
+    let acc=0;const stops=slices.map(s=>{const a=acc;acc+=s.pct;return `${s.color} ${a.toFixed(2)}% ${acc.toFixed(2)}%`;}).join(',');
+    donutHtml=`<div class="budget-section">
+      <div class="budget-section-hd">카테고리 구성 <span class="hd-sub">상위 ${top.length}개${restAmt>0?' + 기타':''}</span></div>
+      <div class="donut-wrap">
+        <div class="donut" style="background:conic-gradient(${stops})" role="img" aria-label="카테고리 비율">
+          <div class="donut-hole"><b>${topCat?topCat.pct.toFixed(0)+'%':'—'}</b><span>${topCat?escapeHtml(getCategoryLabel(topCat.cat)):''}</span></div>
+        </div>
+        <ul class="donut-legend">
+          ${slices.map(s=>`<li class="dl-item"><span class="dl-dot" style="background:${s.color}"></span><span class="dl-name">${escapeHtml(s.label)}</span><span class="dl-pct">${s.pct.toFixed(1)}%</span></li>`).join('')}
+        </ul>
+      </div>
+    </div>`;
+  }
+  const twoHtml=`<div class="stats-two">${trendHtml}${donutHtml}</div>`;
+
+  // 카테고리별 지출 (2열 · 정렬 · 기존 아이콘 · 파스텔 색)
+  let rows=_resolveGroupedRows(cats);
+  if(_ledgerCatSort==='amount_asc')rows=rows.slice().sort((a,b)=>a.amt-b.amt);
+  else if(_ledgerCatSort==='name')rows=rows.slice().sort((a,b)=>getCategoryLabel(a.cat).localeCompare(getCategoryLabel(b.cat),'ko'));
+  else rows=rows.slice().sort((a,b)=>b.amt-a.amt);
+  const max=Math.max(1,...rows.map(r=>r.amt));
+  const catRow=(r,sub=false)=>{
+    const color=getCatColor(r.cat);
+    const active=_monthCatFilter===r.cat;
+    return `<button type="button" class="cat-bar-row stats-cat rich${sub?' cat-bar-sub':''}${active?' cat-active':''}" data-cat="${escapeHtml(r.cat)}" aria-pressed="${active}">
+      <span class="sc-ic" style="background:${color}1f;color:${color}">${getCatSvg(r.cat)}</span>
+      <span class="sc-body">
+        <span class="cat-bar-top"><span class="cat-bar-name">${escapeHtml(getCategoryLabel(r.cat))}</span><span class="cat-pct">${r.pct<0.1?'0.1% 미만':r.pct.toFixed(1)+'%'}</span><span class="cat-bar-amt">${fmtMoney(r.amt)}원</span><span aria-hidden="true">›</span></span>
+        <span class="cat-bar-track"><span class="cat-bar-fill" style="width:${r.amt/max*100}%;background:${color}"></span></span>
+      </span></button>`;
+  };
+  const sortSel=`<select class="cat-sort-sel" id="ledgerCatSort" aria-label="정렬">
+    <option value="amount_desc"${_ledgerCatSort==='amount_desc'?' selected':''}>금액 높은순</option>
+    <option value="amount_asc"${_ledgerCatSort==='amount_asc'?' selected':''}>금액 낮은순</option>
+    <option value="name"${_ledgerCatSort==='name'?' selected':''}>이름순</option>
+  </select>`;
+  const catHtml=`<div class="budget-section">
+    <div class="budget-section-hd">카테고리별 지출 <span class="hd-cat-tools"><span class="hd-sub">${cats.length}개</span>${sortSel}</span></div>
+    <div class="cat-bars stats-cat-grid">${rows.map(r=>catRow(r)+(r.isGroup?r.subRows.map(s=>catRow(s,true)).join(''):'')).join('')}</div>
+  </div>`;
+
+  const filterBar=_monthCatFilter?`<div class="cat-filter-bar"><span>${escapeHtml(periodLabel)} · ${escapeHtml(getCategoryLabel(_monthCatFilter))}</span><button type="button" id="catFilterClearBtn" class="cat-filter-bar-x" aria-label="카테고리 필터 해제">×</button></div>`:'';
+  return filterBar+summaryHtml+twoHtml+catHtml;
+}
+
 function renderYearSummaryHtml(year, recs){
   if(!recs.length) return `<div class="budget-empty-state">
     <div><b>${year}년</b>에 저장된 영수증이 없어요</div></div>`;
@@ -5655,6 +5831,9 @@ let _ledgerTimeFilter={type:'month'};
 // 월간 카테고리 필터 (카테고리 막대 클릭 시 사이드바 필터링)
 let _monthCatFilter=null;
 let _returnToStats=false;
+// v3.14 — 전체 내역 패널: 날짜 범위 직접 선택 상태 + 카테고리 정렬 상태
+let _ledgerRange={from:'',to:''};
+let _ledgerCatSort='amount_desc'; // amount_desc | amount_asc | name
 
 // Record navigation after click/change handlers finish, not intermediate renders.
 let _navigationTimer=null;
@@ -5764,49 +5943,54 @@ function _personFilterPillsHtml(allRecs, f){
   return `<div class="person-filter-wrap">${yearRow}${monthRow}</div>`;
 }
 
-// ── 가계부 우측 패널 시간 필터 pills ──
+// ── 가계부 우측 패널 시간 필터: 이번 달 · 올해 · 전체 · 📅 범위 ──
+// 이번 달=현재 월, 올해=현재 연도, 전체=전 기간, 📅=시작일~종료일 직접 선택(신규).
+// 임의의 과거 월/연도는 📅 범위로 지정한다(분기는 앱 미지원이라 제외).
 function _ledgerFilterPillsHtml(f){
-  const yearMap=new Map();
-  for(const r of receipts){
-    if(!r.date)continue;
-    const y=r.date.slice(0,4),m=r.date.slice(5,7);
-    if(!yearMap.has(y))yearMap.set(y,new Set());
-    yearMap.get(y).add(m);
-  }
-  const years=[...yearMap.keys()].sort().reverse();
-  if(!years.length)return '';
-
-  // 현재 선택 값
-  let selVal='all';
-  if(f.type==='year') selVal=`year:${f.value}`;
-  else if(f.type==='month') selVal=`month:${viewMonth}`;
-
-  let opts=`<option value="all"${selVal==='all'?' selected':''}>전체 기간</option>`;
-  for(const y of years){
-    const months=[...yearMap.get(y)].sort().reverse();
-    opts+=`<optgroup label="${y}년">`;
-    opts+=`<option value="year:${y}"${selVal===`year:${y}`?' selected':''}>${y}년 전체</option>`;
-    for(const m of months){
-      const ym=`${y}-${m}`;
-      opts+=`<option value="month:${ym}"${selVal===`month:${ym}`?' selected':''}>${y}년 ${parseInt(m,10)}월</option>`;
-    }
-    opts+=`</optgroup>`;
-  }
-  // 세그먼트 필(전체·연도·월) + 세부 선택(연도/월일 때만 노출). 분기는 앱 미지원이라 제외.
+  if(!receipts.length)return '';
   const t=f.type;
+  const now=new Date();
+  const curYm=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const isThisMonth=t==='month'&&viewMonth===curYm;
+  const isThisYear=t==='year'&&String(f.value)===String(now.getFullYear());
   const seg=`<div class="lp-seg" role="group" aria-label="기간 선택">
+    <button type="button" data-lp="month" class="${isThisMonth?'on':''}">이번 달</button>
+    <button type="button" data-lp="year" class="${isThisYear?'on':''}">올해</button>
     <button type="button" data-lp="all" class="${t==='all'?'on':''}">전체</button>
-    <button type="button" data-lp="year" class="${t==='year'?'on':''}">연도</button>
-    <button type="button" data-lp="month" class="${t==='month'?'on':''}">월</button>
+    <button type="button" data-lp="range" class="lp-cal${t==='range'?' on':''}" aria-label="기간 직접 선택" title="기간 직접 선택">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    </button>
   </div>`;
-  const sel=`<select class="ledger-filter-sel" id="ledgerFilterSel"${t==='all'?' hidden':''}>${opts}</select>`;
-  return `<div class="ledger-period">${seg}${sel}</div>`;
+  const chip=t==='range'?`<span class="lp-range-chip">${escapeHtml(_ledgerPeriodLabel())}</span>`:'';
+  const pop=`<div class="lp-range-pop" id="lpRangePop" hidden>
+    <div class="lp-range-title">기간 직접 선택</div>
+    <label class="lp-range-field"><span>시작일</span><input type="date" id="lpRangeFrom" value="${escapeHtml(_ledgerRange.from||'')}"></label>
+    <label class="lp-range-field"><span>종료일</span><input type="date" id="lpRangeTo" value="${escapeHtml(_ledgerRange.to||'')}"></label>
+    <div class="lp-range-actions"><button type="button" class="lp-range-reset" id="lpRangeReset">초기화</button><button type="button" class="lp-range-apply" id="lpRangeApply">적용</button></div>
+  </div>`;
+  return `<div class="ledger-period">${seg}${chip}<div class="lp-cal-wrap">${pop}</div></div>`;
 }
 
 function _statsPeriodReceipts(){
-  if(_ledgerTimeFilter.type==='all')return receipts;
-  const prefix=_ledgerTimeFilter.type==='year'?_ledgerTimeFilter.value+'-':viewMonth;
+  const t=_ledgerTimeFilter.type;
+  if(t==='all')return receipts;
+  if(t==='range'){
+    const {from,to}=_ledgerTimeFilter;
+    return receipts.filter(r=>{const d=r.date||'';return d&&(!from||d>=from)&&(!to||d<=to);});
+  }
+  const prefix=t==='year'?_ledgerTimeFilter.value+'-':viewMonth;
   return receipts.filter(r=>(r.date||'').startsWith(prefix));
+}
+// 현재 선택 기간의 사람이 읽는 라벨
+function _ledgerPeriodLabel(){
+  const t=_ledgerTimeFilter.type;
+  if(t==='all')return '전체 기간';
+  if(t==='year')return `${_ledgerTimeFilter.value}년`;
+  if(t==='range'){
+    const f=(_ledgerTimeFilter.from||'').replace(/-/g,'.'),g=(_ledgerTimeFilter.to||'').replace(/-/g,'.');
+    return f&&g?`${f} ~ ${g}`:(f?`${f} ~`:(g?`~ ${g}`:'기간 선택'));
+  }
+  return ymLabel(viewMonth);
 }
 
 function _enhanceStats(body){
@@ -5970,64 +6154,53 @@ async function renderDetail(){
         });
       });
     }else{
-      // ── 가계부 요약 화면 (시간 필터 pills 포함) ──
+      // ── 가계부 통합 분석 패널 (이번 달·올해·전체·범위 동일 레이아웃) ──
       const pillsHtml=_ledgerFilterPillsHtml(_ledgerTimeFilter);
-      if(_ledgerTimeFilter.type==='all'){
-        eye.textContent='Receipt DB';
-        title.textContent='전체 내역';
-        sub.textContent=`${receipts.length}건`;
-        body.innerHTML=pillsHtml+renderAllSummaryHtml(receipts);
-      }else if(_ledgerTimeFilter.type==='year'){
-        const yRecs=receipts.filter(r=>(r.date||'').startsWith(_ledgerTimeFilter.value+'-'));
-        eye.textContent='Receipt DB';
-        title.textContent=`${_ledgerTimeFilter.value}년 내역`;
-        sub.textContent=yRecs.length>0?`${yRecs.length}건`:'영수증 없음';
-        body.innerHTML=pillsHtml+renderYearSummaryHtml(_ledgerTimeFilter.value,yRecs);
-      }else{
-        eye.textContent='Receipt DB';
-        title.textContent=ymLabel(viewMonth);
-        sub.textContent='이번 달 지출 흐름과 카테고리를 요약합니다.';
-        body.innerHTML=pillsHtml+renderMonthSummaryHtml(viewMonth);
-        if(_isTouch) body.classList.add('mob-compact');
-      }
-      _enhanceStats(body);
+      const _ltype=_ledgerTimeFilter.type;
+      const _lrecs=_statsPeriodReceipts();
+      eye.textContent='Receipt DB';
+      title.textContent=_ltype==='all'?'전체 내역':_ltype==='range'?'기간 내역':_ltype==='year'?`${_ledgerTimeFilter.value}년 내역`:ymLabel(viewMonth);
+      sub.textContent=_lrecs.length?`${_lrecs.length}건 · ${_ledgerPeriodLabel()}`:'영수증 없음';
+      body.innerHTML=pillsHtml+renderLedgerPanel(_lrecs);
       _bindSectionToggles(body);
-      // 모바일 컴팩트 토글
-      const _mobBtn=body.querySelector('#mobExpandBtn');
-      if(_mobBtn){
-        _mobBtn.addEventListener('click',()=>{
-          const compact=body.classList.toggle('mob-compact');
-          _mobBtn.innerHTML=compact?'▾&ensp;자세히 보기':'▴&ensp;접기';
-        });
-      }
-      // 가계부 기간 세그먼트 필(전체·연도·월)
+      // 기간 세그먼트 필: 이번 달 · 올해 · 전체 · 📅 범위
       body.querySelectorAll('.lp-seg button[data-lp]').forEach(btn=>{
         btn.addEventListener('click',()=>{
           const lp=btn.dataset.lp;
-          if(lp===_ledgerTimeFilter.type)return;
-          // 데이터가 있는 최근 연/월을 기본값으로 잡는다.
-          const ymList=[...new Set(receipts.map(r=>(r.date||'').slice(0,7)).filter(Boolean))].sort();
-          const latestYm=ymList[ymList.length-1];
-          const latestYear=latestYm?latestYm.slice(0,4):String(new Date().getFullYear());
+          if(lp==='range'){
+            const pop=body.querySelector('#lpRangePop');
+            if(pop)pop.hidden=!pop.hidden;
+            return;
+          }
+          const now=new Date();
           if(lp==='all'){_ledgerTimeFilter={type:'all'};}
-          else if(lp==='year'){_ledgerTimeFilter={type:'year',value:latestYear};}
-          else if(lp==='month'){if(latestYm)viewMonth=latestYm;_ledgerTimeFilter={type:'month'};}
+          else if(lp==='year'){_ledgerTimeFilter={type:'year',value:String(now.getFullYear())};}
+          else if(lp==='month'){viewMonth=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;_ledgerTimeFilter={type:'month'};}
           _monthCatFilter=null;
           renderSide();renderDetail();
         });
       });
-      // 가계부 기간 드롭다운(연도/월 세부 선택) change
-      const _lfSel=body.querySelector('#ledgerFilterSel');
-      if(_lfSel){
-        _lfSel.addEventListener('change',()=>{
-          const v=_lfSel.value;
-          if(v==='all'){_ledgerTimeFilter={type:'all'};}
-          else if(v.startsWith('year:')){_ledgerTimeFilter={type:'year',value:v.slice(5)};}
-          else if(v.startsWith('month:')){viewMonth=v.slice(6);_ledgerTimeFilter={type:'month'};}
-          _monthCatFilter=null;
-          renderSide();renderDetail();
-        });
-      }
+      // 날짜 범위 직접 선택 팝오버
+      const _rApply=body.querySelector('#lpRangeApply');
+      if(_rApply)_rApply.addEventListener('click',()=>{
+        const from=body.querySelector('#lpRangeFrom')?.value||'';
+        const to=body.querySelector('#lpRangeTo')?.value||'';
+        if(!from&&!to){toast('시작일 또는 종료일을 선택해주세요',{type:'error'});return;}
+        let f=from,g=to; if(f&&g&&f>g){const t2=f;f=g;g=t2;}
+        _ledgerRange={from:f,to:g};
+        _ledgerTimeFilter={type:'range',from:f,to:g};
+        _monthCatFilter=null;
+        renderSide();renderDetail();
+      });
+      const _rReset=body.querySelector('#lpRangeReset');
+      if(_rReset)_rReset.addEventListener('click',()=>{
+        const fi=body.querySelector('#lpRangeFrom'),ti=body.querySelector('#lpRangeTo');
+        if(fi)fi.value=''; if(ti)ti.value='';
+        _ledgerRange={from:'',to:''};
+      });
+      // 카테고리 정렬 드롭다운
+      const _sortSel=body.querySelector('#ledgerCatSort');
+      if(_sortSel)_sortSel.addEventListener('change',()=>{_ledgerCatSort=_sortSel.value;renderDetail();});
       // 카테고리 막대 클릭 → 사이드바 필터
       body.querySelectorAll('.cat-bar-row[data-cat]').forEach(row=>{
         row.addEventListener('click',()=>{
