@@ -778,8 +778,8 @@ svg{display:block;flex-shrink:0;}
 .spark-bar.has{background:var(--blue);opacity:.85;}
 .spark-bar.today{background:var(--green);opacity:1;}
 .spark-bar:hover{opacity:1;}
-.spark-bar[data-day]:hover::after{content:attr(data-day)'일 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:rgba(28,30,33,.82);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:.5px solid rgba(255,255,255,.1);color:#fff;font-size:9px;font-weight:600;line-height:1;letter-spacing:-.1px;padding:3px 6px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:5;box-shadow:0 5px 15px rgba(0,0,0,.22);}
-.spark-bar[data-lbl]:hover::after{content:attr(data-lbl)' 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:rgba(28,30,33,.82);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:.5px solid rgba(255,255,255,.1);color:#fff;font-size:9px;font-weight:600;line-height:1;letter-spacing:-.1px;padding:3px 6px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:5;box-shadow:0 5px 15px rgba(0,0,0,.22);}
+.spark-bar[data-day]:hover::after{content:attr(data-day)'일 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:rgba(28,30,33,.82);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:.5px solid rgba(255,255,255,.1);color:#fff;font-size:9px;font-weight:500;line-height:1;letter-spacing:0;padding:3px 6px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:5;box-shadow:0 5px 15px rgba(0,0,0,.22);}
+.spark-bar[data-lbl]:hover::after{content:attr(data-lbl)' 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:rgba(28,30,33,.82);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:.5px solid rgba(255,255,255,.1);color:#fff;font-size:9px;font-weight:500;line-height:1;letter-spacing:0;padding:3px 6px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:5;box-shadow:0 5px 15px rgba(0,0,0,.22);}
 .spark-axis{display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--label3);}
 /* v1.45 — 고급 옵션 토글 */
 /* v1.46 — 경조사 컨텍스트 필드 */
@@ -2205,7 +2205,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         더 부드러운 그림자로 나브바 툴팁과 같은 결의 유리질 배경을 줬다. 글자는 흰색 유지(가독성).
 // v3.09 — 지출 막대 툴팁을 한 단계 더 작게. 글씨 10→9px, 여백 4/7→3/6px, 모서리 7→6px,
 //         그림자도 살짝 낮춰(0 5px 15px) 카드와 값을 더 컴팩트하게. 배경·색은 v3.08 그대로.
-const APP_VERSION='v3.09';
+// v3.10 — 지출 막대 툴팁 글씨를 더 얇게. font-weight 600→500, 자간 -.1px→0으로 작은 글씨의
+//         가독성을 지키면서 더 산뜻하게. 크기·배경·색은 v3.09 그대로.
+const APP_VERSION='v3.10';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
