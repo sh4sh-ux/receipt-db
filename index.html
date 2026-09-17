@@ -773,6 +773,12 @@ svg{display:block;flex-shrink:0;}
 .sum-sub{margin-top:5px;font-size:11.5px;color:var(--label3);font-variant-numeric:tabular-nums;}
 /* 기간 세그먼트 필 + 세부 선택 */
 .ledger-period{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;padding-bottom:14px;}
+/* v3.17 — 기간 컨트롤을 제목 행 우측으로 이동(헤더 슬롯). 제목=현재 기간 / 우측=기간 변경 */
+.ledger-period-slot{display:flex;align-items:center;flex-shrink:0;}
+.ledger-period-slot:empty{display:none;}
+.ledger-period-slot .ledger-period{padding-bottom:0;flex-wrap:nowrap;}
+/* v3.17 — 카테고리별 지출과 참석자별 분담 사이 구분 강화(약 24px) */
+.stats-redesign .ledger-part-section{margin-top:24px;}
 .lp-seg{display:inline-flex;background:var(--fill2);border:1px solid var(--sep);border-radius:9px;padding:2px;gap:2px;}
 .lp-seg button{border:0;background:none;color:var(--label2);font:inherit;font-size:12.5px;font-weight:600;padding:6px 14px;border-radius:7px;cursor:pointer;transition:background .12s,color .12s;}
 .lp-seg button:hover{color:var(--label);}
@@ -827,12 +833,13 @@ svg{display:block;flex-shrink:0;}
 .spark-bar.has{background:var(--blue);opacity:.85;}
 .spark-bar.today{background:var(--green);opacity:1;}
 .spark-bar:hover{opacity:1;}
-.spark-bar[data-day]:hover::after{content:attr(data-day)'일 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:rgba(28,30,33,.82);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:.5px solid rgba(255,255,255,.1);color:#fff;font-size:8px;font-weight:500;line-height:1;letter-spacing:0;padding:3px 6px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:5;box-shadow:0 5px 15px rgba(0,0,0,.22);}
-.spark-bar[data-lbl]:hover::after{content:attr(data-lbl)' 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:rgba(28,30,33,.82);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:.5px solid rgba(255,255,255,.1);color:#fff;font-size:8px;font-weight:500;line-height:1;letter-spacing:0;padding:3px 6px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:5;box-shadow:0 5px 15px rgba(0,0,0,.22);}
-.spark-axis{display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--label3);}
-/* v3.11 — 툴팁 글씨: 데스크탑 8px(위), 모바일은 3x 화면이라 7px도 또렷 */
+/* v3.17 — 추이 툴팁 가독성: 두 줄(날짜/금액), 12px, 넉넉한 padding·line-height */
+.spark-bar[data-day]:hover::after{content:attr(data-day)'일\A'attr(data-amt)'원';position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(24,26,29,.92);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:.5px solid rgba(255,255,255,.12);color:#fff;font-size:12px;font-weight:650;line-height:1.45;letter-spacing:0;padding:7px 10px;border-radius:8px;white-space:pre;text-align:center;pointer-events:none;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.24);}
+.spark-bar[data-lbl]:hover::after{content:attr(data-lbl)'\A'attr(data-amt)'원';position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(24,26,29,.92);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:.5px solid rgba(255,255,255,.12);color:#fff;font-size:12px;font-weight:650;line-height:1.45;letter-spacing:0;padding:7px 10px;border-radius:8px;white-space:pre;text-align:center;pointer-events:none;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.24);}
+.spark-axis{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;color:var(--label2);}
+/* v3.17 — 모바일 툴팁도 읽히게(고해상도) 11px */
 @media(max-width:780px){
-  .spark-bar[data-day]:hover::after,.spark-bar[data-lbl]:hover::after{font-size:7px;}
+  .spark-bar[data-day]:hover::after,.spark-bar[data-lbl]:hover::after{font-size:11px;padding:6px 9px;}
 }
 /* v1.45 — 고급 옵션 토글 */
 /* v1.46 — 경조사 컨텍스트 필드 */
@@ -1254,17 +1261,20 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .stats-redesign .stats-cat-grid .stats-cat:nth-last-child(2):nth-child(odd){border-bottom:0;}
   .stats-redesign .stats-two{flex-direction:row;align-items:stretch;}
   .stats-redesign .stats-two>*{flex:1;min-width:0;margin-bottom:0;}
-  /* v3.16 — 데스크톱 타이포그래피/여백 정제(밀도 있고 세련된 데이터 UI). 기능·색·차트·레이아웃 불변 */
-  .stats-redesign .sum-lbl{font-size:12px;font-weight:600;text-transform:none;letter-spacing:.1px;margin-bottom:6px;}
-  .stats-redesign .sum-val{font-size:28px;letter-spacing:-.4px;line-height:1.1;}
-  .stats-redesign .sum-val .sum-unit{font-size:13px;}
-  .stats-redesign .sum-val.sm{font-size:26px;line-height:1.15;}
-  .stats-redesign .sum-sub{font-size:12px;font-weight:400;margin-top:5px;}
+  /* v3.16/v3.17 — 데스크톱 타이포그래피/여백 정제(밀도 있고 세련된 데이터 UI). 기능·색·차트·레이아웃 불변 */
+  .stats-redesign .sum-lbl{font-size:11.5px;font-weight:600;text-transform:none;letter-spacing:.1px;margin-bottom:6px;}
+  .stats-redesign .sum-val{font-size:25px;letter-spacing:-.4px;line-height:1.1;}
+  .stats-redesign .sum-val .sum-unit{font-size:12px;}
+  .stats-redesign .sum-sub{font-size:11.5px;font-weight:500;margin-top:5px;}
+  /* 최다 카테고리명은 총액보다, 최다 방문처명은 그보다 더 작게(위계) */
+  .stats-redesign .summary-grid--4 .sum-card:nth-child(3) .sum-val.sm{font-size:23px;font-weight:700;line-height:1.15;}
+  .stats-redesign .summary-grid--4 .sum-card:nth-child(4) .sum-val.sm{font-size:21px;font-weight:650;line-height:1.15;}
   .stats-redesign .sum-card{padding:14px 16px;}
   .stats-redesign .summary-grid{padding-bottom:14px;}
   .stats-redesign .budget-section{margin-bottom:20px;}
   .stats-redesign .budget-section-hd{font-size:14px;font-weight:650;text-transform:none;letter-spacing:0;color:var(--label);margin-bottom:11px;}
   .stats-redesign .budget-section-hd .hd-sub{font-size:12px;font-weight:500;}
+  .stats-redesign .spark-axis{font-size:12px;}
   .stats-redesign .stats-cat{padding:11px 10px;}
   .stats-redesign .stats-cat .cat-bar-name{font-size:14px;font-weight:600;}
   .stats-redesign .stats-cat .cat-pct{font-size:13px;font-weight:500;}
@@ -1432,6 +1442,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
             <div class="main-title" id="mainTitle">—</div>
             <div class="main-sub" id="mainSub">왼쪽 목록에서 영수증을 선택하면 상세 정보가 표시됩니다.</div>
           </div>
+          <div class="ledger-period-slot" id="ledgerPeriodSlot"></div>
           <div class="main-actions" id="detailActions" style="display:none;">
             <button class="detail-header-btn dutch" id="sendDutchPayBtn" type="button" title="이 영수증을 더치페이로 보내기">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10M7 12h7M7 17h4"/><path d="m16 15 3 3 3-3M19 18V9"/></svg>
@@ -2311,7 +2322,13 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 // v3.16 — 전체 내역 패널 타이포그래피/여백 정제(데스크톱). 금액 28px·이름 26px·라벨 12px·보조 12px·
 //         섹션제목 14px·카테고리명 14px 등 고정 scale로 통일하고 세로 여백을 약간 줄여 더 밀도 있게.
 //         이름은 총액보다 작게(26<28) + ellipsis 유지(동적 축소 없음). 기능·색·아이콘·차트·레이아웃 불변.
-const APP_VERSION='v3.16';
+// v3.17 — 미세 정제(타이포/여백/기간 컨트롤 위치/차트 텍스트). ① Summary 한 단계 더 축소: 금액 25/700,
+//         카테고리명 23/700, 방문처명 21/650(총액보다 약하게), 라벨 11.5/600, 보조 11.5/500. ellipsis 유지.
+//         ② 기간 컨트롤([이번 달][올해][전체][📅])을 제목 행 우측 헤더 슬롯(#ledgerPeriodSlot)으로 이동
+//         (데스크톱). 모바일은 헤더 높이 보호로 기존처럼 본문 상단. 필터/계산 로직 불변, 위치만 이동.
+//         ③ 지출 추이 텍스트 가독성: 축 11→12px·색 진하게(label2), 툴팁 두 줄(날짜/금액) 12px·패딩·행간 확대.
+//         ④ 카테고리별↔참석자별 분담 사이 간격 24px. 데이터·색·아이콘·차트·레이아웃·모바일 불변.
+const APP_VERSION='v3.17';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5516,7 +5533,7 @@ function renderLedgerPanel(recs){
     const pparts=_participantSplit(recs);
     if(pparts.length){
       const maxPP=Math.max(...pparts.map(p=>p.amt));
-      partHtml=`<div class="budget-section">
+      partHtml=`<div class="budget-section ledger-part-section">
         ${_sectionToggleHtml('참석자별 분담',`${pparts.length}명 · 1/N 균등 배분`,'month_participant',false)}
         <div class="section-body closed">
           <div class="cat-bars" style="padding-top:8px;">
@@ -6098,6 +6115,9 @@ async function renderDetail(){
   const body=document.getElementById('detailBody');
   body.classList.toggle('stats-redesign',!selectedId&&!searchQuery);
   body.classList.remove('mob-compact');
+  // v3.17 — 기간 컨트롤은 헤더 슬롯(제목 행 우측)에 렌더. 기본은 비워두고 가계부 분기에서만 채운다.
+  const periodSlot=document.getElementById('ledgerPeriodSlot');
+  if(periodSlot)periodSlot.innerHTML='';
   const eye=document.getElementById('mainEye');
   const detailVersion=eye.parentElement?.querySelector('.js-app-version');
   if(detailVersion)detailVersion.hidden=!!selectedId;
@@ -6214,14 +6234,18 @@ async function renderDetail(){
       eye.textContent='Receipt DB';
       title.textContent=_ltype==='all'?'전체 내역':_ltype==='range'?'기간 내역':_ltype==='year'?`${_ledgerTimeFilter.value}년 내역`:ymLabel(viewMonth);
       sub.textContent=_lrecs.length?`${_lrecs.length}건 · ${_ledgerPeriodLabel()}`:'영수증 없음';
-      body.innerHTML=pillsHtml+renderLedgerPanel(_lrecs);
+      // 데스크톱: 기간 컨트롤을 제목 행 우측 헤더 슬롯에. 모바일: 헤더 높이 보호 위해 기존처럼 본문 상단에.
+      const _useSlot=!!periodSlot&&!_isMobileLayout();
+      if(_useSlot){body.innerHTML=renderLedgerPanel(_lrecs);periodSlot.innerHTML=pillsHtml;}
+      else{if(periodSlot)periodSlot.innerHTML='';body.innerHTML=pillsHtml+renderLedgerPanel(_lrecs);}
+      const pslot=_useSlot?periodSlot:body;
       _bindSectionToggles(body);
       // 기간 세그먼트 필: 이번 달 · 올해 · 전체 · 📅 범위
-      body.querySelectorAll('.lp-seg button[data-lp]').forEach(btn=>{
+      pslot.querySelectorAll('.lp-seg button[data-lp]').forEach(btn=>{
         btn.addEventListener('click',()=>{
           const lp=btn.dataset.lp;
           if(lp==='range'){
-            const pop=body.querySelector('#lpRangePop');
+            const pop=pslot.querySelector('#lpRangePop');
             if(pop)pop.hidden=!pop.hidden;
             return;
           }
@@ -6234,10 +6258,10 @@ async function renderDetail(){
         });
       });
       // 날짜 범위 직접 선택 팝오버
-      const _rApply=body.querySelector('#lpRangeApply');
+      const _rApply=pslot.querySelector('#lpRangeApply');
       if(_rApply)_rApply.addEventListener('click',()=>{
-        const from=body.querySelector('#lpRangeFrom')?.value||'';
-        const to=body.querySelector('#lpRangeTo')?.value||'';
+        const from=pslot.querySelector('#lpRangeFrom')?.value||'';
+        const to=pslot.querySelector('#lpRangeTo')?.value||'';
         if(!from&&!to){toast('시작일 또는 종료일을 선택해주세요',{type:'error'});return;}
         let f=from,g=to; if(f&&g&&f>g){const t2=f;f=g;g=t2;}
         _ledgerRange={from:f,to:g};
@@ -6245,9 +6269,9 @@ async function renderDetail(){
         _monthCatFilter=null;
         renderSide();renderDetail();
       });
-      const _rReset=body.querySelector('#lpRangeReset');
+      const _rReset=pslot.querySelector('#lpRangeReset');
       if(_rReset)_rReset.addEventListener('click',()=>{
-        const fi=body.querySelector('#lpRangeFrom'),ti=body.querySelector('#lpRangeTo');
+        const fi=pslot.querySelector('#lpRangeFrom'),ti=pslot.querySelector('#lpRangeTo');
         if(fi)fi.value=''; if(ti)ti.value='';
         _ledgerRange={from:'',to:''};
       });
