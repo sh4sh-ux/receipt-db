@@ -402,7 +402,6 @@ svg{display:block;flex-shrink:0;}
   .cat-picker-option{min-height:58px;gap:4px;padding:3px 0;font-size:9.5px;border-radius:9px;}
   .cat-picker-option svg{width:22px;height:22px;}
   .cat-picker-option .cat-icon-mask{width:32px;height:32px;}
-  .detail-cat-popover{left:calc(-100% - 10px);width:calc(200% + 10px);}
 }
 
 /* ── 미리보기 (편집 가능한 폼) ── */
@@ -511,7 +510,7 @@ svg{display:block;flex-shrink:0;}
 .detail-cat-trigger-label{flex:1;font-size:14px;font-weight:600;}
 .detail-cat-trigger-chevron{color:var(--label3);transition:transform .15s;}
 .detail-cat-trigger[aria-expanded="true"] .detail-cat-trigger-chevron{transform:rotate(180deg);}
-.detail-cat-popover{top:calc(100% + 8px);left:calc(-100% - 8px);width:calc(200% + 8px);}
+.detail-cat-popover{top:calc(100% + 8px);left:calc(-100% - 11px);width:calc(200% + 12px);}
 @media(max-width:780px){
   .detail-info-card{grid-template-columns:1fr;gap:16px;padding:14px;}
   .detail-info-photo{width:100%;height:auto;min-height:160px;position:static;margin-top:0;}
@@ -2213,7 +2212,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         가독성을 지키면서 더 산뜻하게. 크기·배경·색은 v3.09 그대로.
 // v3.11 — 지출 막대 툴팁 글씨 크기를 뷰포트별로. 데스크탑(2x) 9→8px, 모바일(≤780px, 3x) 7px.
 //         모바일은 고해상도라 7px도 또렷하고, 데스크탑은 8px이 획이 흐려지지 않는 하한. 나머지 동일.
-const APP_VERSION='v3.11';
+// v3.12 — 상세 화면 카테고리 팝오버(.detail-cat-popover) 왼쪽 정렬. 오른쪽 칸 기준 left/width가
+//         그리드 gap(8px)과 안 맞아 왼쪽 3px·오른쪽 1px 어긋났다(팝오버가 살짝 오른쪽으로 밀림).
+//         left -8→-11px, width +8→+12px로 그리드 폭에 딱 맞춤(측정: 좌우 여백 0px). 겹쳐 죽어 있던
+//         ≤520px용 -10px 규칙은 제거(뒤의 기본 규칙에 늘 덮여 무효였음). 데스크탑·모바일 확인.
+const APP_VERSION='v3.12';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
