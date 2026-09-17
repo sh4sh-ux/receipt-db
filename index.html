@@ -1254,6 +1254,21 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .stats-redesign .stats-cat-grid .stats-cat:nth-last-child(2):nth-child(odd){border-bottom:0;}
   .stats-redesign .stats-two{flex-direction:row;align-items:stretch;}
   .stats-redesign .stats-two>*{flex:1;min-width:0;margin-bottom:0;}
+  /* v3.16 — 데스크톱 타이포그래피/여백 정제(밀도 있고 세련된 데이터 UI). 기능·색·차트·레이아웃 불변 */
+  .stats-redesign .sum-lbl{font-size:12px;font-weight:600;text-transform:none;letter-spacing:.1px;margin-bottom:6px;}
+  .stats-redesign .sum-val{font-size:28px;letter-spacing:-.4px;line-height:1.1;}
+  .stats-redesign .sum-val .sum-unit{font-size:13px;}
+  .stats-redesign .sum-val.sm{font-size:26px;line-height:1.15;}
+  .stats-redesign .sum-sub{font-size:12px;font-weight:400;margin-top:5px;}
+  .stats-redesign .sum-card{padding:14px 16px;}
+  .stats-redesign .summary-grid{padding-bottom:14px;}
+  .stats-redesign .budget-section{margin-bottom:20px;}
+  .stats-redesign .budget-section-hd{font-size:14px;font-weight:650;text-transform:none;letter-spacing:0;color:var(--label);margin-bottom:11px;}
+  .stats-redesign .budget-section-hd .hd-sub{font-size:12px;font-weight:500;}
+  .stats-redesign .stats-cat{padding:11px 10px;}
+  .stats-redesign .stats-cat .cat-bar-name{font-size:14px;font-weight:600;}
+  .stats-redesign .stats-cat .cat-pct{font-size:13px;font-weight:500;}
+  .stats-redesign .stats-cat .cat-bar-amt{font-size:14px;font-weight:650;}
 }
 @media(max-width:1100px){.stats-split{grid-template-columns:1fr;}.stats-category-panel{border-left:0;border-bottom:1px solid var(--sep);padding:0 0 24px;grid-row:1;}}
 @media(max-width:780px){
@@ -2289,7 +2304,14 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         ④ 날짜 범위 직접 선택(신규): _ledgerTimeFilter type:'range'{from,to} + 달력 팝오버.
 //         ⑤ 카테고리 정렬 드롭다운(금액 높은/낮은/이름). ⑥ 추이 막대 sky blue, 기간별 일/월 자동 전환.
 //         전역 Primary·이름/로고/버전·저장·검색·Dropbox·아이콘 자산 불변. 새 의존성 없음.
-const APP_VERSION='v3.14';
+// v3.15 — 통합 패널에 '참석자별 분담'을 정식 섹션으로 되살림(기존 기능 유지). 계산부를
+//         _participantSplit(list)로 분리(출력 동일, participantBreakdown은 이를 호출)해 선택 기간
+//         recs로 재계산 — 이번 달·올해·전체·범위 모두 동일하게 갱신. 참석자 데이터가 없으면 섹션 숨김.
+//         계산 로직은 월 종속이 아니라(영수증별 1/N 합산) 안전히 재사용. '이달 패턴 인사이트'는 제외.
+// v3.16 — 전체 내역 패널 타이포그래피/여백 정제(데스크톱). 금액 28px·이름 26px·라벨 12px·보조 12px·
+//         섹션제목 14px·카테고리명 14px 등 고정 scale로 통일하고 세로 여백을 약간 줄여 더 밀도 있게.
+//         이름은 총액보다 작게(26<28) + ellipsis 유지(동적 축소 없음). 기능·색·아이콘·차트·레이아웃 불변.
+const APP_VERSION='v3.16';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -2873,9 +2895,10 @@ function categoryBreakdown(ym){
     .sort((a,b)=>b.amt-a.amt);
   return {breakdown:arr,total};
 }
-// 참석자별 분담 집계 — 참석자 N명이면 총액을 1/N씩 배분
-function participantBreakdown(ym){
-  const list=receiptsForMonth(ym);
+// 참석자별 분담 집계 — 참석자 N명이면 총액을 1/N씩 배분.
+// 계산 로직은 임의의 영수증 집합에 동일하게 적용된다(월 특유 로직 없음).
+// v3.16: 계산부를 _participantSplit(list)로 분리해 월간/연간/전체/범위에서 그대로 재사용.
+function _participantSplit(list){
   const m=new Map();
   for(const r of list){
     const pp=r.participants||[];
@@ -2887,6 +2910,9 @@ function participantBreakdown(ym){
     .map(([name,amt])=>({name,amt}))
     .filter(x=>x.amt>0)
     .sort((a,b)=>b.amt-a.amt);
+}
+function participantBreakdown(ym){
+  return _participantSplit(receiptsForMonth(ym));
 }
 function dailySparkline(ym){
   const days=daysInMonth(ym);
@@ -5483,8 +5509,35 @@ function renderLedgerPanel(recs){
     <div class="cat-bars stats-cat-grid">${rows.map(r=>catRow(r)+(r.isGroup?r.subRows.map(s=>catRow(s,true)).join(''):'')).join('')}</div>
   </div>`;
 
+  // 참석자별 분담 — 기존 계산(_participantSplit) 그대로 재사용. 선택 기간 recs로 재계산되어
+  // 이번 달·올해·전체·범위 모두 동일하게 갱신된다. 참석자 데이터가 없으면 섹션을 표시하지 않는다.
+  let partHtml='';
+  {
+    const pparts=_participantSplit(recs);
+    if(pparts.length){
+      const maxPP=Math.max(...pparts.map(p=>p.amt));
+      partHtml=`<div class="budget-section">
+        ${_sectionToggleHtml('참석자별 분담',`${pparts.length}명 · 1/N 균등 배분`,'month_participant',false)}
+        <div class="section-body closed">
+          <div class="cat-bars" style="padding-top:8px;">
+            ${pparts.map((p,i)=>{
+              const w=maxPP>0?(p.amt/maxPP*100):0;
+              return `<div class="cat-bar-row" data-rank="${Math.min(i,4)}">
+                <div class="cat-bar-top">
+                  <span class="cat-bar-name">${escapeHtml(p.name)}</span>
+                  <span class="cat-bar-amt">${fmtMoney(p.amt)}원</span>
+                </div>
+                <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;background:var(--blue);"></div></div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>`;
+    }
+  }
+
   const filterBar=_monthCatFilter?`<div class="cat-filter-bar"><span>${escapeHtml(periodLabel)} · ${escapeHtml(getCategoryLabel(_monthCatFilter))}</span><button type="button" id="catFilterClearBtn" class="cat-filter-bar-x" aria-label="카테고리 필터 해제">×</button></div>`:'';
-  return filterBar+summaryHtml+twoHtml+catHtml;
+  return filterBar+summaryHtml+twoHtml+catHtml+partHtml;
 }
 
 function renderYearSummaryHtml(year, recs){
