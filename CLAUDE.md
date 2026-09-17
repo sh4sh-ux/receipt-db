@@ -95,6 +95,15 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.13` — **'전체 내역' 데스크톱 분석 레이아웃 개선(그 화면에만).** ① 상단 요약 타일 4개
+  (총 지출·영수증·가장 많이 쓴 카테고리·가장 많이 간 곳) — 전부 현재 데이터 계산(하드코딩 없음).
+  ② 기간 세그먼트 필(전체·연도·월) + 세부 선택 드롭다운은 기존 `#ledgerFilterSel` 로직 재사용.
+  **분기(Quarter)는 앱이 미지원이라 제외.** ③ 월별 지출 추이(최근 12개월)는 기존 `.spark-bars`
+  재사용(새 차트 라이브러리 없음). ④ 카테고리별 지출 데스크톱 2열 + **기존 아이콘 `getCatSvg`
+  그대로 재사용** + muted 색. ⑤ 순수 CSS `conic-gradient` 도넛(상위 6 + 기타). 카테고리 색은
+  `CAT_COLORS`/`getCatColor` 한 곳에서 관리(앱 전체 동일 색 기반). 저장 구조·검색·Dropbox·아이콘
+  자산·모바일·이름/로고/버전 방식 불변. 새 요소는 `@media(min-width:781px)` 밖에서 자동 1열.
+  변경은 `renderAllSummaryHtml`·`_enhanceStats`(all-view 분기)·`_ledgerFilterPillsHtml` 한정.
 - `v3.12` — **상세 화면 카테고리 팝오버 왼쪽 정렬.** `.detail-cat-popover`가 오른쪽 칸 기준으로
   `left:calc(-100% - 8px)`/`width:calc(200% + 8px)`였는데 그리드 gap(8px)과 어긋나 왼쪽 3px·
   오른쪽 1px 밀려 있었다(팝오버가 필드보다 살짝 오른쪽으로 들어감). `left -11px`/`width +12px`로

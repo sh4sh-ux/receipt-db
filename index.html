@@ -768,6 +768,35 @@ svg{display:block;flex-shrink:0;}
 .cat-bar-sub .cat-bar-fill{opacity:.65;}
 .cat-bar-group-label{font-size:10px;color:var(--label3);font-weight:500;margin-left:5px;vertical-align:middle;}
 
+/* v3.13 — 전체 내역 분석 레이아웃 (데스크톱 개선) */
+.sum-val.sm{font-size:17px;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sum-sub{margin-top:5px;font-size:11.5px;color:var(--label3);font-variant-numeric:tabular-nums;}
+/* 기간 세그먼트 필 + 세부 선택 */
+.ledger-period{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;padding-bottom:14px;}
+.lp-seg{display:inline-flex;background:var(--fill2);border:1px solid var(--sep);border-radius:9px;padding:2px;gap:2px;}
+.lp-seg button{border:0;background:none;color:var(--label2);font:inherit;font-size:12.5px;font-weight:600;padding:6px 14px;border-radius:7px;cursor:pointer;transition:background .12s,color .12s;}
+.lp-seg button:hover{color:var(--label);}
+.lp-seg button.on{background:var(--blue);color:#fff;}
+/* 지출 추이 + 도넛 두 칼럼 래퍼 */
+.stats-two{display:flex;flex-direction:column;gap:22px;}
+/* 도넛 */
+.donut-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.donut{position:relative;width:132px;height:132px;border-radius:50%;flex:0 0 132px;}
+.donut-hole{position:absolute;inset:26px;background:var(--card);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.donut-hole b{font-size:15px;font-weight:700;letter-spacing:-.3px;line-height:1.1;font-variant-numeric:tabular-nums;}
+.donut-hole span{font-size:10.5px;color:var(--label3);margin-top:2px;}
+.donut-legend{flex:1;min-width:160px;display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none;}
+.dl-item{display:grid;grid-template-columns:10px minmax(0,1fr) auto;align-items:center;gap:8px;font-size:12.5px;}
+.dl-dot{width:10px;height:10px;border-radius:3px;}
+.dl-name{color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dl-pct{color:var(--label3);font-variant-numeric:tabular-nums;}
+/* 카테고리별(아이콘 + muted 색) */
+.stats-cat.rich{display:grid;grid-template-columns:34px minmax(0,1fr);gap:11px;align-items:center;}
+.sc-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:0 0 34px;}
+.sc-ic .cat-icon-mask{width:20px;height:20px;}
+.sc-ic .cat-icon-svg{width:19px;height:19px;}
+.sc-body{min-width:0;}
+
 .sparkline{background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:32px 16px 14px;}
 .spark-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;font-size:11px;}
 .spark-peak{color:var(--label3);}
@@ -1198,15 +1227,25 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .stats-cat:focus-visible,.stats-receipt:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 @media(min-width:781px){
+  /* v3.13 — 전체 내역: 요약 4열, 카테고리 2열, 추이+도넛 2열 */
+  .stats-redesign .summary-grid--4{grid-template-columns:repeat(4,1fr);}
+  .stats-redesign .stats-cat-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:26px;}
+  .stats-redesign .stats-cat-grid .stats-cat:nth-last-child(2):nth-child(odd){border-bottom:0;}
+  .stats-redesign .stats-two{flex-direction:row;align-items:stretch;}
+  .stats-redesign .stats-two>*{flex:1;min-width:0;margin-bottom:0;}
 }
 @media(max-width:1100px){.stats-split{grid-template-columns:1fr;}.stats-category-panel{border-left:0;border-bottom:1px solid var(--sep);padding:0 0 24px;grid-row:1;}}
 @media(max-width:780px){
   .stats-redesign .summary-grid{grid-template-columns:1fr;gap:0;}
+  .stats-redesign .summary-grid--4 .sum-card:nth-child(3){grid-column:auto;}
   .stats-redesign .sum-card{padding:12px 0;border-right:0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
-  .stats-redesign .sum-card .sum-diff{flex-basis:100%;}
+  .stats-redesign .sum-card .sum-diff,.stats-redesign .sum-card .sum-sub{flex-basis:100%;}
   .stats-redesign .sum-val{font-size:23px;}
+  .stats-redesign .sum-val.sm{font-size:19px;}
   .stats-cat{min-height:58px;padding:12px 4px;}
   .stats-cat .cat-bar-top{grid-template-columns:minmax(0,1fr) 42px auto 10px;gap:6px;font-size:12px;}
+  .stats-cat.rich{grid-template-columns:30px minmax(0,1fr);gap:9px;padding:12px 4px;}
+  .stats-cat.rich .sc-ic{width:30px;height:30px;flex:0 0 30px;}
   .stats-redesign.mob-compact .budget-section{display:block;}
 }
 </style>
@@ -2216,7 +2255,14 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         그리드 gap(8px)과 안 맞아 왼쪽 3px·오른쪽 1px 어긋났다(팝오버가 살짝 오른쪽으로 밀림).
 //         left -8→-11px, width +8→+12px로 그리드 폭에 딱 맞춤(측정: 좌우 여백 0px). 겹쳐 죽어 있던
 //         ≤520px용 -10px 규칙은 제거(뒤의 기본 규칙에 늘 덮여 무효였음). 데스크탑·모바일 확인.
-const APP_VERSION='v3.12';
+// v3.13 — '전체 내역' 데스크톱 UI를 분석형 레이아웃으로 개선(그 화면에만 적용). ① 상단 요약 타일 4개
+//         (총 지출·영수증·최다 카테고리·최다 방문처) — 모두 현재 데이터에서 계산, 하드코딩 없음.
+//         ② 기간 세그먼트 필(전체·연도·월; 분기는 앱 미지원이라 제외) + 세부 선택 드롭다운은 기존 로직
+//         재사용. ③ 월별 지출 추이(최근 12개월) 막대는 기존 .spark-bars 재사용(새 라이브러리 없음).
+//         ④ 카테고리별 지출 데스크톱 2열 + 기존 아이콘(getCatSvg) 재사용 + muted 색. ⑤ CSS conic-gradient
+//         도넛(상위 6 + 기타). 카테고리 색은 CAT_COLORS 한 곳에서 관리(getCatColor). 데이터·검색·아이콘·
+//         저장·모바일·이름/로고/버전 방식은 불변. 모바일은 새 요소가 자동 1열로 내려감. 새 의존성 없음.
+const APP_VERSION='v3.13';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -2585,6 +2631,26 @@ const CATEGORY_LABELS={'케이크':'기념','영화':'문화','병원·약국':'
 function getCategoryLabel(cat){
   const normalized=normalizeCategory(cat);
   return CATEGORY_LABELS[normalized]||normalized||'';
+}
+// v3.13 — 카테고리 색상 단일 관리(muted palette). 키는 정규화된 저장 카테고리명.
+// 앱 전체에서 같은 카테고리는 항상 같은 색을 쓰도록 여기 한 곳에서만 정의한다.
+const CAT_COLORS={
+  '술집':'#5965D8','경조사':'#A36F9D','외식':'#C97855','쇼핑':'#627DAA',
+  '노래방':'#C99347','숙박':'#7C72A8','스파':'#6E9A83','카페':'#B9855B',
+  '교통':'#668A9D','선물':'#B97878','외주용역비':'#438C87','(미분류)':'#A8ADB7',
+  // 팔레트에 없던 기본 카테고리는 톤을 맞춘 muted 색으로 보완
+  '영화':'#8D7BB0','여행':'#5E8DA8','골프':'#7E9E63','운동':'#B27E52',
+  '케이크':'#C58BA6','병원·약국':'#6F94A6','기타':'#9AA0AB'
+};
+// 위 목록에 없는 사용자 정의 카테고리는 이름 해시로 안정적인 muted 색을 배정
+const CAT_FALLBACK_COLORS=['#6E8FA6','#A88BB0','#8FA36E','#B08A6E','#6E9A8F','#9A8AA8','#A0949E'];
+function getCatColor(cat){
+  const n=normalizeCategory(cat)||cat||'(미분류)';
+  if(CAT_COLORS[n])return CAT_COLORS[n];
+  const lbl=getCategoryLabel(n);
+  if(CAT_COLORS[lbl])return CAT_COLORS[lbl];
+  let h=0; for(let i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))>>>0;
+  return CAT_FALLBACK_COLORS[h%CAT_FALLBACK_COLORS.length];
 }
 function getCatMask(path,cat){
   const scale=CAT_ICON_SCALES[cat]||1;
@@ -5143,26 +5209,88 @@ function renderAllSummaryHtml(recs){
   for(const r of recs){ if(!r.date)continue; const y=r.date.slice(0,4); yearMap.set(y,(yearMap.get(y)||0)+(r.total||0)); }
   const years=[...yearMap.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
   const yearCount=years.length;
-  const yearAvg=yearCount>0?Math.round(total/yearCount):0;
 
-  const summaryHtml=`<div class="budget-section"><div class="summary-grid">
+  const cats=_calcCats(recs);
+  const topCat=cats[0]||null;
+
+  // 가장 많이 간 곳 (매장명 방문 빈도)
+  const storeMap=new Map();
+  for(const r of recs){ const s=(r.store||'').trim(); if(!s)continue; storeMap.set(s,(storeMap.get(s)||0)+1); }
+  let topStore=null,topStoreN=0;
+  for(const [s,n] of storeMap){ if(n>topStoreN){topStoreN=n;topStore=s;} }
+
+  // ── 상단 요약 타일 4개 (실제 데이터) ──
+  const summaryHtml=`<div class="budget-section"><div class="summary-grid summary-grid--4">
     <div class="sum-card">
       <div class="sum-lbl">총 지출</div>
       <div class="sum-val${total<0?' amt-neg':''}">${fmtMoney(total)}<span class="sum-unit">원</span></div>
-      <div class="sum-diff"><span>${yearCount}년치 누계</span></div>
+      <div class="sum-sub">${count}건 · ${yearCount}년치</div>
     </div>
     <div class="sum-card">
       <div class="sum-lbl">영수증</div>
-      <div class="sum-val">${count}<span class="sum-unit">장</span></div>
-      <div class="sum-diff"><span>${years.map(([y])=>y).join(' · ')}</span></div>
+      <div class="sum-val">${count}<span class="sum-unit">건</span></div>
+      <div class="sum-sub">${years.map(([y])=>y).join(' · ')||'—'}</div>
     </div>
     <div class="sum-card">
-      <div class="sum-lbl">연평균</div>
-      <div class="sum-val">${fmtMoney(yearAvg)}<span class="sum-unit">원</span></div>
-      <div class="sum-diff"><span>${yearCount}년 평균</span></div>
+      <div class="sum-lbl">가장 많이 쓴 카테고리</div>
+      <div class="sum-val sm">${topCat?escapeHtml(getCategoryLabel(topCat.cat)):'—'}</div>
+      <div class="sum-sub">${topCat?`${topCat.pct.toFixed(1)}% · ${fmtMoney(topCat.amt)}원`:'데이터 없음'}</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-lbl">가장 많이 간 곳</div>
+      <div class="sum-val sm">${topStore?escapeHtml(topStore):'—'}</div>
+      <div class="sum-sub">${topStore?`${topStoreN}회 방문`:'데이터 없음'}</div>
     </div>
   </div></div>`;
 
+  // ── 월별 지출 추이 (최근 12개월) ──
+  const mMap=new Map();
+  for(const r of recs){ if(!r.date)continue; const ym=r.date.slice(0,7); mMap.set(ym,(mMap.get(ym)||0)+(r.total||0)); }
+  const ymKeys=[...mMap.keys()].sort();
+  let trendHtml='';
+  if(ymKeys.length){
+    const lastYm=ymKeys[ymKeys.length-1];
+    const trend=[];
+    for(let i=11;i>=0;i--){ const ym=ymOffset(lastYm,-i); trend.push({ym,amt:mMap.get(ym)||0}); }
+    const peak=Math.max(...trend.map(t=>t.amt));
+    const shortLbl=ym=>{const[y,m]=ym.split('-');return `${y.slice(2)}.${parseInt(m,10)}`;};
+    trendHtml=`<div class="budget-section">
+      <div class="budget-section-hd">월별 지출 추이 <span class="hd-sub">최근 12개월</span></div>
+      <div class="sparkline">
+        <div class="spark-bars">
+          ${trend.map(t=>{const h=peak>0?Math.max(2,Math.round(t.amt/peak*100)):2;return `<div class="spark-bar ${t.amt>0?'has':''}" style="height:${h}%;" data-lbl="${ymLabel(t.ym)}" data-amt="${fmtMoney(t.amt)}"></div>`;}).join('')}
+        </div>
+        <div class="spark-axis"><span>${shortLbl(trend[0].ym)}</span><span>${shortLbl(trend[6].ym)}</span><span>${shortLbl(trend[11].ym)}</span></div>
+      </div>
+    </div>`;
+  }
+
+  // ── 카테고리 구성 도넛 (상위 6 + 기타) ──
+  let donutHtml='';
+  if(cats.length>=2){
+    const TOPN=6;
+    const top=cats.slice(0,TOPN);
+    const restAmt=cats.slice(TOPN).reduce((s,c)=>s+c.amt,0);
+    const restPct=cats.slice(TOPN).reduce((s,c)=>s+c.pct,0);
+    const slices=top.map(c=>({label:getCategoryLabel(c.cat),color:getCatColor(c.cat),pct:c.pct,amt:c.amt}));
+    if(restAmt>0)slices.push({label:'기타',color:'#C4C8CF',pct:restPct,amt:restAmt});
+    let acc=0; const stops=slices.map(s=>{const a=acc;acc+=s.pct;return `${s.color} ${a.toFixed(2)}% ${acc.toFixed(2)}%`;}).join(',');
+    donutHtml=`<div class="budget-section">
+      <div class="budget-section-hd">카테고리 구성 <span class="hd-sub">상위 ${top.length}개${restAmt>0?' + 기타':''}</span></div>
+      <div class="donut-wrap">
+        <div class="donut" style="background:conic-gradient(${stops})" role="img" aria-label="카테고리 비율">
+          <div class="donut-hole"><b>${topCat?topCat.pct.toFixed(0)+'%':'—'}</b><span>${topCat?escapeHtml(getCategoryLabel(topCat.cat)):''}</span></div>
+        </div>
+        <ul class="donut-legend">
+          ${slices.map(s=>`<li class="dl-item"><span class="dl-dot" style="background:${s.color}"></span><span class="dl-name">${escapeHtml(s.label)}</span><span class="dl-pct">${s.pct.toFixed(1)}%</span></li>`).join('')}
+        </ul>
+      </div>
+    </div>`;
+  }
+
+  const twoHtml=(trendHtml||donutHtml)?`<div class="stats-two">${trendHtml}${donutHtml}</div>`:'';
+
+  // ── 연도별 지출 (기존 · 2년 이상일 때만) ──
   let yearHtml='';
   if(years.length>1){
     const maxY=Math.max(...years.map(([,v])=>v));
@@ -5180,7 +5308,7 @@ function renderAllSummaryHtml(recs){
     </div>`;
   }
 
-  return summaryHtml+yearHtml+_catBarsHtml(_calcCats(recs));
+  return summaryHtml+twoHtml+_catBarsHtml(cats)+yearHtml;
 }
 
 function renderYearSummaryHtml(year, recs){
@@ -5664,7 +5792,15 @@ function _ledgerFilterPillsHtml(f){
     }
     opts+=`</optgroup>`;
   }
-  return `<div class="ledger-filter-row"><select class="ledger-filter-sel" id="ledgerFilterSel">${opts}</select></div>`;
+  // 세그먼트 필(전체·연도·월) + 세부 선택(연도/월일 때만 노출). 분기는 앱 미지원이라 제외.
+  const t=f.type;
+  const seg=`<div class="lp-seg" role="group" aria-label="기간 선택">
+    <button type="button" data-lp="all" class="${t==='all'?'on':''}">전체</button>
+    <button type="button" data-lp="year" class="${t==='year'?'on':''}">연도</button>
+    <button type="button" data-lp="month" class="${t==='month'?'on':''}">월</button>
+  </div>`;
+  const sel=`<select class="ledger-filter-sel" id="ledgerFilterSel"${t==='all'?' hidden':''}>${opts}</select>`;
+  return `<div class="ledger-period">${seg}${sel}</div>`;
 }
 
 function _statsPeriodReceipts(){
@@ -5684,14 +5820,21 @@ function _enhanceStats(body){
   if(categorySection){
     const rows=_resolveGroupedRows(cats);
     const max=Math.max(1,...rows.map(r=>r.amt));
-    const rowHtml=(r,sub=false)=>`<button type="button" class="cat-bar-row stats-cat${sub?' cat-bar-sub':''}${_monthCatFilter===r.cat?' cat-active':''}" data-cat="${escapeHtml(r.cat)}" aria-pressed="${_monthCatFilter===r.cat}">
-      <span class="cat-bar-top"><span class="cat-bar-name">${escapeHtml(getCategoryLabel(r.cat))}</span><span class="cat-pct">${r.pct<0.1?'0.1% 미만':r.pct.toFixed(1)+'%'}</span><span class="cat-bar-amt">${fmtMoney(r.amt)}원</span><span aria-hidden="true">›</span></span>
-      <span class="cat-bar-track"><span class="cat-bar-fill" style="width:${r.amt/max*100}%"></span></span></button>`;
-    categorySection.innerHTML=`<div class="budget-section-hd">카테고리별 지출 <span class="hd-sub">${cats.length}개 · 금액순</span></div><div class="cat-bars">${rows.map(r=>rowHtml(r)+(r.isGroup?r.subRows.map(s=>rowHtml(s,true)).join(''):'')).join('')}</div>`;
-  }
-  if(_ledgerTimeFilter.type==='all'){
-    const cards=body.querySelectorAll('.sum-card');
-    if(cards[2])cards[2].innerHTML=`<div class="sum-lbl">건당 평균</div><div class="sum-val">${fmtMoney(recs.length?Math.round(total/recs.length):0)}<span class="sum-unit">원</span></div><div class="sum-diff">${recs.length}건 기준</div>`;
+    // 전체 내역에서만 아이콘 + muted 색 + 2열. 다른 기간(월/연도)은 기존 그대로 유지.
+    const rich=_ledgerTimeFilter.type==='all';
+    const rowHtml=(r,sub=false)=>{
+      const color=getCatColor(r.cat);
+      const cls=`cat-bar-row stats-cat${rich?' rich':''}${sub?' cat-bar-sub':''}${_monthCatFilter===r.cat?' cat-active':''}`;
+      const inner=`<span class="cat-bar-top"><span class="cat-bar-name">${escapeHtml(getCategoryLabel(r.cat))}</span><span class="cat-pct">${r.pct<0.1?'0.1% 미만':r.pct.toFixed(1)+'%'}</span><span class="cat-bar-amt">${fmtMoney(r.amt)}원</span><span aria-hidden="true">›</span></span>
+        <span class="cat-bar-track"><span class="cat-bar-fill" style="width:${r.amt/max*100}%${rich?';background:'+color:''}"></span></span>`;
+      if(rich){
+        return `<button type="button" class="${cls}" data-cat="${escapeHtml(r.cat)}" aria-pressed="${_monthCatFilter===r.cat}">
+          <span class="sc-ic" style="background:${color}1f;color:${color}">${getCatSvg(r.cat)}</span>
+          <span class="sc-body">${inner}</span></button>`;
+      }
+      return `<button type="button" class="${cls}" data-cat="${escapeHtml(r.cat)}" aria-pressed="${_monthCatFilter===r.cat}">${inner}</button>`;
+    };
+    categorySection.innerHTML=`<div class="budget-section-hd">카테고리별 지출 <span class="hd-sub">${cats.length}개 · 금액순</span></div><div class="cat-bars${rich?' stats-cat-grid':''}">${rows.map(r=>rowHtml(r)+(r.isGroup?r.subRows.map(s=>rowHtml(s,true)).join(''):'')).join('')}</div>`;
   }
   if(_monthCatFilter){
     const filter=document.createElement('div');
@@ -5857,7 +6000,23 @@ async function renderDetail(){
           _mobBtn.innerHTML=compact?'▾&ensp;자세히 보기':'▴&ensp;접기';
         });
       }
-      // 가계부 기간 드롭다운 change
+      // 가계부 기간 세그먼트 필(전체·연도·월)
+      body.querySelectorAll('.lp-seg button[data-lp]').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          const lp=btn.dataset.lp;
+          if(lp===_ledgerTimeFilter.type)return;
+          // 데이터가 있는 최근 연/월을 기본값으로 잡는다.
+          const ymList=[...new Set(receipts.map(r=>(r.date||'').slice(0,7)).filter(Boolean))].sort();
+          const latestYm=ymList[ymList.length-1];
+          const latestYear=latestYm?latestYm.slice(0,4):String(new Date().getFullYear());
+          if(lp==='all'){_ledgerTimeFilter={type:'all'};}
+          else if(lp==='year'){_ledgerTimeFilter={type:'year',value:latestYear};}
+          else if(lp==='month'){if(latestYm)viewMonth=latestYm;_ledgerTimeFilter={type:'month'};}
+          _monthCatFilter=null;
+          renderSide();renderDetail();
+        });
+      });
+      // 가계부 기간 드롭다운(연도/월 세부 선택) change
       const _lfSel=body.querySelector('#ledgerFilterSel');
       if(_lfSel){
         _lfSel.addEventListener('change',()=>{
