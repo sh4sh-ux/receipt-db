@@ -769,7 +769,7 @@ svg{display:block;flex-shrink:0;}
 .cat-bar-sub .cat-bar-fill{opacity:.65;}
 .cat-bar-group-label{font-size:10px;color:var(--label3);font-weight:500;margin-left:5px;vertical-align:middle;}
 
-.sparkline{background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:14px 16px;}
+.sparkline{background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:32px 16px 14px;}
 .spark-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;font-size:11px;}
 .spark-peak{color:var(--label3);}
 .spark-peak b{color:var(--label);font-weight:600;}
@@ -778,8 +778,8 @@ svg{display:block;flex-shrink:0;}
 .spark-bar.has{background:var(--blue);opacity:.85;}
 .spark-bar.today{background:var(--green);opacity:1;}
 .spark-bar:hover{opacity:1;}
-.spark-bar[data-day]:hover::after{content:attr(data-day)'일 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#2d3033;color:var(--label);font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:5;}
-.spark-bar[data-lbl]:hover::after{content:attr(data-lbl)' 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#2d3033;color:var(--label);font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:5;}
+.spark-bar[data-day]:hover::after{content:attr(data-day)'일 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#2d3033;color:#fff;font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.16);}
+.spark-bar[data-lbl]:hover::after{content:attr(data-lbl)' 'attr(data-amt)'원';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#2d3033;color:#fff;font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.16);}
 .spark-axis{display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--label3);}
 /* v1.45 — 고급 옵션 토글 */
 /* v1.46 — 경조사 컨텍스트 필드 */
@@ -2194,7 +2194,13 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //         으로 분리해, 영수증 저장 때와 동기화 때 확인창 없이 자동으로 새 이름(260912_영수증(금액)_매장명)
 //         으로 바로잡는다. 저장 시 완료본을 먼저 채택해 scanPath를 확보하므로 보관본 사본도 안 생긴다.
 //         맥 스크립트의 자동 이름짓기는 repo 밖이라 손대지 않는다 — 앱이 채운 정보로 대신 정리한다.
-const APP_VERSION='v3.06';
+// v3.07 — 일별/월별 지출 막대(sparkline) 호버 툴팁이 라이트 모드에서 안 보이고 위가 잘리던 것 수정.
+//         ① 색: 배경이 고정 #2d3033(항상 어두움)인데 글자가 var(--label)이라 라이트에서 검은 글씨+
+//         어두운 배경으로 묻혔다(v2.60과 같은 함정) → 글자를 고정 #fff로. ② 잘림: 툴팁이 막대 위
+//         (bottom:100%+4px)에 뜨는데 sparkline이 .section-body{overflow:hidden} 안이고 위 여백이
+//         14/8px뿐이라 최고 막대의 툴팁 윗부분이 잘렸다 → .sparkline 위 여백을 툴팁이 들어갈 만큼
+//         확보(연간 막대의 인라인 padding-top:8px도 제거). 데스크탑·모바일 공통 CSS라 양쪽 다 적용.
+const APP_VERSION='v3.07';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5196,11 +5202,11 @@ function renderYearSummaryHtml(year, recs){
   const monthHtml=`<div class="budget-section">
     ${_sectionToggleHtml('월별 지출',peakM>0?`최고 ${MNAMES[peakIdx]}: ${fmtMoney(peakM)}원`:null,'year_month_'+year,true)}
     <div class="section-body open">
-      <div class="sparkline" style="padding-top:8px;">
+      <div class="sparkline">
         <div class="spark-bars">
           ${mArr.map((amt,i)=>{
             const h=peakM>0?Math.max(2,Math.round(amt/peakM*100)):2;
-            return `<div class="spark-bar ${amt>0?'has':''}" style="height:${h}%;" data-day="${i+1}" data-amt="${fmtMoney(amt)}원"></div>`;
+            return `<div class="spark-bar ${amt>0?'has':''}" style="height:${h}%;" data-lbl="${i+1}월" data-amt="${fmtMoney(amt)}"></div>`;
           }).join('')}
         </div>
         <div class="spark-axis"><span>1월</span><span>6월</span><span>12월</span></div>
