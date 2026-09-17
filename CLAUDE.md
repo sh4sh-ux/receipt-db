@@ -95,6 +95,34 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.16` — **전체 내역 패널 타이포그래피/여백 정제(데스크톱).** 홍보용 대시보드 느낌을 줄이고
+  업무용 데이터 UI로. 고정 scale: 금액 28px/700 · 최다 카테고리·방문처 이름 26px/700(총액보다 작게)
+  · 라벨 12px/600 · 보조 12px · 섹션제목 14px/650 · 카테고리명 14px/600 · 비율 13px · 금액 14px/650.
+  세로 여백 약간 축소. 이름은 **ellipsis 유지, 동적 축소 없음**(hover/title로 전체 확인). `@media(min-width:781px)`
+  범위(데스크톱)로 한정 — 모바일·기능·색·아이콘·차트·레이아웃 불변.
+- `v3.15` — **통합 패널에 '참석자별 분담'을 정식 섹션으로 되살림(모든 기간).** v3.14 통합에서 빠졌던
+  기존 기능 복원. 계산부를 `_participantSplit(list)`로 분리(출력 동일 — `participantBreakdown(ym)`은
+  이제 `_participantSplit(receiptsForMonth(ym))`)해 **선택 기간 recs로 재계산** → 이번 달·올해·전체·
+  범위 모두 동일하게 갱신, 참석자 데이터 없으면 섹션 숨김. 계산 로직은 월 종속이 아님(영수증별 1/N
+  합산이라 임의 기간에 의미 동일)이라 변경 없이 안전 재사용. '이달 패턴 인사이트'는 제외.
+- `v3.14` — **'전체 내역' 분석 패널 확장.** ① 카테고리 색을 **밝은 파스텔 팔레트**로 교체
+  (`CAT_COLORS` 한 곳, 앱 전체 동일 색). ② **모든 기간(이번 달·올해·전체·범위) 동일 리치 패널**
+  통합(`renderLedgerPanel`) — 기간 변경 시 요약·추이·도넛·카테고리가 함께 갱신. ③ 기간 UI를
+  `[이번 달][올해][전체][📅 범위]`로 정리(임의 과거 월/연도는 범위로). ④ **날짜 범위 직접 선택(신규)**:
+  `_ledgerTimeFilter={type:'range',from,to}` + `_statsPeriodReceipts` 확장 + 달력 팝오버(시작/종료/초기화/적용).
+  ⑤ **카테고리 정렬 드롭다운**(`_ledgerCatSort`: 금액 높은/낮은/이름). 금액순=비율순이라 비율순은 두지 않음.
+  ⑥ 추이 막대 sky blue, 기간별 일/월 granularity 자동. 전역 Primary·이름/로고/버전·저장·검색·Dropbox·
+  아이콘 자산 불변. 변경: `CAT_COLORS`·`_ledgerFilterPillsHtml`·`_statsPeriodReceipts`·신규 `renderLedgerPanel`
+  /`_ledgerTrend`·renderDetail 가계부 분기. `_enhanceStats`는 미사용이 됨(삭제하지 않고 남김).
+- `v3.13` — **'전체 내역' 데스크톱 분석 레이아웃 개선(그 화면에만).** ① 상단 요약 타일 4개
+  (총 지출·영수증·가장 많이 쓴 카테고리·가장 많이 간 곳) — 전부 현재 데이터 계산(하드코딩 없음).
+  ② 기간 세그먼트 필(전체·연도·월) + 세부 선택 드롭다운은 기존 `#ledgerFilterSel` 로직 재사용.
+  **분기(Quarter)는 앱이 미지원이라 제외.** ③ 월별 지출 추이(최근 12개월)는 기존 `.spark-bars`
+  재사용(새 차트 라이브러리 없음). ④ 카테고리별 지출 데스크톱 2열 + **기존 아이콘 `getCatSvg`
+  그대로 재사용** + muted 색. ⑤ 순수 CSS `conic-gradient` 도넛(상위 6 + 기타). 카테고리 색은
+  `CAT_COLORS`/`getCatColor` 한 곳에서 관리(앱 전체 동일 색 기반). 저장 구조·검색·Dropbox·아이콘
+  자산·모바일·이름/로고/버전 방식 불변. 새 요소는 `@media(min-width:781px)` 밖에서 자동 1열.
+  변경은 `renderAllSummaryHtml`·`_enhanceStats`(all-view 분기)·`_ledgerFilterPillsHtml` 한정.
 - `v3.12` — **상세 화면 카테고리 팝오버 왼쪽 정렬.** `.detail-cat-popover`가 오른쪽 칸 기준으로
   `left:calc(-100% - 8px)`/`width:calc(200% + 8px)`였는데 그리드 gap(8px)과 어긋나 왼쪽 3px·
   오른쪽 1px 밀려 있었다(팝오버가 필드보다 살짝 오른쪽으로 들어감). `left -11px`/`width +12px`로
