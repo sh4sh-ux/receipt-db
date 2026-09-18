@@ -72,6 +72,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   --label:#e4e6ec;
   --label2:#7c7f90;
   --label3:#4c4f60;
+  --sum-name:#A0A6B0;
   --sep:#222426;
   --sep2:#2a2d30;
   --fill:#252729;
@@ -100,6 +101,7 @@ html[data-theme="light"]{
   --label:#111;
   --label2:#666;
   --label3:#B0B0B8;
+  --sum-name:#4B5563;
   --sep:#EBEBED;
   --sep2:#D4D4D8;
   --fill:#F3F3F5;
@@ -126,6 +128,7 @@ html[data-theme="dark"]{
   --label:#F2F2F7;
   --label2:#AEAEB2;
   --label3:#636366;
+  --sum-name:#A0A6B0;
   --sep:#3A3A3C;
   --sep2:#48484A;
   --fill:#3A3A3C;
@@ -209,6 +212,19 @@ svg{display:block;flex-shrink:0;}
 
 .list-group{padding:8px 0 0;}
 .list-group-hd{padding:8px var(--pad-x) 4px;font-size:11px;font-weight:600;color:var(--label2);letter-spacing:.3px;text-transform:uppercase;}
+/* v3.22 — 검색창 아래 compact toolbar(현재 범위·건수 + 정렬) */
+.list-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px var(--pad-x) 8px;border-bottom:1px solid var(--sep);}
+.lt-info{font-size:12px;color:var(--label2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lt-info b{color:var(--label);font-weight:600;}
+.lt-sort{flex:0 0 auto;display:inline-flex;}
+#listSortSel{border:1px solid var(--sep2);border-radius:7px;padding:5px 26px 5px 10px;font:inherit;font-size:12px;font-weight:600;color:var(--label);background:var(--card) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 8px center;appearance:none;-webkit-appearance:none;cursor:pointer;}
+#listSortSel:focus{border-color:var(--blue);outline:none;}
+/* v3.22 — 날짜 그룹(작은 secondary 헤더). 큰 카드·강한 divider 없이 기존 밀도 유지 */
+.list-daygroup{padding:0;}
+.list-month-hd{padding:12px var(--pad-x) 2px;font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.2px;}
+.list-day-hd{padding:7px var(--pad-x) 3px;font-size:11.5px;font-weight:600;color:var(--label2);}
+/* v3.22 — 검색 매칭 이유(품목 등 목록에 안 보이는 필드가 매칭됐을 때) */
+.r-card-reason{font-size:11px;color:var(--label2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .r-card{padding:11px var(--pad-x);border-bottom:1px solid var(--sep);cursor:pointer;transition:background .12s;display:flex;align-items:flex-start;gap:10px;animation:rowIn .25s ease;touch-action:manipulation;}
 .r-card:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;background:var(--blue-bg);}
 @keyframes rowIn{from{opacity:0;transform:translateY(-3px);}to{opacity:1;transform:translateY(0);}}
@@ -811,19 +827,22 @@ svg{display:block;flex-shrink:0;}
 .spark-bar.sky.has:hover{opacity:1;}
 /* 지출 추이 + 도넛 두 칼럼 래퍼 */
 .stats-two{display:flex;flex-direction:column;gap:22px;}
-/* 도넛 (v3.19 — 도넛 왼쪽·범례 오른쪽을 한 그룹으로: nowrap + 좁은 간격) */
-.donut-wrap{display:flex;align-items:center;gap:18px;flex-wrap:nowrap;}
-.donut{position:relative;width:120px;height:120px;border-radius:50%;flex:0 0 120px;}
-.donut-hole{position:absolute;inset:24px;background:var(--card);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+/* 도넛 + 범례. v3.26 — 범례 우측 정렬 + 도넛은 (왼쪽 여분)=(도넛↔범례 여분)이 되도록 그 사이 정중앙.
+   flex의 auto 마진 2개로: [여분][도넛][여분][범례(우측 끝)] — 두 여분이 항상 같아진다. */
+.donut-wrap{display:flex;align-items:center;gap:0;flex-wrap:nowrap;}
+.donut{position:relative;width:110px;height:110px;border-radius:50%;flex:0 0 110px;margin-left:auto;}
+.donut-hole{position:absolute;inset:22px;background:var(--card);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
 .donut-hole b{font-size:15px;font-weight:700;letter-spacing:-.3px;line-height:1.1;font-variant-numeric:tabular-nums;}
 .donut-hole span{font-size:10.5px;color:var(--label3);margin-top:2px;}
-/* v3.21 — 범례를 그리드로: 이름 열(왼쪽 정렬)·% 열(오른쪽 정렬)을 붙여 한 쌍으로,
-   전체를 오른쪽으로 모아(justify-content:end) 도넛과 간격을 확보한다. */
-.donut-legend{flex:1;min-width:0;display:grid;grid-template-columns:10px minmax(0,auto) auto;column-gap:8px;row-gap:9px;justify-content:end;align-content:center;margin:0;padding:0;list-style:none;font-size:12.5px;}
+/* v3.22 — 범례: grid(이름 열 왼쪽정렬·% 열 정렬) + justify-content:start로 도넛 옆에 붙이고 오른쪽엔 여백을 둔다
+   (=%를 컨테이너 우측 끝까지 밀지 않음). 이름↔% 는 ~28px(column-gap 8 + dl-pct padding-left 20). 긴 이름은 ellipsis.
+   v3.23 — 7슬롯(상위 6 + 기타) 고정 높이 + 위에서부터 균등 간격(align-content:start, grid-auto-rows 고정).
+   3개만 있어도 7개일 때의 위쪽 3슬롯과 같은 위치에 오도록 한다. */
+.donut-legend{flex:0 1 auto;min-width:0;margin-left:auto;display:grid;grid-template-columns:10px minmax(0,auto) auto;column-gap:8px;justify-content:start;align-content:start;align-items:center;height:126px;grid-auto-rows:calc(126px/7);padding:0;list-style:none;font-size:12.5px;}
 .dl-item{display:contents;}
 .dl-dot{width:10px;height:10px;border-radius:3px;align-self:center;}
 .dl-name{min-width:0;text-align:left;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.dl-pct{text-align:right;padding-left:12px;color:var(--label3);font-variant-numeric:tabular-nums;}
+.dl-pct{text-align:right;padding-left:20px;color:var(--label3);font-variant-numeric:tabular-nums;}
 /* 카테고리별(아이콘 + muted 색) */
 .stats-cat.rich{display:grid;grid-template-columns:34px minmax(0,1fr);gap:11px;align-items:center;}
 .sc-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:0 0 34px;}
@@ -847,9 +866,9 @@ svg{display:block;flex-shrink:0;}
 /* v3.19 — 전체 내역 지출 추이 차트(Y축 눈금·점선 그리드·다중 X라벨·건수 툴팁). 전용 클래스라 다른 화면 sparkline과 독립 */
 .lp-trend{background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:16px 16px 12px;}
 .lp-plot{display:flex;gap:10px;}
-.lp-yaxis{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;justify-content:space-between;height:150px;text-align:right;font-size:11px;line-height:1;color:var(--label3);font-variant-numeric:tabular-nums;flex:0 0 auto;}
+.lp-yaxis{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;justify-content:space-between;height:176px;text-align:right;font-size:11px;line-height:1;color:var(--label3);font-variant-numeric:tabular-nums;flex:0 0 auto;}
 .lp-canvas-col{flex:1;min-width:0;display:flex;flex-direction:column;}
-.lp-canvas{position:relative;height:150px;}
+.lp-canvas{position:relative;height:176px;}
 .lp-grid{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;}
 .lp-grid span{display:block;height:0;border-top:1px dashed var(--sep);}
 .lp-bars{position:absolute;inset:0;display:flex;align-items:flex-end;gap:3px;}
@@ -857,14 +876,21 @@ svg{display:block;flex-shrink:0;}
 .lp-bar.has{background:#60A5FA;opacity:.92;}
 .lp-bar.has:hover{opacity:1;}
 .lp-xaxis{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--label2);font-variant-numeric:tabular-nums;}
-.lp-bar[data-lbl]:hover::after{content:attr(data-lbl)'\A'attr(data-amt)'원\A영수증 'attr(data-cnt)'건';position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(24,26,29,.92);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:.5px solid rgba(255,255,255,.12);color:#fff;font-size:12px;font-weight:600;line-height:1.5;letter-spacing:0;padding:8px 11px;border-radius:8px;white-space:pre;text-align:center;pointer-events:none;z-index:6;box-shadow:0 6px 18px rgba(0,0,0,.24);}
+/* v3.22 — 밝은 툴팁(흰 카드). 금액만 Bold+진하게, 날짜/건수는 얇고 차분하게. 자식 요소라 부분 스타일 가능.
+   흰 배경+흰 글자 금지 규칙 준수(배경 흰색, 글자는 #111827/#6B7280 고정 — 두 테마 모두 가독). */
+.lp-bar .lp-tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(2px);opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:9px;box-shadow:0 4px 14px rgba(17,24,39,.10);padding:8px 11px;white-space:nowrap;text-align:center;z-index:7;}
+.lp-bar:hover .lp-tip{opacity:1;transform:translateX(-50%) translateY(0);}
+.lp-tip .d{display:block;font-size:12px;font-weight:500;color:#6B7280;line-height:1.3;}
+.lp-tip .a{display:block;font-size:14px;font-weight:700;color:#111827;line-height:1.35;margin-top:1px;}
+.lp-tip .c{display:block;font-size:12px;font-weight:400;color:#6B7280;line-height:1.3;margin-top:1px;}
 /* v3.17 — 모바일 툴팁도 읽히게(고해상도) 11px */
 @media(max-width:780px){
   .spark-bar[data-day]:hover::after,.spark-bar[data-lbl]:hover::after{font-size:11px;padding:6px 9px;}
-  .lp-yaxis,.lp-canvas{height:124px;}
+  .lp-yaxis,.lp-canvas{height:146px;}
   .lp-yaxis{font-size:10px;}
   .lp-xaxis{font-size:10.5px;}
-  .lp-bar[data-lbl]:hover::after{font-size:11px;padding:7px 9px;}
+  .lp-tip{padding:7px 9px;}
+  .lp-tip .a{font-size:13px;}
   /* v3.19 — 기간 컨트롤을 모바일에서도 헤더 우측에. 좁은 폭에 맞게 pill 축소 */
   #ledgerPeriodSlot{align-self:center;}
   #ledgerPeriodSlot .ledger-period{gap:6px;}
@@ -1292,18 +1318,22 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .stats-redesign .stats-cat-grid .stats-cat:nth-last-child(2):nth-child(odd){border-bottom:0;}
   .stats-redesign .stats-two{flex-direction:row;align-items:stretch;}
   .stats-redesign .stats-two>*{flex:1;min-width:0;margin-bottom:0;}
-  /* v3.18 — 지출 추이 60% / 카테고리 구성 40% (추이가 첫 자식). 계산 불변, 폭·플롯 높이만 확대 */
-  .stats-redesign .stats-two>*:first-child{flex:1.5;}
+  /* v3.22 — 지출 추이를 카테고리 구성보다 넓게(약 63:37, 이전 60:40보다 확대). 계산·데이터·외부폭 불변 */
+  .stats-redesign .stats-two>*:first-child{flex:1.7;}
+  /* v3.24 — 도넛 '창'을 추이 카드 높이(≈231px)에 맞추고, 그 안에서 도넛은 세로 정중앙,
+     7슬롯 범례는 위·아래 여분(각 24px)을 두고 중앙 배치. 3개만 있어도 그 블록 위쪽 슬롯부터. */
+  .stats-redesign .donut-wrap{height:231px;align-items:center;margin-top:0;}
+  .stats-redesign .donut-legend{height:183px;grid-auto-rows:calc(183px / 7);}
   /* v3.16/v3.17 — 데스크톱 타이포그래피/여백 정제(밀도 있고 세련된 데이터 UI). 기능·색·차트·레이아웃 불변 */
   .stats-redesign .sum-lbl{font-size:11.5px;font-weight:600;text-transform:none;letter-spacing:.1px;margin-bottom:6px;}
   .stats-redesign .sum-val{font-size:25px;letter-spacing:-.4px;line-height:1.1;}
   .stats-redesign .sum-val .sum-unit{font-size:12px;}
   .stats-redesign .sum-sub{font-size:11.5px;font-weight:500;margin-top:5px;}
-  /* 최다 카테고리명은 총액보다, 최다 방문처명은 그보다 더 작게(위계) */
-  /* v3.18 — 이름 텍스트 강조를 한 단계 낮춤(총 지출·영수증은 Primary 유지). 하드코딩 #4B5563 대신
-     토큰 --label2(라이트 #666 ≈ #4B5563, 다크 #7c7f90)로 두 테마 모두 안전. 크기·ellipsis·보조정보 색 불변 */
-  .stats-redesign .summary-grid--4 .sum-card:nth-child(3) .sum-val.sm{font-size:23px;font-weight:550;line-height:1.15;color:var(--label2);}
-  .stats-redesign .summary-grid--4 .sum-card:nth-child(4) .sum-val.sm{font-size:21px;font-weight:500;line-height:1.15;color:var(--label2);}
+  /* v3.22 — Secondary(최다 카테고리명·방문처명)를 Primary(25px)의 약 60%인 15px로 축소·통일.
+     weight 600, 색은 #4B5563(라이트) 토큰 --sum-name(다크에서도 안전). 카테고리 Accent Color 미사용.
+     ellipsis 유지(동적 축소 없음). 위계: Primary 25 → Secondary 15 → Metadata 11.5. */
+  .stats-redesign .summary-grid--4 .sum-card:nth-child(3) .sum-val.sm,
+  .stats-redesign .summary-grid--4 .sum-card:nth-child(4) .sum-val.sm{font-size:15px;font-weight:600;line-height:1.25;color:var(--sum-name);}
   .stats-redesign .sum-card{padding:14px 16px;}
   .stats-redesign .summary-grid{padding-bottom:14px;}
   .stats-redesign .budget-section{margin-bottom:20px;}
@@ -1319,10 +1349,17 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 @media(max-width:780px){
   .stats-redesign .summary-grid{grid-template-columns:1fr;gap:0;}
   .stats-redesign .summary-grid--4 .sum-card:nth-child(3){grid-column:auto;}
-  .stats-redesign .sum-card{padding:12px 0;border-right:0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  /* v3.25 — 모바일 요약 간격 축소 + 덜 중요한 부분(라벨·이름·보조정보) 크기·색을 데스크탑과 동일하게 */
+  .stats-redesign .sum-card{padding:8px 0;border-right:0;display:flex;align-items:center;justify-content:space-between;gap:3px;flex-wrap:wrap;}
   .stats-redesign .sum-card .sum-diff,.stats-redesign .sum-card .sum-sub{flex-basis:100%;}
+  .stats-redesign .sum-lbl{font-size:11.5px;font-weight:600;text-transform:none;letter-spacing:.1px;margin-bottom:0;}
   .stats-redesign .sum-val{font-size:23px;}
-  .stats-redesign .sum-val.sm{font-size:19px;}
+  .stats-redesign .sum-sub{font-size:11.5px;font-weight:500;margin-top:3px;color:var(--label3);}
+  /* Secondary: 데스크탑과 동일 15px/600/--sum-name(=#4B5563 라이트) */
+  .stats-redesign .sum-val.sm{font-size:15px;font-weight:600;color:var(--sum-name);}
+  /* 도넛 창을 데스크탑처럼: 도넛 세로 중앙 + 7슬롯 범례 중앙(위·아래 여분) */
+  .stats-redesign .donut-wrap{height:186px;align-items:center;}
+  .stats-redesign .donut-legend{height:154px;grid-auto-rows:calc(154px / 7);}
   .stats-cat{min-height:58px;padding:12px 4px;}
   .stats-cat .cat-bar-top{grid-template-columns:minmax(0,1fr) 42px auto 10px;gap:6px;font-size:12px;}
   .stats-cat.rich{grid-template-columns:30px minmax(0,1fr);gap:9px;padding:12px 4px;}
@@ -1418,6 +1455,20 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="3.5"/><path d="M3.6 21.4 20.8 4.2"/></svg>
           <span>사진 없음</span><span class="photo-filter-count" data-photo-count="missing">0</span>
         </button>
+      </div>
+
+      <div class="list-toolbar" id="listToolbar">
+        <div class="lt-info" id="ltInfo"></div>
+        <label class="lt-sort">
+          <span class="sr-only">정렬</span>
+          <select id="listSortSel" aria-label="정렬 기준">
+            <option value="recent">최신순</option>
+            <option value="oldest">오래된순</option>
+            <option value="amount_desc">금액 높은순</option>
+            <option value="amount_asc">금액 낮은순</option>
+            <option value="store">매장명순</option>
+          </select>
+        </label>
       </div>
 
       <div class="side-list" id="sideList"></div>
@@ -2390,7 +2441,28 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 // v3.21 — 도넛 범례 레이아웃 교정. 범례를 그리드(이름 열 왼쪽정렬·% 열 오른쪽정렬)로 바꿔 이름+%가
 //         한 쌍으로 붙고, justify-content:end로 전체를 오른쪽에 모아 도넛과의 간격 확보(도넛 gap 14→18).
 //         이전(v3.20)의 %만 margin-left:auto로 밀어 이름↔%가 벌어지던 것 교정. 데스크톱·모바일 공통.
-const APP_VERSION='v3.21';
+// v3.22 — [A] 전체 내역 미세조정 + [B] 왼쪽 목록 탐색 개선(재설계·리브랜딩 아님, 기능·데이터·계산 보존).
+//   A2/A4: Primary(총 지출·영수증 25px/700/#111) 유지, Secondary(카테고리명·방문처명)를 ~60%인 15px(모바일 14px)/
+//     weight600/토큰 --sum-name(라이트 #4B5563·다크 안전)으로 축소·통일. Metadata 11.5 유지. A3 결과값 Accent 미사용.
+//   A5: 지정 12종만 선명 팔레트로 교체(CAT_COLORS 한 곳). 나머지 7종(기타·(미분류)·여행·골프·운동·케이크·병원·약국) 유지.
+//   A6 아이콘 bg 12%·progress·도넛·범례 동일색. A7 Signature Blue #4355E8·추이 막대 #60A5FA 유지(신규 blue 없음).
+//   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
+//     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
+//   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+//     (_sortForList 안정정렬, 원본 불변). 날짜 정렬만 날짜(월+일) 그룹, 금액·매장명순은 flat. 품목 등 안 보이는 필드
+//     매칭 시 '품목 · …' 이유 표시(getFiltered 불변, 읽기 전용 재확인). placeholder 실제 지원 필드 반영(기존 유지).
+// v3.23 — 도넛 범례를 7슬롯(상위 6 + 기타) 고정 높이 + 위에서부터 균등 간격으로. grid-auto-rows 고정 +
+//   align-content:start라 3개만 있어도 7개일 때의 위쪽 3슬롯과 같은 위치에 온다(일관된 세로 리듬). 색·계산 불변.
+// v3.24 — 도넛 '창'을 추이 카드 높이(≈231px)에 맞추고 도넛을 세로 정중앙에, 7슬롯 범례(183px)도 위·아래 여분을
+//   두고 중앙 배치(데스크톱). 3개만 있어도 그 블록 위쪽 슬롯부터. 모바일은 기존 7슬롯(126px) 유지. 색·계산 불변.
+// v3.25 — 모바일도 데스크탑과 동일 조건으로. ① 요약 세로 간격 축소(sum-card padding 12→8, gap 12→3, sub margin
+//   5→3). ② 덜 중요한 부분 크기·색을 데스크탑과 통일: 라벨 11.5/600/none, 이름(Secondary) 14→15px/600/--sum-name,
+//   보조정보 11.5/500/--label3. ③ 도넛 창을 데스크탑처럼 도넛 세로 중앙 + 7슬롯 범례(154px) 중앙(위·아래 여분).
+//   Primary(총 지출·영수증)·색·계산·데이터 불변.
+// v3.26 — 도넛 구성: 범례를 우측 정렬하고, 도넛을 (왼쪽 여분)=(도넛↔범례 여분)이 되도록 그 사이 정중앙에.
+//   flex auto 마진 2개(.donut margin-left:auto, .donut-legend flex:0 1 auto + margin-left:auto, wrap gap 0).
+//   데스크탑·모바일 공통. 세로 중앙·7슬롯 균등·색·계산 불변.
+const APP_VERSION='v3.26';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -2762,12 +2834,14 @@ function getCategoryLabel(cat){
 }
 // v3.18 — 카테고리 색상 단일 관리(최종 muted 팔레트). 키는 정규화된 저장 카테고리명.
 // 앱 전체에서 같은 카테고리는 항상 같은 색을 쓰도록 여기 한 곳에서만 정의한다.
+// v3.22 — 지정 12종 최종 컬러(선명한 팔레트). 아래 7종(기타·(미분류)·여행·골프·운동·케이크·병원·약국)은
+// 지시에 따라 변경하지 않고 기존 값 유지.
 const CAT_COLORS={
-  '외식':'#D9795F','술집':'#A8734A','카페':'#9A7665','쇼핑':'#D77A91',
-  '영화':'#7475A8','교통':'#718096','숙박':'#77769A','노래방':'#8E74B7',
-  '스파':'#72A99B','경조사':'#8D8783','선물':'#FCA5A5','외주용역비':'#55A6A6',
+  '외식':'#FF7A45','술집':'#F2B01E','카페':'#C58B68','쇼핑':'#F06F9B',
+  '영화':'#6875E8','교통':'#3EA5E8','숙박':'#8B7CF6','노래방':'#A56DE2',
+  '스파':'#2FC7A7','경조사':'#9BA3AF','선물':'#FF7D8B','외주용역비':'#2DAAA6',
   '기타':'#858A90','(미분류)':'#858A90',
-  // 팔레트에 없던 기본 카테고리도 같은 계열의 muted 톤으로 보완
+  // 지정 목록에 없어 기존값 유지
   '여행':'#6E8FA8','골프':'#7C9A6B','운동':'#B57F5E','케이크':'#B77E9E','병원·약국':'#6F94A0'
 };
 // 위 목록에 없는 사용자 정의 카테고리는 이름 해시로 안정적인 muted 색을 배정
@@ -3497,10 +3571,44 @@ function getFiltered(){
   });
 }
 
+// v3.22 — 목록 정렬(표시 단계 전용). 원본 receipts 배열은 건드리지 않고 복사본만 정렬한다.
+function _listDateKey(r){return (r.date||'')+(r.time||'')+(r.id||'');}
+function _sortForList(list){
+  const a=list.slice();
+  switch(_listSort){
+    case 'oldest': a.sort((x,y)=>_listDateKey(x).localeCompare(_listDateKey(y))); break;
+    case 'amount_desc': a.sort((x,y)=>(y.total||0)-(x.total||0)); break;
+    case 'amount_asc': a.sort((x,y)=>(x.total||0)-(y.total||0)); break;
+    case 'store': a.sort((x,y)=>(x.store||'').localeCompare((y.store||''),'ko')); break;
+    case 'recent': default: a.sort((x,y)=>_listDateKey(y).localeCompare(_listDateKey(x))); break;
+  }
+  return a; // Array.sort는 안정정렬이라 동일값은 입력(=최신순) 순서를 유지
+}
+function _isDateSort(){return _listSort==='recent'||_listSort==='oldest';}
+function _fmtDayHd(iso){if(!iso)return '';const[y,m,d]=iso.split('-');return `${parseInt(m,10)}월 ${parseInt(d,10)}일`;}
+// 검색 결과에서 '왜 걸렸는지'를 목록에 안 보이는 필드(품목)에 한해 안전하게 알려준다.
+// getFiltered를 바꾸지 않고, 동일한 매칭 규칙을 읽기 전용으로 다시 확인한다.
+function _searchMatchReason(r, rawQ){
+  const q=(rawQ||'').trim().toLowerCase();
+  if(!q) return '';
+  // 접두어/날짜/초성 검색이거나 매장명이 직접 걸린 경우엔 이유 표시 불필요(이미 카드에 보임)
+  if(q.startsWith('결제자 ')||q.startsWith('참석자 ')||_isChoQuery(q)||_parseDateQ(rawQ.trim())) return '';
+  if((r.store||'').toLowerCase().includes(q)) return '';
+  // 품목명 매칭(한영/식품 동의어 포함) → 어떤 품목이 걸렸는지
+  const terms=_getSearchTerms(q);
+  for(const it of (r.items||[])){
+    const n=(it.name||'').toLowerCase();
+    if(n&&terms.some(t=>t&&n.includes(t))) return '품목 · '+(it.name||'');
+  }
+  return '';
+}
+
 let _batchSelectMode=false;
 const _batchSelectedIds=new Set();
 let _photoListFilter=''; // '' | 'problem'(모든 사진 문제) | 'missing'(누락·불러오기 실패)
 let _photoFilterPrevAllMonths=false;
+// v3.22 — 목록 정렬(표시 단계에서만 적용, 원본 receipts 순서/데이터는 건드리지 않음)
+let _listSort='recent'; // recent(최신순) | oldest(오래된순) | amount_desc(금액 높은순) | amount_asc(금액 낮은순) | store(매장명순)
 
 function _updateBatchExportUi(){
   const side=document.querySelector('.side');
@@ -3618,7 +3726,7 @@ function _setPhotoListFilter(kind){
   switchTab('list');renderSide();renderDetail();
 }
 
-function _cardHtml(r){
+function _cardHtml(r, reason){
   const sel=(r.id===selectedId)?' sel':'';
   const batchSel=_batchSelectedIds.has(r.id)?' batch-selected':'';
   const batchA11y=_batchSelectMode?`role="checkbox" aria-checked="${String(_batchSelectedIds.has(r.id))}"`:'role="button"';
@@ -3626,6 +3734,7 @@ function _cardHtml(r){
   if(r.paidBy)meta.push(escapeHtml(r.paidBy));
   if((r.participants||[]).length>0)meta.push(`${r.participants.length}명`);
   const photoStatusIcon=_receiptStatusIconHtml(r);
+  const reasonHtml=reason?`<div class="r-card-reason">${escapeHtml(reason)}</div>`:'';
   return `<div class="r-card${sel}${batchSel}" data-id="${escapeHtml(r.id)}" ${batchA11y} tabindex="0">
     <button class="r-card-check" type="button" tabindex="-1" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>
@@ -3633,6 +3742,7 @@ function _cardHtml(r){
     <div class="r-card-info">
       <div class="r-card-store-row">${photoStatusIcon}<div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div></div>
       <div class="r-card-meta">${meta.join(' · ')}</div>
+      ${reasonHtml}
     </div>
     <div class="r-card-amt${(r.total||0)<0?' amt-neg':''}">${fmtMoney(r.total)}원</div>
   </div>`;
@@ -3668,6 +3778,21 @@ function renderSide(){
       return grp?grp.members.includes(cat):false;
     })
     :_base;
+  // v3.22 — compact toolbar: 현재 범위·건수 + 정렬 select 동기화
+  const _ltInfo=document.getElementById('ltInfo');
+  if(_ltInfo){
+    const _now=new Date();const _curYm=`${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
+    let _scope;
+    if(searchQuery)_scope='검색 결과';
+    else if(_photoListFilter==='problem')_scope='확인 필요';
+    else if(_photoListFilter==='missing')_scope='사진 없음';
+    else if(_monthCatFilter)_scope=_monthCatFilter;
+    else if(_sideAllMonths)_scope='전체';
+    else _scope=(viewMonth===_curYm)?'이번 달':ymLabel(viewMonth);
+    _ltInfo.innerHTML=`${escapeHtml(_scope)} <b>${filtered.length}건</b>`;
+  }
+  const _sortSel=document.getElementById('listSortSel');
+  if(_sortSel&&_sortSel.value!==_listSort)_sortSel.value=_listSort;
   if(!filtered.length){
     const emptyMsg=_photoListFilter==='problem'
       ? '확인이 필요한 영수증이 없어요'
@@ -3685,26 +3810,27 @@ function renderSide(){
     _updateBatchExportUi();
     return;
   }
+  // v3.22 — 표시 직전 정렬(원본 불변). 날짜 정렬일 때만 날짜 그룹, 그 외(금액·매장명순)는 flat list.
+  const sorted=_sortForList(filtered);
+  const multiMonth=_sideAllMonths||!!searchQuery; // 여러 달이 섞일 수 있는 범위
   const html=[];
-  if(searchQuery||_sideAllMonths){
-    // 검색 시엔 월별 그룹핑 (전체 대상이라 의미 있음)
-    const groups=new Map();
-    for(const r of filtered){
-      const k=r.date?r.date.slice(0,7):'unknown';
-      if(!groups.has(k))groups.set(k,[]);
-      groups.get(k).push(r);
+  if(_isDateSort()){
+    // 날짜 그룹: 달이 바뀌면 월 헤더(여러 달일 때만), 날짜가 바뀌면 일 헤더
+    html.push('<div class="list-daygroup">');
+    let curYm=null,curDay=null;
+    for(const r of sorted){
+      const ymd=r.date||'';
+      const ym=ymd?ymd.slice(0,7):'unknown';
+      if(ym!==curYm){curYm=ym;curDay=null;if(multiMonth)html.push(`<div class="list-month-hd">${ym==='unknown'?'날짜 없음':fmtDateGroup(ym+'-01')}</div>`);}
+      if(ymd!==curDay){curDay=ymd;html.push(`<div class="list-day-hd">${ymd?_fmtDayHd(ymd):'날짜 없음'}</div>`);}
+      html.push(_cardHtml(r,_searchMatchReason(r,searchQuery)));
     }
-    for(const[ym,arr]of groups){
-      const label=ym==='unknown'?'날짜 없음':fmtDateGroup(ym+'-01');
-      html.push(`<div class="list-group"><div class="list-group-hd">${label} · ${arr.length}건</div>`);
-      for(const r of arr)html.push(_cardHtml(r));
-      html.push(`</div>`);
-    }
+    html.push('</div>');
   }else{
-    // 현재 월만 단순 리스트 (월은 이미 상단 nav에 표시)
-    html.push(`<div class="list-group">`);
-    for(const r of filtered)html.push(_cardHtml(r));
-    html.push(`</div>`);
+    // 금액·매장명순: 날짜 그룹이 정렬 의미를 깨므로 flat list
+    html.push('<div class="list-group">');
+    for(const r of sorted)html.push(_cardHtml(r,_searchMatchReason(r,searchQuery)));
+    html.push('</div>');
   }
   list.innerHTML=html.join('');
   // 이벤트 위임
@@ -3724,6 +3850,11 @@ function renderSide(){
 
 document.querySelectorAll('[data-photo-filter]').forEach(btn=>{
   btn.addEventListener('click',()=>_setPhotoListFilter(btn.dataset.photoFilter));
+});
+// v3.22 — 목록 정렬 dropdown
+document.getElementById('listSortSel')?.addEventListener('change',e=>{
+  _listSort=e.target.value;
+  renderSide();
 });
 
 document.getElementById('batchSelectToggle').addEventListener('click',()=>_setBatchSelectMode(!_batchSelectMode));
@@ -5547,7 +5678,7 @@ function renderLedgerPanel(recs){
           <div class="lp-canvas">
             <div class="lp-grid">${tr.yTicks.map(()=>'<span></span>').join('')}</div>
             <div class="lp-bars">
-              ${tr.bars.map(b=>{const h=yMax>0?(b.amt>0?Math.max(2,Math.round(b.amt/yMax*100)):0):0;return `<div class="lp-bar${b.amt>0?' has':''}" style="height:${h}%;" data-lbl="${escapeHtml(b.lbl)}" data-amt="${fmtMoney(b.amt)}" data-cnt="${b.cnt}"></div>`;}).join('')}
+              ${tr.bars.map(b=>{const h=yMax>0?(b.amt>0?Math.max(2,Math.round(b.amt/yMax*100)):0):0;return `<div class="lp-bar${b.amt>0?' has':''}" style="height:${h}%;">${b.amt>0?`<span class="lp-tip"><span class="d">${escapeHtml(b.lbl)}</span><span class="a">${fmtMoney(b.amt)}원</span><span class="c">영수증 ${b.cnt}건</span></span>`:''}</div>`;}).join('')}
             </div>
           </div>
           <div class="lp-xaxis">${tr.axis.map(a=>`<span>${escapeHtml(a)}</span>`).join('')}</div>
