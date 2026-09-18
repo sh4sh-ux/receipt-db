@@ -95,6 +95,10 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.32` — **선불권 목록 카드 깨짐 수정 + 헤더 버전칩 추가.** ① 목록 카드를 `auto-fill` 그리드(좁은 ~350px 칸)에서
+  **전체폭 세로 스택**(`.pp-cards{display:flex;flex-direction:column}`)으로 바꿔, 좁은 칸에서 남은 잔액(196,5/00원)·
+  진행바 범례가 줄바꿈되던 것 수정(상세 카드와 동일 폭). ② 선불권 헤더가 공통 헤더 규칙을 안 지켜 **버전 표시가
+  없던 것** 수정 — `.main-eye-row` + `.js-app-version` 추가해 다른 탭처럼 'RECEIPT DB v3.xx' 표시(init에서 주입).
 - `v3.31` — **선불권 화면을 사용자 최종 시안에 맞춰 재정렬(`prepaid.js`·`prepaid.css`).** 계산·저장·거래
   (`ppTotals`·`ppSuggestedUseAmount`·`ppLatestUse`·`ppCommit`·`ppEventForm`·`ppWalletForm`) 전부 그대로.
   ⚠️ v3.30이 정보 구조가 시안과 달라(분리 카드·6타일·세그먼트·행별 휴지통) 다시 만들었다. **상단을 하나의 카드로 통합**:

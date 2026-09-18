@@ -1531,7 +1531,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
             <button type="button" class="pp-back-btn" id="prepaidBack" hidden aria-label="선불권 목록으로">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
             </button>
-            <div class="pp-header-copy"><div class="pp-eyebrow" id="prepaidEyebrow">Receipt DB</div><div class="main-title" id="prepaidTitle">선불권</div></div>
+            <div class="pp-header-copy"><div class="main-eye-row"><div class="pp-eyebrow" id="prepaidEyebrow">Receipt DB</div><span class="app-version js-app-version" title="앱 버전"></span></div><div class="main-title" id="prepaidTitle">선불권</div></div>
           </div>
           <button type="button" class="pp-new-btn" id="prepaidNew" aria-label="선불권 등록">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>선불권 등록</span>
@@ -2500,7 +2500,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   오른쪽 / 아이콘 액션 버튼 행). 내역을 '사용 내역/충전 내역' 탭 + [최신순 ▾] 정렬로, 데스크탑 표(구분 컬러 칩 +
 //   행별 ••• 메뉴)·모바일 compact 리스트. 모바일 액션은 아이콘 버튼 4개([1회 사용][충전][환불][더보기]),
 //   더보기에 만료 차감·정보 수정. 선불권 삭제(카드 전체 삭제)는 추가하지 않음(동기화 로직 보존).
-const APP_VERSION='v3.31';
+// v3.32 — 선불권 목록 카드가 좁은 그리드 칸에서 잔액·통계가 깨지던 것 수정(전체폭 세로 스택).
+//   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
+const APP_VERSION='v3.32';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{

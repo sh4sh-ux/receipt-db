@@ -18,7 +18,7 @@
 .pp-total-label{color:var(--label3);font-size:13px}
 .pp-total-value{font-size:30px;font-weight:700;overflow-wrap:anywhere}
 .pp-total-sub{color:var(--label3);font-size:13px}
-.pp-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.pp-cards{display:flex;flex-direction:column;gap:16px} /* 목록 카드는 전체폭 세로 스택(좁은 칸에서 잔액·통계가 깨지지 않게) */
 /* ── 공통 카드(목록·상세) ── */
 .pp-card{display:flex;flex-direction:column;gap:18px;width:100%;text-align:left;padding:20px 22px;border:1px solid var(--sep);border-radius:var(--r);background:var(--card);color:var(--label);font:inherit}
 .pp-card--list{cursor:pointer;transition:border-color .12s,box-shadow .12s}
