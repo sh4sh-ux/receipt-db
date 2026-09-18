@@ -95,6 +95,18 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.35` — **사람별 분담 정확도: 한턱(treat)·깍두기(제외, splitExclude) + 이름 변경/클릭.** 참석은 했지만
+  비용을 안 낸 사람을 0원으로 정확히 잡기 위한 기능. ① **계산 단일 진실원**: `_ppSplitters`/`_receiptShare`/
+  새 `_participantSplit`(index.html ~3122)로 통일. `treat`=결제자 전액·나머지 0원, `splitExclude`=참석 유지·분담 0원
+  (나머지끼리 1/N). **두 필드 모두 선택적·후방호환** — 없으면 예전 1/N과 **byte-identical**(회귀 테스트 `verify_split.js`로
+  증명: 기존 데이터 `_participantSplit`/`_receiptShare` 동일 + 총액 보존). 인물 검색 분담금 5곳도 `_receiptShare`로 교체.
+  ② **UI**: 추가 폼·상세 폼에 '분담 방식' 블록(🎉 한턱 스위치 + 참석자 칩 분담↔제외 토글, `_makeSplitUI` 공용
+  컨트롤러). 저장 시 참석자에 실제 있는 이름만 남기고 꺼진 값은 필드 자체를 제거(오염 방지). import 새니타이저도
+  타입 표준화(불리언·문자열배열). ③ **'참석자별 분담'→'사람별 분담'** 이름 변경 + 적응형 부제(1/N 균등 / 한턱 N ·
+  제외 N 반영). 이름에 점선 밑줄 → **클릭 시 그 사람 인물 검색**(`_goPersonSearch`, 기존 검색 재사용). ④ **Dutch Pay
+  연동 불변** — `sendReceiptsToDutchPay` 엔트리는 고정 필드(sourceId·store·date·total·payer·people·items·receiptImage)만
+  매핑, treat/splitExclude 누출 없음(테스트로 확인). 검증: 계산 회귀 + e2e(부트·패널·인물검색 0원·이름클릭·저장
+  영속화·Dutch Pay·콘솔 에러 0) 전부 통과, 데스크탑·모바일·라이트/다크 스크린샷 확인. 변경 파일 `index.html`만.
 - `v3.34` — **지출 추이 막대 터치 영역 확대(모바일 호버/탭 개선).** 막대(`.lp-bar`)가 금액이 작으면 높이가
   3~4px라 손가락으로 정확히 눌러야 툴팁이 떴다. 각 막대를 **세로 전체 높이의 투명 칸(`.lp-col`)**으로 감싸고
   호버/툴팁 트리거를 `.lp-bar:hover`→`.lp-col:hover`로 옮겨, **칸(=하루/한 달 폭 × 플롯 전체 높이) 어디를 눌러도**

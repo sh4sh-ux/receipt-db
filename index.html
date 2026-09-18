@@ -600,6 +600,32 @@ svg{display:block;flex-shrink:0;}
 .srch-table th{font-size:11px;font-weight:600;color:var(--label2);padding:8px 8px;text-align:left;border-bottom:1px solid var(--sep);background:var(--fill2);}
 .srch-table th:last-child,.srch-table td:last-child{text-align:right;}
 .srch-table td{padding:10px 8px;border-bottom:1px solid var(--sep);font-size:13px;color:var(--label);}
+.pp-name-link{cursor:pointer;border-bottom:1px dotted var(--label3);transition:color .1s,border-color .1s;}
+.pp-name-link:hover,.pp-name-link:focus-visible{color:var(--blue);border-bottom-color:var(--blue);outline:none;}
+/* v3.35 — 분담 방식(한턱/제외) UI */
+.pp-split-block{display:flex;flex-direction:column;gap:8px;}
+.pp-treatbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--sep);border-radius:var(--rm);background:var(--fill2);cursor:pointer;transition:.12s;}
+.pp-treatbar.on{border-color:var(--blue);background:var(--blue-bg);}
+.pp-treat-txt{display:flex;flex-direction:column;gap:2px;}
+.pp-treat-t{font-weight:700;font-size:13.5px;}
+.pp-treat-d{font-size:11.5px;color:var(--label2);}
+.pp-switch{position:relative;width:46px;height:26px;border-radius:999px;background:var(--sep2,var(--sep));border:1px solid var(--sep);cursor:pointer;flex:0 0 auto;transition:.15s;padding:0;}
+.pp-switch.on{background:var(--blue);border-color:var(--blue);}
+.pp-switch::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+.pp-switch.on::after{left:22px;}
+.pp-chips{display:flex;gap:7px;flex-wrap:wrap;}
+.pp-chips-empty{font-size:12px;color:var(--label3);}
+.pp-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--sep);background:var(--card);color:var(--label);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;transition:.12s;font-family:inherit;}
+.pp-chip:hover{border-color:var(--blue);}
+.pp-chip[disabled]{cursor:default;opacity:.85;}
+.pp-chip .pp-chip-tag{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--fill2);color:var(--label3);}
+.pp-chip.payer{border-color:var(--blue);color:var(--blue);background:var(--blue-bg);}
+.pp-chip.split .pp-chip-tag.split{background:rgba(52,201,125,.16);color:var(--green);}
+.pp-chip.excl{background:var(--fill2);color:var(--label3);border-style:dashed;}
+.pp-chip.excl .pp-chip-nm{text-decoration:line-through;}
+.pp-chip.excl .pp-chip-tag.excl{background:rgba(255,82,82,.14);color:var(--red);}
+.pp-chip.zero{opacity:.5;}
+.pp-split-hint{font-size:11.5px;color:var(--label2);}
 .srch-row{cursor:pointer;transition:background .1s;}
 .srch-row:hover{background:var(--fill);}
 .srch-row:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;background:var(--blue-bg);}
@@ -1725,6 +1751,15 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                     <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분</span></label>
                     <input id="participantsInp" class="field-inp" type="text" placeholder="예: 철수, 영희, 민준"/>
                   </div>
+                  <div class="field-g pp-split-block" id="addSplitBlock" style="grid-column:1/-1;">
+                    <label class="field-lbl">분담 방식 <span class="field-lbl-hint">참석자가 있을 때 적용</span></label>
+                    <div class="pp-treatbar" id="addTreatBar">
+                      <div class="pp-treat-txt"><span class="pp-treat-t">🎉 한턱</span><span class="pp-treat-d">결제자가 전액 부담 · 나머지 참석자는 0원</span></div>
+                      <button type="button" class="pp-switch" id="addTreatSw" role="switch" aria-checked="false" aria-label="한턱 켜기"></button>
+                    </div>
+                    <div class="pp-chips" id="addPpChips"></div>
+                    <div class="pp-split-hint" id="addSplitHint"></div>
+                  </div>
                   <div class="field-g" style="grid-column:1/-1;">
                     <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
                     <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
@@ -2507,9 +2542,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
-// v3.34 — 지출 추이: 막대가 낮으면(금액 작으면) 터치 영역이 3~4px라 호버/탭이 어렵던 것 개선. 각 막대를 세로
-//   전체 높이의 투명 칸(.lp-col)으로 감싸 그 칸 어디를 눌러도 툴팁이 뜬다(막대 모양·툴팁 위치·계산 불변).
-const APP_VERSION='v3.34';
+// v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
+//   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일. 두 필드 모두
+//   선택적·후방호환(없으면 예전 1/N과 byte-identical, 회귀 테스트로 증명). Dutch Pay 페이로드 불변.
+const APP_VERSION='v3.35';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -3095,16 +3131,40 @@ function categoryBreakdown(ym){
     .sort((a,b)=>b.amt-a.amt);
   return {breakdown:arr,total};
 }
-// 참석자별 분담 집계 — 참석자 N명이면 총액을 1/N씩 배분.
-// 계산 로직은 임의의 영수증 집합에 동일하게 적용된다(월 특유 로직 없음).
-// v3.16: 계산부를 _participantSplit(list)로 분리해 월간/연간/전체/범위에서 그대로 재사용.
+// v3.35 — 사람별 분담 계산의 단일 진실원(모든 화면이 이 함수만 사용).
+//   기본: 참석자 N명이면 총액을 1/N씩. 두 옵션(기존 영수증엔 필드가 없어 항상 기본 동작):
+//   · treat(한턱): 결제자(paidBy)가 전액 부담, 나머지 참석자는 0원.
+//   · splitExclude(깍두기/제외): 참석은 했지만 분담에서 뺄 이름들 → 그들은 0원, 나머지끼리만 1/N.
+//   ⚠️ treat=falsy & splitExclude 비어있으면 예전과 100% 동일한 결과(회귀 테스트로 검증).
+function _ppSplitters(r){
+  const excl=new Set((r.splitExclude||[]).map(s=>(s||'').trim()).filter(Boolean));
+  return (r.participants||[]).map(s=>(s||'').trim()).filter(n=>n&&!excl.has(n));
+}
+// 한 영수증에서 특정 사람이 실제로 부담한 금액.
+function _receiptShare(r,name){
+  name=(name||'').trim();
+  if(!(r.participants||[]).length)return 0;
+  if(r.treat)return ((r.paidBy||'').trim()===name)?(r.total||0):0;
+  const splitters=_ppSplitters(r);
+  if(!splitters.length||!splitters.includes(name))return 0;
+  return Math.round((r.total||0)/splitters.length);
+}
+// 한 영수증의 '사람별 분담' 방식 라벨(부제용).
+function _splitModeLabel(r){
+  if(r.treat)return '한턱';
+  const exN=(r.splitExclude||[]).filter(n=>(r.participants||[]).includes(n)).length;
+  return exN>0?`${exN}명 제외`:'1/N 균등';
+}
 function _participantSplit(list){
   const m=new Map();
+  const add=(name,amt)=>{name=(name||'').trim();if(name&&amt)m.set(name,(m.get(name)||0)+amt);};
   for(const r of list){
-    const pp=r.participants||[];
-    if(!pp.length)continue;
-    const share=Math.round((r.total||0)/pp.length);
-    for(const name of pp)m.set(name,(m.get(name)||0)+share);
+    if(!(r.participants||[]).length)continue;
+    if(r.treat){add((r.paidBy||'').trim(),r.total||0);continue;}
+    const splitters=_ppSplitters(r);
+    if(!splitters.length)continue;
+    const share=Math.round((r.total||0)/splitters.length);
+    for(const n of splitters)add(n,share);
   }
   return [...m.entries()]
     .map(([name,amt])=>({name,amt}))
@@ -3113,6 +3173,32 @@ function _participantSplit(list){
 }
 function participantBreakdown(ym){
   return _participantSplit(receiptsForMonth(ym));
+}
+// v3.35 — '사람별 분담' 섹션 부제. 기간 내 한턱/제외 영수증 수를 세어 적응형으로 표기.
+function _splitSubtitle(list, nPeople){
+  let treatN=0, exclN=0;
+  for(const r of list){
+    if(!(r.participants||[]).length)continue;
+    if(r.treat){treatN++;continue;}
+    if((r.splitExclude||[]).some(n=>(r.participants||[]).includes(n)))exclN++;
+  }
+  const notes=[];
+  if(treatN)notes.push(`한턱 ${treatN}`);
+  if(exclN)notes.push(`제외 ${exclN}`);
+  return `${nPeople}명 · ${notes.length?notes.join(' · ')+' 반영':'1/N 균등'}`;
+}
+// v3.35 — 이름 클릭 시 그 사람의 인물 검색(기존 기능 재사용)으로 이동.
+function _goPersonSearch(name){
+  name=(name||'').trim();
+  if(!name)return;
+  selectedId=null;
+  searchQuery=name;
+  const inp=document.getElementById('searchInp');
+  if(inp)inp.value=name;
+  if(typeof _updateSearchClear==='function')_updateSearchClear();
+  renderSide();renderDetail();
+  const mb=document.querySelector('#viewList .main-body');
+  if(mb)mb.scrollTop=0;
 }
 function dailySparkline(ym){
   const days=daysInMonth(ym);
@@ -4786,6 +4872,13 @@ saveBtn.addEventListener('click',async()=>{
     tags,
     createdAt:nowISO(),updatedAt:nowISO(),
   };
+  // v3.35 — 분담 방식(한턱/제외). 참석자에 실제로 있는 이름만 남긴다.
+  if(_addSplitUI){
+    const sp=_addSplitUI.getState();
+    if(sp.treat)rec.treat=true;
+    const ex=(sp.splitExclude||[]).filter(n=>participants.includes(n));
+    if(ex.length)rec.splitExclude=ex;
+  }
   // ── 중복 검사 ──
   const dup=receipts.find(r=>r.date===rec.date&&(r.store||'').trim()===(rec.store||'').trim()&&r.total===rec.total);
   if(dup){const ok=await _confirmDup(rec.store,rec.date,rec.total);if(!ok)return;}
@@ -4821,12 +4914,75 @@ saveBtn.addEventListener('click',async()=>{
   dbxSyncNow(true);
 });
 
+// ── v3.35 분담 방식 UI 컨트롤러(추가·상세 폼 공용) ──────────────────
+// 참석자 텍스트에서 칩을 만들고, 한턱 토글 + 개별 제외를 관리한다.
+// getState()가 {treat, splitExclude} 를 반환 — 저장 시 그대로 rec에 넣는다.
+function _makeSplitUI(o){
+  let treat=false; const excluded=new Set();
+  const parts=()=>o.getParticipants().map(s=>(s||'').trim()).filter(Boolean);
+  const render=()=>{
+    const pp=parts();
+    [...excluded].forEach(n=>{if(!pp.includes(n))excluded.delete(n);}); // 사라진 이름 정리
+    const payer=((o.getPayer&&o.getPayer())||'').trim();
+    o.treatSw.classList.toggle('on',treat);
+    o.treatSw.setAttribute('aria-checked',treat?'true':'false');
+    o.treatBar.classList.toggle('on',treat);
+    if(!pp.length){o.chips.innerHTML='<span class="pp-chips-empty">참석자를 입력하면 분담 대상이 표시됩니다</span>';o.hint.textContent='';return;}
+    o.chips.innerHTML=pp.map(n=>{
+      const isPayer=payer&&n===payer;
+      let cls='pp-chip',tag='';
+      if(treat){ if(isPayer){cls+=' payer';tag='<span class="pp-chip-tag">전액</span>';} else {cls+=' zero';tag='<span class="pp-chip-tag">0원</span>';} }
+      else if(excluded.has(n)){cls+=' excl';tag='<span class="pp-chip-tag excl">제외</span>';}
+      else {cls+=' split';if(isPayer)cls+=' payer';tag='<span class="pp-chip-tag split">분담</span>';}
+      return `<button type="button" class="${cls}" data-n="${escapeHtml(n)}"${treat?' disabled':''}><span class="pp-chip-nm">${escapeHtml(n)}</span>${tag}</button>`;
+    }).join('');
+    o.chips.querySelectorAll('[data-n]').forEach(c=>c.onclick=()=>{
+      if(treat)return;
+      const n=c.dataset.n;
+      if(excluded.has(n))excluded.delete(n);else excluded.add(n);
+      render();o.onChange&&o.onChange();
+    });
+    const total=o.getTotal?(o.getTotal()||0):0;
+    if(treat){o.hint.textContent=`한턱 — ${payer||'결제자'}가 전액 부담${total?` (${fmtMoney(total)}원)`:''}, 나머지 ${Math.max(pp.length-1,0)}명은 0원(참석은 유지).`;}
+    else{const ex=[...excluded].filter(n=>pp.includes(n));const sn=pp.length-ex.length;
+      const per=(total&&sn>0)?` · 1인당 약 ${fmtMoney(Math.round(total/sn))}원`:'';
+      o.hint.textContent=ex.length?`${ex.length}명 제외(참석 유지·0원) · 나머지 ${sn}명 균등${per}`:`참석자 ${pp.length}명 균등 분담 (1/N)${per}`;}
+  };
+  o.treatSw.addEventListener('click',e=>{e.stopPropagation();treat=!treat;render();o.onChange&&o.onChange();});
+  o.treatBar.addEventListener('click',()=>{treat=!treat;render();o.onChange&&o.onChange();});
+  return {
+    render,
+    getState(){const pp=parts();return {treat,splitExclude:treat?[]:[...excluded].filter(n=>pp.includes(n))};},
+    setState(t,ex){treat=!!t;excluded.clear();(ex||[]).forEach(n=>excluded.add((n||'').trim()));render();},
+    reset(){treat=false;excluded.clear();render();}
+  };
+}
+let _addSplitUI=null, _dSplitUI=null;
+(function _initAddSplitUI(){
+  const chips=document.getElementById('addPpChips');
+  if(!chips)return;
+  _addSplitUI=_makeSplitUI({
+    chips,
+    treatBar:document.getElementById('addTreatBar'),
+    treatSw:document.getElementById('addTreatSw'),
+    hint:document.getElementById('addSplitHint'),
+    getParticipants:()=>(document.getElementById('participantsInp').value||'').split(','),
+    getPayer:()=>document.getElementById('payerInp').value||''
+  });
+  ['participantsInp','payerInp'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.addEventListener('input',()=>_addSplitUI.render());
+  });
+  _addSplitUI.render();
+})();
+
 function clearInputs(){
   pasteTa.value='';
   document.getElementById('payMethod').value='card';
   document.getElementById('payerInp').value=getMyName();
   _setCategoryValue('',{auto:false});
   document.getElementById('participantsInp').value='';
+  if(_addSplitUI)_addSplitUI.reset();
   document.getElementById('tagInp').value='';
   document.getElementById('noteInp').value='';
   document.getElementById('gjPersonInp').value='';
@@ -4963,6 +5119,13 @@ async function _saveDirectEntry(){
     tags,
     createdAt:nowISO(),updatedAt:nowISO(),
   };
+  // v3.35 — 분담 방식(한턱/제외). 참석자에 실제로 있는 이름만 남긴다.
+  if(_addSplitUI){
+    const sp=_addSplitUI.getState();
+    if(sp.treat)rec.treat=true;
+    const ex=(sp.splitExclude||[]).filter(n=>participants.includes(n));
+    if(ex.length)rec.splitExclude=ex;
+  }
   const dup=receipts.find(r=>r.date===rec.date&&(r.store||'').trim()===rec.store&&r.total===rec.total);
   if(dup){const ok=await _confirmDup(rec.store,rec.date,rec.total);if(!ok)return;}
   await dbPut('receipts',rec);
@@ -5286,11 +5449,8 @@ function renderParticipantSummaryHtml(name, filtered){
 
   const sorted=[...filtered].sort((a,b)=>b.date.localeCompare(a.date));
 
-  // 분담금 계산 (각 영수증 total / 참석자 수)
-  const myShare=filtered.reduce((s,r)=>{
-    const cnt=(r.participants||[]).length||1;
-    return s+Math.round((r.total||0)/cnt);
-  },0);
+  // 분담금 계산 (한턱·제외 반영 — _receiptShare가 단일 진실원)
+  const myShare=filtered.reduce((s,r)=>s+_receiptShare(r,name),0);
   const avgShare=filtered.length>0?Math.round(myShare/filtered.length):0;
 
   // 히어로 카드 (참석 횟수 + 분담금)
@@ -5311,8 +5471,7 @@ function renderParticipantSummaryHtml(name, filtered){
   const catMap={};
   for(const r of filtered){
     const k=r.category||'미분류';
-    const cnt=(r.participants||[]).length||1;
-    const share=Math.round((r.total||0)/cnt);
+    const share=_receiptShare(r,name);
     if(share>0) catMap[k]=(catMap[k]||0)+share;
   }
   const catEntries=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
@@ -5370,7 +5529,7 @@ function renderParticipantSummaryHtml(name, filtered){
       <thead><tr><th>일자</th><th>매장명</th><th>인원</th><th>분담금</th></tr></thead>
       <tbody>${sorted.map(r=>{
         const cnt=(r.participants||[]).length||1;
-        const share=Math.round((r.total||0)/cnt);
+        const share=_receiptShare(r,name);
         return `<tr class="srch-row" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
           <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
           <td>${escapeHtml(r.store||'')}</td>
@@ -5390,10 +5549,7 @@ function renderParticipantSummaryHtml(name, filtered){
 function renderPersonDashboardHtml(name, payerRecs, partRecs){
   // 히어로 카드 — 결제 vs 참석
   const totalPaid=payerRecs.reduce((s,r)=>s+(r.total||0),0);
-  const totalShare=partRecs.reduce((s,r)=>{
-    const cnt=(r.participants||[]).length||1;
-    return s+Math.round((r.total||0)/cnt);
-  },0);
+  const totalShare=partRecs.reduce((s,r)=>s+_receiptShare(r,name),0);
   const heroHtml=`<div class="payer-hero">
     <div class="payer-stat total">
       <div class="payer-stat-lbl">결제 총액</div>
@@ -5443,7 +5599,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     const sorted=[...partRecs].sort((a,b)=>b.date.localeCompare(a.date));
     const rows=sorted.map(r=>{
       const cnt=(r.participants||[]).length||1;
-      const share=Math.round((r.total||0)/cnt);
+      const share=_receiptShare(r,name);
       return `<tr class="srch-row" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
         <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
         <td>${escapeHtml(r.store||'')}</td>
@@ -5822,14 +5978,14 @@ function renderLedgerPanel(recs){
     if(pparts.length){
       const maxPP=Math.max(...pparts.map(p=>p.amt));
       partHtml=`<div class="budget-section ledger-part-section">
-        ${_sectionToggleHtml('참석자별 분담',`${pparts.length}명 · 1/N 균등 배분`,'month_participant',false)}
+        ${_sectionToggleHtml('사람별 분담',_splitSubtitle(recs,pparts.length),'month_participant',false)}
         <div class="section-body closed">
           <div class="cat-bars" style="padding-top:8px;">
             ${pparts.map((p,i)=>{
               const w=maxPP>0?(p.amt/maxPP*100):0;
               return `<div class="cat-bar-row" data-rank="${Math.min(i,4)}">
                 <div class="cat-bar-top">
-                  <span class="cat-bar-name">${escapeHtml(p.name)}</span>
+                  <span class="cat-bar-name"><span class="pp-name-link" data-name="${escapeHtml(p.name)}" role="button" tabindex="0" title="${escapeHtml(p.name)} 내역 보기">${escapeHtml(p.name)}</span></span>
                   <span class="cat-bar-amt">${fmtMoney(p.amt)}원</span>
                 </div>
                 <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;background:var(--blue);"></div></div>
@@ -6118,14 +6274,14 @@ function renderMonthSummaryHtml(ym){
     const maxPP=Math.max(...pparts.map(p=>p.amt));
     participantHtml=`
       <div class="budget-section">
-        ${_sectionToggleHtml('참석자별 분담',`${pparts.length}명 · 1/N 균등 배분`,'month_participant',false)}
+        ${_sectionToggleHtml('사람별 분담',_splitSubtitle(receiptsForMonth(ym),pparts.length),'month_participant',false)}
         <div class="section-body closed">
           <div class="cat-bars" style="padding-top:8px;">
             ${pparts.map((p,i)=>{
               const w=maxPP>0?(p.amt/maxPP*100):0;
               return `<div class="cat-bar-row" data-rank="${Math.min(i,4)}">
                 <div class="cat-bar-top">
-                  <span class="cat-bar-name">${escapeHtml(p.name)}</span>
+                  <span class="cat-bar-name"><span class="pp-name-link" data-name="${escapeHtml(p.name)}" role="button" tabindex="0" title="${escapeHtml(p.name)} 내역 보기">${escapeHtml(p.name)}</span></span>
                   <span class="cat-bar-amt">${fmtMoney(p.amt)}원</span>
                 </div>
                 <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;background:var(--blue);"></div></div>
@@ -6410,6 +6566,13 @@ function _bindReceiptRows(root){
 
 async function renderDetail(){
   const body=document.getElementById('detailBody');
+  // v3.35 — '사람별 분담' 이름 클릭 → 인물 검색. detailBody에 1회만 위임 바인딩.
+  if(body&&!body.dataset.ppBound){
+    body.dataset.ppBound='1';
+    const goLink=e=>{const l=e.target.closest('.pp-name-link');if(l&&body.contains(l)){e.preventDefault();_goPersonSearch(l.dataset.name);}};
+    body.addEventListener('click',goLink);
+    body.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('.pp-name-link')){goLink(e);}});
+  }
   // v3.33 — 기간 바텀시트가 body로 포탈된 채 남으면(다른 렌더로 전환 시) 반투명 백드롭이 화면을 덮는다.
   // 어떤 분기로 렌더되든 진입 시 항상 잔재를 제거한다(가계부 분기 전용이던 정리를 전역으로 승격).
   document.querySelectorAll('body > #lpBackdrop, body > #lpRangePop').forEach(n=>n.remove());
@@ -6649,7 +6812,15 @@ async function renderDetail(){
       <div class="kv full">
         <div class="kv-lbl">참석자</div>
         <input id="dParticipants" class="kv-inp" type="text" value="${escapeHtml((r.participants||[]).join(', '))}" placeholder="예: 철수, 영희, 민준"/>
-        ${(r.participants||[]).length>1?`<div class="field-sub">1인당 약 ${fmtMoney(Math.round((r.total||0)/(r.participants||[]).length))}원</div>`:''}
+      </div>
+      <div class="kv full pp-split-block" id="dSplitBlock">
+        <div class="kv-lbl">분담 방식 <span class="field-lbl-hint">참석자가 있을 때 적용</span></div>
+        <div class="pp-treatbar" id="dTreatBar">
+          <div class="pp-treat-txt"><span class="pp-treat-t">🎉 한턱</span><span class="pp-treat-d">결제자가 전액 부담 · 나머지 참석자는 0원</span></div>
+          <button type="button" class="pp-switch" id="dTreatSw" role="switch" aria-checked="false" aria-label="한턱 켜기"></button>
+        </div>
+        <div class="pp-chips" id="dPpChips"></div>
+        <div class="pp-split-hint" id="dSplitHint"></div>
       </div>
     </div>`;
   const memoFieldsHtml=`
@@ -6911,6 +7082,25 @@ async function renderDetail(){
   // ── 참석자·메모·태그 (input → dirty 표시, 저장은 수정 확인 버튼) ──
   const dp2=document.getElementById('dParticipants');
   if(dp2) dp2.addEventListener('input',()=>_detailSetDirty(true));
+  // v3.35 — 분담 방식(한턱/제외) 컨트롤러(상세)
+  _dSplitUI=null;
+  const dChips=document.getElementById('dPpChips');
+  if(dChips){
+    const dPayerInp=body.querySelector('[data-field="paidBy"]');
+    _dSplitUI=_makeSplitUI({
+      chips:dChips,
+      treatBar:document.getElementById('dTreatBar'),
+      treatSw:document.getElementById('dTreatSw'),
+      hint:document.getElementById('dSplitHint'),
+      getParticipants:()=>(document.getElementById('dParticipants').value||'').split(','),
+      getPayer:()=>dPayerInp?dPayerInp.value:'',
+      getTotal:()=>r.total||0,
+      onChange:()=>_detailSetDirty(true)
+    });
+    _dSplitUI.setState(r.treat,r.splitExclude);
+    if(dp2) dp2.addEventListener('input',()=>_dSplitUI.render());
+    if(dPayerInp) dPayerInp.addEventListener('input',()=>_dSplitUI.render());
+  }
   const dn=document.getElementById('dNotes');
   if(dn) dn.addEventListener('input',()=>_detailSetDirty(true));
   const dt=document.getElementById('dTags');
@@ -6941,6 +7131,13 @@ async function renderDetail(){
     if(_dp) r.participants=_dp.value.split(',').map(s=>s.trim()).filter(Boolean);
     const _dt=document.getElementById('dTags');
     if(_dt) r.tags=_dt.value.split(',').map(s=>s.trim()).filter(Boolean);
+    // v3.35 — 분담 방식. 참석자에 실제 있는 이름만 남기고, 꺼진 값은 필드 자체를 제거(기존 데이터 오염 방지).
+    if(_dSplitUI){
+      const sp=_dSplitUI.getState();
+      if(sp.treat)r.treat=true;else delete r.treat;
+      const ex=(sp.splitExclude||[]).filter(n=>(r.participants||[]).includes(n));
+      if(ex.length)r.splitExclude=ex;else delete r.splitExclude;
+    }
     // 총액: 품목 있으면 합계 자동계산, 없으면 dTotalAmt 입력값 사용 (직접 입력 영수증)
     if((r.items||[]).length>0){
       r.total=r.items.reduce((s,i)=>s+(i.amount||0),0);
@@ -7234,6 +7431,9 @@ function _validateReceiptRecord(raw){
     paidBy:String(raw.paidBy||''),
     notes:String(raw.notes||''),
     imageId:raw.imageId==null?'':String(raw.imageId),
+    // v3.35 — 분담 방식. 타입을 표준화(불리언·문자열 배열)해 손상 백업이 잘못된 값을 넣지 못하게.
+    treat:raw.treat===true,
+    splitExclude:Array.isArray(raw.splitExclude)?raw.splitExclude.map(v=>String(v||'')).filter(Boolean):[],
   };
 }
 function _validateImageRecord(raw){
