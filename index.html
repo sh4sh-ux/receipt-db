@@ -2462,7 +2462,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 // v3.26 — 도넛 구성: 범례를 우측 정렬하고, 도넛을 (왼쪽 여분)=(도넛↔범례 여분)이 되도록 그 사이 정중앙에.
 //   flex auto 마진 2개(.donut margin-left:auto, .donut-legend flex:0 1 auto + margin-left:auto, wrap gap 0).
 //   데스크탑·모바일 공통. 세로 중앙·7슬롯 균등·색·계산 불변.
-const APP_VERSION='v3.26';
+// v3.27 — 기간 범위(📅) 팝오버가 바깥 클릭/ESC로 닫히지 않던 것 수정. 전역 click·keydown 리스너 1회 등록
+//   (팝오버는 renderDetail마다 재생성되므로 live query). 달력 버튼·팝오버 내부 클릭은 자체 토글이 처리해 제외.
+const APP_VERSION='v3.27';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -3855,6 +3857,19 @@ document.querySelectorAll('[data-photo-filter]').forEach(btn=>{
 document.getElementById('listSortSel')?.addEventListener('change',e=>{
   _listSort=e.target.value;
   renderSide();
+});
+// v3.27 — 기간 범위(📅) 팝오버: 바깥 클릭 또는 ESC로 닫기. 팝오버는 renderDetail마다 다시 그려지므로
+// 전역 리스너 1회 등록 + 매번 live query한다. 달력 버튼 자신·팝오버 내부 클릭은 자체 토글이 처리하므로 제외.
+document.addEventListener('click',e=>{
+  const pop=document.getElementById('lpRangePop');
+  if(!pop||pop.hidden)return;
+  if(e.target.closest&&(e.target.closest('#lpRangePop')||e.target.closest('.lp-seg button.lp-cal')))return;
+  pop.hidden=true;
+});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  const pop=document.getElementById('lpRangePop');
+  if(pop&&!pop.hidden)pop.hidden=true;
 });
 
 document.getElementById('batchSelectToggle').addEventListener('click',()=>_setBatchSelectMode(!_batchSelectMode));

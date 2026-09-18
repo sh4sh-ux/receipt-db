@@ -95,6 +95,10 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.27` — **기간 범위(📅) 팝오버 바깥 클릭/ESC 닫기.** 달력 버튼으로 연 `#lpRangePop`이 바깥을 눌러도 안
+  닫히던 것 수정. 전역 `click`·`keydown` 리스너 1회 등록(팝오버는 `renderDetail`마다 재생성되므로 매번 live
+  query). 달력 버튼 자신(`.lp-seg button.lp-cal`)·팝오버 내부 클릭은 자체 토글이 처리하므로 제외 → 다른 곳을
+  누르면 닫힌다. 필터·계산·데이터 불변.
 - `v3.26` — **도넛 구성: 범례 우측 정렬 + 도넛 중앙 여백 균등.** 범례를 오른쪽 끝으로 정렬하고, 도넛을
   (왼쪽 여분)=(도넛↔범례 여분)이 되도록 그 사이 정중앙에 배치. flex의 auto 마진 2개로 구현
   (`.donut{margin-left:auto}`, `.donut-legend{flex:0 1 auto;margin-left:auto}`, `.donut-wrap{gap:0}`) — 두 여분이
