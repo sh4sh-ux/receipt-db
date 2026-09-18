@@ -882,15 +882,18 @@ svg{display:block;flex-shrink:0;}
 .lp-canvas{position:relative;height:176px;}
 .lp-grid{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;}
 .lp-grid span{display:block;height:0;border-top:1px dashed var(--sep);}
-.lp-bars{position:absolute;inset:0;display:flex;align-items:flex-end;gap:3px;}
-.lp-bar{flex:1;min-width:0;background:transparent;border-radius:3px 3px 0 0;transition:opacity .12s;position:relative;cursor:default;}
+.lp-bars{position:absolute;inset:0;display:flex;align-items:stretch;gap:3px;}
+/* v3.34 — 막대가 낮아도(금액 작아도) 쉽게 누르도록 세로 전체 높이를 터치 영역(.lp-col)으로. 막대 모양은 그대로 */
+.lp-col{flex:1;min-width:0;display:flex;align-items:flex-end;position:relative;cursor:pointer;}
+.lp-col:not(.has){cursor:default;}
+.lp-bar{width:100%;background:transparent;border-radius:3px 3px 0 0;transition:opacity .12s;position:relative;}
 .lp-bar.has{background:#60A5FA;opacity:.92;}
-.lp-bar.has:hover{opacity:1;}
+.lp-col:hover .lp-bar.has{opacity:1;}
 .lp-xaxis{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--label2);font-variant-numeric:tabular-nums;}
 /* v3.22 — 밝은 툴팁(흰 카드). 금액만 Bold+진하게, 날짜/건수는 얇고 차분하게. 자식 요소라 부분 스타일 가능.
    흰 배경+흰 글자 금지 규칙 준수(배경 흰색, 글자는 #111827/#6B7280 고정 — 두 테마 모두 가독). */
 .lp-bar .lp-tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(2px);opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:9px;box-shadow:0 4px 14px rgba(17,24,39,.10);padding:8px 11px;white-space:nowrap;text-align:center;z-index:7;}
-.lp-bar:hover .lp-tip{opacity:1;transform:translateX(-50%) translateY(0);}
+.lp-col:hover .lp-tip{opacity:1;transform:translateX(-50%) translateY(0);}
 .lp-tip .d{display:block;font-size:12px;font-weight:500;color:#6B7280;line-height:1.3;}
 .lp-tip .a{display:block;font-size:14px;font-weight:700;color:#111827;line-height:1.35;margin-top:1px;}
 .lp-tip .c{display:block;font-size:12px;font-weight:400;color:#6B7280;line-height:1.3;margin-top:1px;}
@@ -2504,7 +2507,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
-const APP_VERSION='v3.33';
+// v3.34 — 지출 추이: 막대가 낮으면(금액 작으면) 터치 영역이 3~4px라 호버/탭이 어렵던 것 개선. 각 막대를 세로
+//   전체 높이의 투명 칸(.lp-col)으로 감싸 그 칸 어디를 눌러도 툴팁이 뜬다(막대 모양·툴팁 위치·계산 불변).
+const APP_VERSION='v3.34';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5751,7 +5756,7 @@ function renderLedgerPanel(recs){
           <div class="lp-canvas">
             <div class="lp-grid">${tr.yTicks.map(()=>'<span></span>').join('')}</div>
             <div class="lp-bars">
-              ${tr.bars.map(b=>{const h=yMax>0?(b.amt>0?Math.max(2,Math.round(b.amt/yMax*100)):0):0;return `<div class="lp-bar${b.amt>0?' has':''}" style="height:${h}%;">${b.amt>0?`<span class="lp-tip"><span class="d">${escapeHtml(b.lbl)}</span><span class="a">${fmtMoney(b.amt)}원</span><span class="c">영수증 ${b.cnt}건</span></span>`:''}</div>`;}).join('')}
+              ${tr.bars.map(b=>{const h=yMax>0?(b.amt>0?Math.max(2,Math.round(b.amt/yMax*100)):0):0;return `<div class="lp-col${b.amt>0?' has':''}"><div class="lp-bar${b.amt>0?' has':''}" style="height:${h}%;">${b.amt>0?`<span class="lp-tip"><span class="d">${escapeHtml(b.lbl)}</span><span class="a">${fmtMoney(b.amt)}원</span><span class="c">영수증 ${b.cnt}건</span></span>`:''}</div></div>`;}).join('')}
             </div>
           </div>
           <div class="lp-xaxis">${tr.axis.map(a=>`<span>${escapeHtml(a)}</span>`).join('')}</div>
