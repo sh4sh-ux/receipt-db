@@ -95,6 +95,20 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.37` — **사용자 피드백 10건 일괄 반영.** ① **상세 '수정 확인' 두 번 눌러야 저장되던 것 근본 수정** —
+  저장바(`#detailSaveBar`)가 `_detailDirty`일 때만 보였는데, 편집 직후 **백그라운드 동기화의 `renderDetail`이
+  `_detailSetDirty(false)`로 버튼을 숨겨** 첫 클릭이 허공에 떨어졌다. `_detailSetDirty`를 **영수증이 열려 있으면
+  항상 `display:flex`**로 바꿔 근본 제거(저장은 멱등이라 안전). ② **검색 디바운스 안전판** — v3.36의 음절별
+  compositionend 의존을 버리고 **조합 여부와 무관하게 input마다 현재 합성값을 180ms 디바운스 적용**('김승환'을
+  쳐도 중간값 '김승호'가 고착되던 회귀 수정, Enter 즉시). ③ **왼쪽 목록**: 일 헤더('5월 25일')와 품목 매칭 줄
+  제거 — 카드에 이미 결제일자가 있고 품목 줄(이름을 품목에 적는 사용법)이 혼란스러웠음. **월 헤더만 유지.**
+  ④ **홈 로고(app-title/navBrandBtn) → 해당 월 대시보드**(`_mobileListMode='stats'`+`_ledgerTimeFilter=month`).
+  ⑤ **모바일 기간 바텀시트 날짜칸 우측 오버플로 방지**(iOS `input[type=date]`에 `-webkit-appearance:none;min-width:0`).
+  ⑥ **사람별 분담: 이름뿐 아니라 행 전체 클릭 → 인물 검색**(`.pp-row[data-ppname]`, 위임 핸들러 `[data-ppname]`).
+  ⑦ **사이드푸터·추가 액션바 높이 1.5배**(side-foot 55→82px, actions padding 9→23px) + **가운데 정렬**
+  (`justify-content:center`). ⑧ **분담 칩 이름↔태그 여백**(gap 6→9px). ⑨ **참석 내역 인원·분담금 우측정렬**
+  (th/td `text-align:right`). ⑩ **전역 `tabular-nums`**(더치페이식 숫자·콤마 폭 정렬, `html,body`). 검증: 데스크탑
+  1280·모바일 390 스크린샷 + 저장바 항상표시·행 클릭·날짜칸 비오버플로·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.36` — **한글 IME 관련 버그 2건 수정.** ① **검색이 '신유'(2글자)에서 먼저 적용되던 것**: 한글은 음절마다
   `compositionend`가 떠서('신'→'신유'→'신유철') 중간 상태가 검색에 반영돼 부분매칭 결과가 번쩍였다. 검색 적용을
   **180ms 디바운스**(`_scheduleSearch`)로 묶어 빠르게 타이핑하면 마지막 상태만 반영되고, **Enter는 즉시 적용**
