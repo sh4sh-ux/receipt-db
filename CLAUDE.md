@@ -95,6 +95,14 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.36` — **한글 IME 관련 버그 2건 수정.** ① **검색이 '신유'(2글자)에서 먼저 적용되던 것**: 한글은 음절마다
+  `compositionend`가 떠서('신'→'신유'→'신유철') 중간 상태가 검색에 반영돼 부분매칭 결과가 번쩍였다. 검색 적용을
+  **180ms 디바운스**(`_scheduleSearch`)로 묶어 빠르게 타이핑하면 마지막 상태만 반영되고, **Enter는 즉시 적용**
+  (`keydown` `!isComposing`). `_clearSearch`에서 타이머 취소. ② **상세 '수정 확인'을 두 번 눌러야 저장되던 것**:
+  입력칸에 포커스(특히 IME 조합)가 있을 때 버튼 첫 클릭이 blur·IME 확정 제스처에 먹혔다. 버튼 `onmousedown`에서
+  `preventDefault()`로 **포커스 훔치기를 차단**해 첫 클릭이 그대로 저장으로 이어지게 하고, 핸들러 시작에서
+  `document.activeElement.blur()`로 조합을 확정한 뒤 값을 읽는다. Playwright로 재현·검증(빠른 타이핑 시 중간
+  '신유' 미적용·Enter 즉시·1회 클릭 저장), 계산 회귀·e2e·Dutch Pay 불변. 변경 파일 `index.html`만.
 - `v3.35` — **사람별 분담 정확도: 한턱(treat)·깍두기(제외, splitExclude) + 이름 변경/클릭.** 참석은 했지만
   비용을 안 낸 사람을 0원으로 정확히 잡기 위한 기능. ① **계산 단일 진실원**: `_ppSplitters`/`_receiptShare`/
   새 `_participantSplit`(index.html ~3122)로 통일. `treat`=결제자 전액·나머지 0원, `splitExclude`=참석 유지·분담 0원

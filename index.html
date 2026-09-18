@@ -2542,10 +2542,13 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.36 — 한글 IME 두 가지 버그 수정. ① 검색: 음절마다 compositionend가 떠서 '신유철'이 '신유'에서
+//   먼저 적용돼 중간 결과가 번쩍이던 것 → 180ms 디바운스(빠르게 치면 최종만 반영, Enter는 즉시). ② 상세
+//   수정확인: 입력칸 포커스/IME 조합 중 버튼 첫 클릭이 blur·IME 확정에 먹혀 '두 번 눌러야' 저장되던 것 →
+//   버튼 onmousedown에서 preventDefault(포커스 훔치기 차단) + 핸들러 시작에 활성 입력 blur로 조합 확정.
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
-//   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일. 두 필드 모두
-//   선택적·후방호환(없으면 예전 1/N과 byte-identical, 회귀 테스트로 증명). Dutch Pay 페이로드 불변.
-const APP_VERSION='v3.35';
+//   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
+const APP_VERSION='v3.36';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -4135,6 +4138,7 @@ let _searchComposing=false;
 
 function _updateSearchClear(){searchClear.classList.toggle('vis',!!searchInp.value);}
 function _clearSearch(){
+  if(typeof _searchTimer!=='undefined')clearTimeout(_searchTimer);
   searchQuery='';searchInp.value='';_monthCatFilter=null;
   _personTimeFilter={type:'all',value:''};_ledgerTimeFilter={type:'month'};
   _updateSearchClear();renderSide();renderDetail();searchInp.focus();
@@ -4150,14 +4154,25 @@ function _applySearchInput(){
   _ledgerTimeFilter={type:'month'};
   _updateSearchClear();renderSide();renderDetail();
 }
+// v3.36 — 검색 디바운스. 한글은 음절마다 compositionend가 떠서('신'→'신유'→'신유철')
+//   예전엔 '신유'(2글자)에서 이미 검색이 적용돼 중간 결과가 번쩍였다. 짧게 묶어(180ms)
+//   빠르게 타이핑하면 마지막 상태만 적용되고, 멈추면 그때 반영된다. Enter는 즉시 적용.
+let _searchTimer=null;
+function _scheduleSearch(){
+  clearTimeout(_searchTimer);
+  _searchTimer=setTimeout(_applySearchInput,180);
+}
 searchInp.addEventListener('compositionstart',()=>{_searchComposing=true;});
-searchInp.addEventListener('compositionend',()=>{_searchComposing=false;_applySearchInput();});
+searchInp.addEventListener('compositionend',()=>{_searchComposing=false;_scheduleSearch();});
 // 조합 중엔 중간 상태로 렌더하지 않는 게 기본(IME 규칙)이지만,
 // 초성 검색은 마지막 자음이 계속 조합 버퍼에 남아 한 글자씩 늦게 반영된다.
 // 자음만 있는 값은 조합 중이어도 바로 반영한다.
 searchInp.addEventListener('input',()=>{
   if(_searchComposing&&!_isChoQuery(searchInp.value))return;
-  _applySearchInput();
+  _scheduleSearch();
+});
+searchInp.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.isComposing){clearTimeout(_searchTimer);_searchComposing=false;_applySearchInput();}
 });
 
 // 앱 제목 클릭 → 초기 화면으로 리셋
@@ -7107,7 +7122,13 @@ async function renderDetail(){
   if(dt) dt.addEventListener('input',()=>_detailSetDirty(true));
 
   // ── 수정 확인 / 되돌리기 ──
-  document.getElementById('detailConfirmBtn').onclick=async()=>{
+  // v3.36 — 입력칸에 포커스(특히 한글 IME 조합)가 있을 때 버튼을 누르면 첫 클릭이 blur/IME 확정에
+  //   먹혀 "두 번 눌러야" 저장되던 문제. mousedown에서 preventDefault로 포커스 훔치기를 막아
+  //   첫 클릭이 그대로 저장으로 이어지게 하고, 핸들러 시작에서 활성 입력을 blur해 조합을 확정한다.
+  const _confirmBtn=document.getElementById('detailConfirmBtn');
+  _confirmBtn.onmousedown=e=>e.preventDefault();
+  _confirmBtn.onclick=async()=>{
+    try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur();}catch(_){}
     _syncDetailFromInputs(r);
     const dTotalBeforeSave=document.getElementById('dTotalAmt');
     const draftTotal=dTotalBeforeSave?_parseN(dTotalBeforeSave.value):(r.total||0);
