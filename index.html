@@ -2502,7 +2502,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   더보기에 만료 차감·정보 수정. 선불권 삭제(카드 전체 삭제)는 추가하지 않음(동기화 로직 보존).
 // v3.32 — 선불권 목록 카드가 좁은 그리드 칸에서 잔액·통계가 깨지던 것 수정(전체폭 세로 스택).
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
-const APP_VERSION='v3.32';
+// v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
+//   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+const APP_VERSION='v3.33';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6403,6 +6405,9 @@ function _bindReceiptRows(root){
 
 async function renderDetail(){
   const body=document.getElementById('detailBody');
+  // v3.33 — 기간 바텀시트가 body로 포탈된 채 남으면(다른 렌더로 전환 시) 반투명 백드롭이 화면을 덮는다.
+  // 어떤 분기로 렌더되든 진입 시 항상 잔재를 제거한다(가계부 분기 전용이던 정리를 전역으로 승격).
+  document.querySelectorAll('body > #lpBackdrop, body > #lpRangePop').forEach(n=>n.remove());
   body.classList.toggle('stats-redesign',!selectedId&&!searchQuery);
   body.classList.remove('mob-compact');
   // v3.17 — 기간 컨트롤은 헤더 슬롯(제목 행 우측)에 렌더. 기본은 비워두고 가계부 분기에서만 채운다.

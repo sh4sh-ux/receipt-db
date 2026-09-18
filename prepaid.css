@@ -26,8 +26,6 @@
 .pp-detail{padding-top:4px;display:flex;flex-direction:column;gap:22px}
 /* 정체성 행(아이콘 + 이름/카테고리 + 유효기간 pill) */
 .pp-id{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center}
-.pp-id-icon{width:48px;height:48px;border-radius:12px;background:var(--fill2);display:grid;place-items:center;color:var(--blue)}
-.pp-id-icon svg,.pp-id-icon img,.pp-id-icon .cat-icon-mask{width:26px;height:26px}
 .pp-id-text{min-width:0}
 .pp-id-name{display:flex;align-items:center;gap:5px;font-size:19px;font-weight:700;min-width:0}
 .pp-id-nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
@@ -125,7 +123,6 @@
  .pp-total-value{font-size:28px}
  .pp-cards{grid-template-columns:1fr;gap:12px}
  .pp-card{gap:16px;padding:18px}
- .pp-id-icon{width:44px;height:44px}
  .pp-id-name{font-size:18px}
  /* 잔액 위, 통계 3칸 아래 — 시안(폰1)처럼 라벨+값만, 보조라벨 숨김 */
  .pp-core{flex-direction:column;gap:16px}
