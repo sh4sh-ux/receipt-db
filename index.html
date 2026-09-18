@@ -800,24 +800,35 @@ svg{display:block;flex-shrink:0;}
 .ledger-period-slot .ledger-period{padding-bottom:0;flex-wrap:nowrap;}
 /* v3.17 — 카테고리별 지출과 참석자별 분담 사이 구분 강화(약 24px) */
 .stats-redesign .ledger-part-section{margin-top:24px;}
-.lp-seg{display:inline-flex;background:var(--fill2);border:1px solid var(--sep);border-radius:9px;padding:2px;gap:2px;}
-.lp-seg button{border:0;background:none;color:var(--label2);font:inherit;font-size:12.5px;font-weight:600;padding:6px 14px;border-radius:7px;cursor:pointer;transition:background .12s,color .12s;}
-.lp-seg button:hover{color:var(--label);}
-.lp-seg button.on{background:var(--blue);color:#fff;}
-.lp-seg button.lp-cal{display:inline-flex;align-items:center;justify-content:center;padding:6px 9px;}
-.lp-seg button.lp-cal svg{display:block;}
-/* 기간 범위 칩 + 직접 선택 팝오버 */
-.lp-range-chip{font-size:12px;font-weight:600;color:var(--blue-txt);background:var(--blue-bg);border-radius:7px;padding:5px 10px;font-variant-numeric:tabular-nums;}
+/* v3.29 — 통합 기간 선택 컨트롤: 트리거 버튼 + 데스크탑 팝오버 / 모바일 바텀시트.
+   기존 4-pill 세그먼트(.lp-seg)를 하나의 트리거로 통합. 계산/필터 로직은 불변. */
+.lp-trigger{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;background:var(--card);border:1px solid var(--sep2);border-radius:9px;color:var(--label);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:border-color .12s,box-shadow .12s;max-width:100%;}
+.lp-trigger:hover{border-color:var(--blue);}
+.lp-trigger:focus-visible{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg);}
+.lp-trigger .lp-tr-cal{color:var(--blue);flex:0 0 auto;display:block;}
+.lp-trigger .lp-tr-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.lp-trigger .lp-tr-label-m{display:none;}
+.lp-trigger .lp-tr-chev{color:var(--label2);flex:0 0 auto;display:block;}
 .lp-cal-wrap{position:relative;}
-.lp-range-pop{position:absolute;right:0;top:calc(100% + 8px);z-index:45;width:230px;background:var(--card);border:1px solid var(--sep2);border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,.10);padding:14px;text-align:left;}
-.lp-range-pop[hidden]{display:none;}
-.lp-range-title{font-size:12px;font-weight:700;color:var(--label2);margin-bottom:10px;}
-.lp-range-field{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--label2);margin-bottom:8px;}
-.lp-range-field input{border:1px solid var(--sep2);border-radius:7px;padding:6px 8px;font:inherit;font-size:12.5px;background:var(--bg);color:var(--label);}
-.lp-range-actions{display:flex;justify-content:space-between;gap:8px;margin-top:12px;}
-.lp-range-actions button{border-radius:7px;padding:7px 14px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid var(--sep2);}
-.lp-range-reset{background:var(--card);color:var(--label2);}
-.lp-range-apply{background:var(--blue);color:#fff;border-color:var(--blue);}
+/* 백드롭 — 모바일 바텀시트에서만 보임(데스크탑은 항상 display:none, 바깥 클릭은 전역 핸들러가 처리) */
+.lp-pop-backdrop{position:fixed;inset:0;z-index:200;background:rgba(15,23,42,.32);display:none;}
+/* 팝오버(데스크탑 기본): 트리거 바로 아래 우측 정렬 */
+.lp-pop{position:absolute;right:0;top:calc(100% + 8px);z-index:201;width:320px;max-width:calc(100vw - 32px);background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:0 10px 30px rgba(15,23,42,.14);padding:16px;text-align:left;}
+.lp-pop[hidden]{display:none;}
+.lp-pop-handle{display:none;}
+.lp-pop-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.lp-pop-title{font-size:13px;font-weight:700;color:var(--label);}
+.lp-pop-close{display:none;border:0;background:none;color:var(--label2);font-size:22px;line-height:1;cursor:pointer;padding:0 2px;}
+.lp-pop-sec-label{font-size:11.5px;font-weight:600;color:var(--label2);margin-bottom:8px;}
+.lp-pop-sec-label.active{color:var(--blue);}
+.lp-quick{display:flex;gap:8px;flex-wrap:wrap;}
+.lp-quick button{flex:1 1 auto;min-width:74px;border:1px solid var(--sep2);background:var(--card);color:var(--label);font:inherit;font-size:12.5px;font-weight:600;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s,color .12s,border-color .12s;}
+.lp-quick button:hover{border-color:var(--blue);}
+.lp-quick button.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+.lp-pop-divider{height:1px;background:var(--sep);margin:14px 0;}
+.lp-range-field{display:flex;flex-direction:column;align-items:stretch;gap:5px;font-size:12px;color:var(--label2);margin-bottom:10px;}
+.lp-range-field input{width:100%;box-sizing:border-box;border:1px solid var(--sep2);border-radius:8px;padding:9px 10px;font:inherit;font-size:13px;background:var(--bg);color:var(--label);}
+.lp-range-apply{width:100%;border-radius:9px;padding:10px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--blue);background:var(--blue);color:#fff;margin-top:2px;}
 /* 카테고리 정렬 드롭다운 */
 .hd-cat-tools{display:inline-flex;align-items:center;gap:10px;}
 .cat-sort-sel{border:1px solid var(--sep2);border-radius:7px;padding:4px 24px 4px 9px;font:inherit;font-size:11.5px;font-weight:600;color:var(--label);background:var(--card) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 7px center;appearance:none;-webkit-appearance:none;cursor:pointer;text-transform:none;letter-spacing:0;}
@@ -894,9 +905,20 @@ svg{display:block;flex-shrink:0;}
   /* v3.19 — 기간 컨트롤을 모바일에서도 헤더 우측에. 좁은 폭에 맞게 pill 축소 */
   #ledgerPeriodSlot{align-self:center;}
   #ledgerPeriodSlot .ledger-period{gap:6px;}
-  #ledgerPeriodSlot .lp-seg button{padding:5px 8px;font-size:11px;}
-  #ledgerPeriodSlot .lp-seg button.lp-cal{padding:5px 6px;}
-  #ledgerPeriodSlot .lp-seg button.lp-cal svg{width:14px;height:14px;}
+  /* v3.29 — 모바일: 트리거 라벨은 항상 '기간'(폭 고정), 팝오버 → 바텀시트 */
+  .lp-trigger{height:32px;padding:0 11px;}
+  .lp-trigger .lp-tr-label-d{display:none;}
+  .lp-trigger .lp-tr-label-m{display:inline;}
+  .lp-pop-backdrop:not([hidden]){display:block;}
+  .lp-pop{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;max-width:none;border-radius:20px 20px 0 0;padding:16px 18px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -8px 30px rgba(15,23,42,.18);}
+  .lp-pop-handle{display:block;width:36px;height:4px;border-radius:2px;background:var(--sep2);margin:0 auto 12px;}
+  .lp-pop-title{font-size:15px;}
+  .lp-pop-close{display:block;}
+  .lp-pop-sec-label{font-size:12px;}
+  .lp-quick button{padding:12px 10px;font-size:13px;}
+  .lp-range-field{font-size:12.5px;}
+  .lp-range-field input{padding:11px 12px;font-size:14px;}
+  .lp-range-apply{padding:13px 14px;font-size:14px;}
 }
 /* v1.45 — 고급 옵션 토글 */
 /* v1.46 — 경조사 컨텍스트 필드 */
@@ -2464,7 +2486,21 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   데스크탑·모바일 공통. 세로 중앙·7슬롯 균등·색·계산 불변.
 // v3.27 — 기간 범위(📅) 팝오버가 바깥 클릭/ESC로 닫히지 않던 것 수정. 전역 click·keydown 리스너 1회 등록
 //   (팝오버는 renderDetail마다 재생성되므로 live query). 달력 버튼·팝오버 내부 클릭은 자체 토글이 처리해 제외.
-const APP_VERSION='v3.27';
+// v3.28 — 기간 범위(📅) 팝오버를 열 때 요약 '가장 많이 간 곳'(4번째 타일) 칸에 맞춰 폭을 실측 조정.
+//   오른쪽 끝 정렬(right:0) + 폭=타일 폭이라 왼쪽 모서리가 그 타일 왼쪽 구분선에 정렬된다(데스크탑·모바일).
+// v3.29 — 기간 선택 UI 통합. 4-pill 세그먼트 → 단일 트리거 버튼(데스크탑=현재 기간 라벨, 모바일=고정 '기간').
+//   트리거를 누르면 데스크탑은 팝오버, 모바일은 바텀시트가 열린다(빠른 선택 3개 + 직접 기간 선택 + 적용).
+//   기존 필터/계산 로직(_ledgerTimeFilter·viewMonth·_ledgerRange·_statsPeriodReceipts·renderSide/renderDetail)은 불변.
+// v3.30 — 선불권 화면(prepaid.js/css) UI/UX 개선. 계산·저장·거래(ppTotals·ppSuggestedUseAmount·ppLatestUse·
+//   ppCommit·ppEventForm·ppWalletForm)와 데이터는 전부 그대로 재사용. 목록=요약+선불권 카드(잔액 진행바·통계),
+//   상세=핵심 잔액 카드+진행바+통계 타일+Primary(1회 사용)/Secondary 액션+내역(전체/사용/충전 세그먼트,
+//   데스크탑 표·모바일 리스트, 실행 잔액 표시). 화면 내 뒤로가기 화살표 제거(헤더/구분선 유지, 탭 재선택으로 복귀).
+// v3.31 — 선불권 화면을 사용자 시안에 맞춰 재정렬(계산·저장·거래 로직 그대로 재사용). 상단 정보를 하나의 카드로
+//   통합(아이콘+이름+카테고리+유효기간 pill / 남은 잔액+진행바 왼쪽 · 3개 통계 박스[사용 횟수·최근 방문·1회 평균]
+//   오른쪽 / 아이콘 액션 버튼 행). 내역을 '사용 내역/충전 내역' 탭 + [최신순 ▾] 정렬로, 데스크탑 표(구분 컬러 칩 +
+//   행별 ••• 메뉴)·모바일 compact 리스트. 모바일 액션은 아이콘 버튼 4개([1회 사용][충전][환불][더보기]),
+//   더보기에 만료 차감·정보 수정. 선불권 삭제(카드 전체 삭제)는 추가하지 않음(동기화 로직 보존).
+const APP_VERSION='v3.31';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -3858,18 +3894,34 @@ document.getElementById('listSortSel')?.addEventListener('change',e=>{
   _listSort=e.target.value;
   renderSide();
 });
-// v3.27 — 기간 범위(📅) 팝오버: 바깥 클릭 또는 ESC로 닫기. 팝오버는 renderDetail마다 다시 그려지므로
-// 전역 리스너 1회 등록 + 매번 live query한다. 달력 버튼 자신·팝오버 내부 클릭은 자체 토글이 처리하므로 제외.
+// v3.29 — 통합 기간 컨트롤 열기/닫기(팝오버=데스크탑, 바텀시트=모바일). 요소는 renderDetail마다
+// 다시 그려지므로 id로 live query한다. 백드롭·트리거 aria도 함께 갱신.
+function _lpOpenPop(){
+  const pop=document.getElementById('lpRangePop'),bd=document.getElementById('lpBackdrop'),tr=document.getElementById('lpTrigger');
+  // 모바일 바텀시트는 뷰포트 기준으로 떠야 한다. 헤더에 backdrop-filter(반투명 블러)가 있어
+  // position:fixed가 헤더 안에 갇히므로, 열 때 backdrop+시트를 body로 이동(포탈)한다.
+  // 데스크탑 팝오버는 트리거 기준 absolute라 그대로 둔다. (재렌더 시 slot에 새로 그려지고 잔재는 아래에서 제거)
+  if(window.matchMedia('(max-width:780px)').matches){
+    if(bd)document.body.appendChild(bd);
+    if(pop)document.body.appendChild(pop);
+  }
+  if(pop)pop.hidden=false; if(bd)bd.hidden=false; if(tr)tr.setAttribute('aria-expanded','true');
+}
+function _lpClosePop(){
+  const pop=document.getElementById('lpRangePop'),bd=document.getElementById('lpBackdrop'),tr=document.getElementById('lpTrigger');
+  if(pop)pop.hidden=true; if(bd)bd.hidden=true; if(tr)tr.setAttribute('aria-expanded','false');
+}
+// 바깥 클릭 또는 ESC로 닫기. 트리거 자신·팝오버 내부 클릭은 자체 핸들러가 처리하므로 제외.
 document.addEventListener('click',e=>{
   const pop=document.getElementById('lpRangePop');
   if(!pop||pop.hidden)return;
-  if(e.target.closest&&(e.target.closest('#lpRangePop')||e.target.closest('.lp-seg button.lp-cal')))return;
-  pop.hidden=true;
+  if(e.target.closest&&(e.target.closest('#lpRangePop')||e.target.closest('#lpTrigger')))return;
+  _lpClosePop();
 });
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
   const pop=document.getElementById('lpRangePop');
-  if(pop&&!pop.hidden)pop.hidden=true;
+  if(pop&&!pop.hidden)_lpClosePop();
 });
 
 document.getElementById('batchSelectToggle').addEventListener('click',()=>_setBatchSelectMode(!_batchSelectMode));
@@ -3934,6 +3986,8 @@ document.querySelectorAll('.tab').forEach(t=>{
     if(_isMobileLayout()&&t.dataset.tab==='list'){
       _mobileListMode='list';selectedId=null;renderSide();renderDetail();
     }
+    // v3.30 — 선불권 탭 선택 시 항상 목록으로(상세의 별도 뒤로가기 화살표를 제거했으므로 탭 재선택이 목록 복귀 경로)
+    if(t.dataset.tab==='prepaid'&&typeof prepaidSelectedId!=='undefined')prepaidSelectedId=null;
     switchTab(t.dataset.tab);
   });
 });
@@ -6248,22 +6302,31 @@ function _ledgerFilterPillsHtml(f){
   const curYm=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const isThisMonth=t==='month'&&viewMonth===curYm;
   const isThisYear=t==='year'&&String(f.value)===String(now.getFullYear());
-  const seg=`<div class="lp-seg" role="group" aria-label="기간 선택">
-    <button type="button" data-lp="month" class="${isThisMonth?'on':''}">이번 달</button>
-    <button type="button" data-lp="year" class="${isThisYear?'on':''}">올해</button>
-    <button type="button" data-lp="all" class="${t==='all'?'on':''}">전체</button>
-    <button type="button" data-lp="range" class="lp-cal${t==='range'?' on':''}" aria-label="기간 직접 선택" title="기간 직접 선택">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-    </button>
-  </div>`;
-  const chip=t==='range'?`<span class="lp-range-chip">${escapeHtml(_ledgerPeriodLabel())}</span>`:'';
-  const pop=`<div class="lp-range-pop" id="lpRangePop" hidden>
-    <div class="lp-range-title">기간 직접 선택</div>
+  const rangeActive=t==='range';
+  const calIcon=`<svg class="lp-tr-cal" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>`;
+  const chev=`<svg class="lp-tr-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+  // 트리거: 데스크탑=현재 기간 라벨, 모바일=고정 '기간'(폭 고정). 상태는 공통(_ledgerTimeFilter).
+  const trigger=`<button type="button" class="lp-trigger" id="lpTrigger" aria-haspopup="dialog" aria-expanded="false" aria-label="기간 선택">
+    ${calIcon}<span class="lp-tr-label lp-tr-label-d">${escapeHtml(_ledgerPeriodLabel())}</span><span class="lp-tr-label-m">기간</span>${chev}
+  </button>`;
+  // 팝오버(데스크탑) / 바텀시트(모바일) — 같은 마크업, CSS로 표현만 다름
+  const pop=`<div class="lp-pop-backdrop" id="lpBackdrop" hidden></div>
+   <div class="lp-pop" id="lpRangePop" role="dialog" aria-modal="false" aria-label="기간 선택" hidden>
+    <div class="lp-pop-handle" aria-hidden="true"></div>
+    <div class="lp-pop-head"><span class="lp-pop-title">기간 선택</span><button type="button" class="lp-pop-close" id="lpClose" aria-label="닫기">&times;</button></div>
+    <div class="lp-pop-sec-label">빠른 선택</div>
+    <div class="lp-quick" role="group" aria-label="빠른 기간 선택">
+      <button type="button" data-lp="month" class="${!rangeActive&&isThisMonth?'on':''}">이번 달</button>
+      <button type="button" data-lp="year" class="${!rangeActive&&isThisYear?'on':''}">올해</button>
+      <button type="button" data-lp="all" class="${t==='all'?'on':''}">전체 기간</button>
+    </div>
+    <div class="lp-pop-divider"></div>
+    <div class="lp-pop-sec-label${rangeActive?' active':''}">직접 기간 선택</div>
     <label class="lp-range-field"><span>시작일</span><input type="date" id="lpRangeFrom" value="${escapeHtml(_ledgerRange.from||'')}"></label>
     <label class="lp-range-field"><span>종료일</span><input type="date" id="lpRangeTo" value="${escapeHtml(_ledgerRange.to||'')}"></label>
-    <div class="lp-range-actions"><button type="button" class="lp-range-reset" id="lpRangeReset">초기화</button><button type="button" class="lp-range-apply" id="lpRangeApply">적용</button></div>
+    <button type="button" class="lp-range-apply" id="lpRangeApply">적용</button>
   </div>`;
-  return `<div class="ledger-period">${seg}${chip}<div class="lp-cal-wrap">${pop}</div></div>`;
+  return `<div class="ledger-period">${trigger}<div class="lp-cal-wrap">${pop}</div></div>`;
 }
 
 function _statsPeriodReceipts(){
@@ -6461,28 +6524,37 @@ async function renderDetail(){
       sub.textContent=_lrecs.length?`${_lrecs.length}건 · ${_ledgerPeriodLabel()}`:'영수증 없음';
       // v3.19 — 기간 컨트롤을 데스크톱·모바일 모두 제목 행 우측 헤더 슬롯에 둔다(요청).
       const _useSlot=!!periodSlot;
+      // v3.29 — 이전에 body로 포탈된 모바일 바텀시트 잔재 제거(재렌더 시 slot에 새로 그려지므로 중복 id 방지)
+      document.querySelectorAll('body > #lpBackdrop, body > #lpRangePop').forEach(n=>n.remove());
       if(_useSlot){body.innerHTML=renderLedgerPanel(_lrecs);periodSlot.innerHTML=pillsHtml;}
       else{if(periodSlot)periodSlot.innerHTML='';body.innerHTML=pillsHtml+renderLedgerPanel(_lrecs);}
       const pslot=_useSlot?periodSlot:body;
       _bindSectionToggles(body);
-      // 기간 세그먼트 필: 이번 달 · 올해 · 전체 · 📅 범위
-      pslot.querySelectorAll('.lp-seg button[data-lp]').forEach(btn=>{
+      // v3.29 — 통합 기간 컨트롤. 트리거로 팝오버/바텀시트 열기, 빠른 선택은 즉시 실행 + 재렌더로 닫힘.
+      const _trig=pslot.querySelector('#lpTrigger');
+      if(_trig)_trig.addEventListener('click',e=>{
+        e.stopPropagation();
+        const pop=document.getElementById('lpRangePop'); // 모바일에선 body로 포탈될 수 있으므로 id로 조회
+        if(!pop)return;
+        if(pop.hidden)_lpOpenPop(); else _lpClosePop();
+      });
+      const _close=pslot.querySelector('#lpClose');
+      if(_close)_close.addEventListener('click',_lpClosePop);
+      const _bd=pslot.querySelector('#lpBackdrop');
+      if(_bd)_bd.addEventListener('click',_lpClosePop);
+      // 빠른 선택: 이번 달 · 올해 · 전체 기간 — 기존 필터 로직 그대로 재사용
+      pslot.querySelectorAll('.lp-quick button[data-lp]').forEach(btn=>{
         btn.addEventListener('click',()=>{
           const lp=btn.dataset.lp;
-          if(lp==='range'){
-            const pop=pslot.querySelector('#lpRangePop');
-            if(pop)pop.hidden=!pop.hidden;
-            return;
-          }
           const now=new Date();
           if(lp==='all'){_ledgerTimeFilter={type:'all'};}
           else if(lp==='year'){_ledgerTimeFilter={type:'year',value:String(now.getFullYear())};}
           else if(lp==='month'){viewMonth=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;_ledgerTimeFilter={type:'month'};}
           _monthCatFilter=null;
-          renderSide();renderDetail();
+          renderSide();renderDetail(); // 재렌더 → 팝오버/시트 자동 닫힘
         });
       });
-      // 날짜 범위 직접 선택 팝오버
+      // 직접 기간 선택: [적용] — 기존 날짜 검증/계산 로직 불변
       const _rApply=pslot.querySelector('#lpRangeApply');
       if(_rApply)_rApply.addEventListener('click',()=>{
         const from=pslot.querySelector('#lpRangeFrom')?.value||'';
@@ -6493,12 +6565,6 @@ async function renderDetail(){
         _ledgerTimeFilter={type:'range',from:f,to:g};
         _monthCatFilter=null;
         renderSide();renderDetail();
-      });
-      const _rReset=pslot.querySelector('#lpRangeReset');
-      if(_rReset)_rReset.addEventListener('click',()=>{
-        const fi=pslot.querySelector('#lpRangeFrom'),ti=pslot.querySelector('#lpRangeTo');
-        if(fi)fi.value=''; if(ti)ti.value='';
-        _ledgerRange={from:'',to:''};
       });
       // 카테고리 정렬 드롭다운
       const _sortSel=body.querySelector('#ledgerCatSort');

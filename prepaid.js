@@ -1,6 +1,8 @@
 /* Prepaid balances are separate from receipts; only cash payments create expenses. */
 let prepaidRecords=[];
 let prepaidSelectedId=null;
+let ppHistTab='use';   // v3.31 — 상세 내역 탭(use=사용 내역 / charge=충전 내역), 표시 전용
+let ppHistSort='recent'; // v3.31 — 상세 내역 정렬(recent=최신순 / old=오래된순), 표시 전용(원본·계산 불변)
 const PP_PREFIX='prepaid:';
 const PP_KINDS=['charge','use','refund','expire','opening','void'];
 const PP_LABELS={charge:'충전',use:'사용',refund:'환불',expire:'만료 차감',opening:'기초 잔액',void:'삭제'};
@@ -131,41 +133,91 @@ async function ppCommit(walletInput,values){
 }
 
 function ppWallets(){return prepaidRecords.filter(r=>r.type==='wallet');}
-function ppOpen(id){prepaidSelectedId=id;renderPrepaid();}
+function ppOpen(id){prepaidSelectedId=id;ppHistTab='use';ppHistSort='recent';renderPrepaid();}
 function ppLatestUse(totals){return totals.active.filter(e=>e.kind==='use').sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id))[0]||null;}
 function ppSuggestedUseAmount(wallet,totals){return wallet.defaultUseAmount||ppLatestUse(totals)?.amount||0;}
 function ppDisplayDate(date){return String(date||'').replace(/-/g,'. ') +(date?'\.':'');}
+function ppRelDay(date){if(!date)return '';const d=Math.round((Date.parse(_todayYMD())-Date.parse(date))/86400000);return d<=0?'오늘':d===1?'어제':d+'일 전';}
+// v3.31 — 선불권 화면 전용 인라인 아이콘(외부 의존성 없음)
+const PP_ICO={
+  use:'<svg class="pp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>',
+  charge:'<svg class="pp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
+  refund:'<svg class="pp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-2"/></svg>',
+  expire:'<svg class="pp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 16h6"/></svg>',
+  edit:'<svg class="pp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  more:'<svg class="pp-ico" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>',
+  trash:'<svg class="pp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>',
+  rcpt:'<svg class="pp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6"/></svg>'
+};
 function renderPrepaid(){
   const root=document.getElementById('prepaidBody');if(!root)return;
   const wallets=ppWallets(),wallet=wallets.find(w=>w.id===prepaidSelectedId);
   const money=n=>fmtMoney(n)+'원',esc=escapeHtml;
   document.getElementById('viewPrepaid').classList.toggle('pp-detail-view',!!wallet);
-  document.getElementById('prepaidEyebrow').textContent=wallet?'선불권':'Receipt DB';
-  document.getElementById('prepaidTitle').textContent=wallet?wallet.name:'선불권';
+  const mobile=typeof _isMobileLayout==='function'&&_isMobileLayout();
+  // 상세: 데스크탑=눈썹 '선불권' + 제목 매장명 / 모바일=제목 '선불권'(맥락 유지) + 매장명은 본문 첫 카드에.
+  document.getElementById('prepaidEyebrow').textContent=(wallet&&!mobile)?'선불권':'Receipt DB';
+  document.getElementById('prepaidTitle').textContent=(wallet&&!mobile)?wallet.name:'선불권';
   document.getElementById('prepaidNew').hidden=!!wallet;
-  document.getElementById('prepaidBack').hidden=!wallet;
+  document.getElementById('prepaidBack').hidden=true; // v3.30 — 화면 내 뒤로가기 화살표 UI 제거(목록 복귀는 선불권 탭 재선택)
+  // 진행바 조각: 총 충전(=충전+기초 잔액 합)이 양수일 때만. 계산은 기존 active 이벤트만 사용(저장/계산 로직 불변).
+  const barHtml=(charged,used,pct)=>charged>0?`<div class="pp-bar" role="img" aria-label="사용 ${pct}%"><span style="width:${Math.max(0,Math.min(100,pct))}%"></span></div><div class="pp-bar-legend"><span>사용 ${money(used)} (${pct}%)</span><span>총 ${money(charged)}</span></div>`:'';
+  // 파생값(전부 기존 계산 함수만 사용)
+  const derive=w=>{const t=ppTotals(prepaidRecords,w.id);const uses=t.active.filter(e=>e.kind==='use').length;const charged=t.active.filter(e=>e.kind==='charge'||e.kind==='opening').reduce((s,e)=>s+e.amount,0);const suggested=ppSuggestedUseAmount(w,t);return {t,uses,charged,pct:charged>0?Math.round(t.used/charged*100):null,avg:uses>0?Math.round(t.used/uses):0,latestUse:ppLatestUse(t),suggested,remaining:suggested?Math.floor(t.balance/suggested):null,expired:w.expiresOn&&w.expiresOn<_todayYMD()};};
+  const idRow=(w,expired,clickable)=>`<div class="pp-id"><div class="pp-id-text"><b class="pp-id-name"><span class="pp-id-nm">${esc(w.name)}</span>${clickable?'<span class="pp-id-chev" aria-hidden="true">›</span>':''}</b><small>${esc(getCategoryLabel(w.category))}</small></div><span class="pp-id-expiry${expired?' danger':''}">${expired?'유효기간 지남':w.expiresOn?esc(w.expiresOn):'유효기간 없음'}</span></div>`;
+  const statBoxes=d=>`<div class="pp-sbox"><small>사용 횟수</small><b>${d.uses}회</b>${d.remaining!==null?`<i>약 ${d.remaining}회 남음</i>`:''}</div>${d.latestUse?`<div class="pp-sbox"><small>최근 방문</small><b>${esc(ppDisplayDate(d.latestUse.date))}</b><i>${ppRelDay(d.latestUse.date)}</i></div>`:''}${d.uses>0?`<div class="pp-sbox"><small>1회 평균 사용</small><b>${money(d.avg)}</b><i>총 ${d.uses}회 기준</i></div>`:''}`;
   if(!wallet){
-    root.innerHTML=`<div class="pp-summary"><span>총 남은 잔액</span><strong>${money(wallets.reduce((s,w)=>s+ppTotals(prepaidRecords,w.id).balance,0))}</strong><small>${wallets.length}개 선불권</small></div><div class="pp-wallets">${wallets.map(w=>{
-      const t=ppTotals(prepaidRecords,w.id),expired=w.expiresOn&&w.expiresOn<_todayYMD();
-      const uses=t.active.filter(e=>e.kind==='use').length,suggested=ppSuggestedUseAmount(w,t),remaining=suggested?Math.floor(t.balance/suggested):null;
-      return `<button class="pp-wallet" type="button" data-wallet="${esc(w.id)}">${getCatSvg(w.category)}<span><b>${esc(w.name)}</b><small>${expired?'유효기간 지남':w.expiresOn?'유효기간 '+esc(w.expiresOn):'유효기간 없음'}${suggested?` · 1회 ${money(suggested)}`:''}</small><small>사용 ${uses}회${remaining!==null?` · 약 ${remaining}회 남음`:''}</small></span><strong>${money(t.balance)}</strong><span aria-hidden="true">›</span></button>`;
-    }).join('')}</div>${!wallets.length?'<div class="empty-state">등록된 선불권이 없어요.</div>':''}`;
+    const totalBalance=wallets.reduce((s,w)=>s+ppTotals(prepaidRecords,w.id).balance,0);
+    root.innerHTML=`<div class="pp-list">
+      <div class="pp-total"><span class="pp-total-label">총 남은 잔액</span><strong class="pp-total-value">${money(totalBalance)}</strong><span class="pp-total-sub">${wallets.length}개 선불권</span></div>
+      <div class="pp-cards">${wallets.map(w=>{const d=derive(w);return `<button class="pp-card pp-card--list" type="button" data-wallet="${esc(w.id)}">${idRow(w,d.expired,true)}<div class="pp-core"><div class="pp-core-bal"><span class="pp-bc-label">남은 잔액</span><strong class="pp-bc-value">${money(d.t.balance)}</strong>${barHtml(d.charged,d.t.used,d.pct)}</div><div class="pp-core-stats">${statBoxes(d)}</div></div></button>`;}).join('')}</div>
+      ${!wallets.length?'<div class="empty-state">등록된 선불권이 없어요.</div>':''}</div>`;
     root.querySelectorAll('[data-wallet]').forEach(b=>b.addEventListener('click',()=>ppOpen(b.dataset.wallet)));return;
   }
-  const t=ppTotals(prepaidRecords,wallet.id),expired=wallet.expiresOn&&wallet.expiresOn<_todayYMD();
-  const uses=t.active.filter(e=>e.kind==='use').length,latestUse=ppLatestUse(t),suggested=ppSuggestedUseAmount(wallet,t),remaining=suggested?Math.floor(t.balance/suggested):null;
-  const priceInfo=wallet.regularPrice?`정가 ${money(wallet.regularPrice)}${wallet.discountRate?` · ${wallet.discountRate}% 할인`:''} · `:'';
-  root.innerHTML=`<div class="pp-summary"><span>남은 잔액</span><strong>${money(t.balance)}</strong><small>${expired?'유효기간 지남 · ':''}${wallet.expiresOn?'유효기간 '+esc(wallet.expiresOn):'유효기간 없음'}</small>${suggested?`<small class="pp-default">${priceInfo}${wallet.defaultUseAmount?'기본':'최근 기준'} 1회 ${money(suggested)} · 약 ${remaining}회 남음</small>`:''}</div>
-    ${t.balance<0?'<p class="alert err">동기화된 사용 기록이 잔액을 초과했어요. 최근 기록을 확인해 주세요.</p>':''}
-    <div class="pp-metrics"><span>실결제 누계 <b>${money(t.paid)}</b></span><span>사용 누계 <b>${money(t.used)}</b></span><span>사용 횟수 <b>${uses}회</b></span>${latestUse?`<span>최근 방문 <b>${esc(ppDisplayDate(latestUse.date))}</b></span>`:''}</div>
-    <div class="pp-actions"><button class="primary-btn" data-kind="use">${suggested?`1회 사용 · ${money(suggested)}`:'사용 기록'}</button><button class="ghost-btn" data-kind="charge">충전</button><button class="ghost-btn" data-kind="refund">환불</button><button class="ghost-btn" data-kind="expire">만료 차감</button><button class="ghost-btn" id="ppEdit">정보 수정</button></div>
-    <h3 class="pp-section-title">충전·사용 내역 <span>${t.active.length}건</span></h3><div class="pp-events">${t.active.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id)).map(e=>{
-      const positive=e.kind==='charge'||e.kind==='opening';
-      const dateLabel=e.kind==='use'?'방문일자':e.kind==='charge'||e.kind==='opening'?'충전일자':'처리일자';
-      return `<div class="pp-event"><div><b>${PP_LABELS[e.kind]}</b><small><span class="pp-date-label">${dateLabel}</span> ${esc(ppDisplayDate(e.date))}${e.description?' · '+esc(e.description):''}</small>${e.paid?`<small>실결제 ${money(e.paid)}</small>`:''}</div><strong>${positive?'+':'−'}${money(e.amount)}</strong><div class="pp-row-actions">${e.receiptId?`<button class="ghost-btn" data-receipt="${esc(e.receiptId)}">영수증</button>`:''}<button class="ghost-btn danger" data-void="${esc(e.id)}">삭제</button></div></div>`;
-    }).join('')||'<div class="empty-state">충전 또는 사용 기록이 없어요.</div>'}</div>`;
+  const d=derive(wallet),t=d.t;
+  const priceInfo=wallet.regularPrice?`정가 ${money(wallet.regularPrice)}${wallet.discountRate?` · ${wallet.discountRate}% 할인`:''}`:'';
+  // 실행 잔액(표시용): 오래된 순으로 누적. 저장 데이터·계산 함수는 변경하지 않음.
+  const asc=t.active.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.createdAt.localeCompare(b.createdAt)||a.id.localeCompare(b.id));
+  const runMap={};let run=0;for(const e of asc){run+=(e.kind==='charge'||e.kind==='opening'?1:-1)*e.amount;runMap[e.id]=run;}
+  const desc=asc.slice().reverse();
+  const grpOf=e=>e.kind==='use'?'use':'charge'; // 사용 내역 vs 충전 내역(충전·기초·환불·만료 포함) — 표시 분류만
+  const useCount=t.active.filter(e=>e.kind==='use').length,allCount=t.active.length,chargeCount=allCount-useCount;
+  let curTab=ppHistTab; if(curTab==='use'&&useCount===0&&chargeCount>0)curTab='charge'; if(curTab==='charge'&&chargeCount===0&&useCount>0)curTab='use';
+  const rows=ppHistSort==='old'?asc:desc;
+  const contentOf=e=>e.kind==='use'?`${esc(wallet.name)}${e.description?' ('+esc(e.description)+')':''}`:(e.description?esc(e.description):PP_LABELS[e.kind]);
+  const chip=e=>`<span class="pp-chip pp-chip-${grpOf(e)}">${PP_LABELS[e.kind]}</span>`;
+  const rowMenu=e=>`<div class="pp-rowmenu"><button type="button" class="pp-dots" aria-haspopup="menu" aria-label="관리"><span class="pp-dots-more">${PP_ICO.more}</span><span class="pp-dots-chev" aria-hidden="true">›</span></button><div class="pp-menu" hidden>${e.receiptId?`<button type="button" data-receipt="${esc(e.receiptId)}">${PP_ICO.rcpt}<span>영수증 보기</span></button>`:''}<button type="button" class="danger" data-void="${esc(e.id)}">${PP_ICO.trash}<span>기록 삭제</span></button></div></div>`;
+  const tableRows=rows.map(e=>{const p=e.kind==='charge'||e.kind==='opening';return `<tr data-grp="${grpOf(e)}"><td class="pp-td-date">${esc(ppDisplayDate(e.date))}</td><td>${chip(e)}</td><td class="pp-td-desc">${contentOf(e)}</td><td class="num ${p?'pos':'neg'}">${p?'+':'−'}${money(e.amount)}</td><td class="num pp-td-bal">${money(runMap[e.id])}</td><td class="pp-td-act">${rowMenu(e)}</td></tr>`;}).join('');
+  const listRows=rows.map(e=>{const p=e.kind==='charge'||e.kind==='opening';return `<div class="pp-mrow" data-grp="${grpOf(e)}"><div class="pp-mrow-main"><small class="pp-mrow-meta">${esc(ppDisplayDate(e.date))}</small><b class="pp-mrow-desc">${contentOf(e)}</b></div><div class="pp-mrow-amt"><strong class="${p?'pos':'neg'}">${p?'+':'−'}${money(e.amount)}</strong><small class="pp-mrow-bal">잔액 ${money(runMap[e.id])}</small></div><div class="pp-mrow-act">${rowMenu(e)}</div></div>`;}).join('');
+  const emptyHist='<div class="empty-state">충전 또는 사용 기록이 없어요.</div>';
+  const actionsHtml=`<div class="pp-actions">
+    <button class="primary-btn" data-kind="use">${PP_ICO.use}<span>1회 사용<span class="pp-amt">${d.suggested?' · '+money(d.suggested):''}</span></span></button>
+    <button class="ghost-btn" data-kind="charge">${PP_ICO.charge}<span>충전</span></button>
+    <button class="ghost-btn" data-kind="refund">${PP_ICO.refund}<span>환불</span></button>
+    <button class="ghost-btn pp-a-deskonly" data-kind="expire">${PP_ICO.expire}<span>만료 차감</span></button>
+    <button class="ghost-btn pp-a-deskonly js-pp-edit" type="button">${PP_ICO.edit}<span>정보 수정</span></button>
+    <div class="pp-morewrap pp-a-mobonly"><button class="ghost-btn" id="ppMore" type="button" aria-haspopup="menu">${PP_ICO.more}<span>더보기</span></button><div class="pp-menu" id="ppMoreMenu" hidden><button type="button" data-kind="expire">${PP_ICO.expire}<span>만료 차감 처리</span></button><button type="button" class="js-pp-edit">${PP_ICO.edit}<span>정보 수정</span></button></div></div>
+  </div>`;
+  root.innerHTML=`<div class="pp-detail">
+    <div class="pp-card pp-card--detail">
+      ${idRow(wallet,d.expired,false)}
+      <div class="pp-core"><div class="pp-core-bal"><span class="pp-bc-label">남은 잔액</span><strong class="pp-bc-value">${money(t.balance)}</strong>${priceInfo?`<span class="pp-bc-meta">${priceInfo}</span>`:''}${barHtml(d.charged,t.used,d.pct)}</div><div class="pp-core-stats">${statBoxes(d)}</div></div>
+      ${t.balance<0?'<p class="alert err">동기화된 사용 기록이 잔액을 초과했어요. 최근 기록을 확인해 주세요.</p>':''}
+      ${actionsHtml}
+    </div>
+    <div class="pp-hist tab-${curTab}">
+      <div class="pp-hist-head"><div class="pp-tabs" role="tablist"><button type="button" data-htab="use" class="${curTab==='use'?'on':''}">사용 내역 <span>${useCount}</span></button><button type="button" data-htab="charge" class="${curTab==='charge'?'on':''}">충전 내역 <span>${chargeCount}</span></button></div><label class="pp-sort"><select id="ppSortSel" aria-label="정렬"><option value="recent"${ppHistSort==='recent'?' selected':''}>최신순</option><option value="old"${ppHistSort==='old'?' selected':''}>오래된순</option></select></label></div>
+      ${allCount?`<table class="pp-table"><thead><tr><th>날짜</th><th>구분</th><th>내용</th><th class="num">금액</th><th class="num">잔액</th><th aria-label="관리"></th></tr></thead><tbody>${tableRows}</tbody></table><div class="pp-mlist">${listRows}</div>`:emptyHist}
+    </div>
+  </div>`;
   root.querySelectorAll('[data-kind]').forEach(b=>b.addEventListener('click',()=>ppEventForm(b.dataset.kind)));
-  root.querySelector('#ppEdit').addEventListener('click',()=>ppWalletForm(wallet));
+  root.querySelectorAll('.js-pp-edit').forEach(b=>b.addEventListener('click',()=>ppWalletForm(wallet)));
+  // 탭(표시 전용 — 원본·계산 불변)
+  root.querySelectorAll('[data-htab]').forEach(b=>b.addEventListener('click',()=>{ppHistTab=b.dataset.htab;const h=root.querySelector('.pp-hist');if(h){h.classList.remove('tab-use','tab-charge');h.classList.add('tab-'+ppHistTab);}root.querySelectorAll('[data-htab]').forEach(x=>x.classList.toggle('on',x===b));}));
+  // 정렬(표시 전용 — 재렌더로 표시만 재정렬)
+  const sortSel=root.querySelector('#ppSortSel');if(sortSel)sortSel.addEventListener('change',()=>{ppHistSort=sortSel.value;renderPrepaid();});
+  // ••• / 더보기 메뉴 토글(다른 메뉴는 닫음)
+  root.querySelectorAll('.pp-dots,#ppMore').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const menu=btn.parentElement.querySelector('.pp-menu');if(!menu)return;const willOpen=menu.hidden;ppCloseMenus();menu.hidden=!willOpen;}));
   root.querySelectorAll('[data-receipt]').forEach(b=>b.addEventListener('click',()=>{
     if(!receipts.some(r=>r.id===b.dataset.receipt)){toast('연결된 영수증을 찾을 수 없어요.',{type:'warning'});return;}
     selectReceipt(b.dataset.receipt);
@@ -177,6 +229,10 @@ function renderPrepaid(){
     catch(e){b.disabled=false;toast(e.message,{type:'error'});}
   }));
 }
+// v3.31 — 행/더보기 메뉴 바깥 클릭·ESC 닫기(1회 등록)
+function ppCloseMenus(except){document.querySelectorAll('#viewPrepaid .pp-menu').forEach(m=>{if(m!==except)m.hidden=true;});}
+document.addEventListener('click',()=>ppCloseMenus());
+document.addEventListener('keydown',e=>{if(e.key==='Escape')ppCloseMenus();});
 
 function ppDialog(title,html,onSave){
   const dialog=document.createElement('dialog');dialog.className='pp-dialog';
