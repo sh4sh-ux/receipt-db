@@ -95,6 +95,23 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.49` — **[수정 확인] 1회 클릭 저장 근본 수정 + 오른쪽 헤더 고정 실측 확인(레이아웃 코드 변경 없음).**
+  ⚠️ **근본 원인**: 상세 '수정 확인'의 '수정됨' 성공 피드백(`toast`+`_flashSaved`)이 로컬 `dbPut` 직후가 아니라
+  **Dropbox 네트워크 3종**(`_autoRenameCompleted`·`_dbxRenameScanFile`/`_dbxArchiveReceiptPhoto`)을 `await`한
+  **뒤**에 있었고, 내부 `try`에 `catch`가 없어 미연결/지연/예외 시 **로컬 저장은 됐는데 피드백이 안 떠** 두 번 눌러야
+  했다. **수정**: `_doConfirm` 재구성 — 포커스 input `blur`→값 commit→로컬 `dbPut`→**즉시 '수정됨'+'저장됨 ✓'
+  피드백 및 재렌더**, 완료본 이름 정리·`dbxSyncNow`는 새 `_detailBackgroundSync`로 **후속(백그라운드, catch)**.
+  저장 시작 시 버튼 `disabled`(중복 저장·pointerup+click 이중 발화 차단), 저장 완료 시 `_flashSaved`가 버튼 재활성
+  (⚠️ `.main-top`은 정적이라 `renderDetail`이 버튼을 재생성하지 않음 — 반드시 직접 재활성/복원), 예외 시 `finally`
+  에서 `_restoreConfirmBtn`. 검증(실데이터): 매장명·날짜·카테고리·결제수단·참석자·**포커스 유지 메모** 각 1클릭
+  저장, 빠른 2회 클릭 시 '수정됨' 1회만, reload 유지 — 데스크탑·모바일(390) 모두 PASS, 콘솔에러 0.
+  ✅ **오른쪽 Detail 헤더/​divider 고정은 이미 기존 구조로 충족**(코드 변경 없음): `.main{height:100%;overflow:hidden}`
+  → `.view.on{flex column;height:100%}` → `.main-top{flex:0 0 144px}` → `.main-body{flex:1;overflow-y:auto;min-height:0}`.
+  긴 영수증(scrollHeight 1832 vs client 545)에서 `.main-body` scrollTop 0/중간(643)/최대(1287) 모두 헤더 divider
+  Y=**224 동일**·actions top=108 고정·문서 스크롤 0으로 실측 확인. 좌측 주 divider(월네비 아래)도 Y=224로 이미 동일
+  (1px `--sep`); 좌측 검색/정렬 툴바 구분선(Y=331)은 목록 구분용으로 그대로 유지. 모바일은 기존 구조 유지(변경 없음).
+  meetingId·Dutch Pay payload·normalizeName/receiptPeople/_personRelation/_receiptShare/treat/splitExclude 전부 불변.
+  변경 파일 `index.html`만.
 - `v3.48` — **만남 생성/상세 마감 다듬기(계산·저장구조·Dutch Pay payload 불변).** ① **만남으로 묶기 생성 확인창에
   경고 2종**(차단 아님, 그대로 진행 가능): 선택 영수증들의 **날짜 차이가 3일 이상**이면 '날짜 차이가 N일로 커요 — 같은
   만남이 맞는지 확인해 주세요'(자정 넘김 1일은 정상이라 제외), 선택 영수증에 **공통 참석자가 전혀 없으면**(각 receipt

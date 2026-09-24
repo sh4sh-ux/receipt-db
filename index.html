@@ -2749,6 +2749,17 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.49 — [수정 확인] 1회 클릭 저장 근본 수정(레이아웃 변경 없음). 근본 원인: '수정됨' 피드백이 로컬 dbPut 뒤가
+//   아니라 Dropbox 네트워크 3종(_autoRenameCompleted·_dbxRenameScanFile·_dbxArchiveReceiptPhoto)을 await한 뒤에
+//   있었고 내부 try에 catch가 없어, 미연결/지연/예외 시 로컬 저장은 됐는데 피드백이 안 떠 두 번 눌러야 했다.
+//   → _doConfirm 재구성: 포커스 input blur→값 commit→로컬 dbPut→**즉시 '수정됨'+저장됨✓ 피드백·재렌더**, 완료본
+//   이름 정리·Dropbox 동기화는 _detailBackgroundSync로 후속(catch). 저장 중 버튼 disable(중복 저장 차단, pointerup+
+//   click 이중 발화 방지), 저장 완료 시 _flashSaved가 재활성(정적 헤더라 renderDetail이 버튼을 재생성하지 않음),
+//   예외 시 finally에서 복원. 검증: 매장명/날짜/카테고리/결제수단/참석자/포커스유지 메모 각 1클릭 저장, 빠른 2회
+//   클릭 시 저장 1회, reload 유지, 데스크탑·모바일·콘솔에러 0. ※ 오른쪽 Detail 헤더 고정+divider Y224 고정은 이미
+//   기존 구조(.main height:100%/overflow:hidden → .view.on flex column → .main-top flex:0 0 144px → .main-body
+//   flex:1/overflow-y:auto/min-height:0)로 충족됨을 스크롤 0/중간/최대에서 dividerY=224 동일·actions 고정·문서
+//   비스크롤로 실측 확인 — 코드 변경 없음. Dutch Pay payload·meetingId·계산 전부 불변. 변경 파일 index.html만.
 // v3.48 — 만남 생성/상세 마감 다듬기(계산·저장구조·payload 불변). ① 만남으로 묶기 **생성 확인창에 경고 2종**
 //   (차단 아님, 진행 가능): 선택 영수증들의 날짜 차이가 **3일 이상**이면 '날짜 차이가 N일로 커요'(자정 넘김 1일은
 //   정상이라 제외), 선택 영수증에 **공통 참석자가 전혀 없으면**(receiptPeople 교집합 공집합) '공통 참석자가 전혀
@@ -2827,7 +2838,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.48';
+const APP_VERSION='v3.49';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -7864,13 +7875,33 @@ async function renderDetail(){
   let _confirmRunning=false;
   const _flashSaved=()=>{
     const b=document.getElementById('detailConfirmBtn');if(!b)return;
+    // 로컬 저장 완료 시점 — 버튼을 다시 활성화하고(정적 헤더라 renderDetail이 재생성하지 않음) 잠깐 '저장됨 ✓' 표시
+    b.disabled=false;b.classList.remove('saving');
     b.classList.add('saved');b.textContent='저장됨 ✓';
     clearTimeout(b._savedT);
     b._savedT=setTimeout(()=>{const bb=document.getElementById('detailConfirmBtn');if(bb){bb.classList.remove('saved');bb.textContent='수정 확인';}},1400);
   };
+  // v3.49 — [수정 확인] 1회 클릭 저장. ⚠️ 근본 원인: 예전엔 '수정됨' 피드백이 로컬 dbPut 뒤가 아니라
+  //   Dropbox 네트워크 3종(_autoRenameCompleted·_dbxRenameScanFile·_dbxArchiveReceiptPhoto)을 await한
+  //   뒤에 있어서, 미연결/지연/예외(내부 try에 catch 없음) 때 로컬 저장은 됐는데 피드백이 안 떠 두 번
+  //   눌러야 했다. → **로컬 저장 성공 즉시 피드백**하고, 완료본 이름 정리·동기화는 백그라운드로 미룬다.
+  const _restoreConfirmBtn=()=>{const b=document.getElementById('detailConfirmBtn');if(b){b.disabled=false;b.classList.remove('saving');if(!b.classList.contains('saved'))b.textContent='수정 확인';}};
+  const _detailBackgroundSync=async(rec)=>{
+    try{
+      let renamed=(await _autoRenameCompleted())>0;
+      const _cur=receipts.find(x=>x.id===rec.id); if(_cur&&_cur.scanPath)rec.scanPath=_cur.scanPath;
+      if(rec.scanPath){ if(await _dbxRenameScanFile(rec))renamed=true; }
+      else if(rec.imageId){ if(await _dbxArchiveReceiptPhoto(rec))renamed=true; }
+      if(renamed){ await dbPut('receipts',rec); toast('완료본 파일 이름도 정리했어요',{type:'success'}); }
+    }catch(e){ console.warn('detail background sync:',e); }
+    dbxSyncNow(true);
+  };
   const _doConfirm=async()=>{
     if(_confirmRunning)return;
     _confirmRunning=true;
+    // 즉시 saving 상태 + 중복 클릭 차단(비활성 버튼은 click 이벤트를 내지 않음 → pointerup/click 중복도 방지)
+    const _btn0=document.getElementById('detailConfirmBtn');
+    if(_btn0){_btn0.disabled=true;_btn0.classList.add('saving');_btn0.textContent='저장 중…';}
     try{
     try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur();}catch(_){}
     _syncDetailFromInputs(r);
@@ -7884,6 +7915,7 @@ async function renderDetail(){
       ].filter(Boolean).join('\n');
       if(!confirm(`금액 불일치가 남아 있어요.\n\n${summary}\n\n영수증 사진과 확인하셨나요? 그래도 수정 내용을 저장할까요?`)){
         toast('저장을 멈췄어요. 표시된 금액을 확인해주세요',{type:'warning'});
+        _restoreConfirmBtn(); // 취소 — 재렌더가 없으므로 버튼 상태 복원
         return;
       }
     }
@@ -7912,21 +7944,20 @@ async function renderDetail(){
     }
     r.updatedAt=nowISO();
     if(r.store&&r.category) await learnCategory(r.store,r.category);
-    await dbPut('receipts',r);   // 먼저 저장 — 이름 계산에 매장명·금액이 필요하다
-    // 매장명·금액이 채워졌으니 완료 폴더 쪽 이름도 맞춘다.
-    //  · 맥 스크립트가 옮겨 둔(scanPath 없는) 완료본은 완료 폴더에서 날짜로 찾아 먼저 바로잡는다.
-    //    이때 scanPath 가 채워지면, 아래 사진 보관본 업로드가 사본을 새로 만들지 않는다.
-    let renamed=(await _autoRenameCompleted())>0;
-    const _cur=receipts.find(x=>x.id===r.id); if(_cur&&_cur.scanPath)r.scanPath=_cur.scanPath;
-    if(r.scanPath){ if(await _dbxRenameScanFile(r))renamed=true; }
-    // 완료본이 아직 없으면(앱에서 사진만 붙인 영수증) 이때 보관본을 올린다.
-    else if(r.imageId){ if(await _dbxArchiveReceiptPhoto(r))renamed=true; }
-    await dbPut('receipts',r);
-    toast(renamed?'수정됨 · 완료본 파일 이름도 정리했어요':'수정됨',{type:'success'});
+    await dbPut('receipts',r);   // ★ 로컬 저장 — 이 시점에 데이터는 안전하게 보존됨
+    // ★ 로컬 저장 성공 즉시 피드백(Dropbox 네트워크를 기다리지 않는다)
+    toast('수정됨',{type:'success'});
     _flashSaved();
+    _detailSetDirty(false);
+    // 완료본 이름 정리·Dropbox 동기화는 후속(백그라운드) — 피드백/렌더를 막지 않는다
+    _detailBackgroundSync(r);
     await loadAll();await renderDetail();
-    dbxSyncNow(true);
-    }finally{_confirmRunning=false;}
+    }finally{
+      _confirmRunning=false;
+      // 예외로 _flashSaved에 도달 못 해 버튼이 'saving' 상태로 남았으면 복원(정적 헤더라 재생성 안 됨)
+      const _bb=document.getElementById('detailConfirmBtn');
+      if(_bb&&_bb.classList.contains('saving'))_restoreConfirmBtn();
+    }
   };
   _confirmBtn.onclick=_doConfirm;
   _confirmBtn.onpointerup=_doConfirm;
