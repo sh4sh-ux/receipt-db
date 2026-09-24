@@ -709,13 +709,14 @@ svg{display:block;flex-shrink:0;}
 .rel-srow-sub{font-style:normal;font-size:11.5px;font-weight:500;color:var(--label3);margin-left:4px;}
 .rel-srow-cnt{font-size:11.5px;font-weight:600;color:var(--label3);font-variant-numeric:tabular-nums;}
 .rel-srow-desc{font-size:11.5px;color:var(--label3);margin-top:3px;}
-.rel-srow-vals{display:flex;gap:24px;flex:none;}
-.rsv{display:flex;flex-direction:column;align-items:flex-end;gap:2px;}
-.rsv i{font-style:normal;font-size:11px;color:var(--label3);}
-.rsv b{font-size:15px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
+.rel-srow-vals{display:flex;gap:22px;flex:none;align-items:baseline;}
+.rsv{display:flex;flex-direction:row;align-items:baseline;gap:5px;} /* 데스크탑: '신유철 0원 · 0건' 한 줄 */
+.rsv i{font-style:normal;font-size:11.5px;color:var(--label3);}
+.rsv b{font-size:14.5px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
 .rsv b.zero{color:var(--label3);font-weight:600;}
 .rsv.me b{color:var(--blue-txt);}
 .rsv em{font-style:normal;font-size:11px;color:var(--label3);font-variant-numeric:tabular-nums;}
+.rsv em::before{content:'· ';color:var(--label3);}
 /* 한턱 / 참석 부담액 — slim insight(컬러 카드 아님, 사이 세로 divider) */
 .rel-insights{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:2px 0 4px;padding-top:13px;border-top:1px solid var(--sep);}
 .rel-ins{min-width:0;padding-right:4px;}
@@ -729,13 +730,18 @@ svg{display:block;flex-shrink:0;}
   .rel-hero{padding:13px 14px;}
   .rel-hero-top{margin-bottom:11px;}
   .rel-duo-amt{font-size:21px;}
-  .rel-srow{flex-direction:column;align-items:stretch;gap:8px;padding:12px 2px;}
+  /* 여럿이/전체 — 2열 비교 유지, 설명문 없음, 세로 여백 축소 */
+  .rel-srow{flex-direction:column;align-items:stretch;gap:8px;padding:11px 2px;}
   .rel-srow-vals{justify-content:space-between;gap:12px;}
-  .rsv{align-items:flex-start;}
-  /* 한턱/참석부담 → 세로 slim row */
+  .rsv{flex-direction:column;align-items:flex-start;gap:1px;}
+  .rsv em::before{content:'';}       /* 모바일 stacked에서는 중점 제거 */
+  /* 한턱/참석부담 → list row(제목 왼쪽 · 금액 오른쪽 · 보조정보 아래) */
   .rel-insights{grid-template-columns:1fr;gap:0;padding-top:0;border-top:none;margin:0;}
-  .rel-ins{padding:12px 2px;border-top:1px solid var(--sep);}
+  .rel-ins{display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:baseline;padding:13px 2px;border-top:1px solid var(--sep);}
   .rel-ins + .rel-ins{border-left:none;padding-left:2px;}
+  .rel-ins-t{grid-column:1;grid-row:1;font-size:13px;font-weight:600;color:var(--label);}
+  .rel-ins-v{grid-column:2;grid-row:1;text-align:right;margin-top:0;white-space:nowrap;font-size:14px;}
+  .rel-ins-d{grid-column:1 / -1;grid-row:2;margin-top:4px;}
   /* 결제/참석 내역 → compact transaction list(데스크탑 표는 그대로) */
   .person-txn thead{display:none;}
   .person-txn,.person-txn tbody{display:block;}
@@ -2662,6 +2668,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.44 — 사람 분석 화면 미세 polish(계산·데이터·구조 불변). ① 단둘이 제목 '단둘이 있을 때'→'단둘이 만났을 때',
+//   보조문구 '함께한 자리의 결제'(19건·금액·비율 Bar 그대로). ② 데스크탑 여럿이/전체: 설명문 제거 + 값 인라인
+//   ('신유철 0원 · 0건' 한 줄)로 compact. ③ 모바일: 여럿이/전체 세로여백 축소(2열 stacked 유지), 한턱/참석부담을
+//   list row(제목 왼쪽·금액 오른쪽·보조정보 아래). transaction list·헤더·기간·divider·계산 전부 불변. 변경 index.html만.
 // v3.43 — 사람 분석 화면 최종 정제(계산·데이터 전부 불변). Card 남발 → 위계: 단둘이만 Hero, 여럿이/전체는
 //   plain row(하단 divider만·카드 제거), 한턱/참석부담은 slim insight(컬러 카드 제거·사이 세로 divider). 기간
 //   드롭다운을 본문 상단 → **헤더 우측 슬롯**(#ledgerPeriodSlot, 제목 옆)으로 이동(전용 줄 제거). '전체'의 합산
@@ -2708,7 +2718,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.43';
+const APP_VERSION='v3.44';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5807,7 +5817,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     }
     const hero=`<div class="rel-hero">
       <div class="rel-hero-top">
-        <div class="rel-hero-tt"><div class="rel-hero-title">단둘이 있을 때</div><div class="rel-hero-desc">우리 둘이 함께한 자리에서 누가 얼마나 결제했는지.</div></div>
+        <div class="rel-hero-tt"><div class="rel-hero-title">단둘이 만났을 때</div><div class="rel-hero-desc">함께한 자리의 결제</div></div>
         <div class="rel-hero-cnt">${duoCnt}건</div>
       </div>
       <div class="rel-duo">
@@ -5823,8 +5833,9 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
       <div class="rel-srow-main"><div class="rel-srow-hd"><span class="rel-srow-title">${title}${subLbl?`<em class="rel-srow-sub">${subLbl}</em>`:''}</span>${cnt?`<span class="rel-srow-cnt">${cnt}건</span>`:''}</div>${desc?`<div class="rel-srow-desc">${desc}</div>`:''}</div>
       <div class="rel-srow-vals">${sideVal(nm,tArr)}${sideVal('나',mArr,true)}</div>
     </div>`;
-    const grpRow=srow('여럿이 함께할 때','',grpCnt,'세 명 이상이 함께한 자리의 결제.',tgtGrp,myGrp);
-    const allRow=srow('전체 결제','함께한 자리 기준','','단둘이 + 여럿이를 합한 금액. 상대가 혼자 결제한 건은 제외.',tgtWith,myWith);
+    // v3.44 — 설명문 제거하고 한 줄 중심 compact row로(데스크탑). 계산 불변.
+    const grpRow=srow('여럿이 함께할 때','',grpCnt,'',tgtGrp,myGrp);
+    const allRow=srow('전체 결제','함께한 자리 기준','','',tgtWith,myWith);
     const noMeNote=tgtNoMe.length?`<div class="rel-note">‘전체’는 <b>나와 함께 있었던 자리</b>만 포함합니다. 나 없이 ${nm}이(가) 결제한 <b>${tgtNoMe.length}건 · ${fmtMoney(sum(tgtNoMe))}원</b>은 아래 ‘결제 내역’에서 볼 수 있어요.</div>`:'';
     // v3.43 — 한턱/참석 부담액은 큰 컬러 카드 대신 얇은 2열 insight(사이 세로 divider). 한턱은 내 결제의 부분집합.
     const treatIns=myTreat.length?`<div class="rel-ins">
