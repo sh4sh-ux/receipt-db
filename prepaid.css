@@ -112,9 +112,10 @@
 @media(max-width:780px){
  .app:has(#viewPrepaid.on){grid-template-columns:1fr}
  .icon-nav .nav-btn,.icon-nav .nav-btn.tab{width:auto;min-width:0;flex:1 1 0}
- #viewPrepaid>.pp-header{min-height:82px;padding:0 18px;align-items:center}
- #viewPrepaid .main-title{font-size:20px}
- .pp-eyebrow{margin-bottom:4px}
+ /* v3.38 — 선불권 헤더를 다른 탭(.main-top)과 통일: 같은 높이·safe-area 상단여백·상단정렬·눈썹 간격 */
+ #viewPrepaid>.pp-header{min-height:var(--mobile-head-h);padding:max(14px,calc(env(safe-area-inset-top,0px) + 6px)) 18px 14px;align-items:flex-start}
+ #viewPrepaid .main-title{font-size:23px;line-height:1.18;letter-spacing:-.55px}
+ .pp-eyebrow{margin-bottom:11px;letter-spacing:.9px;font-weight:600}
  .pp-back-btn{width:36px;height:36px;flex-basis:36px;margin-right:14px}
  .pp-detail-view .pp-header-copy{padding-left:14px}
  .pp-new-btn{position:relative;width:38px;min-width:38px;height:38px;padding:0;gap:0}

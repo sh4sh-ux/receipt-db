@@ -95,6 +95,19 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.38` — **후속 피드백 7건.** ① **수정확인 '두 번 눌러야' 재수정** — iOS에서 `click`이 포커스/IME 확정·
+  키보드 내림 제스처에 첫 탭이 먹히는 경우가 있어 **`pointerup`에도 저장 핸들러를 바인딩**(첫 탭에 저장,
+  `_confirmRunning` 가드로 1회만 실행). v3.36의 `onmousedown preventDefault`(iOS서 오히려 첫 탭 삼킴)는 제거.
+  저장 뒤 버튼을 잠깐 **'저장됨 ✓'(초록)** 으로 바꿔 저장 전/후를 분명히(저장바 항상 표시 유지). ② **모바일
+  기간시트 날짜칸 회귀 수정** — v3.37의 `-webkit-appearance:none`이 '년/월/일' 안내·높이를 없앴다 → 제거하고
+  **`min-width:0`로만** 오버플로 방지(네이티브 렌더 복원). ③ **모바일 '기간' 버튼 폭·높이 확대**(min-width:104px,
+  h38, 가운데). ④ **지출 추이 칸 탭 → 툴팁 고정(pin)** — 손 떼도 남고 다른 곳 탭하면 닫힘(hover도 그대로).
+  ⑤ **좌(side-foot)·우(추가 액션바) 하단바 높이 82px로 정확히 일치**(actions `min-height:82`+`padding:0 32`,
+  border-box) → 구분선 정렬. ⑥ **선불권 헤더를 다른 탭과 통일**(prepaid.css: `--mobile-head-h`·safe-area 상단여백·
+  `align-items:flex-start`·눈썹 간격/두께) → 더 이상 따로 안 놈. ⑦ **iOS 뒤로가기 스와이프가 새로고침 되던 것**
+  — 당겨서새로고침이 **화면 가장자리 시작(28px)·가로 우세 제스처는 양보**(preventDefault 안 함)해 back-swipe 보존.
+  검증: 데스크탑 1회클릭 저장·가드·높이 82=82, 모바일 기간버튼 108px·날짜칸 네이티브·추이 pin·선불권헤더 124=124·
+  콘솔에러 0. 변경 파일 `index.html`·`prepaid.css`.
 - `v3.37` — **사용자 피드백 10건 일괄 반영.** ① **상세 '수정 확인' 두 번 눌러야 저장되던 것 근본 수정** —
   저장바(`#detailSaveBar`)가 `_detailDirty`일 때만 보였는데, 편집 직후 **백그라운드 동기화의 `renderDetail`이
   `_detailSetDirty(false)`로 버튼을 숨겨** 첫 클릭이 허공에 떨어졌다. `_detailSetDirty`를 **영수증이 열려 있으면
