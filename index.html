@@ -668,6 +668,38 @@ svg{display:block;flex-shrink:0;}
 .rel-secondary{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:20px;padding:11px 14px;background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);font-size:12.5px;color:var(--label2);}
 .rel-secondary b{font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
 .rel-secondary span{color:var(--label3);font-size:11.5px;}
+/* v3.41 — 사람 관계 비교표: 단둘이/여럿이/전체 × 상대 결제/내 결제 */
+.rel-cmp{border:1px solid var(--sep);border-radius:var(--rm);overflow:hidden;background:var(--card);margin-bottom:14px;}
+.rel-cmp-head,.rel-cmp-row{display:grid;grid-template-columns:84px 1fr 1fr;align-items:center;}
+.rel-cmp-head{padding:11px 16px 9px;border-bottom:1px solid var(--sep);}
+.rel-cmp-head .rc-col{text-align:right;font-size:12px;font-weight:600;color:var(--label2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rel-cmp-head .rc-col-me{color:var(--blue-txt);}
+.rel-cmp-row{padding:13px 16px;}
+.rel-cmp-row .rc-lbl{font-size:13px;font-weight:600;color:var(--label);}
+.rc-val{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:0;}
+.rc-val b{font-size:17px;font-weight:700;letter-spacing:-.3px;line-height:1.1;font-variant-numeric:tabular-nums;}
+.rc-val i{font-style:normal;font-size:11px;color:var(--label3);font-variant-numeric:tabular-nums;}
+.rc-val.rc-me b{color:var(--blue-txt);}
+.rc-cellname{display:none;}
+.rel-cmp-row.rc-duo{background:var(--blue-bg);}          /* 가장 직접적인 비교 = 단둘이 미세 강조 */
+.rel-cmp-row.rc-duo .rc-lbl{color:var(--blue-txt);}
+.rel-cmp-row.rc-total{border-top:1px solid var(--sep);}
+.rel-cmp-row.rc-total .rc-lbl{color:var(--label2);}
+.rel-cmp-row.rc-total .rc-val b{font-size:16px;}
+.rel-accent-sub{display:block;margin-top:3px;font-size:11px;color:var(--label3);}
+.rel-note{font-size:11.5px;line-height:1.55;color:var(--label3);margin:-4px 2px 14px;}
+.rel-note b{font-weight:600;color:var(--label2);}
+@media(max-width:780px){
+  .rel-cmp-head{display:none;}
+  .rel-cmp-row{grid-template-columns:1fr;padding:11px 14px;row-gap:7px;}
+  .rel-cmp-row .rc-lbl{font-size:11px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.3px;}
+  .rel-cmp-row.rc-duo .rc-lbl{color:var(--blue-txt);}
+  .rc-val{flex-direction:row;align-items:baseline;gap:8px;width:100%;}
+  .rc-cellname{display:block;flex:1 1 auto;min-width:0;font-size:13px;font-weight:600;color:var(--label2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .rc-val.rc-me .rc-cellname{color:var(--blue-txt);}
+  .rc-val b{font-size:16px;margin-left:auto;}
+  .rc-val i{min-width:30px;text-align:right;}
+}
 
 .section-hd{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin:18px 0 8px;display:flex;justify-content:space-between;align-items:center;}
 .section-hd .ghost-mini{border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;text-transform:none;letter-spacing:0;}
@@ -1103,14 +1135,26 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   /* 모바일 컴팩트 요약 — 부가 섹션 접기 */
   #detailBody.mob-compact .mob-secondary{display:none;}
   .mob-expand-btn{display:flex;}
-  /* 모바일 인물 검색: 요약 패널을 영수증 목록 위로 */
+  /* v3.41 — 모바일 인물 검색: 요약(대시보드)을 검색창 아래·목록 위에 표시하고 페이지 전체를 스크롤.
+     (v1.30 이후 side에 photo-filter/list-toolbar/batch-bar가 추가됐는데 order가 없어 맨 위로 튀던 것도 정리) */
+  /* flex column: order는 유지되면서 각 항목이 '내용 높이'로(그리드 트랙 stretch로 main이 잘리던 문제 해결) */
+  .app.mob-person-view{display:flex;flex-direction:column;height:100vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(72px + env(safe-area-inset-bottom,0px));}
   .app.mob-person-view aside.side{display:contents;}
-  .app.mob-person-view .side-top{order:1;}
-  .app.mob-person-view .month-nav{order:2;}
-  .app.mob-person-view .side-search{order:3;}
-  .app.mob-person-view main.main{order:4;}
-  .app.mob-person-view .side-list{order:5;border-top:1px solid var(--sep);}
-  .app.mob-person-view .side-foot{order:6;}
+  .app.mob-person-view .side-top,
+  .app.mob-person-view .month-nav,
+  .app.mob-person-view .photo-filter-mobile{display:none;}          /* 목록 전용 크롬은 인물뷰에서 숨김 */
+  .app.mob-person-view .side-search{order:1;flex:0 0 auto;}
+  .app.mob-person-view main.main{order:2;flex:0 0 auto;display:block;height:auto;min-height:0;overflow:visible;border-bottom:none;}
+  .app.mob-person-view .list-toolbar{order:3;flex:0 0 auto;}
+  .app.mob-person-view .side-list{order:4;flex:0 0 auto;border-top:1px solid var(--sep);}
+  .app.mob-person-view .batch-export-bar{order:5;flex:0 0 auto;}
+  .app.mob-person-view .side-foot{order:6;flex:0 0 auto;}
+  /* 요약·목록을 자연 높이로(내부 스크롤 대신 페이지 스크롤) */
+  .app.mob-person-view #viewList,
+  .app.mob-person-view #viewList.view.on{display:block;height:auto;min-height:0;overflow:visible;}
+  .app.mob-person-view #viewList .main-top{position:static;min-height:0;padding-top:10px;padding-bottom:10px;}
+  .app.mob-person-view #detailBody{flex:none;height:auto;max-height:none;overflow:visible;}
+  .app.mob-person-view .side-list{max-height:none;overflow:visible;}
 }
 /* 더 보기 / 접기 버튼 — 모바일에서만 표시 */
 .mob-expand-btn{display:none;width:100%;background:none;border:1px solid var(--sep2);border-radius:var(--rs);padding:8px 12px;font-size:12px;color:var(--label3);cursor:pointer;align-items:center;justify-content:center;gap:4px;margin-top:8px;font-family:inherit;transition:color .12s;}
@@ -2572,10 +2616,17 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.41 — 사람 검색 대시보드 UI 정리(계산 불변, v3.40 검증 함수 그대로). 히어로를 '단둘이/여럿이/전체 ×
+//   상대 결제/내 결제' 2×3 비교표로 재구성(_personRelation 공유). 가장 직접적인 '단둘이' 행을 맨 위에 두고
+//   soft blue surface로 미세 강조, '전체'=단둘이+여럿이. ⚠️ 관계표의 '상대 결제 전체'는 '나와 함께 있었던
+//   상대 결제'(receiptPeople에 나 포함)만 — 나 없이 상대가 결제한 건은 제외(별도 note로 '결제 내역'으로 안내).
+//   🎉 내가 한턱은 내 결제의 부분집합이라 합산 않고 작은 accent로, 참석 부담액(_receiptShare 불변)은 비교표
+//   아래 보조 영역으로 분리. 헤더 소제목 '결제 N·참석 N'→'상대 결제 N · 함께한 영수증 N'(나+상대 모두 포함).
+//   모바일은 표 축소가 아니라 compact 그룹(단둘이/여럿이/전체별 상대·내 두 줄). 정확일치 identity·receiptPeople·
+//   treat/splitExclude/저장구조/검색/기간필터/결제·참석 내역 로직 전부 불변. meetingId/round/time/treatBy 미도입.
+//   실데이터 확인: '이용일'≠'와이프(이용일)'는 서로 다른 사람(여럿이 정확), 지급기록·paidBy 누락 자동보정 안 함.
 // v3.40 — [STEP A] 사람 검색 결제 관계 정확도. 검색 UX는 부분일치 유지, **집계는 정확일치**(normalizeName ===).
 //   영수증별 실제 사람 집합 receiptPeople(r)=unique(참석자+결제자)로 '둘만/여럿' 판정(participants.length 아님).
-//   통합 대시보드 히어로를 두 카드로: [상대 결제](정확일치 total)·[내가 결제·함께](paidBy===me & 상대∈people) +
-//   각 둘만/여럿 소분해 + 🎉 내가 한턱(paidBy===me & treat & 상대 함께, 내 결제의 subset). 참석 부담액은 기존
 //   _receiptShare 합(계산 불변)으로 유지하되 라벨만 '1/N 정산금액'→'참석 부담액'. treat/splitExclude/_receiptShare·
 //   저장구조·검색·기간필터 전부 불변. meetingId/round/time/treatBy 미도입.
 // v3.39 — '참석만 한 사람(분담 0원)' 표시. 기간 내 참석은 했지만 늘 한턱 받거나 제외돼 분담 0원인 사람을
@@ -2596,7 +2647,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.40';
+const APP_VERSION='v3.41';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -4122,15 +4173,17 @@ function updateCatList(){
 // TAB SWITCH
 // ════════════════════════════════════════════════════════════════
 let _mobileListMode='list';
+let _personViewActive=false; // v3.41 — 인물 검색 대시보드 활성(모바일에서 요약을 목록 위에 표시)
 function _isMobileLayout(){return window.matchMedia('(max-width:780px)').matches;}
 function _activeTabName(){
   return document.querySelector('.tab.on[data-tab]')?.dataset.tab||'list';
 }
 function _syncMobileSurface(name=_activeTabName()){
   const app=document.querySelector('.app');if(!app)return;
-  app.classList.remove('mobile-list-view','mobile-stats-view','mobile-content-view','mobile-detail-view');
+  app.classList.remove('mobile-list-view','mobile-stats-view','mobile-content-view','mobile-detail-view','mob-person-view');
   if(!_isMobileLayout())return;
   if(name==='input'||name==='settings'||name==='prepaid')app.classList.add('mobile-content-view');
+  else if(_personViewActive&&!selectedId)app.classList.add('mob-person-view'); // v3.41 — 인물 요약을 목록 위에
   else if(selectedId||_mobileListMode==='detail')app.classList.add('mobile-detail-view');
   else if(_mobileListMode==='stats')app.classList.add('mobile-stats-view');
   else app.classList.add('mobile-list-view');
@@ -5638,55 +5691,65 @@ function renderParticipantSummaryHtml(name, filtered){
 }
 
 // ── 결제자 + 참석자 통합 대시보드 ──
-function renderPersonDashboardHtml(name, payerRecs, partRecs){
-  // v3.40 — 결제 관계를 정확일치로 재계산(검색 UX의 부분일치와 분리).
-  //   pool = 이 사람이 얽힌(결제자/참석자) 시간필터 반영 영수증 합집합.
-  const totalShare=partRecs.reduce((s,r)=>s+_receiptShare(r,name),0); // 기존 참석 부담액(계산 불변)
-  const totalPaid=payerRecs.reduce((s,r)=>s+(r.total||0),0); // 아래 '결제 내역' 섹션 소제목용
+// v3.41 — 사람 관계 지표를 한 곳에서 계산(정확일치). 대시보드 본문과 헤더 소제목이 같은 값을 쓰게 공유.
+//   검색 UX는 부분일치(includes), 집계 identity는 normalizeName 정확일치 — v3.40 분리 원칙 유지.
+//   단둘이/여럿이 판정은 participants.length가 아니라 receiptPeople(r)(참석자+결제자 정규화 집합) 사용.
+function _personRelation(name, payerRecs, partRecs){
   const me=normalizeName(getMyName());
   const pool=[...new Set([...payerRecs,...partRecs])];
-  // v3.40 — 검색어(부분일치)를 실제 저장된 이름으로 '확정'한 뒤 정확일치로 집계(STEP 2).
-  //   후보(pool 내 사람 중 검색어 포함)가 정확히 일치하면 그대로, 유일하면 그 이름으로 확정.
+  // 검색어(부분일치)를 저장된 실제 이름으로 확정: pool 내 후보가 유일하면 그 이름으로.
   let tgt=normalizeName(name);
   { const q=tgt.toLowerCase(), cand=new Set();
     for(const r of pool)for(const n of receiptPeople(r))if(n.toLowerCase().includes(q))cand.add(n);
     if(!cand.has(tgt)&&cand.size===1)tgt=[...cand][0]; }
-  const sum=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
-  const withBoth=r=>{const P=receiptPeople(r);return P.has(me)&&P.has(tgt);};
+  const has=(r,n)=>receiptPeople(r).has(n);
   const isDuo=r=>{const P=receiptPeople(r);return P.size===2&&P.has(me)&&P.has(tgt);};
   const isGrp=r=>{const P=receiptPeople(r);return P.size>2&&P.has(me)&&P.has(tgt);};
-  // ① 상대 결제 (정확일치)
-  const tgtPaid=pool.filter(r=>normalizeName(r.paidBy)===tgt);
-  const tgtDuo=me?tgtPaid.filter(isDuo):[], tgtGrp=me?tgtPaid.filter(isGrp):[];
-  // ② 내가 결제 + 상대 함께 (정확일치) — 둘만/여럿이 정확히 합집합을 이분
-  const myWith=me?pool.filter(r=>normalizeName(r.paidBy)===me&&withBoth(r)):[];
+  // 상대 결제: A=상대가 결제한 모든 영수증 / B=그중 나와 함께 있었던 것(관계 비교표의 '전체')
+  const tgtPaidAll=pool.filter(r=>normalizeName(r.paidBy)===tgt);
+  const tgtWith=me?tgtPaidAll.filter(r=>has(r,me)):[];
+  const tgtDuo=me?tgtPaidAll.filter(isDuo):[], tgtGrp=me?tgtPaidAll.filter(isGrp):[];
+  const tgtNoMe=me?tgtPaidAll.filter(r=>!has(r,me)):tgtPaidAll.slice();
+  // 내가 결제 + 상대 함께 (정확일치) — 둘만/여럿이 정확히 이분
+  const myWith=me?pool.filter(r=>normalizeName(r.paidBy)===me&&has(r,me)&&has(r,tgt)):[];
   const myDuo=myWith.filter(isDuo), myGrp=myWith.filter(isGrp);
   const myTreat=myWith.filter(r=>r.treat===true);
+  const myTreatDuo=myTreat.filter(isDuo), myTreatGrp=myTreat.filter(isGrp);
+  // 함께한 영수증 = receiptPeople에 나와 상대가 모두 있는 영수증
+  const together=me?pool.filter(r=>has(r,me)&&has(r,tgt)):[];
+  const shareTotal=partRecs.reduce((s,r)=>s+_receiptShare(r,name),0); // 참석 부담액(계산 불변)
+  return {me,tgt,pool,tgtPaidAll,tgtWith,tgtDuo,tgtGrp,tgtNoMe,myWith,myDuo,myGrp,myTreat,myTreatDuo,myTreatGrp,together,shareTotal};
+}
+
+function renderPersonDashboardHtml(name, payerRecs, partRecs){
+  // v3.41 — 히어로를 '단둘이/여럿이/전체 × 상대 결제/내 결제' 2×3 비교표로 정리.
+  //   계산은 v3.40 검증 함수 그대로(_personRelation). 아래 결제/참석 내역 섹션은 불변.
+  const R=_personRelation(name,payerRecs,partRecs);
+  const {me,tgt,tgtWith,tgtDuo,tgtGrp,tgtNoMe,myWith,myDuo,myGrp,myTreat,myTreatDuo,myTreatGrp,shareTotal}=R;
+  const totalShare=shareTotal;                                    // '참석 내역' 섹션 소제목용
+  const totalPaid=payerRecs.reduce((s,r)=>s+(r.total||0),0);      // '결제 내역' 섹션 소제목용(상대 전체 결제)
+  const sum=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
   const nm=escapeHtml(tgt);
-  const bd=(duoArr,grpArr)=>`<div class="rel-bd">
-    <div class="rel-bd-row"><span>둘만</span><b>${fmtMoney(sum(duoArr))}원</b><i>${duoArr.length}건</i></div>
-    <div class="rel-bd-row"><span>여럿</span><b>${fmtMoney(sum(grpArr))}원</b><i>${grpArr.length}건</i></div>
-  </div>`;
-  const myCard=me?`<div class="payer-stat">
-      <div class="payer-stat-lbl">내가 결제 · ${nm}와 함께</div>
-      <div class="payer-stat-val">${fmtMoney(sum(myWith))}원</div>
-      <div class="payer-stat-sub">${myWith.length}건</div>
-      ${bd(myDuo,myGrp)}
-      ${myTreat.length?`<div class="rel-accent">🎉 내가 한턱 <b>${fmtMoney(sum(myTreat))}원</b> · ${myTreat.length}건</div>`:''}
-    </div>`:`<div class="payer-stat rel-hint">
-      <div class="payer-stat-lbl">내가 결제</div>
-      <div class="rel-hint-txt">설정 탭에서 '내 이름'을 지정하면<br/>${nm}와의 결제 관계가 표시됩니다.</div>
+  let heroHtml;
+  if(me){
+    const cell=(arr,who,meCol)=>`<span class="rc-val${meCol?' rc-me':''}"><span class="rc-cellname">${who}</span><b>${fmtMoney(sum(arr))}원</b><i>${arr.length}건</i></span>`;
+    const row=(cls,lbl,dArr,mArr)=>`<div class="rel-cmp-row ${cls}"><span class="rc-lbl">${lbl}</span>${cell(dArr,nm+' 결제')}${cell(mArr,'내 결제',true)}</div>`;
+    const cmp=`<div class="rel-cmp">
+      <div class="rel-cmp-head"><span class="rc-lbl"></span><span class="rc-col rc-col-tgt">${nm} 결제</span><span class="rc-col rc-col-me">내 결제</span></div>
+      ${row('rc-duo','단둘이',tgtDuo,myDuo)}
+      ${row('rc-grp','여럿이',tgtGrp,myGrp)}
+      ${row('rc-total','전체',tgtWith,myWith)}
     </div>`;
-  const heroHtml=`<div class="payer-hero">
-    <div class="payer-stat total">
-      <div class="payer-stat-lbl">${nm} 결제</div>
-      <div class="payer-stat-val">${fmtMoney(sum(tgtPaid))}원</div>
-      <div class="payer-stat-sub">${tgtPaid.length}건${me?' · 그중 나와 함께':''}</div>
-      ${me?bd(tgtDuo,tgtGrp):''}
-    </div>
-    ${myCard}
-  </div>
-  <div class="rel-secondary">참석 부담액 <b>${fmtMoney(totalShare)}원</b><span>${nm}이(가) 타인 결제 자리에서 부담한 몫 · ${partRecs.length}건</span></div>`;
+    const noMeNote=tgtNoMe.length?`<div class="rel-note">위 표의 ‘${nm} 결제 전체’는 <b>나와 함께 있었던 자리</b>만 포함합니다. 나 없이 ${nm}이(가) 결제한 <b>${tgtNoMe.length}건 · ${fmtMoney(sum(tgtNoMe))}원</b>은 아래 ‘결제 내역’에서 볼 수 있어요.</div>`:'';
+    const accent=myTreat.length?`<div class="rel-accent">🎉 내가 한턱 <b>${fmtMoney(sum(myTreat))}원</b> · ${myTreat.length}건${(myTreatDuo.length||myTreatGrp.length)?`<span class="rel-accent-sub">단둘이 ${myTreatDuo.length}건 · ${fmtMoney(sum(myTreatDuo))}원 · 여럿이 ${myTreatGrp.length}건 · ${fmtMoney(sum(myTreatGrp))}원</span>`:''}</div>`:'';
+    const shareBox=`<div class="rel-secondary">참석 부담액 <b>${fmtMoney(shareTotal)}원</b><span>${nm}이(가) 타인 결제 자리에서 부담한 몫 · ${partRecs.length}건</span></div>`;
+    heroHtml=cmp+noMeNote+accent+shareBox;
+  }else{
+    // '내 이름' 미설정 — 관계 비교 불가. 상대 전체 결제만 안내.
+    heroHtml=`<div class="rel-cmp"><div class="rel-cmp-row rc-total"><span class="rc-lbl">${nm} 결제</span><span class="rc-val"><b>${fmtMoney(sum(payerRecs))}원</b><i>${payerRecs.length}건</i></span></div></div>
+      <div class="rel-note">설정 탭에서 <b>‘내 이름’</b>을 지정하면 ${nm}와의 단둘이/여럿이 결제 관계가 표시됩니다.</div>
+      <div class="rel-secondary">참석 부담액 <b>${fmtMoney(shareTotal)}원</b><span>${nm}이(가) 타인 결제 자리에서 부담한 몫 · ${partRecs.length}건</span></div>`;
+  }
 
   // 결제 내역 섹션
   let payerSection='';
@@ -6462,7 +6525,10 @@ function renderMonthSummaryHtml(ym){
 }
 
 function _setMobPersonView(v){
-  document.querySelector('.app').classList.toggle('mob-person-view',v&&!_isMobileLayout());
+  // v3.41 — 인물 대시보드 활성 여부만 기록하고, 실제 모바일 표면 결정은 _syncMobileSurface가 한다.
+  //   (이전엔 !_isMobileLayout() 게이트 때문에 모바일에서 인물 요약이 아예 안 떴다.)
+  _personViewActive=!!v;
+  _syncMobileSurface();
 }
 
 // 인물 검색 시간 필터 상태
@@ -6802,8 +6868,10 @@ async function renderDetail(){
         const allPartF=_applyPersonTimeFilter(partRecs,_personTimeFilter);
         const allRecs=[...new Set([...payerRecs,...partRecs])];
         eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4"/><path d="M16 11l2 2 4-4"/></svg>`;
-        title.textContent=`${personName}`;
-        sub.textContent=`결제 ${allPayerF.length}건 · 참석 ${allPartF.length}건`;
+        // v3.41 — 헤더 소제목을 의미가 분명한 표현으로: 상대 전체 결제 건수 · 함께한 영수증(나+상대 모두 포함) 건수.
+        const _rel=_personRelation(personName,allPayerF,allPartF);
+        title.textContent=`${_rel.tgt||personName}`;
+        sub.textContent=_rel.me?`${_rel.tgt} 결제 ${_rel.tgtPaidAll.length}건 · 함께한 영수증 ${_rel.together.length}건`:`${_rel.tgt} 결제 ${_rel.tgtPaidAll.length}건 · 참석 ${allPartF.length}건`;
         body.innerHTML=_personFilterPillsHtml(allRecs,_personTimeFilter)+renderPersonDashboardHtml(personName,allPayerF,allPartF);
         _bindSectionToggles(body);
         _setMobPersonView(true);
