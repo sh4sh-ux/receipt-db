@@ -92,6 +92,25 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   --pad-x:28px;
   --app-shadow:0 24px 64px rgba(0,0,0,.28),0 4px 16px rgba(0,0,0,.14);
   --soft-shadow:0 1px 2px rgba(0,0,0,.18);
+  /* ── v3.50 Foundation: 역할 기반 시맨틱 토큰(디자인 시스템 단일 출처) ──
+     색 역할은 기존 팔레트 토큰(테마별 재정의)의 별칭이라 값 자체는 불변.
+     타이포/스페이싱/컨트롤 스케일은 데스크탑 기준이며 ≤780px에서 크기만 재정의(역할·weight·색은 공통). */
+  --color-primary:var(--blue);--color-primary-hover:var(--blue-txt);--color-primary-surface:var(--blue-bg);
+  --text-primary:var(--label);--text-secondary:var(--label2);--text-tertiary:var(--label3);
+  --surface:var(--card);--surface-subtle:var(--fill2);--background:var(--bg);
+  --border:var(--sep2);--divider:var(--sep);--selected-bg:var(--blue-bg);
+  --danger:var(--red);--warning:var(--amber);--success:var(--green);
+  --fw-strong:700;--fw-med:600;--fw-reg:500;
+  --fs-page-title:24px;--ls-page-title:-.5px;
+  --fs-section-title:14px;
+  --fs-card-title:15px;
+  --fs-body:14px;
+  --fs-secondary:13px;
+  --fs-caption:11px;
+  --fs-amount:20px;
+  --fs-large-amount:26px;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-6:24px;--sp-8:32px;
+  --ctl-h:36px;--input-h:40px;
 }
 html[data-theme="light"]{
   color-scheme:light;
@@ -301,11 +320,11 @@ svg{display:block;flex-shrink:0;}
 .main-title-row{display:flex;align-items:center;justify-content:space-between;gap:16px;}
 .main-title-row .main-title{min-width:0;}
 .main-title-row .ledger-period-slot{flex-shrink:0;}
-.main-title{font-size:22px;font-weight:700;letter-spacing:-.4px;}
-.main-sub{font-size:13px;color:var(--label2);margin-top:4px;line-height:1.5;}
+.main-title{font-size:var(--fs-page-title);font-weight:var(--fw-strong);letter-spacing:var(--ls-page-title);}
+.main-sub{font-size:var(--fs-secondary);color:var(--text-secondary);margin-top:4px;line-height:1.5;}
 .main-actions{display:flex;gap:6px;flex-shrink:0;}
 .detail-header-save{display:flex;align-items:center;gap:6px;}
-.detail-header-btn{height:36px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);color:var(--label2);padding:0 12px;font-size:12px;font-weight:650;white-space:nowrap;}
+.detail-header-btn{height:var(--ctl-h);border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-secondary);padding:0 12px;font-size:12px;font-weight:650;white-space:nowrap;}
 .detail-header-btn:hover{background:var(--fill);color:var(--label);}
 .detail-header-btn.primary{border-color:var(--blue);background:var(--blue);color:#fff;}
 .detail-header-btn.primary:hover{filter:brightness(1.05);}
@@ -371,10 +390,10 @@ svg{display:block;flex-shrink:0;}
 .input-row.top .photo-preview{height:100%;max-height:none;object-fit:contain;}
 
 .field-g{margin-bottom:16px;}
-.field-lbl{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+.field-lbl{font-size:var(--fs-caption);font-weight:var(--fw-med);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
 .field-lbl-hint{font-weight:500;color:var(--label3);text-transform:none;letter-spacing:0;}
 .field-sub{font-size:11.5px;color:var(--label3);margin-top:4px;font-variant-numeric:tabular-nums;}
-.field-inp,.field-sel,.field-ta{width:100%;border:1px solid var(--sep2);border-radius:var(--rs);padding:9px 12px;font-size:14px;background:var(--bg);color:var(--label);outline:none;font-family:inherit;}
+.field-inp,.field-sel,.field-ta{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:9px 12px;font-size:var(--fs-body);background:var(--bg);color:var(--text-primary);outline:none;font-family:inherit;}
 .field-inp:focus,.field-sel:focus,.field-ta:focus{border-color:var(--blue);background:var(--card);}
 .field-ta{resize:vertical;min-height:220px;line-height:1.5;font-family:ui-monospace,'SF Mono','Menlo','Consolas',monospace;font-size:12.5px;white-space:pre;overflow-x:auto;}
 .field-sel{appearance:none;cursor:pointer;padding-right:32px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 10px center;}
@@ -560,8 +579,8 @@ svg{display:block;flex-shrink:0;}
 
 .kv{padding:10px 12px;background:var(--fill2);border-radius:var(--rm);border:1px solid var(--sep);transition:border-color .15s;}
 .kv:focus-within{border-color:var(--blue);}
-.kv-lbl{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}
-.kv-inp{width:100%;border:none;background:transparent;font-size:14px;font-weight:500;color:var(--label);outline:none;font-family:inherit;padding:0;line-height:1.4;text-align:left;}
+.kv-lbl{font-size:var(--fs-caption);font-weight:var(--fw-med);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}
+.kv-inp{width:100%;border:none;background:transparent;font-size:var(--fs-body);font-weight:var(--fw-reg);color:var(--text-primary);outline:none;font-family:inherit;padding:0;line-height:1.4;text-align:left;}
 .kv-inp::placeholder{color:var(--label3);font-weight:400;}
 .kv-inp:is(select){cursor:pointer;-webkit-appearance:none;appearance:none;}
 .kv-inp[type="date"]{-webkit-appearance:none;appearance:none;text-align:left;}
@@ -834,13 +853,13 @@ th.mtg-chk{background:var(--fill2);}
   #detailBody:has(.mtg-actionbar){padding-bottom:76px;}
 }
 
-.section-hd{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin:18px 0 8px;display:flex;justify-content:space-between;align-items:center;}
+.section-hd{font-size:var(--fs-caption);font-weight:var(--fw-med);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.3px;margin:18px 0 8px;display:flex;justify-content:space-between;align-items:center;}
 .section-hd .ghost-mini{border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;text-transform:none;letter-spacing:0;}
 .section-hd .ghost-mini:hover{background:var(--fill);color:var(--label);}
 
 /* ── SETTINGS VIEW ── */
 .setting-card{background:var(--card);border:1px solid var(--sep);border-radius:var(--rm);padding:16px 18px;margin-bottom:12px;}
-.setting-card h3{font-size:14px;font-weight:600;margin-bottom:4px;}
+.setting-card h3{font-size:var(--fs-section-title);font-weight:var(--fw-med);margin-bottom:4px;}
 .setting-card p{font-size:12.5px;color:var(--label2);line-height:1.5;margin-bottom:10px;}
 .setting-btn-row{display:flex;gap:8px;flex-wrap:wrap;}
 .print-opt-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
@@ -1410,7 +1429,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .r-card-amt{font-variant-numeric:tabular-nums;letter-spacing:-.1px;}
 .main-top{padding:28px 34px 21px;}
 .main-eye{letter-spacing:.8px;margin-bottom:7px;}
-.main-title{font-size:24px;letter-spacing:-.6px;line-height:1.2;}
+.main-title{line-height:1.2;}
 .main-sub{margin-top:5px;}
 .main-body{padding:26px 34px 38px;}
 .guide{border:1px solid color-mix(in srgb,var(--blue) 18%,var(--sep));border-radius:14px;}
@@ -1449,7 +1468,6 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .nav-btn:hover{transform:none;}
   .side-top{padding-top:max(14px,calc(env(safe-area-inset-top,0px) + 6px));padding-bottom:10px;}
   .main-top{padding:19px 18px 15px;}
-  .main-title{font-size:22px;}
   .main-body{padding:18px 18px 28px;}
   .detail-info-card{padding:15px;gap:16px;}
   .r-card{min-height:58px;}
@@ -1468,6 +1486,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
     --mobile-head-h:calc(110px + max(14px, env(safe-area-inset-top,0px) + 6px));
     --mobile-month-head-h:56px;
     --mobile-main-head-h:calc(var(--mobile-brand-head-h) + var(--mobile-month-head-h));
+    /* v3.50 — 타이포 역할 스케일의 모바일 재정의(역할·weight·색은 데스크탑과 공통, 크기만 responsive) */
+    --fs-page-title:23px;--ls-page-title:-.55px;
+    --fs-large-amount:25px;
   }
   .shell{height:calc(100dvh - var(--cw-h,0px));min-height:0;box-sizing:border-box;overflow:hidden;padding-bottom:calc(68px + env(safe-area-inset-bottom,0px));}
   /* --cw-h(미연결 경고 띠)만큼도 빼야 한다. 안 빼면 앱 전체가 띠 높이만큼 아래로
@@ -1512,7 +1533,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .app-eye-row{align-items:baseline;margin-bottom:11px;}
   .main-eye{margin-bottom:11px;}
   .app-version{padding-top:0;padding-bottom:0;border-top-width:0;border-bottom-width:0;line-height:1.375;}
-  .app-title,.main-title{font-size:23px;line-height:1.18;letter-spacing:-.55px;}
+  .app-title{font-size:23px;line-height:1.18;letter-spacing:-.55px;}
+  .main-title{line-height:1.18;}
   .main-sub{font-size:13px;line-height:1.5;margin-top:6px;}
   #viewList>.main-top{align-content:flex-start;}
   #viewList .main-actions{align-items:center;}
@@ -2749,6 +2771,18 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.50 — UI Foundation(역할 기반 디자인 토큰) 정리·적용. 기존에 색/구분선/모서리/폼/보조그레이는 이미 토큰
+//   (--label/2/3·--sep/sep2·--r/rm/rs·--blue/blue-bg·--green/red/amber)으로 통일돼 있었고, 이번엔 그 위에 **시맨틱
+//   역할 토큰 계층**을 `:root`에 추가: 색 별칭(--color-primary·--text-primary/secondary/tertiary·--surface·--border·
+//   --divider·--selected-bg·--danger/warning/success — 값 불변), **타이포 역할 스케일**(--fs-page-title·-section-title·
+//   -card-title·-body·-secondary·-caption·-amount·-large-amount + --fw-strong/med/reg + --ls-page-title), **스페이싱
+//   스케일**(--sp-1..8), **컨트롤 높이**(--ctl-h/--input-h). ≤780px에서 --fs-page-title·--ls-page-title·--fs-large-amount만
+//   responsive 재정의(역할·weight·색은 공통). 공유 역할 셀렉터를 토큰으로 재배선(값은 현행 유지 → 시각 변화 최소):
+//   .main-title(모든 뷰 페이지 제목)·.main-sub·.section-hd·.field-lbl·.kv-lbl·.field-inp/sel/ta·.kv-inp·.detail-header-btn
+//   (height/border/색). 페이지 제목의 흩어진 크기(base22/desktop24/모바일 22·23 혼재)를 토큰 하나로 통합(데스크탑24/
+//   모바일23, 죽은 규칙 제거). ⚠️ 카테고리 팔레트·좌측 브랜드 .app-title·정보구조·계산·Dutch Pay payload·meetingId·
+//   레이아웃(3단·고정 헤더·모바일 page/내부 스크롤)·수정확인 저장 로직 전부 불변. 신규 색테마/그림자/카드 남발 없음.
+//   변경 파일 index.html만.
 // v3.49 — [수정 확인] 1회 클릭 저장 근본 수정(레이아웃 변경 없음). 근본 원인: '수정됨' 피드백이 로컬 dbPut 뒤가
 //   아니라 Dropbox 네트워크 3종(_autoRenameCompleted·_dbxRenameScanFile·_dbxArchiveReceiptPhoto)을 await한 뒤에
 //   있었고 내부 try에 catch가 없어, 미연결/지연/예외 시 로컬 저장은 됐는데 피드백이 안 떠 두 번 눌러야 했다.
@@ -2838,7 +2872,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.49';
+const APP_VERSION='v3.50';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{

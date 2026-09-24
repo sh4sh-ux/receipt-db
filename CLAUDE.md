@@ -95,6 +95,22 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.50` — **UI Foundation(역할 기반 디자인 토큰) 정리·적용 — 최소 변경·시각 거의 불변.** 색/구분선/모서리/폼/보조
+  그레이는 이미 토큰(`--label/2/3`·`--sep`/`--sep2`·`--r/rm/rs`·`--blue`/`--blue-bg`·`--green/red/amber`)으로 앱 전역
+  통일돼 있어, 그 위에 **시맨틱 역할 토큰 계층**을 `:root`에 추가했다: ① **색 별칭**(`--color-primary`·`--text-primary/
+  secondary/tertiary`·`--surface`/`--surface-subtle`·`--background`·`--border`(=sep2)·`--divider`(=sep)·`--selected-bg`
+  (=blue-bg)·`--danger/warning/success`) — 기존 팔레트 참조라 값 불변. ② **타이포 역할 스케일**(`--fs-page-title` 24/
+  모바일23·`--ls-page-title`·`--fs-section-title` 14·`--fs-card-title` 15·`--fs-body` 14·`--fs-secondary` 13·`--fs-caption`
+  11·`--fs-amount` 20·`--fs-large-amount` 26/모바일25 + `--fw-strong/med/reg`). ≤780px에서 크기만 responsive 재정의
+  (역할·weight·색은 데스크탑과 공통). ③ **스페이싱 스케일** `--sp-1..8`(4·8·12·16·24·32), ④ **컨트롤 높이** `--ctl-h`
+  36·`--input-h` 40. 공유 역할 셀렉터를 토큰으로 재배선(값 현행 유지): `.main-title`(모든 뷰 공통 페이지 제목)·`.main-sub`·
+  `.section-hd`·`.field-lbl`·`.kv-lbl`·`.field-inp/sel/ta`·`.kv-inp`·`.detail-header-btn`(height/border/색). 페이지 제목의
+  흩어진 크기(base 22 / desktop 24 / 모바일 22·23 혼재, 죽은 규칙 포함)를 토큰 하나로 통합 → **데스크탑 24 / 모바일 23**
+  단일 규칙. ⚠️ **카테고리 팔레트·좌측 브랜드 `.app-title`·정보구조·계산(normalizeName/receiptPeople/_personRelation/
+  _receiptShare/treat/splitExclude)·Dutch Pay payload·meetingId·레이아웃(데스크탑 3단·고정 헤더·모바일 page/내부 스크롤)·
+  [수정 확인] 1회 저장 로직 전부 불변.** 신규 색테마·gradient·glassmorphism·그림자/카드 남발 없음. 검증: 데스크탑+모바일
+  (390·430) 전 화면(통계·내역·상세·추가·사람분석·선불권·선불권상세·설정·meeting·Dutch Pay) 스크린샷, 헤더 divider
+  Y 고정(스크롤 0/중간/끝 동일), 수정확인 1회 저장·계산·콘솔에러 0·가로 overflow 없음. 변경 파일 `index.html`만.
 - `v3.49` — **[수정 확인] 1회 클릭 저장 근본 수정 + 오른쪽 헤더 고정 실측 확인(레이아웃 코드 변경 없음).**
   ⚠️ **근본 원인**: 상세 '수정 확인'의 '수정됨' 성공 피드백(`toast`+`_flashSaved`)이 로컬 `dbPut` 직후가 아니라
   **Dropbox 네트워크 3종**(`_autoRenameCompleted`·`_dbxRenameScanFile`/`_dbxArchiveReceiptPhoto`)을 `await`한
