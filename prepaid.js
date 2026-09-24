@@ -154,12 +154,30 @@ function renderPrepaid(){
   const wallets=ppWallets(),wallet=wallets.find(w=>w.id===prepaidSelectedId);
   const money=n=>fmtMoney(n)+'원',esc=escapeHtml;
   document.getElementById('viewPrepaid').classList.toggle('pp-detail-view',!!wallet);
-  const mobile=typeof _isMobileLayout==='function'&&_isMobileLayout();
-  // 상세: 데스크탑=눈썹 '선불권' + 제목 매장명 / 모바일=제목 '선불권'(맥락 유지) + 매장명은 본문 첫 카드에.
-  document.getElementById('prepaidEyebrow').textContent=(wallet&&!mobile)?'선불권':'Receipt DB';
-  document.getElementById('prepaidTitle').textContent=(wallet&&!mobile)?wallet.name:'선불권';
+  // v3.52 — 상세 헤더를 영수증 상세와 동일한 Responsive Detail Header grammar로 통일(데스크탑·모바일 공통):
+  //   breadcrumb(← 선불권) + 제목(매장명, 한 줄 ellipsis) + meta(남은 잔액). 정보구조·계산·본문 액션은 불변.
+  const _ppEb=document.getElementById('prepaidEyebrow');
+  const _ppEyeRow=document.getElementById('prepaidEyeRow');
+  const _ppVer=_ppEyeRow?_ppEyeRow.querySelector('.js-app-version'):null;
+  const _ppMeta=document.getElementById('prepaidMeta');
+  if(wallet){
+    // breadcrumb (목록 복귀) — 영수증 상세의 .back-to-summary와 같은 결
+    _ppEb.classList.add('pp-eyebrow--crumb');
+    _ppEb.innerHTML='<button class="back-to-summary" id="prepaidBreadcrumb" type="button"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>선불권</button>';
+    const _crumb=document.getElementById('prepaidBreadcrumb');
+    if(_crumb)_crumb.addEventListener('click',()=>ppOpen(null)); // 목록 복귀(재렌더로 새 버튼이 생기므로 리스너 누적 없음)
+    if(_ppVer)_ppVer.hidden=true;
+    document.getElementById('prepaidTitle').textContent=wallet.name;
+    if(_ppMeta){_ppMeta.hidden=false;_ppMeta.textContent='남은 잔액 '+money(ppTotals(prepaidRecords,wallet.id).balance);}
+  }else{
+    _ppEb.classList.remove('pp-eyebrow--crumb');
+    _ppEb.textContent='Receipt DB';
+    if(_ppVer)_ppVer.hidden=false;
+    document.getElementById('prepaidTitle').textContent='선불권';
+    if(_ppMeta){_ppMeta.hidden=true;_ppMeta.textContent='';}
+  }
   document.getElementById('prepaidNew').hidden=!!wallet;
-  document.getElementById('prepaidBack').hidden=true; // v3.30 — 화면 내 뒤로가기 화살표 UI 제거(목록 복귀는 선불권 탭 재선택)
+  document.getElementById('prepaidBack').hidden=true; // v3.30 — 화면 내 뒤로가기 화살표 UI 제거(목록 복귀는 breadcrumb)
   // 진행바 조각: 총 충전(=충전+기초 잔액 합)이 양수일 때만. 계산은 기존 active 이벤트만 사용(저장/계산 로직 불변).
   const barHtml=(charged,used,pct)=>charged>0?`<div class="pp-bar" role="img" aria-label="사용 ${pct}%"><span style="width:${Math.max(0,Math.min(100,pct))}%"></span></div><div class="pp-bar-legend"><span>사용 ${money(used)} (${pct}%)</span><span>총 ${money(charged)}</span></div>`:'';
   // 파생값(전부 기존 계산 함수만 사용)

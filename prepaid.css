@@ -2,9 +2,15 @@
 .app:has(#viewPrepaid.on) .side{display:none}
 .app:has(#viewPrepaid.on) .main{display:block}
 #viewPrepaid>.pp-header{min-height:92px;padding:0 38px;align-items:center;gap:20px}
-.pp-header-main{display:flex;align-items:center;min-width:0}.pp-header-copy{min-width:0}
+/* v3.52 — 상세 모드는 영수증 상세와 동일하게 breadcrumb·제목·meta를 위에서부터 쌓는다(top-align). 목록 모드는 기존 center 유지. */
+#viewPrepaid.pp-detail-view>.pp-header{align-items:flex-start}
+.pp-header-main{display:flex;align-items:center;min-width:0}.pp-header-copy{min-width:0;flex:1 1 auto}
 .pp-eyebrow{margin-bottom:6px;color:var(--label3);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-#viewPrepaid .main-title{font-size:24px;line-height:1.15;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* v3.52 — 상세 breadcrumb(← 선불권): 영수증 상세의 .back-to-summary와 같은 결(대문자/자간 해제) */
+.pp-eyebrow--crumb{text-transform:none;letter-spacing:0;font-weight:500}
+/* v3.52 — 제목 typography는 Foundation .main-title 토큰(--fs-page-title/--fw-strong/--ls-page-title + ellipsis)에 위임 */
+#viewPrepaid .main-title{line-height:1.15}
+#viewPrepaid .main-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* v3.30 — 화면 내 뒤로가기 화살표 UI 제거(헤더/구분선은 유지, 목록 복귀는 선불권 탭 재선택) */
 .pp-back-btn{display:none}
 .pp-detail-view .pp-header-copy{padding-left:0}
@@ -114,10 +120,13 @@
  .icon-nav .nav-btn,.icon-nav .nav-btn.tab{width:auto;min-width:0;flex:1 1 0}
  /* v3.38 — 선불권 헤더를 다른 탭(.main-top)과 통일: 같은 높이·safe-area 상단여백·상단정렬·눈썹 간격 */
  #viewPrepaid>.pp-header{min-height:var(--mobile-head-h);padding:max(14px,calc(env(safe-area-inset-top,0px) + 6px)) 18px 14px;align-items:flex-start}
- #viewPrepaid .main-title{font-size:23px;line-height:1.18;letter-spacing:-.55px}
+ /* v3.52 — 모바일 제목도 Foundation 토큰(23/-.55)에 위임, line-height만 유지 */
+ #viewPrepaid .main-title{line-height:1.18}
  .pp-eyebrow{margin-bottom:11px;letter-spacing:.9px;font-weight:600}
+ .pp-eyebrow--crumb{letter-spacing:0;font-weight:500}
  .pp-back-btn{width:36px;height:36px;flex-basis:36px;margin-right:14px}
- .pp-detail-view .pp-header-copy{padding-left:14px}
+ /* v3.52 — 뒤로가기 화살표 버튼은 숨김 상태라 상세 copy 들여쓰기 제거(영수증 상세와 동일하게 breadcrumb는 copy 안 eyebrow) */
+ .pp-detail-view .pp-header-copy{padding-left:0}
  .pp-new-btn{position:relative;width:38px;min-width:38px;height:38px;padding:0;gap:0}
  .pp-new-btn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
  .pp-new-btn svg{position:absolute;inset:0;margin:auto;width:17px;height:17px}

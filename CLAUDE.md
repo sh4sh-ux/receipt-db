@@ -95,6 +95,25 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.52` — **Responsive Detail Header 패턴을 다른 상세 화면으로 확장(일관성 작업 — 기능·계산·데이터·정보구조 불변).**
+  영수증 상세의 헤더 grammar(breadcrumb·Page Title·meta·고정 divider)와 Foundation 토큰을 다른 Detail View에 통일했다.
+  ① **사람 분석**: 이미 영수증 상세와 **같은 `.main-top`/`.main-body`**(제목 `.main-title`·부제 `.main-sub`·기간 드롭다운
+  `#ledgerPeriodSlot`·고정 divider Y=224)를 쓰고 있어 **코드 변경 없음**(확인만). 단둘이 Hero·여럿이·전체·한턱·참석 부담액
+  UI·계산 전부 불변. ② **선불권 상세**(`prepaid.js`·`prepaid.css`): 고정 헤더를 영수증 상세와 동일 grammar로 통일 —
+  **breadcrumb(← 선불권, 목록 복귀) + 제목(매장명, Foundation `.main-title` 토큰·한 줄 `nowrap+ellipsis`) + meta(`.main-sub`=
+  남은 잔액 N원)**. 데스크탑·모바일 **공통**(기존엔 데스크탑만 제목=매장명, 모바일은 제목 '선불권'+본문 카드에 매장명).
+  제목 typography를 하드코딩 24/23px → Foundation `--fs-page-title`/`--fw-strong`/`--ls-page-title`에 위임, 상세 헤더
+  top-align(`#viewPrepaid.pp-detail-view>.pp-header{align-items:flex-start}`), breadcrumb는 `.back-to-summary`+`.pp-eyebrow--crumb`
+  (대문자/자간 해제). 뒤로가기 화살표 자리(`pp-back-btn` 숨김) 잔여 들여쓰기 제거. ⚠️ **본문 balance 카드·사용/충전/환불/
+  만료 차감/정보 수정 5개 액션 행·계산(`ppTotals`/`ppSuggestedUseAmount`/…)·저장·정보구조는 전부 그대로**(§9 Primary 액션
+  본문 유지, §19 정보구조 재설계 금지). 긴 매장명에도 헤더 높이 불변(데스크탑 144px 고정·모바일 `min-height:var(--mobile-head-h)`).
+  ③ **Meeting 오버레이**(`.mtg-sheet`): 오버레이라 Page Header 높이는 미적용, 제목/meta/divider/버튼 role만 Foundation 시맨틱
+  토큰(`--text-primary/secondary/tertiary`·`--divider`·`--border`·`--color-primary`·`--fw-strong`·`--fs-secondary`)으로 재배선
+  (값 동일 → 시각 변화 거의 없음). ⚠️ receipt schema·meetingId·Dutch Pay payload·normalizeName/receiptPeople/_personRelation/
+  _receiptShare/treat/splitExclude·선불권 계산·Dropbox 구조·영수증 상세 저장 UX(CLEAN/DIRTY/SAVING/SAVED/ERROR)·헤더 고정
+  (divider Y=224) 전부 불변. 검증(실데이터 151건): 데스크탑+모바일(390·430) 영수증/선불권/사람 상세 헤더 정렬·긴 제목 한 줄
+  ellipsis·breadcrumb 목록 복귀·저장 UX 1회 저장 회귀 없음·선불권 계산/액션 불변·가로 overflow 없음·콘솔에러 0. 변경 파일
+  `index.html`·`prepaid.js`·`prepaid.css`.
 - `v3.51` — **영수증 상세 저장 UX를 Desktop+Mobile 공통 상태 시스템으로 개선(기능·데이터·계산 전부 불변).**
   ① 명칭 **'수정 확인' → '저장'**. ② **공통 저장 상태 하나**(CLEAN/DIRTY/SAVING/SAVED/ERROR)를 `_setSaveState`가
   관리 — 데스크탑 헤더 버튼과 모바일 하단 저장 바가 **같은 엔진(`_doConfirm`)·같은 상태**를 공유하고 표현만

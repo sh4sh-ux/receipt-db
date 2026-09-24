@@ -712,14 +712,15 @@ th.mtg-chk{background:var(--fill2);}
 .mtg-sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9990;display:flex;align-items:center;justify-content:center;padding:20px;}
 .mtg-sheet{background:var(--card);border-radius:var(--r);width:100%;max-width:400px;max-height:82vh;overflow-y:auto;padding:22px 22px 18px;box-shadow:0 16px 48px rgba(0,0,0,.24);}
 .mtg-sheet-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;}
-.mtg-sheet-title{font-size:16px;font-weight:700;color:var(--label);letter-spacing:-.2px;}
-.mtg-sheet-x{border:none;background:none;font-size:22px;line-height:1;color:var(--label3);cursor:pointer;padding:2px 4px;margin:-2px -4px 0 0;border-radius:8px;font-family:inherit;}
+/* v3.52 — Meeting 오버레이 헤더 역할을 Foundation 토큰으로 재배선(오버레이라 Page Header 높이는 미적용, 값 동일). */
+.mtg-sheet-title{font-size:16px;font-weight:var(--fw-strong);color:var(--text-primary);letter-spacing:-.2px;}
+.mtg-sheet-x{border:none;background:none;font-size:22px;line-height:1;color:var(--text-tertiary);cursor:pointer;padding:2px 4px;margin:-2px -4px 0 0;border-radius:8px;font-family:inherit;}
 .mtg-sheet-x:hover{background:var(--fill);}
-.mtg-sheet-meta{font-size:12.5px;color:var(--label2);margin-bottom:14px;}
+.mtg-sheet-meta{font-size:var(--fs-secondary);color:var(--text-secondary);margin-bottom:14px;}
 .mtg-sheet-people{margin-bottom:15px;}
 .mtg-sheet-plbl{font-size:11px;font-weight:600;color:var(--label3);margin-bottom:4px;letter-spacing:.2px;}
 .mtg-sheet-pnames{font-size:13px;color:var(--label);line-height:1.55;}
-.mtg-sheet-divider{height:1px;background:var(--sep);margin:2px 0 8px;}
+.mtg-sheet-divider{height:1px;background:var(--divider);margin:2px 0 8px;}
 .mtg-drows{display:flex;flex-direction:column;gap:3px;}
 .mtg-drow{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:3px 12px;width:100%;padding:11px 12px;border:none;background:none;border-radius:var(--rm);cursor:pointer;font-family:inherit;text-align:left;}
 .mtg-drow:hover{background:var(--fill);}
@@ -727,8 +728,8 @@ th.mtg-chk{background:var(--fill2);}
 .mtg-drow-store{grid-column:1;grid-row:1;font-size:13.5px;font-weight:600;color:var(--label);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .mtg-drow-amt{grid-column:2;grid-row:1;font-size:13.5px;font-weight:700;color:var(--label);white-space:nowrap;}
 .mtg-drow-date{grid-column:1;grid-row:2;font-size:11.5px;color:var(--label3);}
-.mtg-sheet-foot{margin-top:12px;padding-top:12px;border-top:1px solid var(--sep);}
-.mtg-sheet-unlink{width:100%;padding:10px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);color:var(--label2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+.mtg-sheet-foot{margin-top:12px;padding-top:12px;border-top:1px solid var(--divider);}
+.mtg-sheet-unlink{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-secondary);font-size:var(--fs-secondary);font-weight:600;cursor:pointer;font-family:inherit;}
 .mtg-sheet-unlink:hover{background:var(--fill);}
 .mtg-scope-list{display:flex;flex-direction:column;gap:8px;margin:6px 0 14px;}
 .mtg-scope-opt{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border:1px solid var(--sep);border-radius:var(--rm);cursor:pointer;}
@@ -745,9 +746,9 @@ th.mtg-chk{background:var(--fill2);}
 .mtg-sel-amt{font-size:13.5px;font-weight:600;color:var(--label);white-space:nowrap;}
 .mtg-sel-summary{font-size:12.5px;font-weight:600;color:var(--label);margin:2px 2px 12px;}
 .mtg-sheet-btns{display:flex;gap:8px;justify-content:flex-end;}
-.mtg-sheet-cancel{padding:9px 15px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);color:var(--label2);font-size:13px;cursor:pointer;font-family:inherit;}
-.mtg-sheet-ok{padding:9px 16px;border:none;border-radius:8px;background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
-.mtg-sheet-ok:disabled{background:var(--sep2);color:var(--label3);cursor:not-allowed;}
+.mtg-sheet-cancel{padding:9px 15px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-secondary);font-size:var(--fs-secondary);cursor:pointer;font-family:inherit;}
+.mtg-sheet-ok{padding:9px 16px;border:none;border-radius:8px;background:var(--color-primary);color:#fff;font-size:var(--fs-secondary);font-weight:600;cursor:pointer;font-family:inherit;}
+.mtg-sheet-ok:disabled{background:var(--border);color:var(--text-tertiary);cursor:not-allowed;}
 @media(max-width:780px){
   .mtg-sheet-backdrop{align-items:flex-end;padding:0;}
   .mtg-sheet{max-width:none;border-radius:var(--r) var(--r) 0 0;max-height:86vh;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));}
@@ -1812,7 +1813,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
             <button type="button" class="pp-back-btn" id="prepaidBack" hidden aria-label="선불권 목록으로">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
             </button>
-            <div class="pp-header-copy"><div class="main-eye-row"><div class="pp-eyebrow" id="prepaidEyebrow">Receipt DB</div><span class="app-version js-app-version" title="앱 버전"></span></div><div class="main-title" id="prepaidTitle">선불권</div></div>
+            <div class="pp-header-copy"><div class="main-eye-row" id="prepaidEyeRow"><div class="pp-eyebrow" id="prepaidEyebrow">Receipt DB</div><span class="app-version js-app-version" title="앱 버전"></span></div><div class="main-title" id="prepaidTitle">선불권</div><div class="main-sub" id="prepaidMeta" hidden></div></div>
           </div>
           <button type="button" class="pp-new-btn" id="prepaidNew" aria-label="선불권 등록">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>선불권 등록</span>
@@ -2803,6 +2804,20 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.52 — Responsive Detail Header 패턴을 다른 상세 화면으로 확장(일관성 작업, 기능·계산·데이터·정보구조 불변).
+//   영수증 상세의 헤더 grammar(breadcrumb·Page Title·meta·고정 divider)와 Foundation 토큰을 다른 Detail View에 통일.
+//   ① 사람 분석: 이미 동일 .main-top/.main-body(main-title/main-sub/#ledgerPeriodSlot·divider Y224)라 변경 없음(확인만) —
+//   단둘이 Hero·여럿이·전체·한턱·참석부담 UI·계산 전부 불변. ② 선불권 상세(prepaid.js·prepaid.css): 고정 헤더를 영수증
+//   상세와 동일 grammar로 — breadcrumb(← 선불권, 목록 복귀) + 제목(매장명, Foundation .main-title 토큰·한 줄 ellipsis) +
+//   meta(.main-sub=남은 잔액). 데스크탑·모바일 공통(기존엔 데스크탑만 제목=매장명, 모바일은 제목 '선불권'). 제목 typography
+//   하드코딩 24/23px→Foundation --fs-page-title/--fw-strong/--ls-page-title 위임, 상세 헤더 top-align(pp-detail-view).
+//   ⚠️ 본문 balance 카드·사용/충전/환불/만료 차감/정보 수정 5개 액션 행·계산·저장·정보구조 전부 그대로(§9·§19). 긴 매장명
+//   에도 헤더 높이 불변(데스크탑 144px·모바일 min-height). ③ Meeting 오버레이(.mtg-sheet): Page Header 높이 미적용,
+//   제목/meta/divider/버튼 role을 Foundation 시맨틱 토큰(--text-primary/secondary/tertiary·--divider·--border·
+//   --color-primary·--fw-strong·--fs-secondary)으로 재배선(값 동일 → 시각 변화 거의 없음). ⚠️ receipt schema·meetingId·
+//   Dutch Pay payload·normalizeName/receiptPeople/_personRelation/_receiptShare/treat/splitExclude·선불권 계산·Dropbox
+//   구조·영수증 상세 저장 UX(CLEAN/DIRTY/SAVING/SAVED/ERROR)·헤더 고정(divider Y224) 전부 불변. 변경 파일 index.html·
+//   prepaid.js·prepaid.css.
 // v3.51 — 영수증 상세 저장 UX를 Desktop+Mobile 공통 상태 시스템으로 개선(기능·데이터·계산 불변).
 //   ① 명칭 '수정 확인'→'저장'. ② **공통 저장 상태**(CLEAN/DIRTY/SAVING/SAVED/ERROR) 하나를 `_setSaveState`가
 //   관리하고 데스크탑 헤더 버튼과 모바일 하단 저장 바가 같은 엔진(_doConfirm)·같은 상태를 공유, 표현만 responsive.
@@ -2917,7 +2932,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.51';
+const APP_VERSION='v3.52';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
