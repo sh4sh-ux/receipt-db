@@ -95,6 +95,23 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.53` — **사람별 '만남 횟수'(meetingId 기준 관계 지표) 계산·표시 — 금액 분석(receipt 기준)은 전부 불변, 새 지표만 추가.**
+  **Receipt=결제/금액 단위, Meeting=meetingId 단위**로 명확히 분리. 새 런타임 헬퍼 `_personMeetingStats(rel)`:
+  ① **확정된 만남** = 같은 `meetingId` 그룹(런타임 Set — receipt가 몇 개든 **1회**), ② **people union** = 그 meetingId
+  전체 receipt의 `receiptPeople` 합집합(정확일치·원본 participants 불변, `이용일`≠`와이프(이용일)`), ③ **나+대상이 union에
+  모두 있는 meetingId만** 관계 만남으로 셈(대상만 있고 내가 없으면 제외), ④ union이 **정확히 {나,대상} 2명이면 단둘이**,
+  그 외 **여럿이**(한 meeting 안 중간 합류·이탈도 union 기준이라 여럿이 1회), ⑤ **미분류 영수증** = '함께한' receipt 중
+  `meetingId` 없는 것(횟수로 환산 안 함), ⑥ 기간은 `rel.pool`(현재 기간에 대상이 등장하는 meetingId)로 후보 게이트
+  (person-scoped; 한 meeting의 receipt가 기간 내 여러 개여도 count=1). **불변식 confirmed = duo + group.** ⚠️ 각 meetingId는
+  단둘이/여럿이 중 정확히 하나. **표시**: 헤더 소제목 `함께한 영수증 N건 · 확정된 만남 M회`(receipt/meeting 수를 혼합하지
+  않고 병기), 통합 대시보드에 compact 관계 요약(확정된 만남/단둘이/여럿이/미분류 — Foundation 토큰만, 금액 분석과 상단
+  divider로 분리). ⚠️ **자동 추정(날짜/시간/참석자/AI/자정 연결)·round(1차2차)·payee·treatBy·meetingName/Date/Participants·
+  별도 Meeting DB 전부 미도입.** meetingId가 1건에만 남아도 확정 만남 1회로 유지(자동 삭제/보정 안 함 — '최소 2건 묶기'는
+  생성 UX 규칙일 뿐, 분리 후 1건 잔존은 정상). **금액 계산**(`_personRelation`의 상대/내/단둘이/여럿이/전체 결제·한턱·
+  참석 부담액·결제 비율·`treat`/`splitExclude`), Dutch Pay payload, meetingId 묶기/분리, 레이아웃 전부 불변(회귀 없음).
+  검증(실데이터 151건 신유철 + 합성 A~H): 불변식 confirmed=단둘이+여럿이 PASS, 같은 meetingId 중복 count 없음, 자정 넘김
+  1회, 중간 합류/이탈 여럿이 1회, meetingId 없는 receipt 만남 +0·미분류 +N, 나 없는 meeting 관계 +0, 기존 금액값 동일,
+  콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.52` — **Responsive Detail Header 패턴을 다른 상세 화면으로 확장(일관성 작업 — 기능·계산·데이터·정보구조 불변).**
   영수증 상세의 헤더 grammar(breadcrumb·Page Title·meta·고정 divider)와 Foundation 토큰을 다른 Detail View에 통일했다.
   ① **사람 분석**: 이미 영수증 상세와 **같은 `.main-top`/`.main-body`**(제목 `.main-title`·부제 `.main-sub`·기간 드롭다운
