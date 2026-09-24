@@ -2668,6 +2668,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.45 — 단둘이 Hero 우측 건수 라벨 '19건'→'영수증 19건'(만남 횟수 오해 방지, meetingId 없음). 값·계산·레이아웃 불변.
 // v3.44 — 사람 분석 화면 미세 polish(계산·데이터·구조 불변). ① 단둘이 제목 '단둘이 있을 때'→'단둘이 만났을 때',
 //   보조문구 '함께한 자리의 결제'(19건·금액·비율 Bar 그대로). ② 데스크탑 여럿이/전체: 설명문 제거 + 값 인라인
 //   ('신유철 0원 · 0건' 한 줄)로 compact. ③ 모바일: 여럿이/전체 세로여백 축소(2열 stacked 유지), 한턱/참석부담을
@@ -2718,7 +2719,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.44';
+const APP_VERSION='v3.45';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5818,7 +5819,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     const hero=`<div class="rel-hero">
       <div class="rel-hero-top">
         <div class="rel-hero-tt"><div class="rel-hero-title">단둘이 만났을 때</div><div class="rel-hero-desc">함께한 자리의 결제</div></div>
-        <div class="rel-hero-cnt">${duoCnt}건</div>
+        <div class="rel-hero-cnt">영수증 ${duoCnt}건</div>
       </div>
       <div class="rel-duo">
         <div class="rel-duo-side"><div class="rel-duo-lbl">${nm}이 결제</div><div class="rel-duo-amt">${fmtMoney(duoTgt)}원</div><div class="rel-duo-cnt">${tgtDuo.length}건</div></div>
