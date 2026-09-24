@@ -95,6 +95,26 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.47` — **만남 연결 UX (영수증 상세 ↔ meetingId ↔ 더치페이).** Receipt=작업단위·Meeting=meetingId 관계·
+  Dutch Pay=선택 receipt 전송, 셋을 섞지 않는다. ① **영수증 상세 연결 row**: `meetingId`가 있고 같은 만남 영수증이
+  **2건 이상**이면 상세내역 카드 아래에 **얇은 연결 row**(`.mtg-row`, 연한 blue surface·shadow 없음·작은 link 아이콘)
+  — 'M월 D일의 만남 · 영수증 N건 · 합계원', 자정 넘김은 'M월 D일 ~ D일의 만남'(달 다르면 둘째에도 달). 날짜/건수/합계는
+  같은 meetingId 영수증에서 **동적 계산**. 현재 receipt가 항상 주인공(큰 Meeting Card 없음). ② **만남 상세 시트**(row 클릭
+  → 데스크탑 중앙 카드 / 모바일 하단 시트, `.mtg-sheet` body 포탈): 제목·날짜·건수·합계 + **참석자 union**(각 receipt
+  `receiptPeople` 합집합·정확일치·원본 participants 불변·별도 저장 없음) + 영수증 목록(현재 열람분 `.cur` 강조) + 개별
+  클릭 시 기존 `selectReceipt`로 전환 + **[이 영수증을 만남에서 분리]**(현재 receipt만 `meetingId` 제거, `_mtgConfirm`
+  확인 후 `dbPut`+`updatedAt`+동기화). '만남 삭제'는 없음(Meeting은 관계라 분리만). ③ **더치페이 범위 선택**: 현재
+  receipt에 meetingId(2건+)가 있으면 [더치페이] 클릭 시 **범위 선택 시트**(①현재 영수증만[**기본**] ②이 만남의 모든
+  영수증 ③직접 선택) → 기존 전송 경로로 라우팅. meetingId 없으면 기존 단일 전송 그대로. **자동 전체 전송 없음**(명시
+  선택만). '직접 선택'은 만남 영수증 체크리스트(기본 전체 선택, 실시간 건수·합계). **selection 진실원=receipt.id**. 현재
+  영수증만→`sendReceiptsToDutchPay([r],{single:true})`, 만남 전체→`sendReceiptsToDutchPay(meetingRecs)`, 직접→선택
+  `receipt.id` 목록. ⚠️ **Dutch Pay payload 불변**(sourceId/store/date/total/payer/people/items/receiptImage, meetingId
+  미추가), 새 정산 엔진 없음. Rail+왼쪽 목록+오른쪽 상세 3단·모바일 상세·Bottom nav 불변. 시트는 renderDetail 진입 시
+  잔재 제거(body 포탈 정리). **계산 전부 v3.46과 동일**(normalizeName/receiptPeople/_personRelation/_receiptShare/
+  단둘이·여럿이·상대·내 결제/한턱/참석부담/treat/splitExclude). meetingName/meetingDate/meetingParticipants/Meeting
+  object/round/payee/treatBy/migration·만남 횟수 통계 **미도입**. 검증: meetingId 없는 상세=기존 동일, 연결 row·자정 넘김
+  범위·건수/합계·만남 상세 목록·참석자 union·receipt 이동·현재 분리·더치페이(현재/전체/직접·기본값 현재·payload 불변)·
+  Desktop 3단·Mobile 390/430 overflow 없음·사람별 계산 불변·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.46` — **만남으로 묶기(meetingId) 1단계 — 수동 다중 선택.** 사람별 결제 분석 화면의 **결제 내역/참석 내역**에서
   **[선택] 버튼**을 눌렀을 때만 선택 모드로 전환(행마다 원형 체크박스), 영수증을 여러 개 골라 **같은 `meetingId`를
   부여(만남으로 묶기)**하거나 **해제(만남에서 분리)**한다. **원본 영수증은 그대로** — 병합·삭제·마이그레이션·자동추정·
