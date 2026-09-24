@@ -95,6 +95,19 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.43` — **사람 분석 화면 최종 정제(계산·데이터 전부 불변).** Card 남발 → 위계로: **단둘이만 Hero**(연한 blue,
+  세로 여백 ~15% 축소, 상대/내 결제 + 결제금액 비율 Bar '금액 기준 비율'), **여럿이·전체는 plain row**(카드 배경/
+  테두리 제거, 하단 divider만), **🎉 한턱·참석 부담액은 slim insight**(큰 컬러 카드 제거 → 투명 배경 2열 + 사이 세로
+  divider, 🎉·장식 제거). **기간 드롭다운을 본문 상단 → 헤더 우측 슬롯**(`#ledgerPeriodSlot`, 제목 옆)으로 이동해
+  전용 줄 제거(pills는 `#ledgerPeriodSlot`에서도 바인딩). **'전체'의 합산 건수(36) badge 제거** — 관계 대표 count는
+  헤더 '함께한 영수증 N'. **모바일**: 기간 전용 줄 제거, 여럿이/전체 plain row(stacked), 한턱/참석부담 세로 slim,
+  결제·참석 내역을 **compact transaction list**(`.person-txn` + `.txn-store/.txn-amt/.txn-date/.txn-sub`, 모바일에서만
+  표→리스트, 데스크탑 표는 그대로; 날짜검색 패널 등 다른 `.srch-table`은 불영향). Header divider·Dropbox 배너·
+  Bottom nav·Navigation Rail·왼쪽 목록 불변. 계산(`_personRelation`/`_receiptShare`/treat/splitExclude)·데이터·검색·
+  기간로직 전부 불변. meetingId/round/treatBy/payee/migration·새 dependency 없음. 검증: 실데이터 151건 신유철
+  단둘이 431,900/9·505,000/10·비율 46/54(합100)·여럿이 0/1,948,500·전체 431,900/2,453,500(36 badge 없음)·한턱
+  399,600/8·참석 595,884/32, 불변식 PASS, 기간 헤더슬롯·plain row·투명 insight 확인, 모바일 390/430 가로 overflow
+  없음·transaction list·스크롤·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.42` — **사람별 결제 분석 화면 재디자인(계산·데이터 전부 불변, v3.41 검증 함수 그대로).** 회계 비교표(2×3)를
   위계형 카드로 교체. ① **단둘이 Hero**(연한 blue surface): '단둘이 있을 때' + 건수 + 상대/내 결제 금액(내 결제만
   blue accent) + **결제금액 비율 Bar**(상대%/나%, `금액 기준 비율` 라벨, 반올림 후 합 100% 보장, **분모 0이면

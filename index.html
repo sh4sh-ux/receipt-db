@@ -668,73 +668,83 @@ svg{display:block;flex-shrink:0;}
 .rel-secondary{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:20px;padding:11px 14px;background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);font-size:12.5px;color:var(--label2);}
 .rel-secondary b{font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
 .rel-secondary span{color:var(--label3);font-size:11.5px;}
-/* v3.42 — 사람 관계 위계형 카드: 단둘이 Hero(비율 Bar) → 여럿이/전체 row → 한턱/참석 부담액 insight */
-/* 기간 드롭다운(전체/연도/월 = 기존 _personTimeFilter 재사용) */
-.person-period-bar{display:flex;justify-content:flex-end;margin-bottom:12px;}
+/* v3.43 — 사람 관계 최종 정제: 단둘이만 Hero, 여럿이/전체는 plain row(divider), 한턱/참석부담은 slim insight. */
+/* 기간 드롭다운 — 헤더 우측 슬롯(#ledgerPeriodSlot)에 배치(전체/연도/월 = 기존 _personTimeFilter 재사용) */
 .person-period{position:relative;}
-.person-period>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--sep2);background:var(--card);color:var(--label);border-radius:var(--rs);padding:8px 13px;font-size:12.5px;font-weight:600;}
+.person-period>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--sep2);background:var(--card);color:var(--label);border-radius:var(--rs);padding:6px 11px;font-size:12.5px;font-weight:600;white-space:nowrap;}
 .person-period>summary::-webkit-details-marker{display:none;}
 .person-period>summary::after{content:'▾';color:var(--label3);font-size:10px;}
 .person-period[open]>summary{border-color:var(--blue);}
-.person-period-static{display:inline-flex;align-items:center;border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:var(--rs);padding:8px 13px;font-size:12.5px;font-weight:600;}
-.person-period-pop{position:absolute;right:0;top:calc(100% + 6px);z-index:60;background:var(--card);border:1px solid var(--sep);border-radius:var(--rm);box-shadow:0 8px 30px rgba(0,0,0,.16);padding:10px 12px;min-width:210px;}
+.person-period-static{display:inline-flex;align-items:center;border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:var(--rs);padding:6px 11px;font-size:12.5px;font-weight:600;white-space:nowrap;}
+.person-period-pop{position:absolute;right:0;top:calc(100% + 6px);z-index:80;background:var(--card);border:1px solid var(--sep);border-radius:var(--rm);box-shadow:0 8px 30px rgba(0,0,0,.16);padding:10px 12px;min-width:210px;}
 .person-period-pop .person-filter-wrap{margin:0;}
-/* 단둘이 Hero */
-.rel-hero{background:color-mix(in srgb,var(--blue) 6%,var(--card));border:1px solid color-mix(in srgb,var(--blue) 20%,var(--sep));border-radius:var(--rm);padding:18px 20px;margin-bottom:12px;}
-.rel-hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;}
+/* 단둘이 = 유일한 Hero */
+.rel-hero{background:color-mix(in srgb,var(--blue) 5%,var(--card));border:1px solid color-mix(in srgb,var(--blue) 18%,var(--sep));border-radius:var(--rm);padding:15px 18px;margin-bottom:14px;}
+.rel-hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:13px;}
 .rel-hero-tt{min-width:0;}
 .rel-hero-title{font-size:15px;font-weight:700;color:var(--label);}
-.rel-hero-desc{font-size:12px;color:var(--label3);margin-top:3px;}
+.rel-hero-desc{font-size:12px;color:var(--label3);margin-top:2px;}
 .rel-hero-cnt{flex:none;font-size:12.5px;font-weight:700;color:var(--blue-txt);white-space:nowrap;font-variant-numeric:tabular-nums;}
 .rel-duo{display:grid;grid-template-columns:1fr 1fr;gap:14px;position:relative;}
 .rel-duo::before{content:'';position:absolute;left:50%;top:2px;bottom:2px;width:1px;background:color-mix(in srgb,var(--blue) 16%,var(--sep));}
 .rel-duo-side{min-width:0;}
 .rel-duo-lbl{font-size:12.5px;font-weight:600;color:var(--label2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .rel-duo-side.me .rel-duo-lbl{color:var(--blue-txt);}
-.rel-duo-amt{font-size:24px;font-weight:700;letter-spacing:-.5px;line-height:1.15;margin-top:5px;font-variant-numeric:tabular-nums;}
+.rel-duo-amt{font-size:23px;font-weight:700;letter-spacing:-.5px;line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums;}
 .rel-duo-side.me .rel-duo-amt{color:var(--blue-txt);}
-.rel-duo-cnt{font-size:11.5px;color:var(--label3);margin-top:4px;font-variant-numeric:tabular-nums;}
-.rel-ratio{margin-top:16px;}
-.rel-ratio-bar{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--fill2);}
+.rel-duo-cnt{font-size:11.5px;color:var(--label3);margin-top:3px;font-variant-numeric:tabular-nums;}
+.rel-ratio{margin-top:14px;}
+.rel-ratio-bar{display:flex;height:6px;border-radius:999px;overflow:hidden;background:var(--fill2);}
 .rrb-tgt{background:var(--label3);}
 .rrb-me{background:var(--blue);}
 .rel-ratio-legend{display:flex;justify-content:space-between;align-items:center;margin-top:7px;font-size:11.5px;font-variant-numeric:tabular-nums;}
 .rrl-tgt{font-weight:700;color:var(--label2);}
 .rrl-me{font-weight:700;color:var(--blue-txt);}
 .rrl-cap{font-size:11px;font-weight:500;color:var(--label3);}
-/* 여럿이 / 전체 compact row */
-.rel-srow{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--card);border:1px solid var(--sep);border-radius:var(--rm);padding:13px 16px;margin-bottom:10px;}
+/* 여럿이 / 전체 — plain row(카드 아님, 하단 divider만) */
+.rel-srow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 2px;border-bottom:1px solid var(--sep);}
 .rel-srow-main{min-width:0;flex:1;}
 .rel-srow-hd{display:flex;align-items:baseline;gap:8px;}
-.rel-srow-title{font-size:14px;font-weight:600;color:var(--label);}
+.rel-srow-title{font-size:13.5px;font-weight:600;color:var(--label);}
 .rel-srow-sub{font-style:normal;font-size:11.5px;font-weight:500;color:var(--label3);margin-left:4px;}
 .rel-srow-cnt{font-size:11.5px;font-weight:600;color:var(--label3);font-variant-numeric:tabular-nums;}
 .rel-srow-desc{font-size:11.5px;color:var(--label3);margin-top:3px;}
 .rel-srow-vals{display:flex;gap:24px;flex:none;}
 .rsv{display:flex;flex-direction:column;align-items:flex-end;gap:2px;}
 .rsv i{font-style:normal;font-size:11px;color:var(--label3);}
-.rsv b{font-size:16px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
+.rsv b{font-size:15px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
 .rsv b.zero{color:var(--label3);font-weight:600;}
 .rsv.me b{color:var(--blue-txt);}
 .rsv em{font-style:normal;font-size:11px;color:var(--label3);font-variant-numeric:tabular-nums;}
-/* 한턱 / 참석 부담액 insight */
-.rel-insights{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;}
-.rel-ins{background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:14px 16px;}
-.rel-ins.treat{background:color-mix(in srgb,#E0A020 10%,var(--card));border-color:color-mix(in srgb,#E0A020 24%,var(--sep));}
-.rel-ins.share{background:color-mix(in srgb,var(--green) 8%,var(--card));border-color:color-mix(in srgb,var(--green) 20%,var(--sep));}
-.rel-ins-t{font-size:12.5px;font-weight:700;color:var(--label);}
-.rel-ins-v{font-size:17px;font-weight:700;margin-top:7px;font-variant-numeric:tabular-nums;}
-.rel-ins-d{font-size:11px;line-height:1.55;color:var(--label3);margin-top:6px;}
-.rel-note{font-size:11.5px;line-height:1.55;color:var(--label3);margin:-2px 2px 14px;}
+/* 한턱 / 참석 부담액 — slim insight(컬러 카드 아님, 사이 세로 divider) */
+.rel-insights{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:2px 0 4px;padding-top:13px;border-top:1px solid var(--sep);}
+.rel-ins{min-width:0;padding-right:4px;}
+.rel-ins + .rel-ins{border-left:1px solid var(--sep);padding-left:18px;padding-right:0;}
+.rel-ins-t{font-size:12.5px;font-weight:600;color:var(--label2);}
+.rel-ins-v{font-size:16px;font-weight:700;margin-top:5px;font-variant-numeric:tabular-nums;color:var(--label);}
+.rel-ins-d{font-size:11px;line-height:1.5;color:var(--label3);margin-top:5px;}
+.rel-note{font-size:11.5px;line-height:1.55;color:var(--label3);margin:8px 2px 0;}
 .rel-note b{font-weight:600;color:var(--label2);}
 @media(max-width:780px){
-  .rel-hero{padding:16px 16px;}
-  .rel-duo-amt{font-size:22px;}
-  .rel-srow{flex-direction:column;align-items:stretch;gap:9px;}
+  .rel-hero{padding:13px 14px;}
+  .rel-hero-top{margin-bottom:11px;}
+  .rel-duo-amt{font-size:21px;}
+  .rel-srow{flex-direction:column;align-items:stretch;gap:8px;padding:12px 2px;}
   .rel-srow-vals{justify-content:space-between;gap:12px;}
   .rsv{align-items:flex-start;}
-  .rel-insights{gap:8px;}
-  .rel-ins-v{font-size:16px;}
+  /* 한턱/참석부담 → 세로 slim row */
+  .rel-insights{grid-template-columns:1fr;gap:0;padding-top:0;border-top:none;margin:0;}
+  .rel-ins{padding:12px 2px;border-top:1px solid var(--sep);}
+  .rel-ins + .rel-ins{border-left:none;padding-left:2px;}
+  /* 결제/참석 내역 → compact transaction list(데스크탑 표는 그대로) */
+  .person-txn thead{display:none;}
+  .person-txn,.person-txn tbody{display:block;}
+  .person-txn tr{display:grid;grid-template-columns:1fr auto;align-items:baseline;column-gap:10px;padding:11px 0;border-bottom:1px solid var(--sep);}
+  .person-txn td{display:block;padding:0;border:none;white-space:normal;height:auto;}
+  .person-txn .txn-store{grid-column:1;grid-row:1;font-size:13.5px;font-weight:600;color:var(--label);min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  .person-txn .txn-amt{grid-column:2;grid-row:1;text-align:right;font-size:14px;font-weight:700;color:var(--label);white-space:nowrap;}
+  .person-txn .txn-date{grid-column:1;grid-row:2;font-size:11.5px;color:var(--label3);margin-top:2px;}
+  .person-txn .txn-sub{grid-column:2;grid-row:2;text-align:right;font-size:11.5px;color:var(--label3);margin-top:2px;}
 }
 
 .section-hd{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin:18px 0 8px;display:flex;justify-content:space-between;align-items:center;}
@@ -2652,6 +2662,12 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.43 — 사람 분석 화면 최종 정제(계산·데이터 전부 불변). Card 남발 → 위계: 단둘이만 Hero, 여럿이/전체는
+//   plain row(하단 divider만·카드 제거), 한턱/참석부담은 slim insight(컬러 카드 제거·사이 세로 divider). 기간
+//   드롭다운을 본문 상단 → **헤더 우측 슬롯**(#ledgerPeriodSlot, 제목 옆)으로 이동(전용 줄 제거). '전체'의 합산
+//   건수(36) badge 제거 — 관계 대표 count는 헤더의 '함께한 영수증'. Hero 세로 여백 ~15% 축소. 🎉/장식 미사용.
+//   모바일: 기간 전용 줄 제거(헤더 우측), 여럿이/전체 plain row, 한턱/참석부담 세로 slim, 결제/참석 내역은
+//   compact transaction list(.person-txn, 데스크탑 표는 그대로). 계산/데이터/검색/기간로직/다른 화면 불변.
 // v3.42 — 사람별 결제 분석 화면 재디자인(계산·데이터 전부 불변, v3.41 검증 함수 그대로). 회계 비교표(2×3)를
 //   위계형 카드로 교체: ① 단둘이 Hero(연한 blue surface, 상대/내 결제 + 결제금액 비율 Bar '금액 기준 비율',
 //   합 100% 보장·분모 0이면 Bar 숨김) ② 여럿이/전체 compact row(상대·나, 0원은 Secondary) ③ 🎉 내가 한턱·
@@ -2692,7 +2708,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.42';
+const APP_VERSION='v3.43';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5800,20 +5816,23 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
       </div>
       ${ratioHtml}
     </div>`;
+    // v3.43 — 여럿이/전체는 카드가 아니라 plain row(하단 divider만). '전체'는 합산 건수 badge를 두지 않는다
+    //   (Header의 '함께한 영수증'이 관계 대표 count — 36건을 대표로 오해하지 않게).
     const sideVal=(who,arr,meCol)=>`<span class="rsv${meCol?' me':''}"><i>${who}</i><b class="${sum(arr)?'':'zero'}">${fmtMoney(sum(arr))}원</b><em>${arr.length}건</em></span>`;
     const srow=(title,subLbl,cnt,desc,tArr,mArr)=>`<div class="rel-srow">
-      <div class="rel-srow-main"><div class="rel-srow-hd"><span class="rel-srow-title">${title}${subLbl?`<em class="rel-srow-sub">${subLbl}</em>`:''}</span><span class="rel-srow-cnt">${cnt}건</span></div><div class="rel-srow-desc">${desc}</div></div>
+      <div class="rel-srow-main"><div class="rel-srow-hd"><span class="rel-srow-title">${title}${subLbl?`<em class="rel-srow-sub">${subLbl}</em>`:''}</span>${cnt?`<span class="rel-srow-cnt">${cnt}건</span>`:''}</div>${desc?`<div class="rel-srow-desc">${desc}</div>`:''}</div>
       <div class="rel-srow-vals">${sideVal(nm,tArr)}${sideVal('나',mArr,true)}</div>
     </div>`;
     const grpRow=srow('여럿이 함께할 때','',grpCnt,'세 명 이상이 함께한 자리의 결제.',tgtGrp,myGrp);
-    const allRow=srow('전체','함께한 자리 기준',allCnt,'단둘이 + 여럿이를 합한 금액. 상대가 혼자 결제한 건은 제외.',tgtWith,myWith);
+    const allRow=srow('전체 결제','함께한 자리 기준','','단둘이 + 여럿이를 합한 금액. 상대가 혼자 결제한 건은 제외.',tgtWith,myWith);
     const noMeNote=tgtNoMe.length?`<div class="rel-note">‘전체’는 <b>나와 함께 있었던 자리</b>만 포함합니다. 나 없이 ${nm}이(가) 결제한 <b>${tgtNoMe.length}건 · ${fmtMoney(sum(tgtNoMe))}원</b>은 아래 ‘결제 내역’에서 볼 수 있어요.</div>`:'';
-    const treatIns=myTreat.length?`<div class="rel-ins treat">
-      <div class="rel-ins-t">🎉 내가 한턱</div>
+    // v3.43 — 한턱/참석 부담액은 큰 컬러 카드 대신 얇은 2열 insight(사이 세로 divider). 한턱은 내 결제의 부분집합.
+    const treatIns=myTreat.length?`<div class="rel-ins">
+      <div class="rel-ins-t">내가 한턱</div>
       <div class="rel-ins-v">${fmtMoney(sum(myTreat))}원 · ${myTreat.length}건</div>
       <div class="rel-ins-d">내가 결제하고 분담하지 않은 금액.${(myTreatDuo.length||myTreatGrp.length)?`<br>단둘이 ${fmtMoney(sum(myTreatDuo))}원 · ${myTreatDuo.length}건 · 여럿이 ${fmtMoney(sum(myTreatGrp))}원 · ${myTreatGrp.length}건`:''}</div>
     </div>`:'';
-    const shareIns=`<div class="rel-ins share">
+    const shareIns=`<div class="rel-ins">
       <div class="rel-ins-t">참석 부담액</div>
       <div class="rel-ins-v">${fmtMoney(shareTotal)}원 · ${partRecs.length}건</div>
       <div class="rel-ins-d">다른 사람이 결제한 자리에서 ${nm}의 몫.</div>
@@ -5840,15 +5859,15 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     </div>`).join('');
     const sorted=[...payerRecs].sort((a,b)=>b.date.localeCompare(a.date));
     const rows=sorted.map(r=>`<tr class="srch-row" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
-      <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
-      <td style="text-align:left;">${escapeHtml(r.store||'')}</td>
-      <td>${fmtMoney(r.total||0)}원</td>
+      <td class="txn-date" style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
+      <td class="txn-store" style="text-align:left;">${escapeHtml(r.store||'')}</td>
+      <td class="txn-amt">${fmtMoney(r.total||0)}원</td>
     </tr>`).join('');
     payerSection=`<div class="budget-section">
       ${_sectionToggleHtml('결제 내역',`${payerRecs.length}건 · ${fmtMoney(totalPaid)}원`,'person_payer',true)}
       <div class="section-body open">
         <div class="cat-bars" style="padding-top:8px;">${catBars}</div>
-        <table class="srch-table" style="margin-top:10px;table-layout:fixed;">
+        <table class="srch-table person-txn" style="margin-top:10px;table-layout:fixed;">
           <thead><tr><th style="width:100px;">일자</th><th>매장명</th><th style="width:140px;">총액</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
@@ -5864,16 +5883,16 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
       const cnt=(r.participants||[]).length||1;
       const share=_receiptShare(r,name);
       return `<tr class="srch-row" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
-        <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
-        <td>${escapeHtml(r.store||'')}</td>
-        <td style="text-align:right;">${cnt}명</td>
-        <td style="text-align:right;">${fmtMoney(share)}원</td>
+        <td class="txn-date" style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
+        <td class="txn-store">${escapeHtml(r.store||'')}</td>
+        <td class="txn-sub" style="text-align:right;">${cnt}명</td>
+        <td class="txn-amt" style="text-align:right;">${fmtMoney(share)}원</td>
       </tr>`;
     }).join('');
     partSection=`<div class="budget-section">
       ${_sectionToggleHtml('참석 내역',`${partRecs.length}건 · 분담 ${fmtMoney(totalShare)}원`,'person_part',true)}
       <div class="section-body open">
-        <table class="srch-table" style="margin-top:8px;table-layout:fixed;">
+        <table class="srch-table person-txn" style="margin-top:8px;table-layout:fixed;">
           <thead><tr><th style="width:100px;">일자</th><th>매장명</th><th style="width:50px;text-align:right;">인원</th><th style="width:90px;text-align:right;">분담금</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
@@ -6733,10 +6752,11 @@ function _personPeriodLabel(f){
   return '전체 기간';
 }
 function _personPeriodBarHtml(allRecs, f){
+  // v3.43 — 헤더 슬롯(#ledgerPeriodSlot, 제목 우측)에 넣는다. 바 wrapper 없이 트리거만.
   const pills=_personFilterPillsHtml(allRecs, f);
   const label=escapeHtml(_personPeriodLabel(f));
-  if(!pills)return `<div class="person-period-bar"><span class="person-period-static">${label}</span></div>`;
-  return `<div class="person-period-bar"><details class="person-period"><summary>${label}</summary><div class="person-period-pop">${pills}</div></details></div>`;
+  if(!pills)return `<span class="person-period-static">${label}</span>`;
+  return `<details class="person-period"><summary>${label}</summary><div class="person-period-pop">${pills}</div></details>`;
 }
 
 // ── 가계부 우측 패널 시간 필터: 이번 달 · 올해 · 전체 · 📅 범위 ──
@@ -6961,7 +6981,8 @@ async function renderDetail(){
         const _rel=_personRelation(personName,allPayerF,allPartF);
         title.textContent=`${_rel.tgt||personName}`;
         sub.textContent=_rel.me?`함께한 영수증 ${_rel.together.length}건 · 상대 결제 ${_rel.tgtPaidAll.length}건`:`${_rel.tgt} 결제 ${_rel.tgtPaidAll.length}건 · 참석 ${allPartF.length}건`;
-        body.innerHTML=_personPeriodBarHtml(allRecs,_personTimeFilter)+renderPersonDashboardHtml(personName,allPayerF,allPartF);
+        if(periodSlot)periodSlot.innerHTML=_personPeriodBarHtml(allRecs,_personTimeFilter); // v3.43 — 기간 컨트롤을 헤더 우측 슬롯으로
+        body.innerHTML=renderPersonDashboardHtml(personName,allPayerF,allPartF);
         _bindSectionToggles(body);
         _setMobPersonView(true);
       }else{
@@ -6973,13 +6994,13 @@ async function renderDetail(){
         _bindSectionToggles(body);
       }
       _bindReceiptRows(body);
-      // 인물 패널 시간 필터 클릭
-      body.querySelectorAll('.pf-pill').forEach(btn=>{
+      // 인물 패널 시간 필터 클릭 — 본문(날짜검색 패널) + 헤더 슬롯(통합 대시보드 기간 드롭다운) 모두 바인딩
+      [body, periodSlot].forEach(scope=>{ if(!scope)return; scope.querySelectorAll('.pf-pill').forEach(btn=>{
         btn.addEventListener('click',()=>{
           _personTimeFilter={type:btn.dataset.pf,value:btn.dataset.pv};
           renderDetail();
         });
-      });
+      }); });
     }else{
       // ── 가계부 통합 분석 패널 (이번 달·올해·전체·범위 동일 레이아웃) ──
       const pillsHtml=_ledgerFilterPillsHtml(_ledgerTimeFilter);
