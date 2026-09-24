@@ -320,7 +320,7 @@ svg{display:block;flex-shrink:0;}
 .main-title-row{display:flex;align-items:center;justify-content:space-between;gap:16px;}
 .main-title-row .main-title{min-width:0;}
 .main-title-row .ledger-period-slot{flex-shrink:0;}
-.main-title{font-size:var(--fs-page-title);font-weight:var(--fw-strong);letter-spacing:var(--ls-page-title);}
+.main-title{font-size:var(--fs-page-title);font-weight:var(--fw-strong);letter-spacing:var(--ls-page-title);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .main-sub{font-size:var(--fs-secondary);color:var(--text-secondary);margin-top:4px;line-height:1.5;}
 .main-actions{display:flex;gap:6px;flex-shrink:0;}
 .detail-header-save{display:flex;align-items:center;gap:6px;}
@@ -334,6 +334,23 @@ svg{display:block;flex-shrink:0;}
 .icon-btn{width:36px;height:36px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);color:var(--label2);display:flex;align-items:center;justify-content:center;transition:all .12s;}
 .icon-btn:hover{background:var(--fill);color:var(--label);}
 .icon-btn.danger:hover{background:var(--red-bg);color:var(--red);border-color:var(--red);}
+/* v3.51 — 상세 헤더: 데스크탑은 [더치페이][되돌리기][저장][삭제], 모바일은 [···] 하나로. */
+.detail-more-btn{display:none;}
+/* v3.51 — 모바일 [···] 더보기 시트 항목 (bottom sheet=_mtgSheetOpen 재사용) */
+.detail-more-list{display:flex;flex-direction:column;gap:2px;}
+.detail-more-item{display:flex;align-items:center;gap:12px;width:100%;padding:14px 12px;border:none;background:none;border-radius:var(--rm);cursor:pointer;font-family:inherit;font-size:var(--fs-body);font-weight:var(--fw-med);color:var(--text-primary);text-align:left;}
+.detail-more-item:hover{background:var(--fill);}
+.detail-more-item svg{width:18px;height:18px;flex:0 0 18px;color:var(--text-tertiary);}
+.detail-more-item.danger{color:var(--danger);}
+.detail-more-item.danger svg{color:var(--danger);}
+/* v3.51 — 모바일 상세 저장 바 (기본 숨김; .on일 때 하단 nav 위에 고정). 데스크탑에선 표시 규칙이 없어 항상 숨김. */
+.mobile-save-bar{display:none;}
+.msb-msg{flex:1;min-width:0;font-size:var(--fs-secondary);font-weight:var(--fw-med);color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mobile-save-bar.is-saved .msb-msg{color:var(--success);}
+.mobile-save-bar.is-error .msb-msg{color:var(--danger);}
+.msb-btn{flex:0 0 auto;height:38px;padding:0 20px;border:none;border-radius:9px;background:var(--color-primary);color:#fff;font-size:var(--fs-body);font-weight:var(--fw-strong);font-family:inherit;cursor:pointer;}
+.msb-btn:disabled{opacity:.6;cursor:default;}
+.mobile-save-bar.is-error .msb-btn{background:var(--danger);}
 
 .main-body{flex:1;padding:24px 32px 32px;overflow-y:auto;}
 .main-body::-webkit-scrollbar{width:3px;}
@@ -1256,9 +1273,15 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .side-search{padding-bottom:10px;}
   .side-list{max-height:none;overflow:visible;padding-bottom:18px;}
   .main-top{padding:18px 18px 14px;}
-  #viewList>.main-top{flex-wrap:wrap;}
-  #viewList>.main-top>div:first-child{min-width:0;flex:1 1 120px;}
-  #viewList .main-actions{margin-left:auto;flex-wrap:wrap;justify-content:flex-end;}
+  #viewList>.main-top{flex-wrap:nowrap;align-items:flex-start;}
+  #viewList>.main-top>div:first-child{min-width:0;flex:1 1 auto;}
+  #viewList .main-actions{margin-left:auto;flex-wrap:nowrap;justify-content:flex-end;flex:0 0 auto;}
+  /* v3.51 — 모바일 상세 헤더 간소화: 헤더 액션은 [···] 하나만, 나머지는 시트/하단 저장 바로 이동 */
+  .detail-desk-act{display:none!important;}
+  .detail-more-btn{display:flex;}
+  /* v3.51 — 모바일 상세 저장 바: DIRTY일 때만 하단 nav(68px)+safe-area 위에 표시 */
+  .mobile-save-bar.on{display:flex;position:fixed;left:0;right:0;bottom:calc(68px + env(safe-area-inset-bottom,0px));z-index:118;align-items:center;gap:12px;padding:11px 18px;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid var(--divider);box-shadow:0 -8px 24px rgba(0,0,0,.08);}
+  body:has(.mobile-save-bar.on) .toast-container{bottom:calc(68px + 60px + env(safe-area-inset-bottom,0px) + 12px);}
   .main-body{padding:18px 18px 24px;}
   /* v2.30 — position:fixed 되돌림. 이 앱은 body가 overflow:hidden이고 .main-body가
      스크롤 컨테이너라, iOS에서 키보드가 열리면 레이아웃 뷰포트는 그대로인 채
@@ -1812,16 +1835,19 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
             <div class="main-sub" id="mainSub">왼쪽 목록에서 영수증을 선택하면 상세 정보가 표시됩니다.</div>
           </div>
           <div class="main-actions" id="detailActions" style="display:none;">
-            <button class="detail-header-btn dutch" id="sendDutchPayBtn" type="button" title="이 영수증을 더치페이로 보내기">
+            <button class="detail-header-btn dutch detail-desk-act" id="sendDutchPayBtn" type="button" title="이 영수증을 더치페이로 보내기">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10M7 12h7M7 17h4"/><path d="m16 15 3 3 3-3M19 18V9"/></svg>
               <span class="dutch-label">더치페이</span>
             </button>
-            <div class="detail-header-save" id="detailSaveBar" style="display:none;">
+            <div class="detail-header-save detail-desk-act" id="detailSaveBar">
               <button class="detail-header-btn" id="detailRevertBtn" type="button">되돌리기</button>
-              <button class="detail-header-btn primary" id="detailConfirmBtn" type="button">수정 확인</button>
+              <button class="detail-header-btn primary" id="detailConfirmBtn" type="button" disabled>저장</button>
             </div>
-            <button class="icon-btn danger" id="detailDeleteBtn" title="삭제">
+            <button class="icon-btn danger detail-desk-act" id="detailDeleteBtn" title="삭제">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </button>
+            <button class="icon-btn detail-more-btn" id="detailMoreBtn" type="button" title="더보기" aria-label="더보기" aria-haspopup="menu">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>
             </button>
           </div>
         </div>
@@ -2305,6 +2331,12 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   <img id="lightboxImg" alt=""/>
 </div>
 
+<!-- v3.51 — 모바일 상세 저장 바: 수정이 있을 때만 하단 nav 위에 표시(데스크탑은 헤더에 저장 버튼이 있어 숨김) -->
+<div class="mobile-save-bar" id="mobileSaveBar" role="status" aria-live="polite">
+  <span class="msb-msg" id="mobileSaveMsg">변경사항이 있어요</span>
+  <button class="msb-btn" id="mobileSaveBtn" type="button">저장</button>
+</div>
+
 <!-- Dropbox 복원 파일 선택 모달 -->
 <div id="dbxModal" style="display:none;position:fixed;inset:0;z-index:190;">
   <div class="modal-overlay" id="dbxModalOverlay"></div>
@@ -2771,6 +2803,19 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.51 — 영수증 상세 저장 UX를 Desktop+Mobile 공통 상태 시스템으로 개선(기능·데이터·계산 불변).
+//   ① 명칭 '수정 확인'→'저장'. ② **공통 저장 상태**(CLEAN/DIRTY/SAVING/SAVED/ERROR) 하나를 `_setSaveState`가
+//   관리하고 데스크탑 헤더 버튼과 모바일 하단 저장 바가 같은 엔진(_doConfirm)·같은 상태를 공유, 표현만 responsive.
+//   CLEAN=저장 disabled/neutral, DIRTY=Primary 활성, SAVING='저장 중…' 비활성(중복 차단), SAVED='✓ 저장됨/저장됐어요'
+//   약 1.4초 뒤 CLEAN, ERROR='다시 시도'(자동 사라지지 않음). ③ **Desktop 헤더 유지**([더치페이][되돌리기][저장]
+//   [삭제], 고정 헤더·divider Y224 불변). ④ **Mobile 헤더 간소화**: 상단 4버튼 제거 → breadcrumb·상호명(한 줄
+//   ellipsis)·[···]·meta·divider만. [···]는 바텀시트(더치페이로 보내기/되돌리기/삭제[위험])로 기존 핸들러 재사용.
+//   ⑤ **Mobile 저장 바**: 수정(DIRTY) 때만 하단 nav(68px)+safe-area 위에 표시, Foundation 토큰만 사용. ⑥ **1회 저장**:
+//   focus 유지 상태에서 첫 클릭/첫 탭에 최신 값 commit 후 저장(pointerup+click, _confirmRunning 가드). ⑦ **DIRTY 감지**:
+//   렌더 완료 후 baseline 스냅샷과 비교해 실제 값이 바뀌었을 때만 DIRTY, 원래 값으로 되돌리면 CLEAN(데이터 모델 불변).
+//   ⑧ **SAVED 기준=로컬 IndexedDB 저장**(Dropbox 동기화는 기존대로 백그라운드). ⚠️ receipt schema·meetingId·Meeting
+//   UI/계산·Dutch Pay payload·normalizeName/receiptPeople/_personRelation/_receiptShare/treat/splitExclude·카테고리
+//   팔레트·선불권·Dropbox 구조·다른 화면 정보구조 전부 불변. 변경 파일 index.html만.
 // v3.50 — UI Foundation(역할 기반 디자인 토큰) 정리·적용. 기존에 색/구분선/모서리/폼/보조그레이는 이미 토큰
 //   (--label/2/3·--sep/sep2·--r/rm/rs·--blue/blue-bg·--green/red/amber)으로 통일돼 있었고, 이번엔 그 위에 **시맨틱
 //   역할 토큰 계층**을 `:root`에 추가: 색 별칭(--color-primary·--text-primary/secondary/tertiary·--surface·--border·
@@ -2872,7 +2917,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.50';
+const APP_VERSION='v3.51';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -7571,6 +7616,7 @@ async function renderDetail(){
   sub.textContent=`${fmtDateKor(r.date)} · ${fmtMoney(r.total)}원`;
   actions.style.display='flex';
   _detailOrigItems=JSON.parse(JSON.stringify(r.items||[]));
+  _detailBaseline=null; // baseline은 렌더/바인딩 완료 후 확정(끝에서 _detailSnapshot). 그 전 입력은 무시.
   _detailSetDirty(false);
 
   // 영수증 정보는 사진 확인을 기다리지 않고 즉시 그린다. 캐시에 사진이 있으면 바로
@@ -7899,27 +7945,13 @@ async function renderDetail(){
   const dt=document.getElementById('dTags');
   if(dt) dt.addEventListener('input',()=>_detailSetDirty(true));
 
-  // ── 수정 확인 / 되돌리기 ──
-  // v3.38 — '두 번 눌러야' 저장되던 문제 재수정. iOS에서 click은 포커스/IME 확정·키보드 내림 제스처에
-  //   첫 탭이 먹히는 경우가 있어, **pointerup에도 같은 핸들러를 바인딩**해 첫 탭에 바로 저장되게 한다.
-  //   (mouse는 pointerup→click 둘 다 오지만 _confirmRunning 가드로 1회만 실행.) 저장 뒤엔 버튼을
-  //   잠깐 '저장됨 ✓'으로 바꿔 저장 전/후를 분명히 한다(저장바는 항상 표시 유지).
+  // ── 저장 / 되돌리기 (데스크탑 헤더 버튼 · 모바일 하단 저장 바 공통 엔진) ──
+  // v3.51 — 데스크탑/모바일이 하나의 저장 엔진(_doConfirm)·하나의 상태(_setSaveState)를 공유한다.
+  //   첫 클릭/첫 탭에 최신 입력값까지 commit 후 즉시 저장(pointerup+click 둘 다 바인딩, _confirmRunning 가드).
+  // v3.49 — 로컬 dbPut 성공 즉시 피드백(SAVED). 완료본 이름 정리·Dropbox 동기화는 백그라운드로 미룬다.
   const _confirmBtn=document.getElementById('detailConfirmBtn');
   _confirmBtn.onmousedown=null;
   let _confirmRunning=false;
-  const _flashSaved=()=>{
-    const b=document.getElementById('detailConfirmBtn');if(!b)return;
-    // 로컬 저장 완료 시점 — 버튼을 다시 활성화하고(정적 헤더라 renderDetail이 재생성하지 않음) 잠깐 '저장됨 ✓' 표시
-    b.disabled=false;b.classList.remove('saving');
-    b.classList.add('saved');b.textContent='저장됨 ✓';
-    clearTimeout(b._savedT);
-    b._savedT=setTimeout(()=>{const bb=document.getElementById('detailConfirmBtn');if(bb){bb.classList.remove('saved');bb.textContent='수정 확인';}},1400);
-  };
-  // v3.49 — [수정 확인] 1회 클릭 저장. ⚠️ 근본 원인: 예전엔 '수정됨' 피드백이 로컬 dbPut 뒤가 아니라
-  //   Dropbox 네트워크 3종(_autoRenameCompleted·_dbxRenameScanFile·_dbxArchiveReceiptPhoto)을 await한
-  //   뒤에 있어서, 미연결/지연/예외(내부 try에 catch 없음) 때 로컬 저장은 됐는데 피드백이 안 떠 두 번
-  //   눌러야 했다. → **로컬 저장 성공 즉시 피드백**하고, 완료본 이름 정리·동기화는 백그라운드로 미룬다.
-  const _restoreConfirmBtn=()=>{const b=document.getElementById('detailConfirmBtn');if(b){b.disabled=false;b.classList.remove('saving');if(!b.classList.contains('saved'))b.textContent='수정 확인';}};
   const _detailBackgroundSync=async(rec)=>{
     try{
       let renamed=(await _autoRenameCompleted())>0;
@@ -7933,10 +7965,9 @@ async function renderDetail(){
   const _doConfirm=async()=>{
     if(_confirmRunning)return;
     _confirmRunning=true;
-    // 즉시 saving 상태 + 중복 클릭 차단(비활성 버튼은 click 이벤트를 내지 않음 → pointerup/click 중복도 방지)
-    const _btn0=document.getElementById('detailConfirmBtn');
-    if(_btn0){_btn0.disabled=true;_btn0.classList.add('saving');_btn0.textContent='저장 중…';}
+    _setSaveState('saving'); // 즉시 SAVING(데스크탑·모바일 버튼 비활성 → pointerup/click 중복도 차단)
     try{
+    // 첫 탭에서: 포커스 input을 blur해 IME 조합을 확정하고, 현재 DOM 값을 그대로 읽는다.
     try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur();}catch(_){}
     _syncDetailFromInputs(r);
     const dTotalBeforeSave=document.getElementById('dTotalAmt');
@@ -7949,7 +7980,7 @@ async function renderDetail(){
       ].filter(Boolean).join('\n');
       if(!confirm(`금액 불일치가 남아 있어요.\n\n${summary}\n\n영수증 사진과 확인하셨나요? 그래도 수정 내용을 저장할까요?`)){
         toast('저장을 멈췄어요. 표시된 금액을 확인해주세요',{type:'warning'});
-        _restoreConfirmBtn(); // 취소 — 재렌더가 없으므로 버튼 상태 복원
+        _setSaveState('dirty'); // 취소 — 변경은 그대로 남아 있으므로 DIRTY로 복귀
         return;
       }
     }
@@ -7978,29 +8009,36 @@ async function renderDetail(){
     }
     r.updatedAt=nowISO();
     if(r.store&&r.category) await learnCategory(r.store,r.category);
-    await dbPut('receipts',r);   // ★ 로컬 저장 — 이 시점에 데이터는 안전하게 보존됨
-    // ★ 로컬 저장 성공 즉시 피드백(Dropbox 네트워크를 기다리지 않는다)
-    toast('수정됨',{type:'success'});
-    _flashSaved();
-    _detailSetDirty(false);
+    try{
+      await dbPut('receipts',r);   // ★ 로컬 저장 — 이 시점에 데이터는 안전하게 보존됨(SAVED 기준)
+    }catch(e){
+      console.error('receipt save 실패',e);
+      toast('저장하지 못했어요. 다시 시도해 주세요.',{type:'error'});
+      _setSaveState('error'); // ERROR는 자동으로 사라지지 않는다(다시 시도 버튼)
+      return;
+    }
     // 완료본 이름 정리·Dropbox 동기화는 후속(백그라운드) — 피드백/렌더를 막지 않는다
     _detailBackgroundSync(r);
-    await loadAll();await renderDetail();
+    await loadAll();await renderDetail(); // 저장값으로 재렌더(baseline=저장값 → CLEAN)
+    if(selectedId===r.id){ toast('저장됨',{type:'success'}); _setSaveState('saved'); } // 재렌더 뒤 SAVED 표시 → 1.4초 뒤 CLEAN
     }finally{
       _confirmRunning=false;
-      // 예외로 _flashSaved에 도달 못 해 버튼이 'saving' 상태로 남았으면 복원(정적 헤더라 재생성 안 됨)
-      const _bb=document.getElementById('detailConfirmBtn');
-      if(_bb&&_bb.classList.contains('saving'))_restoreConfirmBtn();
     }
   };
   _confirmBtn.onclick=_doConfirm;
   _confirmBtn.onpointerup=_doConfirm;
+  // v3.51 — 모바일 하단 저장 바 버튼도 같은 엔진에 바인딩(첫 탭 1회 저장)
+  const _mSaveBtn=document.getElementById('mobileSaveBtn');
+  if(_mSaveBtn){_mSaveBtn.onclick=_doConfirm;_mSaveBtn.onpointerup=_doConfirm;}
   document.getElementById('detailRevertBtn').onclick=async()=>{
     r.items=JSON.parse(JSON.stringify(_detailOrigItems));
     await renderDetail();
   };
   // v3.47 — meetingId가 있으면(2건 이상) 더치페이 전송 범위 선택, 아니면 기존 단일 전송.
   document.getElementById('sendDutchPayBtn').onclick=()=>{ if(_mtgHasMeeting(r))_mtgOpenDutchScope(r); else sendReceiptToDutchPay(r); };
+  // v3.51 — 모바일 [···] 더보기: 기존 헤더 액션(더치페이·되돌리기·삭제) 핸들러를 그대로 재사용
+  const _moreBtn=document.getElementById('detailMoreBtn');
+  if(_moreBtn)_moreBtn.onclick=()=>_openDetailMoreMenu(r);
   const _mtgDetailRowBtn=document.getElementById('mtgDetailRow');
   if(_mtgDetailRowBtn)_mtgDetailRowBtn.onclick=()=>_mtgOpenMeetingDetail(r);
 
@@ -8017,6 +8055,27 @@ async function renderDetail(){
       if(label)label.textContent='불러오기 실패';
     }
   });
+  // v3.51 — 편집 baseline 확정(모든 필드·품목·분담 컨트롤 렌더/바인딩 완료 후). 이후 입력마다 이 값과
+  //   비교해 실제 변경이 있을 때만 DIRTY로 전환한다. 저장 직후 재렌더 시엔 baseline=저장값 → CLEAN.
+  _detailBaseline=_detailSnapshot();
+  _setSaveState('clean');
+}
+
+// v3.51 — 모바일 [···] 더보기 시트: 더치페이로 보내기 / 되돌리기 / 삭제(위험). 기존 헤더 버튼 핸들러를
+//   그대로 재사용한다(hidden이어도 .click()은 동작). 바텀시트는 만남 시트(_mtgSheetOpen)와 같은 패턴.
+function _openDetailMoreMenu(r){
+  const {card,close}=_mtgSheetOpen();
+  card.innerHTML=`
+    <div class="mtg-sheet-hd"><div class="mtg-sheet-title">${escapeHtml(r.store||'영수증')}</div><button class="mtg-sheet-x" id="dmX" type="button" aria-label="닫기">×</button></div>
+    <div class="detail-more-list" role="menu">
+      <button type="button" class="detail-more-item" id="dmDutch" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10M7 12h7M7 17h4"/><path d="m16 15 3 3 3-3M19 18V9"/></svg>더치페이로 보내기</button>
+      <button type="button" class="detail-more-item" id="dmRevert" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M3.5 13a9 9 0 1 0 2.6-7.6L3 8"/></svg>되돌리기</button>
+      <button type="button" class="detail-more-item danger" id="dmDelete" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>삭제</button>
+    </div>`;
+  card.querySelector('#dmX').onclick=close;
+  card.querySelector('#dmDutch').onclick=()=>{close();document.getElementById('sendDutchPayBtn')?.click();};
+  card.querySelector('#dmRevert').onclick=()=>{close();document.getElementById('detailRevertBtn')?.click();};
+  card.querySelector('#dmDelete').onclick=()=>{close();document.getElementById('detailDeleteBtn')?.click();};
 }
 
 // v1.32: 항상 보이는 입력창 (label + field, rawValue, type?, options?)
@@ -8056,20 +8115,65 @@ function persistItemChange(r){ _detailSetDirty(true); _liveUpdateDetailTotal(); 
 let _detailOrigItems=null;
 let _detailDirty=false;
 let _expandedDetailReceiptId=null;
+// v3.51 — 공통 저장 상태(CLEAN/DIRTY/SAVING/SAVED/ERROR). 데스크탑 헤더 버튼과 모바일 하단 저장 바가
+//   같은 엔진(_doConfirm)·같은 상태를 공유하고 표현만 responsive하게 다르다.
+let _saveState='clean', _saveSavedTimer=null, _detailBaseline=null;
+function _setSaveState(state){
+  _saveState=state;
+  _detailDirty=(state==='dirty');
+  clearTimeout(_saveSavedTimer);
+  const open=!!selectedId;
+  // 데스크탑 헤더 저장 버튼 (되돌리기·저장은 상세가 열려 있으면 항상 표시, 상태로만 강조/비활성)
+  const btn=document.getElementById('detailConfirmBtn');
+  if(btn){
+    btn.classList.remove('saved');btn.disabled=false;
+    if(state==='clean'){btn.textContent='저장';btn.classList.remove('primary');btn.disabled=true;}
+    else if(state==='dirty'){btn.textContent='저장';btn.classList.add('primary');}
+    else if(state==='saving'){btn.textContent='저장 중…';btn.classList.add('primary');btn.disabled=true;}
+    else if(state==='saved'){btn.textContent='✓ 저장됨';btn.classList.add('primary','saved');btn.disabled=true;}
+    else if(state==='error'){btn.textContent='다시 시도';btn.classList.add('primary');}
+  }
+  // 모바일 하단 저장 바 (CLEAN이면 숨김)
+  const bar=document.getElementById('mobileSaveBar');
+  if(bar){
+    bar.classList.toggle('on',open&&state!=='clean');
+    bar.classList.toggle('is-error',state==='error');
+    bar.classList.toggle('is-saved',state==='saved');
+    const msg=document.getElementById('mobileSaveMsg');
+    if(msg)msg.textContent=state==='saving'?'저장 중…':state==='saved'?'✓ 저장됐어요':state==='error'?'저장하지 못했어요':'변경사항이 있어요';
+    const mb=document.getElementById('mobileSaveBtn');
+    if(mb){
+      mb.disabled=(state==='saving');
+      mb.textContent=state==='error'?'다시 시도':'저장';
+      mb.style.display=(state==='saved')?'none':'';
+    }
+  }
+  // SAVED는 약 1.4초 뒤 자동으로 CLEAN(모바일 바는 사라짐). ERROR는 자동으로 사라지지 않는다.
+  if(state==='saved')_saveSavedTimer=setTimeout(()=>{if(_saveState==='saved')_setSaveState('clean');},1400);
+}
 function _isDetailEditing(){
   if(_detailDirty)return true;
   const body=document.getElementById('detailBody');
   const active=document.activeElement;
   return !!(body&&active&&body.contains(active)&&/^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName));
 }
+// v3.51 — 편집 가능한 필드 전체의 현재 DOM 값을 하나의 비교 문자열로. baseline과 비교해 '실제 값이
+//   바뀌었을 때만' DIRTY로 전환하고, 원래 값으로 되돌리면 CLEAN으로 복귀한다. 저장 데이터 모델은 불변.
+function _detailSnapshot(){
+  const parts=[];
+  document.querySelectorAll('#detailBody .kv .kv-inp').forEach(inp=>{const f=inp.dataset.field;if(f)parts.push(f+'='+inp.value);});
+  ['dParticipants','dNotes','dTags','dTotalAmt'].forEach(id=>{const el=document.getElementById(id);if(el)parts.push(id+'='+el.value);});
+  document.querySelectorAll('#itemsTable tbody tr[data-idx] input').forEach(inp=>{parts.push((inp.dataset.f||'')+':'+inp.value);});
+  if(_dSplitUI){const sp=_dSplitUI.getState();parts.push('treat='+(sp.treat?1:0));parts.push('excl='+((sp.splitExclude||[]).slice().sort().join('|')));}
+  return parts.join('\u0001');
+}
 function _detailSetDirty(v){
-  _detailDirty=v;
-  // v3.37 — 저장바(되돌리기·수정 확인)는 영수증이 열려 있으면 항상 표시한다.
-  //   예전엔 dirty일 때만 보였는데, 편집 직후 백그라운드 동기화가 renderDetail을 다시 돌리면
-  //   _detailSetDirty(false)로 버튼이 사라져 첫 클릭이 허공에 떨어지고 '두 번 눌러야' 저장되던
-  //   문제가 있었다. 항상 표시하면 그 타이밍 문제가 사라진다(저장은 멱등이라 안전).
-  const bar=document.getElementById('detailSaveBar');
-  if(bar) bar.style.display='flex';
+  if(v){
+    const changed=_detailBaseline!=null&&_detailSnapshot()!==_detailBaseline;
+    _setSaveState(changed?'dirty':'clean');
+  }else{
+    _setSaveState('clean');
+  }
 }
 function _syncDetailFromInputs(r){
   document.querySelectorAll('#itemsTable tbody tr[data-idx]').forEach(tr=>{

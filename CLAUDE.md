@@ -95,6 +95,26 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.51` — **영수증 상세 저장 UX를 Desktop+Mobile 공통 상태 시스템으로 개선(기능·데이터·계산 전부 불변).**
+  ① 명칭 **'수정 확인' → '저장'**. ② **공통 저장 상태 하나**(CLEAN/DIRTY/SAVING/SAVED/ERROR)를 `_setSaveState`가
+  관리 — 데스크탑 헤더 버튼과 모바일 하단 저장 바가 **같은 엔진(`_doConfirm`)·같은 상태**를 공유하고 표현만
+  responsive. CLEAN=저장 disabled/neutral, DIRTY=Primary 활성, SAVING='저장 중…'(비활성·중복 차단), SAVED=
+  '✓ 저장됨/저장됐어요' 약 1.4초 뒤 CLEAN, ERROR='다시 시도'(자동 사라지지 않음). ③ **Desktop 헤더 유지**
+  ([더치페이][되돌리기][저장][삭제], 고정 헤더·divider Y=**224** 불변, 실측: scroll 0/mid/max 모두 224·문서 스크롤 0·
+  Content만 scroll). ④ **Mobile 헤더 간소화**: 상단 4버튼 제거 → breadcrumb·상호명(**한 줄 `nowrap+ellipsis`**)·[···]·
+  meta·divider만(`.detail-desk-act`를 ≤780px에서 숨기고 `.detail-more-btn` 표시). [···]는 바텀시트(더치페이로 보내기/
+  되돌리기/삭제[danger])로 **기존 헤더 버튼 핸들러를 그대로 재사용**(hidden 버튼 `.click()`). ⑤ **Mobile 저장 바**:
+  수정(DIRTY)일 때만 하단 nav(68px)+safe-area 위에 `position:fixed`로 표시(Foundation 토큰만, 과한 shadow/gradient
+  없음, nav와 겹치지 않음, 390/430 overflow 없음). ⑥ **1회 저장**: focus 유지 상태에서 첫 클릭/첫 탭에 최신 DOM 값까지
+  commit 후 즉시 저장(pointerup+click 둘 다 바인딩, `_confirmRunning` 가드로 1회만). ⑦ **DIRTY 감지**: 렌더 완료 후
+  `_detailSnapshot()` baseline과 비교해 **실제 값이 바뀌었을 때만 DIRTY**, 원래 값으로 되돌리면 CLEAN(저장 데이터
+  모델 재설계 없음). ⑧ **SAVED 기준=로컬 IndexedDB 저장 성공**(Dropbox 동기화는 기존대로 백그라운드), 실패 시 ERROR.
+  ⚠️ receipt schema·meetingId·Meeting UI/계산·Dutch Pay payload·normalizeName/receiptPeople/_personRelation/
+  _receiptShare/treat/splitExclude·카테고리 팔레트·선불권·Dropbox 구조·다른 화면 정보구조 전부 불변. 검증(실데이터 151건):
+  Desktop A~I(CLEAN/DIRTY/원복CLEAN/1클릭·저장중·저장됨·자동복귀/중복방지/reload/divider 224·문서스크롤0) + Mobile
+  390·430 A~L(헤더간소화·ellipsis····메뉴·CLEAN無바·DIRTY바·카테고리/한턱즉시DIRTY·focus유지 1탭·저장중·저장됐어요·
+  자동사라짐·double탭 1회·reload·nav충돌無·overflow無) + ERROR(다시 시도·미자동소멸·복구) + meetingId row 회귀 없음,
+  콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.50` — **UI Foundation(역할 기반 디자인 토큰) 정리·적용 — 최소 변경·시각 거의 불변.** 색/구분선/모서리/폼/보조
   그레이는 이미 토큰(`--label/2/3`·`--sep`/`--sep2`·`--r/rm/rs`·`--blue`/`--blue-bg`·`--green/red/amber`)으로 앱 전역
   통일돼 있어, 그 위에 **시맨틱 역할 토큰 계층**을 `:root`에 추가했다: ① **색 별칭**(`--color-primary`·`--text-primary/
