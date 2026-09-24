@@ -674,17 +674,18 @@ th.mtg-chk{background:var(--fill2);}
 .mtg-row-sub{font-size:12px;color:var(--label2);}
 .mtg-row-chev{color:var(--label3);font-size:19px;line-height:1;flex:0 0 auto;}
 .mtg-sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9990;display:flex;align-items:center;justify-content:center;padding:20px;}
-.mtg-sheet{background:var(--card);border-radius:var(--r);width:100%;max-width:360px;max-height:82vh;overflow-y:auto;padding:18px 18px 16px;box-shadow:0 12px 40px rgba(0,0,0,.22);}
-.mtg-sheet-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;}
-.mtg-sheet-title{font-size:15px;font-weight:700;color:var(--label);}
-.mtg-sheet-x{border:none;background:none;font-size:22px;line-height:1;color:var(--label3);cursor:pointer;padding:0 2px;font-family:inherit;}
-.mtg-sheet-meta{font-size:12.5px;color:var(--label2);margin-bottom:10px;}
-.mtg-sheet-people{margin-bottom:12px;}
-.mtg-sheet-plbl{font-size:11px;font-weight:600;color:var(--label3);margin-bottom:3px;}
-.mtg-sheet-pnames{font-size:13px;color:var(--label);line-height:1.5;}
-.mtg-sheet-divider{height:1px;background:var(--sep);margin:4px 0 10px;}
-.mtg-drows{display:flex;flex-direction:column;gap:2px;}
-.mtg-drow{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:2px 10px;width:100%;padding:10px;border:none;background:none;border-radius:var(--rs);cursor:pointer;font-family:inherit;text-align:left;}
+.mtg-sheet{background:var(--card);border-radius:var(--r);width:100%;max-width:400px;max-height:82vh;overflow-y:auto;padding:22px 22px 18px;box-shadow:0 16px 48px rgba(0,0,0,.24);}
+.mtg-sheet-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;}
+.mtg-sheet-title{font-size:16px;font-weight:700;color:var(--label);letter-spacing:-.2px;}
+.mtg-sheet-x{border:none;background:none;font-size:22px;line-height:1;color:var(--label3);cursor:pointer;padding:2px 4px;margin:-2px -4px 0 0;border-radius:8px;font-family:inherit;}
+.mtg-sheet-x:hover{background:var(--fill);}
+.mtg-sheet-meta{font-size:12.5px;color:var(--label2);margin-bottom:14px;}
+.mtg-sheet-people{margin-bottom:15px;}
+.mtg-sheet-plbl{font-size:11px;font-weight:600;color:var(--label3);margin-bottom:4px;letter-spacing:.2px;}
+.mtg-sheet-pnames{font-size:13px;color:var(--label);line-height:1.55;}
+.mtg-sheet-divider{height:1px;background:var(--sep);margin:2px 0 8px;}
+.mtg-drows{display:flex;flex-direction:column;gap:3px;}
+.mtg-drow{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:3px 12px;width:100%;padding:11px 12px;border:none;background:none;border-radius:var(--rm);cursor:pointer;font-family:inherit;text-align:left;}
 .mtg-drow:hover{background:var(--fill);}
 .mtg-drow.cur{background:var(--blue-bg);}
 .mtg-drow-store{grid-column:1;grid-row:1;font-size:13.5px;font-weight:600;color:var(--label);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -2748,6 +2749,13 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.48 — 만남 생성/상세 마감 다듬기(계산·저장구조·payload 불변). ① 만남으로 묶기 **생성 확인창에 경고 2종**
+//   (차단 아님, 진행 가능): 선택 영수증들의 날짜 차이가 **3일 이상**이면 '날짜 차이가 N일로 커요'(자정 넘김 1일은
+//   정상이라 제외), 선택 영수증에 **공통 참석자가 전혀 없으면**(receiptPeople 교집합 공집합) '공통 참석자가 전혀
+//   없어요 — 서로 다른 자리일 수 있어요'. 경고는 확인창 안 노란 배지(--toast-warn+흰글자)로만 표시, 묶기 자체는
+//   그대로 진행. ② **데스크탑 만남 상세 모달 폭·여백 정제**(max-width 360→400, padding 18→22, 그림자 강화, 제목
+//   16px·자간, 항목 padding/여백 상향, × 버튼 hover). 모바일 하단 시트는 그대로. 계산/데이터/저장구조/Dutch Pay
+//   payload/분리·전송 로직 전부 불변. 변경 파일 index.html만.
 // v3.47 — 만남 연결 UX(영수증 상세 ↔ meetingId ↔ 더치페이). ① meetingId가 있고 같은 만남 영수증이 2건 이상이면
 //   영수증 상세 요약(상세내역 카드) 아래에 얇은 연결 row('M월 D일의 만남 · 영수증 N건 · 합계', 자정 넘김은 날짜 범위)를
 //   추가(연한 blue surface, shadow 없음, 현재 receipt가 주인공). 날짜/건수/합계는 같은 meetingId 영수증에서 동적 계산.
@@ -2819,7 +2827,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.47';
+const APP_VERSION='v3.48';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5944,13 +5952,23 @@ async function _mtgLink(){
   }
   const sum=recs.reduce((s,r)=>s+(r.total||0),0);
   const nm=_mtgPersonName?escapeHtml(_mtgPersonName)+'과의 만남':'하나의 만남';
+  // v3.48 — 생성 시 경고(차단 아님): ① 날짜 차이가 큰 경우(자정 넘김 1일은 정상) ② 공통 참석자가 전혀 없는 경우
+  const _mds=recs.map(r=>r.date).filter(Boolean).sort();
+  const _spanDays=_mds.length>=2?Math.round((Date.parse(_mds[_mds.length-1])-Date.parse(_mds[0]))/86400000):0;
+  let _common=null;
+  for(const r of recs){const p=receiptPeople(r);_common=_common===null?new Set(p):new Set([..._common].filter(x=>p.has(x)));}
+  const _noCommon=!_common||_common.size===0;
+  const _warns=[];
+  if(_spanDays>=3)_warns.push(`날짜 차이가 ${_spanDays}일로 커요 — 같은 만남이 맞는지 확인해 주세요.`);
+  if(_noCommon)_warns.push('공통 참석자가 전혀 없어요 — 서로 다른 자리일 수 있어요.');
+  const _warnHtml=_warns.length?`<span style="display:block;margin-top:10px;background:var(--toast-warn);color:#fff;border-radius:var(--rm);padding:9px 12px;font-size:12px;line-height:1.5;">⚠️ ${_warns.map(escapeHtml).join('<br>')}</span>`:'';
   const ok=await _mtgConfirm({title:'만남으로 묶기',
     bodyHtml:`선택한 <b>${recs.length}개</b>의 영수증을 하나의 만남으로 묶을까요?<br><br>
       <span style="display:block;background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:11px 13px;">
         <span style="color:var(--label3);font-size:12px;">${_mtgDateLabel(recs)}</span><br>
         <b style="color:var(--label);font-size:14px;">${nm}</b><br>
         <span style="color:var(--label2);font-size:12.5px;">영수증 ${recs.length}건 · ${fmtMoney(sum)}원</span>
-      </span><br>
+      </span>${_warnHtml}<br>
       <span style="color:var(--label3);font-size:11.5px;">원본 영수증은 그대로 유지돼요.</span>`,
     okLabel:'만남으로 묶기'});
   if(!ok)return;
