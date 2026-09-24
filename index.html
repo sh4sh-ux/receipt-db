@@ -654,6 +654,20 @@ svg{display:block;flex-shrink:0;}
 .payer-stat.total .payer-stat-val{color:var(--blue-txt);}
 .payer-stat-sub{margin-top:5px;font-size:11px;color:var(--label3);}
 @media(max-width:600px){.payer-hero{gap:8px;}.payer-stat-val{font-size:18px;}}
+/* v3.40 — 결제 관계 카드: 둘만/여럿 소분해 + 한턱 액센트 + 참석 부담액 보조줄 */
+.rel-bd{margin-top:10px;padding-top:9px;border-top:1px solid var(--sep);display:flex;flex-direction:column;gap:5px;}
+.payer-stat.total .rel-bd{border-top-color:color-mix(in srgb,var(--blue) 30%,transparent);}
+.rel-bd-row{display:flex;align-items:baseline;gap:8px;font-size:12px;}
+.rel-bd-row span{color:var(--label3);flex:0 0 30px;}
+.rel-bd-row b{font-weight:700;font-variant-numeric:tabular-nums;}
+.rel-bd-row i{margin-left:auto;font-style:normal;color:var(--label3);font-size:11px;font-variant-numeric:tabular-nums;}
+.rel-accent{margin-top:9px;font-size:12px;color:var(--label2);}
+.rel-accent b{font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
+.rel-hint{display:flex;flex-direction:column;justify-content:center;}
+.rel-hint-txt{font-size:12px;color:var(--label3);line-height:1.5;margin-top:4px;}
+.rel-secondary{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:20px;padding:11px 14px;background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);font-size:12.5px;color:var(--label2);}
+.rel-secondary b{font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
+.rel-secondary span{color:var(--label3);font-size:11.5px;}
 
 .section-hd{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin:18px 0 8px;display:flex;justify-content:space-between;align-items:center;}
 .section-hd .ghost-mini{border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;text-transform:none;letter-spacing:0;}
@@ -2558,6 +2572,12 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.40 — [STEP A] 사람 검색 결제 관계 정확도. 검색 UX는 부분일치 유지, **집계는 정확일치**(normalizeName ===).
+//   영수증별 실제 사람 집합 receiptPeople(r)=unique(참석자+결제자)로 '둘만/여럿' 판정(participants.length 아님).
+//   통합 대시보드 히어로를 두 카드로: [상대 결제](정확일치 total)·[내가 결제·함께](paidBy===me & 상대∈people) +
+//   각 둘만/여럿 소분해 + 🎉 내가 한턱(paidBy===me & treat & 상대 함께, 내 결제의 subset). 참석 부담액은 기존
+//   _receiptShare 합(계산 불변)으로 유지하되 라벨만 '1/N 정산금액'→'참석 부담액'. treat/splitExclude/_receiptShare·
+//   저장구조·검색·기간필터 전부 불변. meetingId/round/time/treatBy 미도입.
 // v3.39 — '참석만 한 사람(분담 0원)' 표시. 기간 내 참석은 했지만 늘 한턱 받거나 제외돼 분담 0원인 사람을
 //   사람별 분담 섹션 하단에 회색 칩(클릭 시 인물 검색)으로 보여준다(_attendedOnly/_attendedOnlyHtml).
 //   인물 검색에서도 그 사람의 분담 총액이 0이면 '참석만 함' 배지 + 안내로 0원이 버그가 아님을 명확히.
@@ -2576,7 +2596,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.39';
+const APP_VERSION='v3.40';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -3230,6 +3250,16 @@ function _goPersonSearch(name){
   renderSide();renderDetail();
   const mb=document.querySelector('#viewList .main-body');
   if(mb)mb.scrollTop=0;
+}
+// v3.40 — 사람 집계용 정확일치 identity + 영수증별 실제 사람 집합.
+//   ⚠️ 검색 UX(부분일치 includes)와 분리 — 집계에는 이 정확일치만 쓴다.
+function normalizeName(v){return String(v||'').trim();}
+// 한 영수증의 실제 사람 집합 = unique(참석자 + 결제자), 빈값 제외. 원본 데이터는 건드리지 않음.
+function receiptPeople(r){
+  const s=new Set();
+  for(const p of (r.participants||[])){const n=normalizeName(p);if(n)s.add(n);}
+  const payer=normalizeName(r&&r.paidBy);if(payer)s.add(payer);
+  return s;
 }
 // v3.39 — 기간 내 '참석만 한 사람'(분담 총액 0원). 참석은 했지만 늘 한턱 받았거나 제외돼
 //   사람별 분담 막대에는 안 나오는 이들. _participantSplit(분담>0)에 없는 참석자 = 총 0원.
@@ -5523,7 +5553,7 @@ function renderParticipantSummaryHtml(name, filtered){
       <div class="payer-stat-sub">건당 평균 ${fmtMoney(avgShare)}원</div>
     </div>
     <div class="payer-stat total">
-      <div class="payer-stat-lbl">분담 총액${myShare===0?' <span class="attend-only-badge">참석만 함</span>':''}</div>
+      <div class="payer-stat-lbl">참석 부담액${myShare===0?' <span class="attend-only-badge">참석만 함</span>':''}</div>
       <div class="payer-stat-val">${fmtMoney(myShare)}<span style="font-size:14px;font-weight:500;margin-left:3px;">원</span></div>
       <div class="payer-stat-sub">${myShare===0?'한턱·제외로 분담 0원 (참석은 함)':(sorted[0]?fmtDateKor(sorted[sorted.length-1].date)+' ~ '+fmtDateKor(sorted[0].date):'')}</div>
     </div>
@@ -5601,7 +5631,7 @@ function renderParticipantSummaryHtml(name, filtered){
       }).join('')}
       </tbody>
     </table>
-    <div class="srch-total">분담 총액 <b>${fmtMoney(myShare)}원</b></div>
+    <div class="srch-total">참석 부담액 <b>${fmtMoney(myShare)}원</b></div>
   </div>`;
 
   return heroHtml+catHtml+coHtml+listHtml;
@@ -5609,21 +5639,54 @@ function renderParticipantSummaryHtml(name, filtered){
 
 // ── 결제자 + 참석자 통합 대시보드 ──
 function renderPersonDashboardHtml(name, payerRecs, partRecs){
-  // 히어로 카드 — 결제 vs 참석
-  const totalPaid=payerRecs.reduce((s,r)=>s+(r.total||0),0);
-  const totalShare=partRecs.reduce((s,r)=>s+_receiptShare(r,name),0);
+  // v3.40 — 결제 관계를 정확일치로 재계산(검색 UX의 부분일치와 분리).
+  //   pool = 이 사람이 얽힌(결제자/참석자) 시간필터 반영 영수증 합집합.
+  const totalShare=partRecs.reduce((s,r)=>s+_receiptShare(r,name),0); // 기존 참석 부담액(계산 불변)
+  const totalPaid=payerRecs.reduce((s,r)=>s+(r.total||0),0); // 아래 '결제 내역' 섹션 소제목용
+  const me=normalizeName(getMyName());
+  const pool=[...new Set([...payerRecs,...partRecs])];
+  // v3.40 — 검색어(부분일치)를 실제 저장된 이름으로 '확정'한 뒤 정확일치로 집계(STEP 2).
+  //   후보(pool 내 사람 중 검색어 포함)가 정확히 일치하면 그대로, 유일하면 그 이름으로 확정.
+  let tgt=normalizeName(name);
+  { const q=tgt.toLowerCase(), cand=new Set();
+    for(const r of pool)for(const n of receiptPeople(r))if(n.toLowerCase().includes(q))cand.add(n);
+    if(!cand.has(tgt)&&cand.size===1)tgt=[...cand][0]; }
+  const sum=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
+  const withBoth=r=>{const P=receiptPeople(r);return P.has(me)&&P.has(tgt);};
+  const isDuo=r=>{const P=receiptPeople(r);return P.size===2&&P.has(me)&&P.has(tgt);};
+  const isGrp=r=>{const P=receiptPeople(r);return P.size>2&&P.has(me)&&P.has(tgt);};
+  // ① 상대 결제 (정확일치)
+  const tgtPaid=pool.filter(r=>normalizeName(r.paidBy)===tgt);
+  const tgtDuo=me?tgtPaid.filter(isDuo):[], tgtGrp=me?tgtPaid.filter(isGrp):[];
+  // ② 내가 결제 + 상대 함께 (정확일치) — 둘만/여럿이 정확히 합집합을 이분
+  const myWith=me?pool.filter(r=>normalizeName(r.paidBy)===me&&withBoth(r)):[];
+  const myDuo=myWith.filter(isDuo), myGrp=myWith.filter(isGrp);
+  const myTreat=myWith.filter(r=>r.treat===true);
+  const nm=escapeHtml(tgt);
+  const bd=(duoArr,grpArr)=>`<div class="rel-bd">
+    <div class="rel-bd-row"><span>둘만</span><b>${fmtMoney(sum(duoArr))}원</b><i>${duoArr.length}건</i></div>
+    <div class="rel-bd-row"><span>여럿</span><b>${fmtMoney(sum(grpArr))}원</b><i>${grpArr.length}건</i></div>
+  </div>`;
+  const myCard=me?`<div class="payer-stat">
+      <div class="payer-stat-lbl">내가 결제 · ${nm}와 함께</div>
+      <div class="payer-stat-val">${fmtMoney(sum(myWith))}원</div>
+      <div class="payer-stat-sub">${myWith.length}건</div>
+      ${bd(myDuo,myGrp)}
+      ${myTreat.length?`<div class="rel-accent">🎉 내가 한턱 <b>${fmtMoney(sum(myTreat))}원</b> · ${myTreat.length}건</div>`:''}
+    </div>`:`<div class="payer-stat rel-hint">
+      <div class="payer-stat-lbl">내가 결제</div>
+      <div class="rel-hint-txt">설정 탭에서 '내 이름'을 지정하면<br/>${nm}와의 결제 관계가 표시됩니다.</div>
+    </div>`;
   const heroHtml=`<div class="payer-hero">
     <div class="payer-stat total">
-      <div class="payer-stat-lbl">결제 총액</div>
-      <div class="payer-stat-val">${fmtMoney(totalPaid)}원</div>
-      <div class="payer-stat-sub">${payerRecs.length}건 · 카드/현금 지출</div>
+      <div class="payer-stat-lbl">${nm} 결제</div>
+      <div class="payer-stat-val">${fmtMoney(sum(tgtPaid))}원</div>
+      <div class="payer-stat-sub">${tgtPaid.length}건${me?' · 그중 나와 함께':''}</div>
+      ${me?bd(tgtDuo,tgtGrp):''}
     </div>
-    <div class="payer-stat">
-      <div class="payer-stat-lbl">1/N 정산금액</div>
-      <div class="payer-stat-val">${fmtMoney(totalShare)}원</div>
-      <div class="payer-stat-sub">${partRecs.length}건 · 타인 결제 참석분</div>
-    </div>
-  </div>`;
+    ${myCard}
+  </div>
+  <div class="rel-secondary">참석 부담액 <b>${fmtMoney(totalShare)}원</b><span>${nm}이(가) 타인 결제 자리에서 부담한 몫 · ${partRecs.length}건</span></div>`;
 
   // 결제 내역 섹션
   let payerSection='';
