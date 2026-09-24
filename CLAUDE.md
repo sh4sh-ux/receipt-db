@@ -95,6 +95,13 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.39` — **'참석만 한 사람(분담 0원)' 표시.** 한턱/제외로 기간 내 분담 총액이 0이라 사람별 분담 막대에는
+  안 나오는 참석자를, 섹션 하단에 **회색 칩**으로 보여준다(`_attendedOnly`=`_participantSplit`(분담>0)에 없는
+  참석자, `_attendedOnlyHtml`). 칩은 기존 `[data-ppname]` 위임 핸들러로 **클릭 시 그 사람 인물 검색**. 두 렌더
+  경로(`renderLedgerPanel`=recs / `renderMonthSummaryHtml`=receiptsForMonth) 모두 적용. 또 **인물 검색**에서
+  그 사람의 분담 총액이 0이면 '분담 총액' 카드에 **'참석만 함' 배지** + '한턱·제외로 분담 0원(참석은 함)' 안내를
+  달아 0원이 버그가 아님을 명확히(순수 참석자 요약 경로). 계산·데이터 불변(표시만). 검증: 참석만 칩·클릭 이동·
+  순수 참석자 배지·콘솔에러 0. 변경 파일 `index.html`.
 - `v3.38` — **후속 피드백 7건.** ① **수정확인 '두 번 눌러야' 재수정** — iOS에서 `click`이 포커스/IME 확정·
   키보드 내림 제스처에 첫 탭이 먹히는 경우가 있어 **`pointerup`에도 저장 핸들러를 바인딩**(첫 탭에 저장,
   `_confirmRunning` 가드로 1회만 실행). v3.36의 `onmousedown preventDefault`(iOS서 오히려 첫 탭 삼킴)는 제거.

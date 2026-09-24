@@ -607,6 +607,13 @@ svg{display:block;flex-shrink:0;}
 .pp-row{cursor:pointer;border-radius:var(--rs);transition:background .1s;}
 .pp-row:hover,.pp-row:focus-visible{background:var(--fill);outline:none;}
 .pp-row:hover .pp-name-link,.pp-row:focus-visible .pp-name-link{color:var(--blue);border-bottom-color:var(--blue);}
+/* v3.39 — 참석만 한 사람(분담 0원): 막대 아래 회색 칩으로 조용히 표시. 클릭하면 그 사람 내역으로. */
+.pp-attend-only{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--sep);}
+.pp-ao-label{font-size:11.5px;font-weight:600;color:var(--label3);flex:0 0 auto;}
+.pp-ao-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.pp-ao-chip{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--label2);background:var(--fill2);border:1px solid var(--sep);border-radius:999px;padding:4px 11px;transition:.12s;}
+.pp-ao-chip:hover,.pp-ao-chip:focus-visible{border-color:var(--blue);color:var(--blue);outline:none;}
+.attend-only-badge{display:inline-block;font-size:10.5px;font-weight:700;color:var(--blue);background:var(--blue-bg);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:middle;letter-spacing:0;}
 /* v3.35 — 분담 방식(한턱/제외) UI */
 .pp-split-block{display:flex;flex-direction:column;gap:8px;}
 .pp-treatbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--sep);border-radius:var(--rm);background:var(--fill2);cursor:pointer;transition:.12s;}
@@ -2551,6 +2558,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.39 — '참석만 한 사람(분담 0원)' 표시. 기간 내 참석은 했지만 늘 한턱 받거나 제외돼 분담 0원인 사람을
+//   사람별 분담 섹션 하단에 회색 칩(클릭 시 인물 검색)으로 보여준다(_attendedOnly/_attendedOnlyHtml).
+//   인물 검색에서도 그 사람의 분담 총액이 0이면 '참석만 함' 배지 + 안내로 0원이 버그가 아님을 명확히.
+//   계산·데이터 불변(표시만 추가).
 // v3.38 — 후속 피드백. ① 수정확인 두 번 눌러야 재수정: pointerup에도 저장 바인딩(첫 탭에 저장, 가드로 1회
 //   실행) + 저장 뒤 버튼 '저장됨 ✓'(초록) 플래시로 저장 전/후 명확. onmousedown preventDefault 제거.
 //   ② 모바일 기간시트 날짜칸: -webkit-appearance:none 제거해 '년/월/일' 안내·높이 복원(오버플로는 min-width:0로만).
@@ -2565,7 +2576,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.38';
+const APP_VERSION='v3.39';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -3219,6 +3230,27 @@ function _goPersonSearch(name){
   renderSide();renderDetail();
   const mb=document.querySelector('#viewList .main-body');
   if(mb)mb.scrollTop=0;
+}
+// v3.39 — 기간 내 '참석만 한 사람'(분담 총액 0원). 참석은 했지만 늘 한턱 받았거나 제외돼
+//   사람별 분담 막대에는 안 나오는 이들. _participantSplit(분담>0)에 없는 참석자 = 총 0원.
+function _attendedOnly(list){
+  const paid=new Set(_participantSplit(list).map(x=>x.name));
+  const out=[];const seen=new Set();
+  for(const r of list){
+    if(!(r.participants||[]).length)continue;
+    for(const n of (r.participants||[])){
+      const nm=(n||'').trim();
+      if(!nm||paid.has(nm)||seen.has(nm))continue;
+      seen.add(nm);out.push(nm);
+    }
+  }
+  return out;
+}
+function _attendedOnlyHtml(list){
+  const names=_attendedOnly(list);
+  if(!names.length)return '';
+  const chips=names.map(n=>`<span class="pp-ao-chip" data-ppname="${escapeHtml(n)}" role="button" tabindex="0" title="${escapeHtml(n)} 내역 보기">${escapeHtml(n)}</span>`).join('');
+  return `<div class="pp-attend-only"><span class="pp-ao-label">참석만 · 분담 0원</span><div class="pp-ao-chips">${chips}</div></div>`;
 }
 function dailySparkline(ym){
   const days=daysInMonth(ym);
@@ -5491,9 +5523,9 @@ function renderParticipantSummaryHtml(name, filtered){
       <div class="payer-stat-sub">건당 평균 ${fmtMoney(avgShare)}원</div>
     </div>
     <div class="payer-stat total">
-      <div class="payer-stat-lbl">분담 총액</div>
+      <div class="payer-stat-lbl">분담 총액${myShare===0?' <span class="attend-only-badge">참석만 함</span>':''}</div>
       <div class="payer-stat-val">${fmtMoney(myShare)}<span style="font-size:14px;font-weight:500;margin-left:3px;">원</span></div>
-      <div class="payer-stat-sub">${sorted[0]?fmtDateKor(sorted[sorted.length-1].date)+' ~ '+fmtDateKor(sorted[0].date):''}</div>
+      <div class="payer-stat-sub">${myShare===0?'한턱·제외로 분담 0원 (참석은 함)':(sorted[0]?fmtDateKor(sorted[sorted.length-1].date)+' ~ '+fmtDateKor(sorted[0].date):'')}</div>
     </div>
   </div>`;
 
@@ -6022,6 +6054,7 @@ function renderLedgerPanel(recs){
               </div>`;
             }).join('')}
           </div>
+          ${_attendedOnlyHtml(recs)}
         </div>
       </div>`;
     }
@@ -6318,6 +6351,7 @@ function renderMonthSummaryHtml(ym){
               </div>`;
             }).join('')}
           </div>
+          ${_attendedOnlyHtml(receiptsForMonth(ym))}
         </div>
       </div>
     `;
