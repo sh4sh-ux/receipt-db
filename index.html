@@ -641,7 +641,29 @@ svg{display:block;flex-shrink:0;}
 .srch-row{cursor:pointer;transition:background .1s;}
 .srch-row:hover{background:var(--fill);}
 .srch-row:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;background:var(--blue-bg);}
+.srch-row.sel{background:var(--blue-bg);}
 .srch-total{text-align:right;font-size:13px;color:var(--label2);padding:10px 8px 0;}
+
+/* ── v3.46 만남으로 묶기(meetingId) UI ── */
+.mtg-toolbar{display:flex;justify-content:flex-end;margin:0 0 10px;}
+.mtg-select-btn{padding:6px 14px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);color:var(--label2);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .12s,color .12s,border-color .12s;}
+.mtg-select-btn:hover{background:var(--fill);}
+.mtg-select-btn.on{background:var(--blue);color:#fff;border-color:transparent;}
+.mtg-chk{width:34px;text-align:center;}
+th.mtg-chk{background:var(--fill2);}
+.mtg-box{display:inline-block;width:18px;height:18px;border:2px solid var(--sep2);border-radius:50%;vertical-align:middle;position:relative;transition:background .12s,border-color .12s;box-sizing:border-box;}
+.mtg-box.on{background:var(--blue);border-color:var(--blue);}
+.mtg-box.on::after{content:"";position:absolute;left:4px;top:1px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);}
+.mtg-tag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:var(--fill2);border:1px solid var(--sep);color:var(--label3);font-size:10.5px;font-weight:600;vertical-align:middle;}
+.mtg-actionbar{position:sticky;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:12px 14px;border-top:1px solid var(--sep);background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:0 0 var(--rm) var(--rm);z-index:6;}
+.mtg-ab-info{display:flex;align-items:baseline;gap:8px;min-width:0;}
+.mtg-ab-info #mtgAbCount{font-size:13.5px;font-weight:700;color:var(--label);white-space:nowrap;}
+.mtg-ab-info .mtg-ab-sum{font-size:12.5px;color:var(--label2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mtg-ab-btns{display:flex;gap:8px;flex-shrink:0;}
+.mtg-ab-unlink{padding:9px 13px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);color:var(--label2);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;}
+.mtg-ab-unlink:hover{background:var(--fill);}
+.mtg-ab-link{padding:9px 15px;border:none;border-radius:8px;background:var(--blue);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+.mtg-ab-link:disabled{background:var(--sep2);color:var(--label3);cursor:not-allowed;}
 @media(max-width:780px){.srch-stats{gap:8px;}.srch-stat{padding:10px 8px;}.srch-stat-val{font-size:15px;}}
 
 /* ── PAYER SUMMARY ── */
@@ -751,6 +773,13 @@ svg{display:block;flex-shrink:0;}
   .person-txn .txn-amt{grid-column:2;grid-row:1;text-align:right;font-size:14px;font-weight:700;color:var(--label);white-space:nowrap;}
   .person-txn .txn-date{grid-column:1;grid-row:2;font-size:11.5px;color:var(--label3);margin-top:2px;}
   .person-txn .txn-sub{grid-column:2;grid-row:2;text-align:right;font-size:11.5px;color:var(--label3);margin-top:2px;}
+  /* v3.46 — 모바일 선택 모드: 왼쪽 체크박스 열을 추가하고 나머지 정보는 그대로 2열 유지 */
+  .person-txn tr:has(.mtg-chk){grid-template-columns:auto 1fr auto;}
+  .person-txn .mtg-chk{grid-column:1;grid-row:1/3;align-self:center;width:auto;text-align:left;}
+  /* v3.46 — 모바일 만남 액션바: 하단 nav(68px)+safe-area 위에 고정 */
+  .mtg-actionbar{position:fixed;left:0;right:0;bottom:calc(68px + env(safe-area-inset-bottom,0px));margin-top:0;padding:11px 18px;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:0;box-shadow:0 -8px 24px rgba(0,0,0,.08);z-index:118;}
+  /* 고정 액션바에 마지막 행이 가리지 않도록 스크롤 여백 확보 */
+  #detailBody:has(.mtg-actionbar){padding-bottom:76px;}
 }
 
 .section-hd{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.3px;margin:18px 0 8px;display:flex;justify-content:space-between;align-items:center;}
@@ -2668,6 +2697,14 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.46 — 만남으로 묶기(meetingId) 1단계: 사람 대시보드의 결제/참석 내역에서 [선택] 모드로 영수증을 다중 선택해
+//   같은 meetingId를 부여(만남으로 묶기)하거나 해제(만남에서 분리). 원본 영수증은 그대로 두고 optional meetingId만
+//   추가·삭제(병합/삭제/마이그레이션/자동추정/만남통계 없음). 선택은 receipt.id 기준, 2건 이상부터 묶기 활성.
+//   저장은 dbPutMany 단일 트랜잭션(원자적, 실패 시 in-memory 롤백+에러 토스트, 부분저장 없음). meetingId는 기존
+//   _validateReceiptRecord 보존({...raw})·_dbxMerge(updatedAt) 경로를 그대로 타 동기화/백업에 실림. 묶인 영수증엔
+//   작은 '만남' 태그 표시. 이미 다른 만남에 속한 건은 명시적 확인 후에만 새 만남으로 이동. 검색변경·탭이동 시 선택
+//   모드 종료. normalizeName/receiptPeople/_personRelation/_receiptshare/단둘이·여럿이·상대결제·내결제·한턱·참석부담·
+//   treat/splitExclude 계산 전부 v3.44와 동일(불변). 모바일 액션바는 하단 nav 위 고정. 변경 파일 index.html만.
 // v3.45 — 단둘이 Hero 우측 건수 라벨 '19건'→'영수증 19건'(만남 횟수 오해 방지, meetingId 없음). 값·계산·레이아웃 불변.
 // v3.44 — 사람 분석 화면 미세 polish(계산·데이터·구조 불변). ① 단둘이 제목 '단둘이 있을 때'→'단둘이 만났을 때',
 //   보조문구 '함께한 자리의 결제'(19건·금액·비율 Bar 그대로). ② 데스크탑 여럿이/전체: 설명문 제거 + 값 인라인
@@ -2719,7 +2756,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.45';
+const APP_VERSION='v3.46';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -2845,6 +2882,15 @@ function openDB(){
 }
 function txStore(name,mode){return openDB().then(db=>db.transaction(name,mode).objectStore(name));}
 function dbPut(store,obj){return txStore(store,'readwrite').then(s=>new Promise((res,rej)=>{const r=s.put(obj);r.onsuccess=()=>res(obj);r.onerror=e=>rej(e.target.error);}));}
+// v3.46 — 여러 레코드를 한 트랜잭션으로 저장(원자성). 하나라도 실패하면 트랜잭션이 통째로 롤백된다.
+function dbPutMany(store,objs){return txStore(store,'readwrite').then(s=>new Promise((res,rej)=>{
+  if(!objs.length)return res(objs);
+  let err=null;
+  objs.forEach(o=>{const r=s.put(o);r.onerror=e=>{err=e.target.error;};});
+  s.transaction.oncomplete=()=>err?rej(err):res(objs);
+  s.transaction.onerror=e=>rej(e.target.error||err);
+  s.transaction.onabort=e=>rej(e.target.error||err||new Error('tx abort'));
+}));}
 function dbGet(store,id){return txStore(store,'readonly').then(s=>new Promise((res,rej)=>{const r=s.get(id);r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e.target.error);}));}
 function dbDel(store,id){return txStore(store,'readwrite').then(s=>new Promise((res,rej)=>{const r=s.delete(id);r.onsuccess=()=>res();r.onerror=e=>rej(e.target.error);}));}
 function dbAll(store){return txStore(store,'readonly').then(s=>new Promise((res,rej)=>{const r=s.getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=e=>rej(e.target.error);}));}
@@ -4264,6 +4310,7 @@ addEventListener('resize',()=>_syncMobileSurface());
 addEventListener('orientationchange',()=>setTimeout(()=>_syncMobileSurface(),80));
 function switchTab(name){
   if(name!=='list'&&_batchSelectMode)_setBatchSelectMode(false,{render:false});
+  if(name!=='list')_mtgExit(); // v3.46 — 내역 탭을 벗어나면 만남 선택 모드 종료
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===name));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
   document.querySelector(`.nav-btn[data-nav="${name}"]`)?.classList.add('on');
@@ -4344,6 +4391,7 @@ function _clearSearch(){
   if(typeof _searchTimer!=='undefined')clearTimeout(_searchTimer);
   searchQuery='';searchInp.value='';_monthCatFilter=null;
   _personTimeFilter={type:'all',value:''};_ledgerTimeFilter={type:'month'};
+  _mtgExit(); // v3.46 — 검색 해제 시 만남 선택 모드 종료
   _updateSearchClear();renderSide();renderDetail();searchInp.focus();
 }
 searchClear.addEventListener('click',_clearSearch);
@@ -4355,6 +4403,7 @@ function _applySearchInput(){
   _monthCatFilter=null;
   _personTimeFilter={type:'all',value:''};
   _ledgerTimeFilter={type:'month'};
+  _mtgExit(); // v3.46 — 검색어 변경 시 만남 선택 모드 종료(다른 사람으로 바뀔 수 있음)
   _updateSearchClear();renderSide();renderDetail();
 }
 // v3.36b — 검색 디바운스(한글 IME 안전판).
@@ -5762,6 +5811,126 @@ function renderParticipantSummaryHtml(name, filtered){
   return heroHtml+catHtml+coHtml+listHtml;
 }
 
+// ── v3.46 만남으로 묶기(meetingId) — 사람 대시보드 결제/참석 내역에서 수동 다중 선택 ──
+//   원본 영수증은 그대로 두고 선택분에 동일 meetingId만 부여/제거한다. 자동 추정·만남 통계 없음.
+let _mtgSelectMode=false;
+const _mtgSel=new Set();          // 선택된 receipt.id
+let _mtgPersonName='';            // 확인창 '○○과의 만남' 표시용(표시 전용, 저장 안 함)
+function _mtgExit(){_mtgSelectMode=false;_mtgSel.clear();}
+function _mtgNewId(recs){
+  const ymd=(recs.map(r=>r.date).filter(Boolean).sort()[0]||new Date().toISOString().slice(0,10)).replace(/-/g,'');
+  return `meet_${ymd}_${Math.random().toString(36).slice(2,8)}`;
+}
+function _mtgSelectedRecs(){return [..._mtgSel].map(id=>receipts.find(r=>r.id===id)).filter(Boolean);}
+function _mtgUpdateBar(){
+  const bar=document.getElementById('mtgActionBar');if(!bar)return;
+  const recs=_mtgSelectedRecs();
+  const sum=recs.reduce((s,r)=>s+(r.total||0),0);
+  const cEl=document.getElementById('mtgAbCount'),sEl=document.getElementById('mtgAbSum');
+  if(cEl)cEl.textContent=`${recs.length}건`;
+  if(sEl)sEl.textContent=`${fmtMoney(sum)}원`;
+  const link=document.getElementById('mtgAbLink');if(link)link.disabled=recs.length<2;
+  const unlink=document.getElementById('mtgAbUnlink');
+  if(unlink)unlink.style.display=recs.some(r=>r.meetingId)?'':'none';
+}
+function _mtgToggleRow(row){
+  const id=row.dataset.id;if(!id)return;
+  if(_mtgSel.has(id))_mtgSel.delete(id);else _mtgSel.add(id);
+  const on=_mtgSel.has(id);
+  row.classList.toggle('sel',on);
+  const box=row.querySelector('.mtg-box');if(box){box.classList.toggle('on',on);box.setAttribute('aria-checked',String(on));}
+  _mtgUpdateBar();
+}
+// 앱 스타일 확인창(_confirmDup 패턴). {title, bodyHtml, okLabel, danger}
+function _mtgConfirm({title,bodyHtml,okLabel='확인'}){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    ov.innerHTML=`<div style="background:var(--card);border-radius:var(--r);padding:22px 20px;max-width:340px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18);">
+      <div style="font-size:15px;font-weight:700;margin-bottom:10px;color:var(--label);">${title}</div>
+      <div style="font-size:13px;color:var(--label2);line-height:1.6;margin-bottom:18px;">${bodyHtml}</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button id="_mtgCancel" style="padding:9px 15px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);color:var(--label2);font-size:13px;cursor:pointer;font-family:inherit;">취소</button>
+        <button id="_mtgOk" style="padding:9px 15px;border:none;border-radius:8px;background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">${escapeHtml(okLabel)}</button>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    const done=v=>{ov.remove();resolve(v);};
+    ov.querySelector('#_mtgCancel').addEventListener('click',()=>done(false));
+    ov.querySelector('#_mtgOk').addEventListener('click',()=>done(true));
+    ov.addEventListener('click',e=>{if(e.target===ov)done(false);});
+  });
+}
+function _mtgDateLabel(recs){
+  const ds=recs.map(r=>r.date).filter(Boolean).sort();
+  if(!ds.length)return '';
+  const a=ds[0],b=ds[ds.length-1];
+  if(a===b)return fmtDateKor(a);
+  return `${fmtDateKor(a)} ~ ${fmtDateKor(b)}`;
+}
+async function _mtgLink(){
+  const recs=_mtgSelectedRecs();
+  if(recs.length<2)return;
+  // 이미 다른 만남에 속한 영수증이 있으면 명시적 확인
+  const existing=recs.filter(r=>r.meetingId);
+  if(existing.length){
+    const ok=await _mtgConfirm({title:'이미 다른 만남에 포함됨',
+      bodyHtml:`선택한 영수증 중 <b>${existing.length}건</b>이 이미 다른 만남에 포함돼 있어요.<br>새 만남으로 옮길까요?`,
+      okLabel:'새 만남으로 이동'});
+    if(!ok)return;
+  }
+  const sum=recs.reduce((s,r)=>s+(r.total||0),0);
+  const nm=_mtgPersonName?escapeHtml(_mtgPersonName)+'과의 만남':'하나의 만남';
+  const ok=await _mtgConfirm({title:'만남으로 묶기',
+    bodyHtml:`선택한 <b>${recs.length}개</b>의 영수증을 하나의 만남으로 묶을까요?<br><br>
+      <span style="display:block;background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:11px 13px;">
+        <span style="color:var(--label3);font-size:12px;">${_mtgDateLabel(recs)}</span><br>
+        <b style="color:var(--label);font-size:14px;">${nm}</b><br>
+        <span style="color:var(--label2);font-size:12.5px;">영수증 ${recs.length}건 · ${fmtMoney(sum)}원</span>
+      </span><br>
+      <span style="color:var(--label3);font-size:11.5px;">원본 영수증은 그대로 유지돼요.</span>`,
+    okLabel:'만남으로 묶기'});
+  if(!ok)return;
+  const mid=_mtgNewId(recs);
+  const now=nowISO();
+  recs.forEach(r=>{r.meetingId=mid;r.updatedAt=now;});
+  try{
+    await dbPutMany('receipts',recs);
+  }catch(e){
+    console.error('meeting link 실패',e);
+    // 롤백: 방금 바꾼 in-memory 필드를 되돌린다(부분 저장 방지 — 트랜잭션은 이미 롤백됨).
+    receipts=await dbAll('receipts');
+    toast('만남 묶기에 실패했어요. 다시 시도해 주세요.',{type:'error'});
+    return;
+  }
+  _mtgExit();
+  renderSide();await renderDetail();
+  dbxSyncUpload().catch(()=>{});
+  toast(`${recs.length}개 영수증을 만남으로 묶었어요.`,{type:'success'});
+}
+async function _mtgUnlink(){
+  const recs=_mtgSelectedRecs().filter(r=>r.meetingId);
+  if(!recs.length)return;
+  const ok=await _mtgConfirm({title:'만남에서 분리',
+    bodyHtml:`선택한 <b>${recs.length}건</b>을 만남에서 분리할까요?<br>영수증 자체는 그대로 남고 만남 연결만 해제돼요.`,
+    okLabel:'분리'});
+  if(!ok)return;
+  const now=nowISO();
+  recs.forEach(r=>{delete r.meetingId;r.updatedAt=now;});
+  try{
+    await dbPutMany('receipts',recs);
+  }catch(e){
+    console.error('meeting unlink 실패',e);
+    receipts=await dbAll('receipts');
+    toast('분리에 실패했어요. 다시 시도해 주세요.',{type:'error'});
+    return;
+  }
+  _mtgExit();
+  renderSide();await renderDetail();
+  dbxSyncUpload().catch(()=>{});
+  toast('만남에서 분리했어요.',{type:'success'});
+}
+
 // ── 결제자 + 참석자 통합 대시보드 ──
 // v3.41 — 사람 관계 지표를 한 곳에서 계산(정확일치). 대시보드 본문과 헤더 소제목이 같은 값을 쓰게 공유.
 //   검색 UX는 부분일치(includes), 집계 identity는 normalizeName 정확일치 — v3.40 분리 원칙 유지.
@@ -5858,6 +6027,13 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
   }
 
   // 결제 내역 섹션
+  // v3.46 — 만남 선택 모드 셀/태그 헬퍼(결제·참석 내역 공용). 표시 전용, 계산 불변.
+  _mtgPersonName=tgt;
+  const _sm=_mtgSelectMode;
+  const chkHead=_sm?'<th class="mtg-chk" style="width:34px;"></th>':'';
+  const chkCell=r=>_sm?`<td class="mtg-chk"><span class="mtg-box${_mtgSel.has(r.id)?' on':''}" role="checkbox" aria-checked="${_mtgSel.has(r.id)}"></span></td>`:'';
+  const rowCls=r=>'srch-row'+(_sm&&_mtgSel.has(r.id)?' sel':'');
+  const mtgTag=r=>r.meetingId?' <span class="mtg-tag">만남</span>':'';
   let payerSection='';
   if(payerRecs.length>0){
     // 카테고리별 막대 (결제 기준)
@@ -5870,9 +6046,9 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
       <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${amt/maxCat*100}%;background:var(--blue);"></div></div>
     </div>`).join('');
     const sorted=[...payerRecs].sort((a,b)=>b.date.localeCompare(a.date));
-    const rows=sorted.map(r=>`<tr class="srch-row" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
-      <td class="txn-date" style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
-      <td class="txn-store" style="text-align:left;">${escapeHtml(r.store||'')}</td>
+    const rows=sorted.map(r=>`<tr class="${rowCls(r)}" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
+      ${chkCell(r)}<td class="txn-date" style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
+      <td class="txn-store" style="text-align:left;">${escapeHtml(r.store||'')}${mtgTag(r)}</td>
       <td class="txn-amt">${fmtMoney(r.total||0)}원</td>
     </tr>`).join('');
     payerSection=`<div class="budget-section">
@@ -5880,7 +6056,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
       <div class="section-body open">
         <div class="cat-bars" style="padding-top:8px;">${catBars}</div>
         <table class="srch-table person-txn" style="margin-top:10px;table-layout:fixed;">
-          <thead><tr><th style="width:100px;">일자</th><th>매장명</th><th style="width:140px;">총액</th></tr></thead>
+          <thead><tr>${chkHead}<th style="width:100px;">일자</th><th>매장명</th><th style="width:140px;">총액</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
@@ -5894,9 +6070,9 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     const rows=sorted.map(r=>{
       const cnt=(r.participants||[]).length||1;
       const share=_receiptShare(r,name);
-      return `<tr class="srch-row" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
-        <td class="txn-date" style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
-        <td class="txn-store">${escapeHtml(r.store||'')}</td>
+      return `<tr class="${rowCls(r)}" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
+        ${chkCell(r)}<td class="txn-date" style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
+        <td class="txn-store">${escapeHtml(r.store||'')}${mtgTag(r)}</td>
         <td class="txn-sub" style="text-align:right;">${cnt}명</td>
         <td class="txn-amt" style="text-align:right;">${fmtMoney(share)}원</td>
       </tr>`;
@@ -5905,14 +6081,31 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
       ${_sectionToggleHtml('참석 내역',`${partRecs.length}건 · 분담 ${fmtMoney(totalShare)}원`,'person_part',true)}
       <div class="section-body open">
         <table class="srch-table person-txn" style="margin-top:8px;table-layout:fixed;">
-          <thead><tr><th style="width:100px;">일자</th><th>매장명</th><th style="width:50px;text-align:right;">인원</th><th style="width:90px;text-align:right;">분담금</th></tr></thead>
+          <thead><tr>${chkHead}<th style="width:100px;">일자</th><th>매장명</th><th style="width:50px;text-align:right;">인원</th><th style="width:90px;text-align:right;">분담금</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
     </div>`;
   }
 
-  return heroHtml+payerSection+partSection;
+  // v3.46 — 만남 묶기 UI(선택 툴바 + 액션바). 결제·참석 내역에 행이 있을 때만.
+  const hasRows=(payerRecs.length+partRecs.length)>0;
+  let mtgToolbar='',mtgActionBar='';
+  if(hasRows){
+    mtgToolbar=`<div class="mtg-toolbar">
+      <button type="button" class="mtg-select-btn${_sm?' on':''}" id="mtgSelectBtn">${_sm?'선택 취소':'선택'}</button>
+    </div>`;
+    if(_sm){
+      mtgActionBar=`<div class="mtg-actionbar" id="mtgActionBar">
+        <div class="mtg-ab-info"><span id="mtgAbCount">0건 선택</span><span class="mtg-ab-sum" id="mtgAbSum"></span></div>
+        <div class="mtg-ab-btns">
+          <button type="button" class="mtg-ab-unlink" id="mtgAbUnlink" style="display:none;">만남에서 분리</button>
+          <button type="button" class="mtg-ab-link" id="mtgAbLink" disabled>만남으로 묶기</button>
+        </div>
+      </div>`;
+    }
+  }
+  return heroHtml+mtgToolbar+payerSection+partSection+mtgActionBar;
 }
 
 // ── v1.34 날짜 검색 요약 패널 ───────────────────────────────────
@@ -6869,7 +7062,10 @@ function _bindReceiptRows(root){
   root.querySelectorAll('.srch-row[data-id]').forEach(row=>{
     if(row.dataset.bound)return;
     row.dataset.bound='true';
-    const openRow=()=>{_returnToStats=!!row.closest('#statsCategoryPanel');selectReceipt(row.dataset.id);};
+    const openRow=()=>{
+      if(_mtgSelectMode&&row.dataset.id){_mtgToggleRow(row);return;} // v3.46 — 만남 선택 모드: 열지 않고 선택 토글
+      _returnToStats=!!row.closest('#statsCategoryPanel');selectReceipt(row.dataset.id);
+    };
     row.addEventListener('click',openRow);
     row.addEventListener('keydown',e=>{
       if(e.key!=='Enter'&&e.key!==' ')return;
@@ -7006,6 +7202,18 @@ async function renderDetail(){
         _bindSectionToggles(body);
       }
       _bindReceiptRows(body);
+      // v3.46 — 만남 묶기 선택 모드 버튼(통합 대시보드에만 존재). 있을 때만 바인딩.
+      const _mtgBtn=body.querySelector('#mtgSelectBtn');
+      if(_mtgBtn)_mtgBtn.addEventListener('click',()=>{
+        _mtgSelectMode=!_mtgSelectMode;
+        if(!_mtgSelectMode)_mtgSel.clear();
+        renderDetail();
+      });
+      const _mtgLinkBtn=body.querySelector('#mtgAbLink');
+      if(_mtgLinkBtn)_mtgLinkBtn.addEventListener('click',_mtgLink);
+      const _mtgUnlinkBtn=body.querySelector('#mtgAbUnlink');
+      if(_mtgUnlinkBtn)_mtgUnlinkBtn.addEventListener('click',_mtgUnlink);
+      if(_mtgSelectMode)_mtgUpdateBar();
       // 인물 패널 시간 필터 클릭 — 본문(날짜검색 패널) + 헤더 슬롯(통합 대시보드 기간 드롭다운) 모두 바인딩
       [body, periodSlot].forEach(scope=>{ if(!scope)return; scope.querySelectorAll('.pf-pill').forEach(btn=>{
         btn.addEventListener('click',()=>{
@@ -7783,6 +7991,8 @@ function _validateReceiptRecord(raw){
     // v3.35 — 분담 방식. 타입을 표준화(불리언·문자열 배열)해 손상 백업이 잘못된 값을 넣지 못하게.
     treat:raw.treat===true,
     splitExclude:Array.isArray(raw.splitExclude)?raw.splitExclude.map(v=>String(v||'')).filter(Boolean):[],
+    // v3.46 — 만남 묶기: optional meetingId(문자열)만 보존·정규화. 없으면 키 자체를 두지 않는다(undefined→JSON 제외).
+    meetingId:(typeof raw.meetingId==='string'&&raw.meetingId.trim())?raw.meetingId.trim():undefined,
   };
 }
 function _validateImageRecord(raw){
