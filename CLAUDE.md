@@ -95,6 +95,16 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.67` — **만남 목록 표시 문구 최종 정제(표시만, 계산·필터·클릭·Meeting Management·데이터 전부 불변).**
+  ① **묶인 만남**(실제 2건 이상) 3단 구조로 통일: 제목=`M월 D일의 만남`, 2번째 줄=**`대표매장 외 N곳 · N건 묶음`**(기존 '영수증 N건'→
+  **'N건 묶음'**, `nowrap`+ellipsis 1줄 유지), 3번째 줄=참석자 union. Blue Bar(v3.66)는 title+2번째 줄 높이에 맞고 참석자 줄로
+  안 내려감. ② **독립 만남**: bar 없음·제목=`YYYY.MM.DD · 매장`, 보조='영수증 1건' 반복 제거(참석자만). ③ **meetingId가 있어도
+  실제 동일 meetingId receipt가 1건뿐인 만남**은 **독립 만남과 완전히 동일하게 렌더** — bar 없음, `'meetingId'`·`'1건 묶음'` 미노출,
+  개발/테스트성 문구 `'1건meetingId · 영수증 1건'` 제거(렌더 분기 조건을 `m.type==='g'` → `m.type==='g'&&rc.length>=2`로 좁힘;
+  1건 grouped unit은 독립 렌더 경로로). ④ 상단 `[전체 N][묶인 만남 N]` 필터·클릭(`m.type` 기준, 1건 meetingId 클릭 시 기존대로
+  Meeting Detail)·straight divider·radius 0 불변. ⚠️ Meeting count/grouped/independent 정의·meetingId·`_mtgReceiptsById`·금액·
+  Dutch Pay·Dropbox 전부 불변. 검증(김영석+합성): 묶음 'N건 묶음'·2번째 줄 1줄 ellipsis·bar 두 줄 높이·독립 및 1건 meetingId
+  동일 간결 표시('meetingId'/'N건' 미노출)·Desktop/Mobile 390·430·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.66` — **묶인 만남 Blue Bar 높이를 title+grouped metadata 두 줄 블록에 맞춤(표시만, 계산·필터·클릭·데이터 전부 불변).**
   v3.65의 bar가 고정 `height:32px`라 두 줄(제목+보조정보)보다 짧아 '작은 상태표시'처럼 보이던 것 수정. **고정 height 폐기** →
   목록 row의 제목(`.mm-row-top`)+grouped 보조정보(`.mm-row-sub`)를 새 wrapper **`.mm-row-head`**(position:relative)로 묶고,

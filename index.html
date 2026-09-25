@@ -940,6 +940,7 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .mm-list{padding:0 12px 8px;}
 .mm-row{position:relative;display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;border-bottom:1px solid var(--divider);background:none;font:inherit;padding:12px 4px 12px 12px;cursor:pointer;border-radius:0;}
 .mm-row:hover{background:var(--fill);}
+/* v3.67 — 만남 목록 문구 최종 정제: 묶인 만남 '대표매장 외 N곳 · N건 묶음'(1줄), meetingId 1건뿐인 만남은 독립 만남과 동일 표시(bar·meetingId·N건 노출 없음). CSS 불변. */
 /* v3.66 — 묶인 만남 Blue Bar를 title+metadata 두 줄 블록(.mm-row-head) 높이에 맞춤(고정 height 폐기). 참석자 줄·divider와 분리, 계산/필터/클릭 불변. */
 /* v3.65 — 묶인 만남(같은 meetingId 실제 2건+) 신호: 짧은 Signature Blue 세로바. row 안에서만, divider와 분리(§1). */
 .mm-row-head{display:block;position:relative;min-width:0;padding:3px 0;}
@@ -2966,6 +2967,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.67 — 만남 목록 표시 문구 최종 정제(표시만, 계산·필터·클릭·Meeting Management·데이터 전부 불변).
+//   ① 묶인 만남(실제 2건 이상) 2번째 줄: '영수증 N건' → 'N건 묶음'(1줄 ellipsis 유지). Blue Bar는 title+2번째 줄 높이(v3.66) 그대로.
+//   ② 독립 만남: bar 없음·'영수증 1건' 반복 제거(제목=날짜·매장, 보조=참석자만) — v3.65부터 유지.
+//   ③ meetingId가 있어도 실제 동일 meetingId receipt가 1건뿐이면 독립 만남과 동일 렌더(bar 없음, 'meetingId'·'1건 묶음' 미노출). '1건meetingId · 영수증 1건' 개발성 문구 제거.
+//   상단 [전체 N][묶인 만남 N] 필터·클릭(m.type 기준)·straight divider 불변.
 // v3.66 — 묶인 만남 Blue Bar 높이를 title+grouped metadata 두 줄 블록에 맞춤(표시만, 계산·필터·클릭·데이터 전부 불변).
 //   고정 height(32px) 폐기 → title+metadata를 .mm-row-head로 묶고 그 wrapper 실제 높이를 bar가 따라감(top/bottom:0).
 //   참석자 줄(.mm-row-ppl)은 head 바깥이라 bar가 내려가지 않고, row/divider와도 분리. width 3px·radius 0·Signature Blue·독립 만남 bar 없음.
@@ -3241,7 +3247,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.66';
+const APP_VERSION='v3.67';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6544,14 +6550,16 @@ function _mtgManageOpen(initialTab){
       const filter=`<div class="mm-tabs mm-subfilter"><button type="button" class="mm-tab${mtgFilter==='all'?' on':''}" data-mf="all">전체 ${units.length}</button><button type="button" class="mm-tab${mtgFilter==='grouped'?' on':''}" data-mf="grouped">묶인 만남 ${linkedCnt}</button></div>`;
       body=shown.length?shown.map((m,i)=>{
         const rc=m.rc, linked=isLinked(m);
-        if(m.type==='g'){
+        // 묶인 만남(실제 2건 이상)만 3단 구조 + Blue Bar. 2번째 줄 '대표매장 외 N곳 · N건 묶음'(1줄 ellipsis).
+        if(m.type==='g'&&rc.length>=2){
           const stores=[...new Set(rc.map(x=>x.store||'').filter(Boolean))];
           const rep=stores[0]||'(매장명 없음)';
           const storeLbl=stores.length>1?`${rep} 외 ${stores.length-1}곳`:rep;
-          const sub=`${storeLbl} · 영수증 ${rc.length}건`;
+          const sub=`${storeLbl} · ${rc.length}건 묶음`;
           return mmRow(_mtgCompactTitle(rc),_mtgSumTotal(rc),sub,_mtgPeopleUnion(rc).join(' · '),`data-u="${i}"${linked?' data-linked="1"':''}`);
         }
-        // independent: 반복적 '영수증 1건' 노이즈 생략(§4). 제목=날짜·매장, 보조=참석자만.
+        // 독립 만남 + meetingId가 있어도 실제 1건뿐인 만남: 동일하게 간결 표시(§2·§3).
+        // Bar 없음 · '영수증 1건'/'N건 묶음'/'meetingId' 노출 없음. 제목=날짜·매장, 보조=참석자만.
         return mmRow(fmtDateKor(rc[0].date)+' · '+(rc[0].store||'(매장명 없음)'),_mtgSumTotal(rc),'',receiptPeople(rc[0]).size?[...receiptPeople(rc[0])].join(' · '):'',`data-u="${i}"`);
       }).join(''):`<div class="org-empty">${mtgFilter==='grouped'?'묶인 만남이 없어요.':'만남이 없어요.'}</div>`;
       panel.innerHTML=`<div class="org-hd">${back_}<div class="org-title">만남 관리</div>${mmTabs(units.length,uCnt)}</div>${filter}<div class="org-list mm-list">${body}</div>`;
