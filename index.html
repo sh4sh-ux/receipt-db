@@ -688,7 +688,24 @@ svg{display:block;flex-shrink:0;}
   .psplit-bar{grid-area:bar;margin-top:2px;}
   .psplit-head-desc{font-size:11.5px;}
   .psplit-head-sum{font-size:11px;}
+  .psplit-row.grouprow .psplit-gmem{white-space:normal;}
 }
+/* v3.74 — 개인/그룹 보기 전환 토글(compact segmented, 새 색 없음) */
+.psplit-viewtoggle{display:flex;gap:2px;align-self:flex-end;margin:2px 4px 8px auto;padding:2px;background:var(--fill);border-radius:8px;width:fit-content;}
+.psplit-viewtoggle button{font:inherit;font-size:12px;font-weight:600;color:var(--label2);background:none;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;transition:background .12s,color .12s;}
+.psplit-viewtoggle button.on{background:var(--card);color:var(--blue);box-shadow:0 1px 2px rgba(0,0,0,.06);}
+@media(hover:hover){.psplit-viewtoggle button:not(.on):hover{color:var(--label);}}
+/* v3.74 — 그룹 row: 이름 + 작은 구성원 secondary(큰 badge/카드 없음, Flat 유지) */
+.psplit-row.grouprow .psplit-name{white-space:normal;display:flex;flex-direction:column;gap:1px;line-height:1.25;}
+.psplit-gname{font-size:13.5px;font-weight:600;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.psplit-gmem{font-size:11px;font-weight:400;color:var(--label3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* v3.74 — 관계 그룹 부담 상세(기존 mtg-sheet/pd-row grammar 재사용) */
+.gd-total{display:flex;align-items:baseline;justify-content:space-between;padding:10px 2px 4px;}
+.gd-total span{font-size:13px;color:var(--label2);}
+.gd-total b{font-size:20px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
+.gd-sectlabel{font-size:12px;font-weight:600;color:var(--label3);margin:12px 2px 4px;}
+.gd-mrow,.gd-corow{position:relative;padding-right:26px;}
+.gd-chev{position:absolute;right:6px;top:50%;transform:translateY(-50%);color:var(--label3);font-size:16px;line-height:1;}
 /* v3.35 — 분담 방식(한턱/제외) UI */
 .pp-split-block{display:flex;flex-direction:column;gap:8px;}
 .pp-treatbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--sep);border-radius:var(--rm);background:var(--fill2);cursor:pointer;transition:.12s;}
@@ -3069,6 +3086,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.74 — 사람별 분담 [개인|그룹] 보기 + 관계 그룹 부담 상세. ⚠️ 개인 부담 계산(_participantSplit/_receiptShare) 전부 불변 — 그 결과를 관계 그룹 단위로 aggregate해 다른 관점으로 보여줄 뿐.
+//   보기 모드 _splitViewMode(person 기본, 탭 세션 유지·영구 저장 안 함). 그룹 0개면 toggle 숨김·개인 보기와 완전 동일.
+//   _splitUnits(list): 개인 계산 결과를 unit으로 재구성 — 각 사람은 정확히 하나의 unit(첫 active 그룹 아니면 개인) → double count 0·SUM(개인)=SUM(그룹) 불변. dup=여러 active 그룹 동시소속(있으면 첫 그룹 귀속·조용한 중복합산 아님·보고).
+//   그룹 row(data-rgid) → _openRelationGroupSplitDetail(총부담=구성원 부담 합계, 공동한턱은 더하지 않음 §26) → 구성원 row → _openGroupMemberEvidence(근거 receipt=_receiptShare>0) → selectReceipt. 공동한턱 → _openGroupCoTreatDrillScoped(기간 scope, treatBy.members snapshot). 전부 _mtgSheetOpen/_openPersonDetailShell 재사용 = v3.72~73 overlay history 계약 준수.
+//   ⚠️ _receiptShare/_participantSplit/receiptPeople/normalizeName/treat/treatBy/splitExclude/_relGroupCoTreat·기간 filter·개인 보기(순위·금액·%·Top5·더보기·참석만)·Dutch Pay·Dropbox·Meeting 전부 불변. active:false 그룹 미사용. 변경 파일 index.html.
 // v3.73 — 남은 예외 1건: 기간 선택 시트(#lpBackdrop)를 v3.72 오버레이 history 공통 계층에 연결. 새 history 시스템 없음, 계산/기간 로직/UI 디자인 불변.
 //   문제: 기간 시트가 열린 채 iPhone Safari edge swipe-back 시 시트만 닫히지 않고 밑의 ledger route가 pop될 가능성(공통 계층 미연결).
 //   수정: _lpOpenPop에서 _ovPush로 history 엔트리 +1, 모든 UI 닫기(X·backdrop·ESC·트리거 토글·빠른선택·적용)는 _lpClosePop→_ovDismissById로
@@ -3391,7 +3413,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.73';
+const APP_VERSION='v3.74';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -4328,35 +4350,150 @@ function _attendedOnlyHtml(list){
   const chips=names.map(n=>`<span class="pp-ao-chip" data-ppname="${escapeHtml(n)}" role="button" tabindex="0" title="${escapeHtml(n)} 내역 보기">${escapeHtml(n)}</span>`).join('');
   return `<div class="pp-attend-only"><span class="pp-ao-label">참석만 · 분담 0원</span><div class="pp-ao-chips">${chips}</div></div>`;
 }
-// v3.69 — '사람별 분담' Clean Modern 렌더(표시만). 계산은 _participantSplit/_receiptShare/_attendedOnly 그대로 사용.
-//   rank | 이름 | progress | 금액 | 비율 5열 정렬, 기본 상위 5명 + '더보기 N명'/'접기'. 비율=amt/전체부담액(동적).
+// v3.74 — '사람별 분담' 보기 모드: 'person'(개인, 기본) | 'group'(관계 그룹 단위 재구성). 탭 세션 동안만 유지(영구 저장 안 함).
+let _splitViewMode='person';
+// 현재 렌더된 사람별 분담 list(기간 recs). toggle/그룹 drill-down이 재계산에 쓴다(별도 캐시 아님·진실원은 매 render 시 갱신).
+let _splitSectionList=[];
+// v3.74 — 개인 계산(_participantSplit) 결과를 관계 그룹 단위로 aggregate. 새 부담 계산 없음(기존 per-person amt 합산).
+//   각 사람은 정확히 하나의 unit에만 속한다(그룹 소속이면 첫 active 그룹, 아니면 개인) → double count 0·SUM 불변 보장.
+//   dup=여러 active 그룹에 동시 소속된 사람 목록(있으면 보고·첫 그룹에만 귀속, 조용한 중복 합산 아님 §10).
+function _splitUnits(list){
+  const parts=_participantSplit(list);              // [{name,amt}] amt>0 desc — 개인 계산 진실원
+  const total=parts.reduce((s,p)=>s+p.amt,0);
+  const groups=activeRelationGroups();              // active:false 제외(§11)
+  const dup=[];
+  const unitByGid=new Map();
+  const units=[];
+  for(const p of parts){
+    const gs=groups.filter(g=>g.members.includes(p.name));
+    if(gs.length>=2&&!dup.includes(p.name))dup.push(p.name);
+    if(gs.length>=1){
+      const g=gs[0];                                // 첫 active 그룹에만 귀속(결정적) → SUM 불변
+      let u=unitByGid.get(g.id);
+      if(!u){u={kind:'group',id:g.id,name:g.name||_suggestRgName(g.members,g.type),type:g.type,roster:g.members.slice(),amt:0,members:[]};unitByGid.set(g.id,u);units.push(u);}
+      u.amt+=p.amt; u.members.push({name:p.name,amt:p.amt});
+    }else{
+      units.push({kind:'person',name:p.name,amt:p.amt});
+    }
+  }
+  units.sort((a,b)=>b.amt-a.amt);                   // aggregate 후 순위 재계산(§14)
+  return {units,total,dup};
+}
+// v3.69/v3.74 — '사람별 분담' Clean Modern 렌더. 계산은 _participantSplit/_receiptShare/_attendedOnly 그대로.
+//   개인 보기(기본): rank|이름|progress|금액|비율. 그룹 보기: 관계 그룹은 한 unit으로 합치고 무소속은 개인 유지(§5).
+//   비율 분모=전체 부담액(동적)으로 두 보기 동일 → SUM(개인)=SUM(그룹) 불변(§15).
 function _personSplitSectionHtml(list){
+  _splitSectionList=list||[];
   const pparts=_participantSplit(list);
   if(!pparts.length)return '';
-  const total=pparts.reduce((s,p)=>s+p.amt,0);
-  const maxPP=pparts[0].amt; // 정렬 desc → 첫 항목이 최대(bar 폭 기준)
+  const hasGroups=activeRelationGroups().length>0;
+  if(!hasGroups)_splitViewMode='person';            // 그룹 0개면 toggle 숨기고 개인 보기(§33)
+  const grouped=_splitViewMode==='group';
+  const gu=grouped?_splitUnits(list):null;
+  const units=grouped?gu.units:pparts.map(p=>({kind:'person',name:p.name,amt:p.amt}));
+  const total=pparts.reduce((s,p)=>s+p.amt,0);       // 분모=개인 보기 전체 부담액(불변)
+  const maxU=units.length?units[0].amt:0;            // 정렬 desc → 첫 unit이 최대(bar 폭 기준)
   const sum=_splitSubtitle(list,pparts.length).replace(' 반영',''); // "18명 · 한턱 47 · 제외 6"
-  const TOP=5, restN=Math.max(0,pparts.length-TOP);
+  const TOP=5, restN=Math.max(0,units.length-TOP);
   const chev=`<svg class="section-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`;
-  const rows=pparts.map((p,i)=>{
-    const w=maxPP>0?Math.round(p.amt/maxPP*100):0;
-    const pct=total>0?(p.amt/total*100).toFixed(1):'0.0';
-    return `<div class="psplit-row${i===0?' top1':''}${i>=TOP?' psplit-extra':''}" data-ppname="${escapeHtml(p.name)}" role="button" tabindex="0" title="${escapeHtml(p.name)} 내역 보기">`
+  const rows=units.map((u,i)=>{
+    const w=maxU>0?Math.round(u.amt/maxU*100):0;
+    const pct=total>0?(u.amt/total*100).toFixed(1):'0.0';
+    const cls=`psplit-row${i===0?' top1':''}${i>=TOP?' psplit-extra':''}${u.kind==='group'?' grouprow':''}`;
+    if(u.kind==='group'){
+      const memTxt=u.roster.join(' · ');
+      const nameCell=`<span class="psplit-name"><span class="psplit-gname">${escapeHtml(u.name)}</span><span class="psplit-gmem">${escapeHtml(relTypeLabel(u.type))} · ${escapeHtml(memTxt)}</span></span>`;
+      return `<div class="${cls}" data-rgid="${escapeHtml(u.id)}" role="button" tabindex="0" title="${escapeHtml(u.name)} 상세">`
+        +`<span class="psplit-rank">${i+1}</span>${nameCell}`
+        +`<span class="psplit-bar"><span class="psplit-bar-fill" style="width:${w}%"></span></span>`
+        +`<span class="psplit-amt">${fmtMoney(u.amt)}원</span>`
+        +`<span class="psplit-pct">${pct}%</span>`
+      +`</div>`;
+    }
+    return `<div class="${cls}" data-ppname="${escapeHtml(u.name)}" role="button" tabindex="0" title="${escapeHtml(u.name)} 내역 보기">`
       +`<span class="psplit-rank">${i+1}</span>`
-      +`<span class="psplit-name">${escapeHtml(p.name)}</span>`
+      +`<span class="psplit-name">${escapeHtml(u.name)}</span>`
       +`<span class="psplit-bar"><span class="psplit-bar-fill" style="width:${w}%"></span></span>`
-      +`<span class="psplit-amt">${fmtMoney(p.amt)}원</span>`
+      +`<span class="psplit-amt">${fmtMoney(u.amt)}원</span>`
       +`<span class="psplit-pct">${pct}%</span>`
     +`</div>`;
   }).join('');
-  const more=restN>0?`<button type="button" class="psplit-more" data-rest="${restN}"><span class="psplit-more-lbl">더보기 ${restN}명</span><svg class="psplit-more-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button>`:'';
+  const unitWord=grouped?'개':'명'; // 개인 보기는 '명'(기존과 동일), 그룹 보기는 unit 단위라 '개'
+  const more=restN>0?`<button type="button" class="psplit-more" data-rest="${restN}" data-unit="${unitWord}"><span class="psplit-more-lbl">더보기 ${restN}${unitWord}</span><svg class="psplit-more-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button>`:'';
+  const toggle=hasGroups?`<div class="psplit-viewtoggle" role="group" aria-label="분담 보기 전환">`
+      +`<button type="button" data-splitview="person"${!grouped?' class="on"':''}>개인</button>`
+      +`<button type="button" data-splitview="group"${grouped?' class="on"':''}>그룹</button>`
+    +`</div>`:'';
+  // 그룹 보기에서는 그룹 member가 unit에 흡수되므로 '참석만·부담0' 칩에 중복 노출하지 않는다(개인 보기에서만 표시 §18).
+  const attend=grouped?'':_attendedOnlyHtml(list);
   return `<div class="budget-section psplit">`
     +`<button class="section-toggle psplit-head" data-toggle-key="month_participant" data-toggle-default="0">`
       +`<span class="psplit-head-l"><span class="section-toggle-lbl">사람별 분담</span><span class="psplit-head-desc">함께한 사람들의 부담 금액</span></span>`
       +`<span class="psplit-head-r"><span class="psplit-head-sum">${escapeHtml(sum)}</span>${chev}</span>`
     +`</button>`
-    +`<div class="section-body closed"><div class="psplit-list">${rows}</div>${more}${_attendedOnlyHtml(list)}</div>`
+    +`<div class="section-body closed">${toggle}<div class="psplit-list">${rows}</div>${more}${attend}</div>`
   +`</div>`;
+}
+// v3.74 — 관계 그룹 부담 상세 drill-down. 총 부담=구성원별 부담액 합계(공동 한턱은 더하지 않음 §22·§26).
+//   기간 list 기준(§29). member row → 근거 receipt(_openGroupMemberEvidence), 공동 한턱 → 기존 co-treat drill(period-scoped).
+function _openRelationGroupSplitDetail(groupId,list){
+  const g=relationGroupById(groupId); if(!g)return;
+  const {card,close}=_mtgSheetOpen();
+  const scoped=list||[];
+  const memRows=g.members.map(name=>{
+    const recs=scoped.filter(r=>_receiptShare(r,name)>0);
+    const amt=recs.reduce((s,r)=>s+_receiptShare(r,name),0);
+    return {name,amt,cnt:recs.length};
+  }).filter(x=>x.amt>0).sort((a,b)=>b.amt-a.amt);
+  const total=memRows.reduce((s,m)=>s+m.amt,0);
+  const listIds=new Set(scoped.map(r=>r.id));
+  const co=_relGroupCoTreat(g.id).filter(r=>listIds.has(r.id)); // 재사용(§25) + 기간 scope(§29)
+  const coSum=co.reduce((s,r)=>s+(r.total||0),0);
+  const memHtml=memRows.length?memRows.map(m=>`<button type="button" class="pd-row gd-mrow" data-mname="${escapeHtml(m.name)}">`
+      +`<span class="pd-row-store">${escapeHtml(m.name)}</span>`
+      +`<span class="pd-row-right em">${fmtMoney(m.amt)}원</span>`
+      +`<span class="pd-row-sub">${m.cnt}건</span>`
+      +`<span class="gd-chev" aria-hidden="true">›</span>`
+    +`</button>`).join(''):'<div class="pd-empty">이 기간에 부담 내역이 없어요.</div>';
+  const coHtml=co.length?`<div class="gd-sectlabel">공동 한턱</div><div class="pd-list"><button type="button" class="pd-row gd-corow" id="gdCo">`
+      +`<span class="pd-row-store">공동 한턱</span>`
+      +`<span class="pd-row-right">${fmtMoney(coSum)}원</span>`
+      +`<span class="pd-row-sub">${co.length}건 · 총 부담에는 포함되지 않음</span>`
+      +`<span class="gd-chev" aria-hidden="true">›</span>`
+    +`</button></div>`:'';
+  card.innerHTML=`
+    <div class="mtg-sheet-hd"><div class="mtg-sheet-title">${escapeHtml(g.name||_suggestRgName(g.members,g.type))}</div><button class="mtg-sheet-x" id="gdX" type="button" aria-label="닫기">×</button></div>
+    <div class="mtg-sheet-meta">${escapeHtml(relTypeLabel(g.type))} · ${escapeHtml(g.members.join(' · '))}</div>
+    <div class="mtg-sheet-divider"></div>
+    <div class="gd-total"><span>총 부담</span><b>${fmtMoney(total)}원</b></div>
+    <div class="gd-sectlabel">구성원별</div>
+    <div class="pd-list">${memHtml}</div>
+    ${coHtml}`;
+  card.querySelector('#gdX').onclick=close;
+  card.querySelectorAll('.gd-mrow[data-mname]').forEach(b=>b.onclick=()=>{const nm=b.dataset.mname;close(()=>_openGroupMemberEvidence(g,nm,scoped));});
+  const coBtn=card.querySelector('#gdCo');
+  if(coBtn)coBtn.onclick=()=>close(()=>_openGroupCoTreatDrillScoped(g.id,scoped));
+}
+// v3.74 — 그룹 구성원 부담 근거 receipt(기간 list). 기존 _receiptShare/_openPersonDetailShell 재사용, 새 계산 없음.
+function _openGroupMemberEvidence(g,name,list){
+  const nm=normalizeName(name);
+  const recs=[...(list||[]).filter(r=>_receiptShare(r,nm)>0)].sort((a,b)=>((b.date||'').localeCompare(a.date||''))||String(b.id).localeCompare(String(a.id)));
+  const tot=recs.reduce((s,r)=>s+_receiptShare(r,nm),0);
+  const payer=r=>normalizeName(r.paidBy)||'결제자 미상';
+  _openPersonDetailShell({title:escapeHtml(nm), subtitle:`${escapeHtml(g.name||_suggestRgName(g.members,g.type))} · ${fmtMoney(tot)}원 · ${recs.length}건`, emphasizeRight:true,
+    rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(_receiptShare(r,nm))}원`, subHtml:escapeHtml([fmtDateKor(r.date),`총 ${fmtMoney(r.total||0)}원`,payer(r)+' 결제'].filter(Boolean).join(' · '))})),
+    foot:()=>({label:'합계', amount:tot})});
+}
+// v3.74 — 그룹 공동 한턱 drill(기간 scope). _relGroupCoTreat 재사용(§25), receipt는 treatBy.members snapshot 표시(§28).
+function _openGroupCoTreatDrillScoped(groupId,list){
+  const g=relationGroupById(groupId); if(!g)return;
+  const listIds=new Set((list||[]).map(r=>r.id));
+  const recs=[..._relGroupCoTreat(groupId).filter(r=>listIds.has(r.id))].sort((a,b)=>((b.date||'').localeCompare(a.date||''))||String(b.id).localeCompare(String(a.id)));
+  const sumT=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
+  const flow=r=>{const subj=_treatSubjects(r),rec=_treatRecipients(r);return escapeHtml(subj.join(' · ')+' → '+(rec.length?rec.join(' · '):'참석자'));};
+  _openPersonDetailShell({title:`${escapeHtml(g.name||_suggestRgName(g.members,g.type))} 공동 한턱`, subtitle:`${fmtMoney(sumT(recs))}원 · ${recs.length}건`,
+    rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, subHtml:flow(r)})),
+    foot:()=>({label:'합계', amount:sumT(recs)})});
 }
 function dailySparkline(ym){
   const days=daysInMonth(ym);
@@ -8673,7 +8810,7 @@ async function renderDetail(){
       const box=m.parentElement.querySelector('.psplit-list');if(!box)return;
       const exp=box.classList.toggle('expanded');
       m.classList.toggle('up',exp);
-      const lbl=m.querySelector('.psplit-more-lbl');if(lbl)lbl.textContent=exp?'접기':('더보기 '+m.dataset.rest+'명');
+      const lbl=m.querySelector('.psplit-more-lbl');if(lbl)lbl.textContent=exp?'접기':('더보기 '+m.dataset.rest+(m.dataset.unit||'명'));
     });
     // v3.54 — 단둘이 Hero 금액 클릭 → 근거 영수증 drill-down(위임)
     body.addEventListener('click',e=>{const d=e.target.closest('[data-duo]');if(d&&body.contains(d)){e.preventDefault();_openDuoDrill(d.dataset.duo);}});
@@ -8682,6 +8819,27 @@ async function renderDetail(){
       const ed=e.target.closest('[data-rgedit]');if(ed&&body.contains(ed)){e.preventDefault();openRelationGroupEditor(ed.dataset.rgedit);return;}
       const nw=e.target.closest('[data-rgnew]');if(nw&&body.contains(nw)){e.preventDefault();openRelationGroupEditor(null,nw.dataset.rgnew);}
     });
+    // v3.74 — 사람별 분담 [개인|그룹] 보기 전환(위임). 모드만 바꿔 .psplit 섹션을 제자리에서 재렌더(collapse 상태 유지).
+    body.addEventListener('click',e=>{
+      const t=e.target.closest('.psplit-viewtoggle button[data-splitview]');
+      if(!t||!body.contains(t))return;
+      e.preventDefault();
+      const mode=t.dataset.splitview;
+      if(mode===_splitViewMode)return;
+      _splitViewMode=mode;
+      const sec=t.closest('.budget-section.psplit');if(!sec)return;
+      const tmp=document.createElement('div');tmp.innerHTML=_personSplitSectionHtml(_splitSectionList);
+      const fresh=tmp.firstElementChild;
+      if(fresh){sec.replaceWith(fresh);_bindSectionToggles(fresh);}
+    });
+    // v3.74 — 그룹 보기의 관계 그룹 row → 관계 그룹 부담 상세 drill-down(위임). 개인 row(data-ppname)는 기존 goLink 처리.
+    body.addEventListener('click',e=>{
+      const g=e.target.closest('.psplit-row[data-rgid]');
+      if(!g||!body.contains(g))return;
+      e.preventDefault();
+      _openRelationGroupSplitDetail(g.dataset.rgid,_splitSectionList);
+    });
+    body.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')){const g=e.target.closest&&e.target.closest('.psplit-row[data-rgid]');if(g&&body.contains(g)){e.preventDefault();_openRelationGroupSplitDetail(g.dataset.rgid,_splitSectionList);}}});
     // v3.38 — 지출 추이 칸을 탭하면 툴팁이 고정(pin)돼 손가락을 떼도 남는다. 다른 곳 탭하면 닫힘.
     body.addEventListener('click',e=>{
       const col=e.target.closest('.lp-col.has');
