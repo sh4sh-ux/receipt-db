@@ -95,6 +95,28 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.59` — **meetingId 생성 UX를 [선택] 혼재 방식 → '만남 정리 전용 작업 공간(Meeting Organizer)'으로 분리 — 계산·meetingId 계약 불변.**
+  문제: Person Dashboard에서 [선택]을 누르면 결제/참석 목록에 체크박스가 섞이고, 하단 액션 UI와 기존 콘텐츠가 겹쳐 보였다. →
+  **조회(Dashboard)와 만남 정리(Organizer)의 역할을 분리**한다. ① Dashboard의 **[선택] 버튼·체크박스·툴바·액션바 전부 제거**
+  (결제/참석 목록은 조회 전용, '만남' 태그는 표시 유지). ② 만남 영역 2 row를 **클릭 진입점**으로: **'확정된 만남 N회 ›'**(→ 만남
+  목록 시트 → row 클릭 시 기존 Meeting Detail 재사용) / **'미분류 영수증 N건 ›'**(→ Meeting Organizer). 미분류 row에 **진행률 sub**
+  `M/T건 정리됨`(=meetingId 있는 함께한 receipt / 함께한 전체, 동적; 0이면 '모든 영수증 정리 완료'). 각 0건이면 비클릭. ③ **Organizer**=
+  full-screen overlay(`.org-backdrop` z-index 300, backdrop로 Dashboard와 완전 분리 — 데스크탑 중앙 560px 패널·모바일 100% full-height):
+  **[고정 헤더(← 이름 · 만남 정리 · subtitle)]** + **[고정 필터(미분류만/전체, 기본 미분류만)]** + **[스크롤 날짜그룹 리스트]** +
+  **[고정 Action Bar(선택 N건 · 합계, ≥2건 활성)]**. 영수증은 **날짜별 grouping(최신순)** + 날짜 헤더 **'모두 선택'(토글)** + **row 전체
+  tap**(연한 selected surface + 원형 check indicator, checkbox 작은 원만 누르는 UX 아님). **다른 날짜도 함께 선택** 가능(날짜는 탐색 UI일
+  뿐 차단 없음), 자동 묶기 없음 — [만남으로 묶기]를 눌러야 저장. 참석자 표시, meetingId 있는 receipt는 '만남' badge(전체 필터). ④ **생성=
+  `_mtgCreateMeeting` 재사용**(v3.48 경고 2종[날짜차 3일↑·공통 참석자 없음]·v3.46 '이미 다른 만남' 확인·`dbPutMany` 원자적 저장·롤백
+  전부 불변). 성공 후 `renderSide`+`renderDetail`로 fresh 재계산 → Organizer 미분류 즉시 감소, Dashboard 확정 만남 +1·미분류 −N.
+  ⚠️ **Meeting은 사람에 종속되지 않는다** — `meetingId`는 receipt 전역 필드라, 같은 meetingId union에 포함된 **모든 사람 화면(다른 사람
+  포함)에서 즉시 미분류에서 빠진다**(사람별 캐시 없음, 어느 화면에서 만들었는지 무관, 재생성 불필요). Organizer는 '작업 대상 목록'만
+  현재 사람의 together로 좁힐 뿐 생성 결과는 전역. ⑤ '자주 함께한 멤버'는 Organizer에서 제외(Dashboard엔 유지). ⚠️ meetingId 의미/
+  생성 규칙·`dbPutMany`·receipt schema·`receiptPeople`/`normalizeName`/`_personRelation`/`_receiptShare`/`treat`/`splitExclude`/단둘이 한턱/
+  일반 분담/전체 결제/참석 부담액/Dutch Pay payload/Dropbox merge·sync·Meeting Detail(분리·union·Dutch Pay 범위) 전부 불변. 자동
+  meeting/시간판단/round/1차2차/meetingName/별도 Meeting DB/payee/treatBy 미도입. 검증(실데이터 151건 신유철 + 합성 크로스퍼슨):
+  [선택]·체크박스 제거, Organizer 진입·날짜 grouping(15그룹/41행)·모두선택/일부해제·2건 생성(동일 meetingId 전역 globalCount=2)·미분류
+  즉시 41→39·**김테스트에서 묶음 → 박테스트 화면 미분류 0·확정 만남 1**·확정 목록→Meeting Detail, Desktop 1280 + Mobile 390·430
+  full-height·backdrop 분리·Action Bar 고정·가로 overflow 없음·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.58` — **Person Dashboard 시각 위계 정제: 'B안 핵심 Hero + A안 절제 정보구조' — 계산·데이터·drill·정보량 전부 불변, UI만.**
   ① **Hero(B 밸런스)**: 양쪽 한턱(상대/나)을 **중앙정렬 + 위에 작은 person 아이콘 칩**(`.rel-duo-ic` — 상대=soft blue·
   나=Signature Blue, §22 새 색 없음). 중앙 이모지·감성문구·사진·gradient·ratio Bar 없음(§6·§29 — 금액이 주인공, 장식이

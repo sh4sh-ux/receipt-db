@@ -873,6 +873,51 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .rel-mlabel{font-size:var(--fs-caption);font-weight:var(--fw-med);color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px;margin:14px 2px 2px;}
 .rel-li{display:flex;align-items:center;gap:11px;padding:12px 2px;border-bottom:1px solid var(--sep);}
 .rel-metrics .rel-li:last-child{border-bottom:none;}
+/* v3.59 — 만남 영역 클릭 가능 row(확정된 만남/미분류) */
+.rel-li-tap{cursor:pointer;border-radius:var(--rs);}
+.rel-li-tap:hover{background:var(--fill);}
+.rel-li-go{font-size:16px;line-height:1;color:var(--label3);margin-left:6px;vertical-align:1px;font-weight:400;}
+.rel-li-tap:hover .rel-li-go{color:var(--blue-txt);}
+.rel-li-tap:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+/* v3.59 Meeting Organizer — 만남 정리 전용 full-screen overlay(Person Dashboard와 완전 분리) */
+.org-backdrop{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:24px;}
+.org-panel{background:var(--card);width:100%;max-width:560px;height:86vh;max-height:900px;border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,.28);}
+.org-hd{flex:none;padding:16px 18px 12px;border-bottom:1px solid var(--sep);}
+.org-back{display:inline-flex;align-items:center;gap:3px;border:none;background:none;padding:2px 0;margin:0 0 8px;font:inherit;font-size:13px;font-weight:600;color:var(--label2);cursor:pointer;}
+.org-back:hover{color:var(--blue-txt);}
+.org-back svg{color:var(--label3);}
+.org-title{font-size:var(--fs-page-title);font-weight:var(--fw-strong);color:var(--label);letter-spacing:var(--ls-page-title);}
+.org-sub{font-size:var(--fs-secondary);color:var(--label3);margin-top:2px;}
+.org-filter{flex:none;display:flex;gap:8px;padding:12px 18px;border-bottom:1px solid var(--sep);}
+.org-fchip{border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:999px;padding:6px 14px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;font-variant-numeric:tabular-nums;}
+.org-fchip.on{background:var(--blue-bg);border-color:transparent;color:var(--blue-txt);}
+.org-list{flex:1;overflow-y:auto;padding:6px 12px 8px;-webkit-overflow-scrolling:touch;}
+.org-dgroup{margin-top:8px;}
+.org-dhd{display:flex;align-items:center;gap:10px;padding:8px 6px 6px;border-bottom:1px solid var(--sep);position:sticky;top:0;background:var(--card);z-index:1;}
+.org-dhd-date{font-size:12.5px;font-weight:600;color:var(--label2);}
+.org-dhd-cnt{font-size:11.5px;color:var(--label3);font-variant-numeric:tabular-nums;}
+.org-dall{margin-left:auto;border:none;background:none;color:var(--blue-txt);font:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:2px 4px;}
+.org-row{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:none;background:none;font:inherit;padding:11px 6px;border-radius:var(--rm);cursor:pointer;border-bottom:1px solid var(--sep);}
+.org-row:last-child{border-bottom:none;}
+.org-row.sel{background:var(--blue-bg);}
+.org-check{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid var(--sep2);position:relative;box-sizing:border-box;}
+.org-row.sel .org-check{border-color:var(--blue);background:var(--blue);}
+.org-row.sel .org-check::after{content:'';position:absolute;left:6px;top:2.5px;width:4px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);}
+.org-row-main{flex:1;min-width:0;}
+.org-row-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+.org-row-store{font-size:13.5px;font-weight:600;color:var(--label);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.org-row-amt{flex:none;font-size:13.5px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
+.org-row-ppl{display:block;font-size:11.5px;color:var(--label3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.org-empty{padding:40px 12px;text-align:center;color:var(--label3);font-size:13px;}
+.org-actionbar{flex:none;display:flex;align-items:center;gap:12px;padding:12px 18px;border-top:1px solid var(--sep);background:var(--card);padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+.org-ab-info{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--label2);font-variant-numeric:tabular-nums;}
+.org-ab-btn{flex:none;border:none;border-radius:var(--rm);background:var(--blue);color:#fff;font:inherit;font-size:13.5px;font-weight:700;padding:11px 18px;cursor:pointer;}
+.org-ab-btn:disabled{background:var(--sep2);color:var(--label3);cursor:default;}
+@media(max-width:780px){
+  .org-backdrop{padding:0;}
+  .org-panel{max-width:none;width:100%;height:100%;max-height:none;border-radius:0;}
+  .org-hd{padding-top:calc(14px + env(safe-area-inset-top));}
+}
 .rel-li-ic{flex:none;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--fill2);color:var(--label3);}
 .rel-li-ic svg{width:16px;height:16px;}
 .rel-li-main{flex:1;min-width:0;}
@@ -2865,6 +2910,20 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.59 — meetingId 생성 UX를 [선택] 혼재 방식 → '만남 정리 전용 작업 공간(Meeting Organizer)'으로 분리. ⚠️ 계산·meetingId 계약 불변.
+//   문제: [선택] 누르면 결제/참석 목록에 체크박스 혼재, 하단 액션바와 기존 콘텐츠가 겹쳐 보임. → 조회(Dashboard)와 정리(Organizer) 역할 분리.
+//   ① Dashboard [선택] 버튼·체크박스·툴바·액션바 전부 제거(결제/참석 목록은 조회 전용). ② 만남 영역 2 row를 클릭 진입점으로:
+//   '확정된 만남 N회 ›'(→ 만남 목록 시트 → 기존 Meeting Detail 재사용) / '미분류 영수증 N건 ›'(→ Organizer). 진행률 sub 'M/T건 정리됨'
+//   (0이면 '모든 영수증 정리 완료'). 0건이면 비클릭. ③ Organizer=full-screen overlay(.org-backdrop, z-index 300, backdrop로 완전 분리
+//   — 데스크탑 중앙 560px 패널·모바일 100%): [고정 헤더(← 이름·만남 정리·subtitle)] + [고정 필터(미분류만/전체, 기본 미분류만)] +
+//   [스크롤 날짜그룹 리스트] + [고정 Action Bar(선택 N건·합계, ≥2건 활성)]. 날짜별 grouping(최신순) + 날짜 '모두 선택'(토글) +
+//   row 전체 tap(연한 selected surface + 원형 check). 다른 날짜도 함께 선택 가능(자동 묶기 없음). ④ 생성=_mtgCreateMeeting 재사용
+//   (경고 2종·이미 다른 만남 확인·dbPutMany 원자적 저장 전부 불변). 성공 후 renderSide+renderDetail로 fresh 재계산 → Organizer
+//   미분류 즉시 감소, Dashboard 확정 만남 +1. ⚠️ **Meeting은 사람에 종속 안 됨** — meetingId는 receipt 전역 필드라 union의 모든
+//   사람 화면(다른 사람 포함)에서 즉시 미분류 제외(사람별 캐시 없음, 재생성 불필요). 자주 함께한 멤버는 Organizer에서 제외(§33).
+//   자동 meeting/시간판단/round/payee/treatBy/Meeting DB 미도입(§37). 검증(실데이터 151+합성): [선택]/체크박스 제거, Organizer
+//   진입·날짜 모두선택/일부해제·2건 생성(전역 meetingId)·미분류 즉시 감소·크로스퍼슨(김테스트에서 묶음→박테스트 미분류 0)·
+//   확정 목록→Meeting Detail, Desktop/Mobile 390·430 full-height·overflow 없음·콘솔에러 0. 변경 파일 index.html만.
 // v3.58 — Person Dashboard 시각 위계 정제: 'B안 핵심 Hero + A안 절제 정보구조'. ⚠️ 계산·데이터·drill·정보량 전부 불변, UI만.
 //   ① Hero(B 밸런스): 양쪽 한턱(상대/나)을 중앙정렬 + 위에 작은 person 아이콘 칩(상대=soft blue·나=Signature Blue,
 //   §22 — purple/green/orange 새 색 없음). 중앙 이모지·감성문구·사진·gradient 없음(§29), ratio Bar 없음(§6). 금액이 주인공.
@@ -3051,7 +3110,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.58';
+const APP_VERSION='v3.59';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6163,16 +6222,17 @@ function _mtgDateLabel(recs){
   if(a===b)return fmtDateKor(a);
   return `${fmtDateKor(a)} ~ ${fmtDateKor(b)}`;
 }
-async function _mtgLink(){
-  const recs=_mtgSelectedRecs();
-  if(recs.length<2)return;
-  // 이미 다른 만남에 속한 영수증이 있으면 명시적 확인
+// v3.59 — 만남 생성 코어(확인창·경고·dbPutMany). Meeting Organizer가 호출. 성공 시 true 반환(새로고침은 호출자 책임).
+//   ⚠️ 생성 규칙·경고·원자적 저장·meetingId 계약 전부 v3.48과 동일(불변). 진입 UX만 [선택]→Organizer로 바뀜.
+async function _mtgCreateMeeting(recs){
+  if(!recs||recs.length<2)return false;
+  // 이미 다른 만남에 속한 영수증이 있으면 명시적 확인(v3.46 유지)
   const existing=recs.filter(r=>r.meetingId);
   if(existing.length){
     const ok=await _mtgConfirm({title:'이미 다른 만남에 포함됨',
       bodyHtml:`선택한 영수증 중 <b>${existing.length}건</b>이 이미 다른 만남에 포함돼 있어요.<br>새 만남으로 옮길까요?`,
       okLabel:'새 만남으로 이동'});
-    if(!ok)return;
+    if(!ok)return false;
   }
   const sum=recs.reduce((s,r)=>s+(r.total||0),0);
   const nm=_mtgPersonName?escapeHtml(_mtgPersonName)+'과의 만남':'하나의 만남';
@@ -6195,7 +6255,7 @@ async function _mtgLink(){
       </span>${_warnHtml}<br>
       <span style="color:var(--label3);font-size:11.5px;">원본 영수증은 그대로 유지돼요.</span>`,
     okLabel:'만남으로 묶기'});
-  if(!ok)return;
+  if(!ok)return false;
   const mid=_mtgNewId(recs);
   const now=nowISO();
   recs.forEach(r=>{r.meetingId=mid;r.updatedAt=now;});
@@ -6206,34 +6266,140 @@ async function _mtgLink(){
     // 롤백: 방금 바꾼 in-memory 필드를 되돌린다(부분 저장 방지 — 트랜잭션은 이미 롤백됨).
     receipts=await dbAll('receipts');
     toast('만남 묶기에 실패했어요. 다시 시도해 주세요.',{type:'error'});
-    return;
+    return false;
   }
-  _mtgExit();
-  renderSide();await renderDetail();
   dbxSyncUpload().catch(()=>{});
   toast(`${recs.length}개 영수증을 만남으로 묶었어요.`,{type:'success'});
+  return true;
 }
-async function _mtgUnlink(){
-  const recs=_mtgSelectedRecs().filter(r=>r.meetingId);
-  if(!recs.length)return;
-  const ok=await _mtgConfirm({title:'만남에서 분리',
-    bodyHtml:`선택한 <b>${recs.length}건</b>을 만남에서 분리할까요?<br>영수증 자체는 그대로 남고 만남 연결만 해제돼요.`,
-    okLabel:'분리'});
-  if(!ok)return;
-  const now=nowISO();
-  recs.forEach(r=>{delete r.meetingId;r.updatedAt=now;});
-  try{
-    await dbPutMany('receipts',recs);
-  }catch(e){
-    console.error('meeting unlink 실패',e);
-    receipts=await dbAll('receipts');
-    toast('분리에 실패했어요. 다시 시도해 주세요.',{type:'error'});
-    return;
+
+// ── v3.59 Meeting Organizer (만남 정리 전용 작업 공간) ──
+//   Person Dashboard와 완전 분리된 full-screen overlay. 미분류 영수증을 날짜별로 묶어 보여주고,
+//   row 전체 tap 선택 + 날짜 '모두 선택' + 고정 Action Bar로 [만남으로 묶기](_mtgCreateMeeting 재사용, ≥2건).
+//   ⚠️ Meeting은 사람에 종속되지 않는다 — 생성되는 meetingId는 receipt 전역 필드. 작업 대상 목록만 이 사람의 together로 좁힌다.
+//   묶은 뒤 renderDetail로 dashboard·_personMtgData를 fresh 재계산 → 이 사람은 물론 다른 사람 화면에서도 미분류에서 즉시 빠짐.
+let _personMtgData=null; // {name, together:[...], meetingIds:[...]} — renderPersonDashboardHtml에서 세팅(매 렌더 fresh)
+const _ORG_BACK_ICON='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
+function _orgClose(){document.querySelectorAll('body > .org-backdrop').forEach(n=>n.remove());}
+function _orgWeekday(iso){try{const dt=new Date(iso+'T00:00:00');return ['일','월','화','수','목','금','토'][dt.getDay()]+'요일';}catch(e){return '';}}
+function _mtgOrganizerOpen(){
+  if(!_personMtgData)return;
+  _mtgSel.clear();
+  _mtgPersonName=_personMtgData.name;
+  let filter='unclassified'; // 'unclassified' | 'all'
+  _orgClose();
+  document.querySelectorAll('body > .mtg-sheet-backdrop').forEach(n=>n.remove());
+  const bd=document.createElement('div');
+  bd.className='org-backdrop';
+  bd.innerHTML='<div class="org-panel" role="dialog" aria-modal="true" aria-label="만남 정리"></div>';
+  document.body.appendChild(bd);
+  const panel=bd.querySelector('.org-panel');
+  const esc=e=>{if(e.key==='Escape')close();};
+  document.addEventListener('keydown',esc);
+  function close(){document.removeEventListener('keydown',esc);_mtgSel.clear();bd.remove();}
+  const base=()=>((_personMtgData&&_personMtgData.together)||[]);
+  const shown=()=> filter==='all'? base() : base().filter(r=>!r.meetingId);
+  const groupByDate=recs=>{
+    const map=new Map();
+    for(const r of recs){const k=r.date||'';if(!map.has(k))map.set(k,[]);map.get(k).push(r);}
+    return [...map.entries()].sort((a,b)=>b[0].localeCompare(a[0])); // 최신순(§11)
+  };
+  function paint(){
+    const nm=(_personMtgData&&_personMtgData.name)||'';
+    const uCnt=base().filter(r=>!r.meetingId).length, aCnt=base().length;
+    const groups=groupByDate(shown());
+    const listHtml=groups.length?groups.map(([date,recs])=>{
+      const allSel=recs.length>0&&recs.every(r=>_mtgSel.has(r.id));
+      const rowsHtml=recs.map(r=>{
+        const on=_mtgSel.has(r.id);
+        const ppl=[...receiptPeople(r)].join(' · ');
+        const badge=r.meetingId?'<span class="mtg-tag">만남</span>':'';
+        return `<button type="button" class="org-row${on?' sel':''}" data-id="${escapeHtml(r.id)}" aria-pressed="${on}">
+          <span class="org-check" aria-hidden="true"></span>
+          <span class="org-row-main">
+            <span class="org-row-top"><span class="org-row-store">${escapeHtml(r.store||'(매장명 없음)')}${badge}</span><span class="org-row-amt">${fmtMoney(r.total||0)}원</span></span>
+            <span class="org-row-ppl">${escapeHtml(ppl)}</span>
+          </span>
+        </button>`;
+      }).join('');
+      return `<div class="org-dgroup">
+        <div class="org-dhd"><span class="org-dhd-date">${date?escapeHtml(fmtDateKor(date)+' '+_orgWeekday(date)):'날짜 없음'}</span><span class="org-dhd-cnt">${recs.length}건</span><button type="button" class="org-dall" data-date="${escapeHtml(date)}">${allSel?'전체 해제':'모두 선택'}</button></div>
+        ${rowsHtml}
+      </div>`;
+    }).join('')
+    :`<div class="org-empty">${filter==='unclassified'?'정리할 미분류 영수증이 없어요.':'표시할 영수증이 없어요.'}</div>`;
+    panel.innerHTML=`
+      <div class="org-hd">
+        <button type="button" class="org-back" id="orgBack" aria-label="닫기">${_ORG_BACK_ICON}<span>${escapeHtml(nm)}</span></button>
+        <div class="org-title">만남 정리</div>
+        <div class="org-sub">${escapeHtml(nm)} · 미분류 영수증 ${uCnt}건</div>
+      </div>
+      <div class="org-filter">
+        <button type="button" class="org-fchip${filter==='unclassified'?' on':''}" data-f="unclassified">미분류만 ${uCnt}</button>
+        <button type="button" class="org-fchip${filter==='all'?' on':''}" data-f="all">전체 ${aCnt}</button>
+      </div>
+      <div class="org-list">${listHtml}</div>
+      <div class="org-actionbar">
+        <div class="org-ab-info" id="orgAbInfo"></div>
+        <button type="button" class="org-ab-btn" id="orgAbLink" disabled>만남으로 묶기</button>
+      </div>`;
+    panel.querySelector('#orgBack').onclick=close;
+    panel.querySelectorAll('.org-fchip').forEach(b=>b.onclick=()=>{filter=b.dataset.f;paint();});
+    panel.querySelectorAll('.org-row[data-id]').forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(_mtgSel.has(id))_mtgSel.delete(id);else _mtgSel.add(id);paint();});
+    panel.querySelectorAll('.org-dall[data-date]').forEach(b=>b.onclick=()=>{
+      const dt=b.dataset.date;const recs=shown().filter(r=>(r.date||'')===dt);
+      const allSel=recs.length>0&&recs.every(r=>_mtgSel.has(r.id));
+      recs.forEach(r=>{if(allSel)_mtgSel.delete(r.id);else _mtgSel.add(r.id);});paint();});
+    updateBar();
   }
-  _mtgExit();
-  renderSide();await renderDetail();
-  dbxSyncUpload().catch(()=>{});
-  toast('만남에서 분리했어요.',{type:'success'});
+  function updateBar(){
+    const recs=_mtgSelectedRecs();
+    const info=panel.querySelector('#orgAbInfo'), btn=panel.querySelector('#orgAbLink');
+    if(!info||!btn)return;
+    const sm=recs.reduce((s,r)=>s+(r.total||0),0);
+    info.textContent=!recs.length?'선택한 영수증 없음':recs.length===1?'1건 선택 · 2건 이상 필요':`${recs.length}건 · ${fmtMoney(sm)}원`;
+    btn.disabled=recs.length<2;
+  }
+  bd.addEventListener('click',e=>{if(e.target===bd)close();}); // 데스크탑 backdrop 클릭 닫기(모바일은 패널이 꽉 참)
+  // Action Bar 버튼은 paint마다 재생성되므로 위임 바인딩(패널 1회).
+  bd.addEventListener('click',async e=>{
+    if(!e.target.closest('#orgAbLink'))return;
+    const recs=_mtgSelectedRecs();
+    if(recs.length<2)return;
+    const ok=await _mtgCreateMeeting(recs);
+    // 성공/실패 모두 fresh 데이터로 재계산(성공: meetingId 반영 / 실패: 롤백된 receipts로 복원). Organizer는 닫지 않는다.
+    _mtgSel.clear();
+    renderSide();await renderDetail();
+    if(!document.body.contains(bd))return; // 방어(닫혔으면 중단)
+    paint();
+    if(ok&&(!_personMtgData||base().filter(r=>!r.meetingId).length===0)&&filter==='unclassified'){
+      // 미분류가 0이 되면 안내(빈 리스트 메시지가 이미 보임) — 별도 처리 없음.
+    }
+  });
+  paint();
+}
+// v3.59 — 확정된 만남 목록(이 사람 union에 포함된 meetingId). row 클릭 → 기존 Meeting Detail 재사용.
+function _mtgConfirmedListOpen(){
+  if(!_personMtgData)return;
+  const ids=_personMtgData.meetingIds||[];
+  const meetings=ids.map(mid=>_mtgSortByDate(_mtgReceiptsById(mid))).filter(rc=>rc.length)
+    .sort((a,b)=>(b[b.length-1].date||'').localeCompare(a[a.length-1].date||'')); // 최신순
+  const {card,close}=_mtgSheetOpen();
+  const rows=meetings.length?meetings.map(rc=>{
+    const stores=rc.map(x=>x.store||'').filter(Boolean).slice(0,3).join(' · ');
+    return `<button type="button" class="mtg-drow" data-mid="${escapeHtml(rc[0].meetingId)}">
+      <span class="mtg-drow-store">${escapeHtml(_mtgCompactTitle(rc))}</span>
+      <span class="mtg-drow-amt">${fmtMoney(_mtgSumTotal(rc))}원</span>
+      <span class="mtg-drow-date">${rc.length}건 · ${escapeHtml(stores)}</span>
+    </button>`;}).join('')
+    :'<div class="empty-state" style="padding:22px 8px;">확정된 만남이 없어요.</div>';
+  card.innerHTML=`
+    <div class="mtg-sheet-hd"><div class="mtg-sheet-title">확정된 만남 ${meetings.length}회</div><button class="mtg-sheet-x" id="mtgClX" type="button" aria-label="닫기">×</button></div>
+    <div class="mtg-sheet-meta">${escapeHtml(_personMtgData.name)}과의 만남 · meetingId 기준</div>
+    <div class="mtg-sheet-divider"></div>
+    <div class="mtg-drows">${rows}</div>`;
+  card.querySelector('#mtgClX').onclick=close;
+  card.querySelectorAll('.mtg-drow[data-mid]').forEach(b=>b.onclick=()=>{const mid=b.dataset.mid;const rc=_mtgReceiptsById(mid);close();if(rc.length)_mtgOpenMeetingDetail(rc[0]);});
 }
 
 // ── v3.47 만남 연결 UX (영수증 상세 ↔ meetingId ↔ 더치페이) ──
@@ -6548,11 +6714,19 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     const treatRow=myTreat.length?liOne('gift','전체 내가 한턱',treatSub,sum(myTreat),myTreat.length):'';
     const shareRow=liOne('group','참석 부담액',`다른 사람이 결제한 자리에서 ${nm}의 몫`,shareTotal,partRecs.length);
     // v3.53 — 만남(관계) 지표: meetingId 기준(금액 분석과 분리, §17·§19). 확정된 만남 = 단둘이 + 여럿이(불변식). 큰 공간 안 씀.
+    // v3.59 — 두 row를 클릭 가능하게: 확정된 만남 → 만남 목록, 미분류 → Meeting Organizer(전용 작업 공간). 진행률 sub 추가.
+    //   ⚠️ Meeting은 사람에 종속되지 않는다 — meetingId는 receipt 전역 필드, union의 모든 사람에게 자동 반영(여기 수치도 그 계산 그대로).
     const _ms=_personMeetingStats(R);
+    const _mtgTotal=together.length;                       // 함께한 전체 receipt(기간 스코프)
+    const _mtgOrganized=Math.max(0,_mtgTotal-_ms.unclassified);
+    const _progSub=_mtgTotal===0?'':(_ms.unclassified===0?'모든 영수증 정리 완료':`${_mtgOrganized}/${_mtgTotal}건 정리됨`);
+    const _confTap=_ms.confirmed>0, _orgTap=_ms.unclassified>0;
+    // Organizer/만남 목록이 읽을 데이터(작업 대상은 이 사람의 together로 좁히지만, 생성되는 meetingId는 전역).
+    _personMtgData={name:tgt, together:together.slice(), meetingIds:(_ms.meetingIds||[]).slice()};
     const mtgSummary=`<div class="rel-mlabel">만남 · meetingId 기준</div>
       <div class="rel-metrics">
-        <div class="rel-li"><div class="rel-li-ic">${_relIco('cal')}</div><div class="rel-li-main"><div class="rel-li-title">확정된 만남</div><div class="rel-li-sub">단둘이 ${_ms.duo}회 · 여럿이 ${_ms.group}회</div></div><div class="rel-li-val"><span class="v${_ms.confirmed?'':' zero'}">${_ms.confirmed}회</span></div></div>
-        <div class="rel-li"><div class="rel-li-ic">${_relIco('doc')}</div><div class="rel-li-main"><div class="rel-li-title">미분류 영수증</div></div><div class="rel-li-val"><span class="v${_ms.unclassified?'':' zero'}">${_ms.unclassified}건</span></div></div>
+        <div class="rel-li${_confTap?' rel-li-tap':''}"${_confTap?' id="relMtgConfirmed" role="button" tabindex="0"':''}><div class="rel-li-ic">${_relIco('cal')}</div><div class="rel-li-main"><div class="rel-li-title">확정된 만남</div><div class="rel-li-sub">단둘이 ${_ms.duo}회 · 여럿이 ${_ms.group}회</div></div><div class="rel-li-val"><span class="v${_ms.confirmed?'':' zero'}">${_ms.confirmed}회</span>${_confTap?'<span class="rel-li-go" aria-hidden="true">›</span>':''}</div></div>
+        <div class="rel-li${_orgTap?' rel-li-tap':''}"${_orgTap?' id="relMtgOrganize" role="button" tabindex="0"':''}><div class="rel-li-ic">${_relIco('doc')}</div><div class="rel-li-main"><div class="rel-li-title">미분류 영수증</div>${_progSub?`<div class="rel-li-sub">${_progSub}</div>`:''}</div><div class="rel-li-val"><span class="v${_ms.unclassified?'':' zero'}">${_ms.unclassified}건</span>${_orgTap?'<span class="rel-li-go" aria-hidden="true">›</span>':''}</div></div>
       </div>`;
     heroHtml=hero+`<div class="rel-metrics">${grpRow}${allRow}${noMeNote}${treatRow}${shareRow}</div>`+mtgSummary;
   }else{
@@ -6563,12 +6737,12 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
   }
 
   // 결제 내역 섹션
-  // v3.46 — 만남 선택 모드 셀/태그 헬퍼(결제·참석 내역 공용). 표시 전용, 계산 불변.
+  // v3.59 — [선택] 체크박스 혼재 UX 제거. 만남 정리는 전용 Organizer(만남 영역 '미분류 영수증' 클릭)로 분리.
+  //   결제/참석 목록은 조회 전용(체크박스 없음). '만남' 태그는 표시 전용으로 유지.
   _mtgPersonName=tgt;
-  const _sm=_mtgSelectMode;
-  const chkHead=_sm?'<th class="mtg-chk" style="width:34px;"></th>':'';
-  const chkCell=r=>_sm?`<td class="mtg-chk"><span class="mtg-box${_mtgSel.has(r.id)?' on':''}" role="checkbox" aria-checked="${_mtgSel.has(r.id)}"></span></td>`:'';
-  const rowCls=r=>'srch-row'+(_sm&&_mtgSel.has(r.id)?' sel':'');
+  const chkHead='';
+  const chkCell=r=>'';
+  const rowCls=r=>'srch-row';
   const mtgTag=r=>r.meetingId?' <span class="mtg-tag">만남</span>':'';
   let payerSection='';
   if(payerRecs.length>0){
@@ -6626,24 +6800,8 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
 
   // v3.56 — '자주 함께한 멤버'(참석 receipt 동행자). 참석 기록이 있을 때만, 참석 내역 위에 표시(데이터 보존).
   const coSection=partRecs.length>0?_coMembersHtml(partRecs,name):'';
-  // v3.46 — 만남 묶기 UI(선택 툴바 + 액션바). 결제·참석 내역에 행이 있을 때만.
-  const hasRows=(payerRecs.length+partRecs.length)>0;
-  let mtgToolbar='',mtgActionBar='';
-  if(hasRows){
-    mtgToolbar=`<div class="mtg-toolbar">
-      <button type="button" class="mtg-select-btn${_sm?' on':''}" id="mtgSelectBtn">${_sm?'선택 취소':'선택'}</button>
-    </div>`;
-    if(_sm){
-      mtgActionBar=`<div class="mtg-actionbar" id="mtgActionBar">
-        <div class="mtg-ab-info"><span id="mtgAbCount">0건 선택</span><span class="mtg-ab-sum" id="mtgAbSum"></span></div>
-        <div class="mtg-ab-btns">
-          <button type="button" class="mtg-ab-unlink" id="mtgAbUnlink" style="display:none;">만남에서 분리</button>
-          <button type="button" class="mtg-ab-link" id="mtgAbLink" disabled>만남으로 묶기</button>
-        </div>
-      </div>`;
-    }
-  }
-  return heroHtml+mtgToolbar+payerSection+coSection+partSection+mtgActionBar;
+  // v3.59 — 만남 묶기 진입은 만남 영역 '미분류 영수증'(Organizer)으로 이동. Dashboard에는 [선택] 툴바/액션바 없음.
+  return heroHtml+payerSection+coSection+partSection;
 }
 
 // ── v1.34 날짜 검색 요약 패널 ───────────────────────────────────
@@ -7601,7 +7759,6 @@ function _bindReceiptRows(root){
     if(row.dataset.bound)return;
     row.dataset.bound='true';
     const openRow=()=>{
-      if(_mtgSelectMode&&row.dataset.id){_mtgToggleRow(row);return;} // v3.46 — 만남 선택 모드: 열지 않고 선택 토글
       _returnToStats=!!row.closest('#statsCategoryPanel');selectReceipt(row.dataset.id);
     };
     row.addEventListener('click',openRow);
@@ -7745,18 +7902,11 @@ async function renderDetail(){
         _bindSectionToggles(body);
       }
       _bindReceiptRows(body);
-      // v3.46 — 만남 묶기 선택 모드 버튼(통합 대시보드에만 존재). 있을 때만 바인딩.
-      const _mtgBtn=body.querySelector('#mtgSelectBtn');
-      if(_mtgBtn)_mtgBtn.addEventListener('click',()=>{
-        _mtgSelectMode=!_mtgSelectMode;
-        if(!_mtgSelectMode)_mtgSel.clear();
-        renderDetail();
-      });
-      const _mtgLinkBtn=body.querySelector('#mtgAbLink');
-      if(_mtgLinkBtn)_mtgLinkBtn.addEventListener('click',_mtgLink);
-      const _mtgUnlinkBtn=body.querySelector('#mtgAbUnlink');
-      if(_mtgUnlinkBtn)_mtgUnlinkBtn.addEventListener('click',_mtgUnlink);
-      if(_mtgSelectMode)_mtgUpdateBar();
+      // v3.59 — 만남 영역 진입: 확정된 만남 → 만남 목록 시트 / 미분류 영수증 → Meeting Organizer(전용 작업 공간).
+      const _confBtn=body.querySelector('#relMtgConfirmed');
+      if(_confBtn){const go=()=>_mtgConfirmedListOpen();_confBtn.addEventListener('click',go);_confBtn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});}
+      const _orgBtn=body.querySelector('#relMtgOrganize');
+      if(_orgBtn){const go=()=>_mtgOrganizerOpen();_orgBtn.addEventListener('click',go);_orgBtn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});}
       // 인물 패널 시간 필터 클릭 — 본문(날짜검색 패널) + 헤더 슬롯(통합 대시보드 기간 드롭다운) 모두 바인딩
       [body, periodSlot].forEach(scope=>{ if(!scope)return; scope.querySelectorAll('.pf-pill').forEach(btn=>{
         btn.addEventListener('click',()=>{
