@@ -873,12 +873,26 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .rel-mlabel{font-size:var(--fs-caption);font-weight:var(--fw-med);color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px;margin:14px 2px 2px;}
 .rel-li{display:flex;align-items:center;gap:11px;padding:12px 2px;border-bottom:1px solid var(--sep);}
 .rel-metrics .rel-li:last-child{border-bottom:none;}
-/* v3.59 — 만남 영역 클릭 가능 row(확정된 만남/미분류) */
-.rel-li-tap{cursor:pointer;border-radius:var(--rs);}
+/* v3.62 — 클릭 가능 Flat Row: ⚠️ border-radius 금지(둥근 모서리가 하단 divider를 곡선으로 보이게 함). 직선 divider 유지.
+   hover는 full-width 사각 tint만. chevron은 행 맨 오른쪽 trailing(.rel-li-chev, 위치/크기/색 통일 §57·§58). */
+.rel-li-tap{cursor:pointer;position:relative;padding-right:20px;}
 .rel-li-tap:hover{background:var(--fill);}
-.rel-li-go{font-size:16px;line-height:1;color:var(--label3);margin-left:6px;vertical-align:1px;font-weight:400;}
-.rel-li-tap:hover .rel-li-go{color:var(--blue-txt);}
-.rel-li-tap:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+.rel-li-chev{position:absolute;right:2px;top:50%;transform:translateY(-50%);font-size:16px;line-height:1;color:var(--label3);font-weight:400;}
+.rel-li-tap:hover .rel-li-chev{color:var(--blue-txt);}
+.rel-li-tap:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
+/* v3.62 — 공통 Person Detail(요약→근거→영수증) Drill-down surface. Flat row·straight divider·radius 0(§55). _mtgSheetOpen 재사용. */
+.pd-filter{display:flex;gap:8px;margin:2px 0 10px;flex-wrap:wrap;}
+.pd-fchip{border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:999px;padding:5px 13px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;font-variant-numeric:tabular-nums;}
+.pd-fchip.on{background:var(--blue-bg);border-color:transparent;color:var(--blue-txt);}
+.pd-list{display:flex;flex-direction:column;}
+.pd-row{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:3px 12px;width:100%;padding:11px 4px;border:none;border-bottom:1px solid var(--sep);background:none;border-radius:0;cursor:pointer;font-family:inherit;text-align:left;}
+.pd-row:last-child{border-bottom:none;}
+.pd-row:hover{background:var(--fill);}
+.pd-row-store{grid-column:1;grid-row:1;font-size:13.5px;font-weight:600;color:var(--label);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pd-row-right{grid-column:2;grid-row:1;font-size:13.5px;font-weight:700;color:var(--label);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.pd-row-right.em{color:var(--blue-txt);font-size:15px;}
+.pd-row-sub{grid-column:1 / -1;grid-row:2;font-size:11.5px;color:var(--label3);}
+.pd-empty{padding:30px 8px;text-align:center;color:var(--label3);font-size:13px;}
 /* v3.59 Meeting Organizer — 만남 정리 전용 full-screen overlay(Person Dashboard와 완전 분리) */
 .org-backdrop{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:24px;}
 .org-panel{background:var(--card);width:100%;max-width:560px;height:86vh;max-height:900px;border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,.28);}
@@ -903,7 +917,7 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .org-dmeta.diff{color:var(--label2);}
 /* v3.60 — '여러 건 날짜만' 토글 칩(기존 .org-fchip 재사용, on=blue-bg) */
 .org-fchip--multi{margin-left:auto;}
-.org-row{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:none;background:none;font:inherit;padding:11px 6px;border-radius:var(--rm);cursor:pointer;border-bottom:1px solid var(--sep);}
+.org-row{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:none;background:none;font:inherit;padding:11px 6px;border-radius:0;cursor:pointer;border-bottom:1px solid var(--sep);}
 .org-row:last-child{border-bottom:none;}
 .org-row.sel{background:var(--blue-bg);}
 .org-check{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid var(--sep2);position:relative;box-sizing:border-box;}
@@ -2916,6 +2930,22 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.62 — ① 구분선 직선 규칙 완성 + ② 공통 Person Detail(요약→근거→영수증) Drill-down. ⚠️ 계산·데이터 전부 불변, UI/네비만.
+//   ① Divider 직선화: ⚠️ 근본 원인 = 클릭 가능 Flat Row(.rel-li-tap·.org-row)에 border-radius가 있어 하단 border(divider)가
+//   곡선으로 보였다. radius 제거(rel-li-tap radius 삭제·org-row radius 0) → 완전 직선 divider. hover는 full-width 사각 tint만.
+//   Foundation 불변식: "Dividers are always straight. Flat rows never use rounded corners. Rounded corners are reserved for
+//   containers/controls, not separators." (Card·Modal·Sheet·Input·Select·Button·chip·badge·selection circle radius는 유지.)
+//   ② 공통 Person Detail: chevron=navigation 통일(클릭 가능 row에만 trailing chevron, 절대 위치 우측중앙 §57·§58). 4개 요약 row
+//   (여럿이 함께할 때·전체 결제·전체 내가 한턱·참석 부담액)에 Drill-down 연결. 공통 shell `_openPersonDetailShell`(_mtgSheetOpen
+//   재사용, flat row·straight divider·radius 0) + `_openPersonDetail(type)`. **진실원=_personDetailData**(Dashboard 요약을 만든 그
+//   컬렉션 그대로: grpAll=together(3명+)·tgtWith/myWith·myTreat/Duo/Grp·partRecs) → Summary=Evidence 보장, 새 계산·유사 filter
+//   복제 없음(§35·§71). 전체 결제[전체/신유철/나]·전체 내가 한턱[전체/단둘이/여럿이] filter, 참석 부담액 row 우측=_receiptShare
+//   (강조). row 클릭 → 기존 selectReceipt. 금액은 receipt.total 또는 _receiptShare만(새 귀속 없음 §10·§24). 기존 단둘이 Hero
+//   drill(상대/내 한턱·일반 분담)·Meeting 목록·Organizer는 그대로(§67~§69, 무리한 통합 안 함). 0건 row는 chevron 숨김·비클릭(§59).
+//   ⚠️ receiptPeople/normalizeName/_receiptShare/_participantSplit/_personRelation/treat/splitExclude/단둘이 한턱/일반 분담/여럿이/
+//   전체 결제/전체 내가 한턱/참석 부담액/meetingId/Meeting count(v3.61)/Organizer/Meeting Detail/사람 비종속/Dutch Pay/Dropbox/
+//   기간 필터 전부 불변. 검증(실데이터 신유철·1건/0값 사람 + 합성): Summary=Detail 합계·건수 불변식 PASS, chevron 전부 동작,
+//   divider 직선, Desktop/Mobile 390·430 overflow 없음·콘솔에러 0. 변경 파일 index.html만.
 // v3.61 — Meeting 정의 개념 수정: **receipt 1건(meetingId 없음)도 독립 Meeting 1회**. ⚠️ 금액 계산 전부 불변, 만남 count 의미·용어만.
 //   meetingId는 'Meeting 존재 여부'가 아니라 '여러 receipt를 같은 Meeting으로 연결하는 ID'. Meeting count = unique meetingId 수(grouped)
 //   + meetingId 없는 receipt 수(independent). 불변식: count = grouped + independent = 단둘이 + 여럿이(§45). ⚠️ §56 순서: 전체 receipt →
@@ -3141,7 +3171,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.61';
+const APP_VERSION='v3.62';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6457,6 +6487,72 @@ function _mtgConfirmedListOpen(){
   card.querySelectorAll('.mtg-drow[data-i]').forEach(b=>b.onclick=()=>{const m=meetings[+b.dataset.i];close();if(m.type==='g')_mtgOpenMeetingDetail(m.rc[0]);else selectReceipt(m.rc[0].id);});
 }
 
+// ── v3.62 공통 Person Detail (요약 → 근거 → 영수증) ──
+//   4개 요약 row(여럿이/전체 결제/전체 내가 한턱/참석 부담액)의 Drill-down을 하나의 shell로. _mtgSheetOpen 재사용, flat row·straight divider.
+//   ⚠️ 진실원 = _personDetailData(Dashboard 요약을 만든 그 컬렉션 그대로). 새 계산·유사 filter 복제 없음 → Summary=Evidence 보장(§35·§71).
+//   row 클릭 → 기존 selectReceipt(§27). 금액은 receipt.total 또는 _receiptShare(기존 함수)만 사용, 새 귀속 계산 없음(§10·§24).
+function _openPersonDetailShell(cfg){
+  const {card,close}=_mtgSheetOpen();
+  let fkey=cfg.defaultFilter||(cfg.filters&&cfg.filters[0]&&cfg.filters[0].key)||'all';
+  const paint=()=>{
+    const rows=cfg.rows(fkey)||[];
+    const foot=cfg.foot?cfg.foot(fkey):null;
+    const filterHtml=(cfg.filters&&cfg.filters.length>1)?`<div class="pd-filter">${cfg.filters.map(f=>`<button type="button" class="pd-fchip${f.key===fkey?' on':''}" data-k="${escapeHtml(f.key)}">${escapeHtml(f.label)}</button>`).join('')}</div>`:'';
+    const listHtml=rows.length?rows.map(row=>`<button type="button" class="pd-row" data-open="${escapeHtml(row.r.id)}">
+        <span class="pd-row-store">${escapeHtml(row.r.store||'(매장명 없음)')}</span>
+        <span class="pd-row-right${cfg.emphasizeRight?' em':''}">${row.rightHtml}</span>
+        ${row.subHtml?`<span class="pd-row-sub">${row.subHtml}</span>`:''}
+      </button>`).join('')
+      :'<div class="pd-empty">해당 내역이 없어요.</div>';
+    card.innerHTML=`
+      <div class="mtg-sheet-hd"><div class="mtg-sheet-title">${escapeHtml(cfg.title)}</div><button class="mtg-sheet-x" id="pdX" type="button" aria-label="닫기">×</button></div>
+      ${cfg.subtitle?`<div class="mtg-sheet-meta">${escapeHtml(cfg.subtitle)}</div>`:''}
+      ${filterHtml}
+      <div class="mtg-sheet-divider"></div>
+      <div class="pd-list">${listHtml}</div>
+      ${(foot&&rows.length)?`<div class="duo-drill-foot"><span>${escapeHtml(foot.label)}</span><b>${fmtMoney(foot.amount)}원</b></div>`:''}`;
+    card.querySelector('#pdX').onclick=close;
+    card.querySelectorAll('.pd-fchip[data-k]').forEach(b=>b.onclick=()=>{fkey=b.dataset.k;paint();});
+    card.querySelectorAll('.pd-row[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;close();selectReceipt(id);});
+  };
+  paint();
+}
+function _openPersonDetail(type){
+  const d=_personDetailData; if(!d)return;
+  const nm=d.name, share=r=>_receiptShare(r,nm);
+  const sumT=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
+  const sortD=arr=>[...arr].sort((a,b)=>((b.date||'').localeCompare(a.date||''))||String(b.id).localeCompare(String(a.id)));
+  const dedup=arr=>{const seen=new Set();return arr.filter(r=>seen.has(r.id)?false:(seen.add(r.id),true));};
+  const sub=(r,extra)=>[fmtDateKor(r.date),...extra].filter(Boolean).join(' · ');
+  const payer=r=>normalizeName(r.paidBy)||'결제자 미상';
+  if(type==='grp'){
+    const recs=sortD(d.grpAll);
+    _openPersonDetailShell({title:'여럿이 함께할 때', subtitle:`${recs.length}건 · 3명 이상 함께한 자리`,
+      rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, subHtml:escapeHtml(sub(r,[`${receiptPeople(r).size}명`, payer(r)+' 결제', `부담 ${fmtMoney(share(r))}원`]))})),
+      foot:()=>({label:'총액 합계', amount:sumT(recs)})});
+  }else if(type==='pay'){
+    const tgtW=sortD(d.tgtWith), myW=sortD(d.myWith), all=sortD(dedup([...d.tgtWith,...d.myWith]));
+    const pick=k=>k==='tgt'?tgtW:k==='me'?myW:all;
+    _openPersonDetailShell({title:'전체 결제', subtitle:`${escapeHtml(nm)}이 결제 ${fmtMoney(sumT(d.tgtWith))}원·${d.tgtWith.length}건 · 내가 결제 ${fmtMoney(sumT(d.myWith))}원·${d.myWith.length}건`,
+      filters:[{key:'all',label:'전체'},{key:'tgt',label:nm},{key:'me',label:'나'}], defaultFilter:'all',
+      rows:k=>pick(k).map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, subHtml:escapeHtml(sub(r,[payer(r)+' 결제']))})),
+      foot:k=>({label:'합계', amount:sumT(pick(k))})});
+  }else if(type==='treat'){
+    const all=sortD(d.myTreat), duo=sortD(d.myTreatDuo), grp=sortD(d.myTreatGrp);
+    const pick=k=>k==='duo'?duo:k==='grp'?grp:all;
+    const kind=r=>receiptPeople(r).size===2?'단둘이':'여럿이';
+    _openPersonDetailShell({title:'전체 내가 한턱', subtitle:`${fmtMoney(sumT(d.myTreat))}원 · ${d.myTreat.length}건 · 단둘이 ${fmtMoney(sumT(d.myTreatDuo))}원·${d.myTreatDuo.length}건 · 여럿이 ${fmtMoney(sumT(d.myTreatGrp))}원·${d.myTreatGrp.length}건`,
+      filters:[{key:'all',label:'전체'},{key:'duo',label:'단둘이'},{key:'grp',label:'여럿이'}], defaultFilter:'all',
+      rows:k=>pick(k).map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, subHtml:escapeHtml(sub(r,[kind(r), `${receiptPeople(r).size}명`]))})),
+      foot:k=>({label:'합계', amount:sumT(pick(k))})});
+  }else if(type==='share'){
+    const recs=sortD(d.partRecs), tot=recs.reduce((s,r)=>s+share(r),0);
+    _openPersonDetailShell({title:'참석 부담액', subtitle:`${fmtMoney(tot)}원 · ${recs.length}건 · 다른 사람이 결제한 자리에서 ${escapeHtml(nm)}의 몫`, emphasizeRight:true,
+      rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(share(r))}원`, subHtml:escapeHtml(sub(r,[`총 ${fmtMoney(r.total||0)}원`, `${receiptPeople(r).size}명`, payer(r)+' 결제']))})),
+      foot:()=>({label:'합계', amount:tot})});
+  }
+}
+
 // ── v3.47 만남 연결 UX (영수증 상세 ↔ meetingId ↔ 더치페이) ──
 //   Receipt=작업단위, Meeting=meetingId 관계, Dutch Pay=선택 receipt 전송. 셋을 섞지 않는다.
 //   표시/전송 흐름만 추가하고 계산·저장구조·Dutch Pay payload는 불변.
@@ -6652,6 +6748,7 @@ function _personMeetingStats(rel){
 //   단둘이(receiptPeople 정확히 {나,대상}) receipt를 paidBy 실제 결제자에게 total 전액 귀속(1/N 아님).
 //   treat/splitExclude와 무관(실결제 기준). Hero 숫자 = 여기 목록 합(진실원 동일). meetingId/여럿이/전체/한턱/참석부담 불변.
 let _personDuoDrill=null; // {name, tgt:[상대결제], me:[내결제], unknown:[결제자 미상]} — renderPersonDashboardHtml에서 세팅
+let _personDetailData=null; // v3.62 {name,me,grpAll,tgtWith,myWith,myTreat,myTreatDuo,myTreatGrp,partRecs} — Person Detail 진실원(매 렌더 fresh)
 // v3.58 — 소형 인라인 아이콘(A 절제 리스트/ B Hero 밸런스용). currentColor 마스크, Foundation 색만. 장식 최소.
 const _PERSON_ICO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 19.5a6.5 6.5 0 0 1 13 0"/></svg>';
 function _relIco(k){
@@ -6769,15 +6866,21 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     // v3.58 — Hero 아래는 A 절제형 통일 리스트(작은 좌측 아이콘 + 우측 값). 계산·정보량 불변, 표현만.
     //   여럿이/전체는 신유철·나 두 값을 그대로 유지(정보 손실 없음, §11·§24). 컬러 카드/박스 없음(§10·§14).
     const sideVal=(who,arr,meCol)=>`<span class="rsv${meCol?' me':''}"><i>${who}</i><b class="${sum(arr)?'':'zero'}">${fmtMoney(sum(arr))}원</b><em>${arr.length}건</em></span>`;
-    const liTwo=(icon,title,sub,tArr,mArr)=>`<div class="rel-li two"><div class="rel-li-ic">${_relIco(icon)}</div><div class="rel-li-main"><div class="rel-li-title">${title}</div>${sub?`<div class="rel-li-sub">${sub}</div>`:''}</div><div class="rel-li-vals">${sideVal(nm,tArr)}${sideVal('나',mArr,true)}</div></div>`;
-    const liOne=(icon,title,sub,amt,cnt)=>`<div class="rel-li"><div class="rel-li-ic">${_relIco(icon)}</div><div class="rel-li-main"><div class="rel-li-title">${title}</div>${sub?`<div class="rel-li-sub">${sub}</div>`:''}</div><div class="rel-li-val"><span class="v${amt?'':' zero'}">${fmtMoney(amt)}원</span><span class="c">${cnt}건</span></div></div>`;
-    const grpRow=liTwo('group','여럿이 함께할 때','',tgtGrp,myGrp);
-    const allRow=liTwo('card','전체 결제','함께한 자리 기준',tgtWith,myWith);
+    // v3.62 — tapId 있으면 클릭 가능(rel-li-tap + role + trailing chevron). 없으면 정보 표시만.
+    const _chev='<span class="rel-li-chev" aria-hidden="true">›</span>';
+    const liTwo=(icon,title,sub,tArr,mArr,tapId)=>`<div class="rel-li two${tapId?' rel-li-tap':''}"${tapId?` id="${tapId}" role="button" tabindex="0"`:''}><div class="rel-li-ic">${_relIco(icon)}</div><div class="rel-li-main"><div class="rel-li-title">${title}</div>${sub?`<div class="rel-li-sub">${sub}</div>`:''}</div><div class="rel-li-vals">${sideVal(nm,tArr)}${sideVal('나',mArr,true)}</div>${tapId?_chev:''}</div>`;
+    const liOne=(icon,title,sub,amt,cnt,tapId)=>`<div class="rel-li${tapId?' rel-li-tap':''}"${tapId?` id="${tapId}" role="button" tabindex="0"`:''}><div class="rel-li-ic">${_relIco(icon)}</div><div class="rel-li-main"><div class="rel-li-title">${title}</div>${sub?`<div class="rel-li-sub">${sub}</div>`:''}</div><div class="rel-li-val"><span class="v${amt?'':' zero'}">${fmtMoney(amt)}원</span><span class="c">${cnt}건</span></div>${tapId?_chev:''}</div>`;
+    // v3.62 — 4개 요약 row에 Drill-down 연결(0건이면 chevron 숨김·비클릭 §59). 진실원 컬렉션을 _personDetailData에 그대로 전달.
+    const grpAll=together.filter(r=>{const P=receiptPeople(r);return P.size>2&&P.has(me)&&P.has(tgt);}); // 여럿이 자리 전체(3명+, 나+대상)
+    const grpRow=liTwo('group','여럿이 함께할 때','',tgtGrp,myGrp, grpAll.length?'relDetailGrp':null);
+    const allRow=liTwo('card','전체 결제','함께한 자리 기준',tgtWith,myWith, (tgtWith.length+myWith.length)?'relDetailPay':null);
     const noMeNote=tgtNoMe.length?`<div class="rel-note">‘전체’는 <b>나와 함께 있었던 자리</b>만 포함합니다. 나 없이 ${nm}이(가) 결제한 <b>${tgtNoMe.length}건 · ${fmtMoney(sum(tgtNoMe))}원</b>은 아래 ‘결제 내역’에서 볼 수 있어요.</div>`:'';
     // §13 — 아래 '내가 한턱'은 단둘이+여럿이 전체 → '전체 내가 한턱'으로 명확화(Hero '내가 한턱'=단둘이만과 구분). 계산 불변.
     const treatSub=(myTreatDuo.length||myTreatGrp.length)?`단둘이 ${fmtMoney(sum(myTreatDuo))}원·${myTreatDuo.length}건 · 여럿이 ${fmtMoney(sum(myTreatGrp))}원·${myTreatGrp.length}건`:'내가 결제하고 분담하지 않은 금액';
-    const treatRow=myTreat.length?liOne('gift','전체 내가 한턱',treatSub,sum(myTreat),myTreat.length):'';
-    const shareRow=liOne('group','참석 부담액',`다른 사람이 결제한 자리에서 ${nm}의 몫`,shareTotal,partRecs.length);
+    const treatRow=myTreat.length?liOne('gift','전체 내가 한턱',treatSub,sum(myTreat),myTreat.length,'relDetailTreat'):'';
+    const shareRow=liOne('group','참석 부담액',`다른 사람이 결제한 자리에서 ${nm}의 몫`,shareTotal,partRecs.length, partRecs.length?'relDetailShare':null);
+    // v3.62 — Person Detail 진실원(Dashboard 요약을 만든 바로 그 컬렉션). openPersonDetail이 그대로 목록화 → Summary=Evidence 보장.
+    _personDetailData={name:tgt, me, grpAll:grpAll.slice(), tgtWith:tgtWith.slice(), myWith:myWith.slice(), myTreat:myTreat.slice(), myTreatDuo:myTreatDuo.slice(), myTreatGrp:myTreatGrp.slice(), partRecs:partRecs.slice()};
     // v3.61 — 만남(관계) 지표: receipt 1건도 독립 Meeting 1회. count=grouped+independent(§3·§45). '확정/미분류/정리됨' 용어 제거(§6·§7·§20).
     //   '만남' row → 만남 목록(grouped+independent 둘 다), '묶이지 않은 영수증' row → Organizer. Meeting은 사람 비종속(meetingId 전역).
     const _ms=_personMeetingStats(R);
@@ -6786,8 +6889,8 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     _personMtgData={name:tgt, together:together.slice(), meetingIds:(_ms.meetingIds||[]).slice(), independentRecs:(_ms.independentRecs||[]).slice()};
     const mtgSummary=`<div class="rel-mlabel">만남 · receipt / meetingId 기준</div>
       <div class="rel-metrics">
-        <div class="rel-li${_mtgTap?' rel-li-tap':''}"${_mtgTap?' id="relMtgConfirmed" role="button" tabindex="0"':''}><div class="rel-li-ic">${_relIco('cal')}</div><div class="rel-li-main"><div class="rel-li-title">만남</div><div class="rel-li-sub">단둘이 ${_ms.duo}회 · 여럿이 ${_ms.group}회</div></div><div class="rel-li-val"><span class="v${_ms.count?'':' zero'}">${_ms.count}회</span>${_mtgTap?'<span class="rel-li-go" aria-hidden="true">›</span>':''}</div></div>
-        <div class="rel-li${_orgTap?' rel-li-tap':''}"${_orgTap?' id="relMtgOrganize" role="button" tabindex="0"':''}><div class="rel-li-ic">${_relIco('doc')}</div><div class="rel-li-main"><div class="rel-li-title">묶이지 않은 영수증</div></div><div class="rel-li-val"><span class="v${_ms.unlinked?'':' zero'}">${_ms.unlinked}건</span>${_orgTap?'<span class="rel-li-go" aria-hidden="true">›</span>':''}</div></div>
+        <div class="rel-li${_mtgTap?' rel-li-tap':''}"${_mtgTap?' id="relMtgConfirmed" role="button" tabindex="0"':''}><div class="rel-li-ic">${_relIco('cal')}</div><div class="rel-li-main"><div class="rel-li-title">만남</div><div class="rel-li-sub">단둘이 ${_ms.duo}회 · 여럿이 ${_ms.group}회</div></div><div class="rel-li-val"><span class="v${_ms.count?'':' zero'}">${_ms.count}회</span></div>${_mtgTap?_chev:''}</div>
+        <div class="rel-li${_orgTap?' rel-li-tap':''}"${_orgTap?' id="relMtgOrganize" role="button" tabindex="0"':''}><div class="rel-li-ic">${_relIco('doc')}</div><div class="rel-li-main"><div class="rel-li-title">묶이지 않은 영수증</div></div><div class="rel-li-val"><span class="v${_ms.unlinked?'':' zero'}">${_ms.unlinked}건</span></div>${_orgTap?_chev:''}</div>
       </div>`;
     heroHtml=hero+`<div class="rel-metrics">${grpRow}${allRow}${noMeNote}${treatRow}${shareRow}</div>`+mtgSummary;
   }else{
@@ -7968,6 +8071,11 @@ async function renderDetail(){
       if(_confBtn){const go=()=>_mtgConfirmedListOpen();_confBtn.addEventListener('click',go);_confBtn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});}
       const _orgBtn=body.querySelector('#relMtgOrganize');
       if(_orgBtn){const go=()=>_mtgOrganizerOpen();_orgBtn.addEventListener('click',go);_orgBtn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});}
+      // v3.62 — 요약 4개 row Drill-down(여럿이/전체 결제/전체 내가 한턱/참석 부담액) → 공통 Person Detail. chevron=navigation.
+      [['relDetailGrp','grp'],['relDetailPay','pay'],['relDetailTreat','treat'],['relDetailShare','share']].forEach(([id,type])=>{
+        const el=body.querySelector('#'+id);
+        if(el){const go=()=>_openPersonDetail(type);el.addEventListener('click',go);el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});}
+      });
       // 인물 패널 시간 필터 클릭 — 본문(날짜검색 패널) + 헤더 슬롯(통합 대시보드 기간 드롭다운) 모두 바인딩
       [body, periodSlot].forEach(scope=>{ if(!scope)return; scope.querySelectorAll('.pf-pill').forEach(btn=>{
         btn.addEventListener('click',()=>{

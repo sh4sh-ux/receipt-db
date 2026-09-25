@@ -95,6 +95,25 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.62` — **① 구분선 직선 규칙 완성 + ② 공통 Person Detail(요약→근거→영수증) Drill-down. ⚠️ 계산·데이터 전부 불변, UI/네비만.**
+  **① Divider 직선화**: ⚠️ 근본 원인 = 클릭 가능 Flat Row(`.rel-li-tap`·`.org-row`)에 `border-radius`가 있어 그 행의 하단
+  `border-bottom`(divider) 양끝이 곡선으로 보였다(전수 조사로 확인). radius 제거(`.rel-li-tap` radius 삭제·`.org-row` radius 0)
+  → 만남/묶이지 않은 영수증·Organizer receipt row 모두 완전 직선 divider. hover는 radius 없는 full-width 사각 tint만. Foundation
+  불변식을 CLAUDE.md 디자인 원칙에 명문화("Dividers are always straight…"). radius 유지 요소(Card·Modal·Sheet·Input·Select·Button·
+  chip·badge·selection circle)는 그대로. **② 공통 Person Detail**: chevron=navigation 통일(클릭 가능 row에만 trailing chevron,
+  절대 위치 우측중앙 — 크기/위치/색 통일 §57·§58; `.rel-li-go`→`.rel-li-chev`). 4개 요약 row(**여럿이 함께할 때·전체 결제·
+  전체 내가 한턱·참석 부담액**)를 Drill-down에 연결. 공통 shell `_openPersonDetailShell`(`_mtgSheetOpen` 재사용, flat row `.pd-row`·
+  straight divider·radius 0) + `_openPersonDetail(type)`. **진실원 = `_personDetailData`**(Dashboard 요약을 만든 그 컬렉션 그대로:
+  grpAll=together 3명+ / tgtWith·myWith / myTreat·myTreatDuo·myTreatGrp / partRecs) → **Summary=Evidence 보장**, 새 계산·유사 filter
+  복제 없음(§35·§71). 전체 결제 filter [전체/신유철/나], 전체 내가 한턱 filter [전체/단둘이/여럿이], 참석 부담액 row 우측=`_receiptShare`
+  (강조·합계=참석 부담액 total §25). row 클릭 → 기존 `selectReceipt`(§27). 금액은 receipt.total 또는 `_receiptShare`만(새 귀속 계산
+  없음 §10·§24). 0건 row는 chevron 숨김·비클릭(§59). 기존 단둘이 Hero drill(상대/내 한턱·일반 분담)·만남 목록·Organizer는 그대로
+  (§67~§69 — 무리한 통합 안 함, 단둘이 drill은 `.mtg-drow` gap 스타일 유지·향후 통일 가능). ⚠️ receiptPeople/normalizeName/
+  `_receiptShare`/`_participantSplit`/`_personRelation`/treat/splitExclude/단둘이 한턱/일반 분담/여럿이/전체 결제/전체 내가 한턱/참석
+  부담액/meetingId/Meeting count(v3.61)/Organizer/Meeting Detail/사람 비종속/Dutch Pay/Dropbox/기간 필터 전부 불변. 검증(실데이터
+  신유철 + 1건/0값 사람 + 합성): 여럿이/전체 결제/전체 내가 한턱/참석 부담액 각 Detail 건수·합계 = Dashboard(불변식 PASS: 전체
+  한턱=단둘이+여럿이, 참석 부담액 SUM(_receiptShare)=595,884), chevron 8종 전부 동작, divider 직선(radius 0), Desktop 1280 +
+  Mobile 390·430 overflow 없음·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.61` — **Meeting 정의 개념 수정: receipt 1건(meetingId 없음)도 '독립 Meeting 1회'. ⚠️ 금액 계산 전부 불변, 만남 count 의미·용어만.**
   기존엔 사실상 'meetingId 있음=만남, 없음=미분류'로 셈했으나, 영수증 1건 자체가 이미 실제 만남 1회다. `meetingId`는 **'Meeting 존재
   여부'가 아니라 '여러 receipt를 같은 Meeting으로 연결하는 ID'**로 재정의. **Meeting count = unique meetingId 수(grouped) + meetingId
@@ -1148,6 +1167,13 @@ P오플레 클래식 플레인 1+1 680.0g | 1 | 3,980 | 3,980
   보조로 900 / 1100+781 / 600 / 520 / 420px. `min-height:700px`는 브레이크포인트가 아니라 최소 높이니 헷갈리지 말 것.
 - 데스크톱은 좌·우 2단 그리드
 - iOS 자동 확대 방지 (`maximum-scale=1.0,user-scalable=no` viewport)
+- ⚠️ **구분선은 항상 완전한 직선 (v3.62 Foundation 불변식)**:
+  "Dividers are always straight. Flat rows never use rounded corners.
+  Rounded corners are reserved for containers and interactive controls, not separators."
+  - **radius 금지**: divider / flat information row(`.rel-li`·`.pd-row`·`.org-row`) / table·receipt·date-group·section·Action Bar separator / 선택된 flat receipt row.
+  - **radius 허용**: Card·Modal·Sheet 외곽 / Input·Select·Button / filter chip·badge·toggle·selection circle.
+  - ⚠️ **함정**: 클릭 가능 flat row에 `border-radius`를 주면 그 행의 `border-bottom`(divider) 양끝이 곡선으로 보인다.
+    hover 피드백은 radius 없는 full-width 사각 tint(`background:var(--fill)`)로 준다. `overflow:hidden` 부모 radius가 내부 divider 끝을 자르지 않는지도 확인.
 
 ## 테마 전환 (다크/라이트/시스템)
 - 설정 탭에 3단 토글: `system` · `light` · `dark` (`[data-theme-choice]` 버튼)
