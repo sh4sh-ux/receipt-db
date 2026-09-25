@@ -95,6 +95,16 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.66` — **묶인 만남 Blue Bar 높이를 title+grouped metadata 두 줄 블록에 맞춤(표시만, 계산·필터·클릭·데이터 전부 불변).**
+  v3.65의 bar가 고정 `height:32px`라 두 줄(제목+보조정보)보다 짧아 '작은 상태표시'처럼 보이던 것 수정. **고정 height 폐기** →
+  목록 row의 제목(`.mm-row-top`)+grouped 보조정보(`.mm-row-sub`)를 새 wrapper **`.mm-row-head`**(position:relative)로 묶고,
+  bar를 `.mm-row[data-linked] .mm-row-head::before{top:0;bottom:0}`로 걸어 **wrapper 실제 높이를 그대로 따라간다**(두 줄이면 두 줄,
+  보조정보가 줄바꿈되면 그만큼 늘어남). 참석자 줄(`.mm-row-ppl`)은 head **바깥**이라 bar가 그 줄로 내려가지 않고, `left:-10px`
+  (row padding-left 12px 보정)로 좌측 2px에 놓여 row/아래 divider와 분리된다. Desktop/Mobile 공통 규칙(고정 px 대신 line-height
+  기반이라 뷰포트별 typography에 자동으로 맞음). ⚠️ width 3px·`border-radius:0`(양끝 직선)·Signature Blue·독립 만남/1건 meetingId
+  bar 없음·[전체][묶인 만남] 필터·Meeting 계산/클릭/편집/데이터 전부 불변. 검증(김영석 실데이터+합성): 2건/3건 묶음 bar 있음·bar가
+  head 두 줄 높이에 정렬(참석자 줄 미침)·긴 매장명 ellipsis·divider 미접촉·독립 bar 없음·Desktop/Mobile 390·430·콘솔에러 0.
+  변경 파일 `index.html`만.
 - `v3.65` — **만남 목록에서 묶인 만남 vs 독립 만남 시각 구별(표시/필터만, 계산·기능 불변).** ① **묶인 만남**(같은 meetingId에
   실제 receipt **2건 이상**, 전역 `_mtgReceiptsById(mid).length>=2` §3·§8)에만 왼쪽 짧은 **Signature Blue 세로바**(width 3·height 32,
   `.mm-row[data-linked]::before`, row 안·divider와 분리 §1). **독립 receipt(meetingId 없음)·meetingId 1건뿐인 만남은 바 없음**(§2·§3).
