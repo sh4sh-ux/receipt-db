@@ -95,6 +95,16 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.70` — **관계 그룹(Relation Group) + 공동 한턱(treatBy) — STEP 1/2. ⚠️ paidBy·treat·_receiptShare·_participantSplit 계산 전부 불변.**
+  ⚠️ **조사 결과**: Dutch Pay '커플'은 `_coupleNames`(정확히 2명·이름 문자열·localStorage `dutchpay_couple`+그룹별 `data.couples`+Dropbox `coupleNames`)로,
+  **별도 앱·별도 저장소**라 Receipt DB와 데이터 공유 불가·stable ID 없음. → 개념(커플/공동 한턱)만 차용하고 **2명 이상 지원 Relation Group**으로 일반화.
+  Receipt DB Person도 **이름 문자열 식별(stable Person ID 없음)** — 이번 기능 때문에 대규모 Person migration은 하지 않고 members도 이름 문자열로 둔다(한계 명시).
+  **저장**: settings store `relationGroups`(storeCatMap과 동일 계약) + sync JSON `relationGroups`(_dbxMerge에서 id·updatedAt 최신 우선 머지, 백업 export/import 포함).
+  schema `{id(불변 identity), name(사용자 수정 가능·계산 identity 아님), type(couple/family/other), members:[이름], active, createdAt, updatedAt}`. **해제=active:false**(hard delete 아님 → 과거 treatBy 보존).
+  Person은 **절대 병합 안 함**(개인 검색/결제/Detail/Meeting/부담액 전부 그대로) — 그룹은 순수 관계 계층. **Receipt**: optional `treatBy={type:'relationGroup',groupId,members}`(당시 실제 공동주체 **snapshot** — 나중에 그룹에 멤버 추가해도 과거 기록 불변 §16). `_validateReceiptRecord`에 `_validTreatBy` 정규화 추가(손상 값 차단, 없으면 undefined→JSON 제외, 기존 Receipt에 기본값 안 씀·migration 없음). treat OFF 저장 시 treatBy 제거(§19). **paidBy 불변**(§26 — 공동 선택해도 결제자는 그대로), **receipt.total N분할 없음**(§15·§27 — 208,000을 104/104로 쪼개지 않음, 받은 사람 0원 기존 treat 의미 유지). 기존 `treat`(treatBy 없음)=개인 한턱으로 runtime 해석.
+  **runtime 헬퍼**: `_treatSubjects`(treatBy members 2명↑=공동, 아니면 paidBy 개인)·`_treatRecipients`(receiptPeople−주체, 별도 recipient 필드 없음)·`_treatSummarySentence`(동적 문장).
+  **UI**: ① 설정>**사람 및 관계**(관계 그룹 목록·+추가, 그룹명/유형/구성원 체크리스트 모달) ② **Person Detail '관계' 섹션**(속한 그룹 표시·같은 그룹 편집·없으면 '관계 그룹 설정' — Settings와 동일 relationGroups 편집) ③ **Receipt Detail 한턱 주체**(`_makeSplitUI` 확장: 한턱 ON 시 `[결제자 개인](기본)`/`[결제자·동행 공동]` 후보 — **현재 참석한 그룹 멤버만·paidBy 포함**, 불참 멤버 자동 포함 안 함 §21, 부분집합 폭발 없음 §22) + 요약 문장(§25). 관계 그룹이 없으면 주체 선택 UI는 숨기고 요약만.
+  **미도입(STEP 2/2)**: 사람별 분담 관계 Ranking·관계 그룹별 통계·가족 총지출·자동 관계 추론·Meeting 계산 변경·Dutch Pay UI 개편. **갈포갈비 검증**: paidBy=김영석·treat=true·treatBy=김영석·이종현 → 실결제 김영석 208,000원(불변), 공동 한턱 김영석·이종현→조상현, `_receiptShare`(김영석 208,000·나머지 0)·`_participantSplit` 불변, treatBy 백업 roundtrip 보존, 3명 모두 독립 Person 유지. 변경 파일 `index.html`만.
 - `v3.69` — **'사람별 분담' 영역 Clean Modern UI 정제(표시만, 계산·명단·금액·한턱·제외·참석만 판정 전부 불변).**
   기존 `.cat-bar-row.pp-row`(카테고리 막대 공유·rank별 파랑 음영) 구조를 전용 Flat List로 교체. 공통 헬퍼
   **`_personSplitSectionHtml(list)`**(renderLedgerPanel·renderMonthSummaryHtml 공통): 헤더=제목 '사람별 분담' + 보조설명
