@@ -95,6 +95,22 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.58` — **Person Dashboard 시각 위계 정제: 'B안 핵심 Hero + A안 절제 정보구조' — 계산·데이터·drill·정보량 전부 불변, UI만.**
+  ① **Hero(B 밸런스)**: 양쪽 한턱(상대/나)을 **중앙정렬 + 위에 작은 person 아이콘 칩**(`.rel-duo-ic` — 상대=soft blue·
+  나=Signature Blue, §22 새 색 없음). 중앙 이모지·감성문구·사진·gradient·ratio Bar 없음(§6·§29 — 금액이 주인공, 장식이
+  숫자보다 먼저 보이면 FAIL). 금액/라벨/건수·`_duoSideHtml`·drill 그대로. ② **Hero 아래(A 절제)**: 컬러 카드/2열 insight
+  박스(`.rel-insights`/`.rel-ins`) + `.rel-srow`/`.rel-mtg` 제거 → **작은 좌측 아이콘 + 우측 값의 통일 리스트**
+  (`.rel-metrics`/`.rel-li`, 소형 인라인 SVG `_relIco`: group/card/gift/cal/doc). 여럿이·전체 결제는 **신유철·나 두 값 그대로
+  유지**(정보 손실 없음, `.rel-li.two`+기존 `.rsv` 재사용, 모바일 값 아래로 wrap), 참석 부담액도 plain row(§14 — 큰 컬러
+  카드 금지). ③ **§13 라벨**: 아래 '내가 한턱'(단둘이+여럿이 전체) → **'전체 내가 한턱'**으로 명확화(Hero '내가 한턱'=
+  단둘이만과 구분), sub에 '단둘이 N·여럿이 N' 분해(계산 불변). ④ 만남 지표는 **'만남 · meetingId 기준' caption + 확정된
+  만남/미분류 2 row**로 리스트 grammar 통일(§17 — 큰 공간 안 씀). ⑤ 비클릭 row엔 chevron 안 붙임(§8 — Hero 3개만
+  클릭, 오해 방지). ⚠️ **단둘이 판정·treat 의미·상대/내 한턱·일반 분담·`receiptPeople`/`normalizeName`/`_receiptShare`/
+  `_participantSplit`/`splitExclude`/여럿이/전체/`meetingId`/만남 통계/Dutch Pay/Dropbox/schema/기간 필터/사람 renderer
+  통일(§25) 전부 불변.** v3.57 drill-down(한턱 tgt/me·일반 분담 normal·미상 unknown) 그대로. 검증(실데이터 151건 신유철):
+  단둘이 20 = 상대 320,900/6 + 내 265,000/5 + 일반 9 + 미상 0, 전체 내가 한턱 399,600/8·참석 595,884/32·여럿이 나
+  1,948,500/17·전체 나 2,453,500/27 불변, drill 합계=Hero, 아이콘 칩·A 리스트·§13 라벨·만남 caption PASS,
+  Desktop 1280 + Mobile 390·430 금액 잘림/가로 overflow 없음·2값 row 안 넘침·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.57` — **단둘이 Hero 주지표를 '실결제액'→'단둘이 한턱(treat)'으로 변경 — treat 의미·계산 전부 불변, Hero 표현/분류만.**
   사용자 의도: "단둘이 있을 때 누가 누구에게 순수하게 한턱을 냈는가". 일반 1/N 분담은 한턱 금액에서 **완전히 제외**한다.
   ① **단둘이 receipt**(`receiptPeople`가 정확히 {나,대상} 2명)를 **4분류**: **상대 한턱**(`treat===true && paidBy===대상`)·
