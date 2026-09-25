@@ -95,6 +95,26 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.61` — **Meeting 정의 개념 수정: receipt 1건(meetingId 없음)도 '독립 Meeting 1회'. ⚠️ 금액 계산 전부 불변, 만남 count 의미·용어만.**
+  기존엔 사실상 'meetingId 있음=만남, 없음=미분류'로 셈했으나, 영수증 1건 자체가 이미 실제 만남 1회다. `meetingId`는 **'Meeting 존재
+  여부'가 아니라 '여러 receipt를 같은 Meeting으로 연결하는 ID'**로 재정의. **Meeting count = unique meetingId 수(grouped) + meetingId
+  없는 receipt 수(independent)**. 불변식: count = grouped + independent = 단둘이 + 여럿이(§45). ① `_personMeetingStats` 재작성:
+  grouped(같은 meetingId 전역 `_mtgReceiptsById` union) + independent(together 중 meetingId 없는 receipt 각각, `receiptPeople`이 곧
+  Meeting people §59) 합산, 각 단둘이(union/receiptPeople 정확히 {나,대상})/여럿이 판정. ⚠️ **§56 순서 유지**: 전체 receipt → Meeting
+  unit → 나+대상 관계 필터(사람 receipt 먼저 필터하면 grouped union이 잘려 단둘이 오분류 §57). ② **용어 정비**(§6·§7·§8·§20·§48):
+  '확정된 만남'→**'만남'**, '미분류 영수증'/'미분류만'→**'묶이지 않은 영수증'/'묶이지 않음'**, **'M/T건 정리됨' 진행률 제거**(독립
+  Meeting은 미완성·오류 아님 §50). ③ Dashboard 만남 영역: `만남 N회 ›`(→ 만남 목록: grouped+independent 둘 다, grouped→Meeting
+  Detail·independent→receipt 상세 §32·§33·§55) + `묶이지 않은 영수증 N건 ›`(→ Organizer). 헤더 소제목 `함께한 영수증 N건 · 만남
+  M회`(receipt≠meeting 혼합 금지 §46). ④ 묶이지 않은 영수증은 이미 만남 count에 포함된 **보조 상태 정보**(중복 합산 아님 §18·§47).
+  ⚠️ receipt schema·meetingId·migration 없음(§64), 기존 데이터 자동 병합 없음(§63), 단둘이 한턱/일반 분담/여럿이/전체 결제/전체
+  내가 한턱/참석 부담액/`treat`/`splitExclude`/`receiptPeople`/`normalizeName`/Dutch Pay/Dropbox/Meeting Detail(분리·union·범위)·
+  **사람 비종속 Meeting(v3.59)** 전부 불변. Organizer flat list·날짜 grouping·모두 선택·여러 건 날짜만·참석자 동일/일부 변경(v3.60) 유지.
+  ⚠️ **김아름 사례**: 사용자 실기기 화면은 '확정된 만남 2회 / 미분류 1건'(= grouped meetingId 2개 + 독립 1건)이었는데, 새 정의로는
+  **만남 = 2 + 1 = 3회**(묶이지 않은 영수증 1건은 그 3회에 포함). 참고로 repo 검증 sync.json에는 meetingId가 하나도 없어 그 데이터
+  기준 김아름은 grouped 0 + independent 9 = **만남 9회**(단둘이 0·여럿이 9)로 표시됨(둘 다 정의상 정상). 검증(실데이터 신유철 41=0+41=
+  20+21·이영환 21=0+21=7+14·김아름 9=0+9=0+9 불변식 PASS + 합성 A~E[1건 독립→만남1, 독립 3건→만남3, 묶은 후→1, union 합류→여럿이,
+  묶음+독립→2] + 사람 비종속 6명 각 만남1 + 만남 목록 rows=count + 금액 320,900/265,000/399,600/595,884 불변 + Desktop/Mobile 390
+  용어·overflow 없음·콘솔에러 0). 변경 파일 `index.html`만.
 - `v3.60` — **Meeting Organizer 보조 기능 2종(추천 보조 — 자동 묶기 절대 없음) + 날짜 헤더 문구 정제. ⚠️ 계산·meetingId·생성 로직 불변.**
   ① **'여러 건 날짜만' 필터**(`multiOnly` 토글 칩): 현재 표시 중인 receipt를 날짜 grouping한 뒤 **count≥2인 날짜 group만** 표시.
   미분류만/전체와 **조합**(각각 독립 작동). 묶어볼 후보 날짜를 빠르게 찾는 용도 — meeting 판정 아님. 해당 날짜 없으면

@@ -2916,6 +2916,19 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.61 — Meeting 정의 개념 수정: **receipt 1건(meetingId 없음)도 독립 Meeting 1회**. ⚠️ 금액 계산 전부 불변, 만남 count 의미·용어만.
+//   meetingId는 'Meeting 존재 여부'가 아니라 '여러 receipt를 같은 Meeting으로 연결하는 ID'. Meeting count = unique meetingId 수(grouped)
+//   + meetingId 없는 receipt 수(independent). 불변식: count = grouped + independent = 단둘이 + 여럿이(§45). ⚠️ §56 순서: 전체 receipt →
+//   Meeting unit(grouped=meetingId 전역 union / independent=receiptPeople) → 나+대상 관계 필터(사람 receipt 먼저 필터하면 grouped union이
+//   잘려 단둘이 오분류 §57). `_personMeetingStats`: grouped(_mtgReceiptsById 전역 union) + independent(together 중 meetingId 없는 receipt
+//   각각) 합산, 각 단둘이/여럿이 판정(union/ receiptPeople size). **용어 정비**(§6·§7·§8·§20): '확정된 만남'→'만남', '미분류 영수증'/
+//   '미분류만'→'묶이지 않은 영수증'/'묶이지 않음', 'M/T건 정리됨' 진행률 **제거**(독립 Meeting은 미완성/오류 아님 §50). Dashboard 만남
+//   row → 만남 목록(grouped+independent 둘 다, §32·§55: grouped→Meeting Detail / independent→receipt 상세), 묶이지 않은 영수증 row →
+//   Organizer. 헤더 소제목 '함께한 영수증 N건 · 만남 M회'(receipt≠meeting 혼합 금지 §46). ⚠️ receipt schema·meetingId·migration 없음(§64),
+//   기존 receipt/데이터 자동 병합 없음(§63), 단둘이 한턱/일반 분담/여럿이/전체 결제/전체 내가 한턱/참석 부담액/treat/splitExclude/
+//   receiptPeople/normalizeName/Dutch Pay/Dropbox·사람 비종속 Meeting(v3.59) 전부 불변. 검증(실데이터 신유철·김아름·이영환 + 합성 A~E·
+//   사람 비종속): count=grouped+independent=단둘이+여럿이 불변식 PASS, 독립 receipt Meeting 1회 인정, 묶기 3→1·분리 1→2, 콘솔에러 0.
+//   변경 파일 index.html만.
 // v3.60 — Meeting Organizer 보조 기능 2종(추천 보조 — 자동 묶기 절대 없음). ⚠️ 계산·meetingId·생성 로직 불변, 필터/표시만.
 //   ① '여러 건 날짜만' 필터: 현재 표시 중인 receipt를 날짜 grouping한 뒤 count≥2인 날짜 group만 표시(미분류만/전체와 조합).
 //   묶어볼 후보 날짜를 빠르게 찾는 용도일 뿐 meeting 판정 아님. 없으면 '묶어볼 만한 여러 건 날짜가 없어요' empty state.
@@ -3128,7 +3141,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.60';
+const APP_VERSION='v3.61';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6362,15 +6375,15 @@ function _mtgOrganizerOpen(){
         ${rowsHtml}
       </div>`;
     }).join('')
-    :`<div class="org-empty">${multiOnly?'묶어볼 만한 여러 건 날짜가 없어요.':(filter==='unclassified'?'정리할 미분류 영수증이 없어요.':'표시할 영수증이 없어요.')}</div>`;
+    :`<div class="org-empty">${multiOnly?'묶어볼 만한 여러 건 날짜가 없어요.':(filter==='unclassified'?'묶이지 않은 영수증이 없어요.':'표시할 영수증이 없어요.')}</div>`;
     panel.innerHTML=`
       <div class="org-hd">
         <button type="button" class="org-back" id="orgBack" aria-label="닫기">${_ORG_BACK_ICON}<span>${escapeHtml(nm)}</span></button>
         <div class="org-title">만남 정리</div>
-        <div class="org-sub">${escapeHtml(nm)} · 미분류 영수증 ${uCnt}건</div>
+        <div class="org-sub">${escapeHtml(nm)} · 묶이지 않은 영수증 ${uCnt}건</div>
       </div>
       <div class="org-filter">
-        <button type="button" class="org-fchip${filter==='unclassified'?' on':''}" data-f="unclassified">미분류만 ${uCnt}</button>
+        <button type="button" class="org-fchip${filter==='unclassified'?' on':''}" data-f="unclassified">묶이지 않음 ${uCnt}</button>
         <button type="button" class="org-fchip${filter==='all'?' on':''}" data-f="all">전체 ${aCnt}</button>
         <button type="button" class="org-fchip org-fchip--multi${multiOnly?' on':''}" id="orgMultiChip">여러 건 날짜만</button>
       </div>
@@ -6416,28 +6429,32 @@ function _mtgOrganizerOpen(){
   });
   paint();
 }
-// v3.59 — 확정된 만남 목록(이 사람 union에 포함된 meetingId). row 클릭 → 기존 Meeting Detail 재사용.
+// v3.61 — 만남 목록: grouped Meeting(meetingId 묶음) + independent Meeting(meetingId 없는 receipt 1건) 둘 다 표시(§32·§55).
+//   grouped row → Meeting Detail / independent row → receipt 상세(§33). 최신순(§53). '확정/미분류' 용어 없음.
 function _mtgConfirmedListOpen(){
   if(!_personMtgData)return;
   const ids=_personMtgData.meetingIds||[];
-  const meetings=ids.map(mid=>_mtgSortByDate(_mtgReceiptsById(mid))).filter(rc=>rc.length)
-    .sort((a,b)=>(b[b.length-1].date||'').localeCompare(a[a.length-1].date||'')); // 최신순
+  const grouped=ids.map(mid=>({type:'g',rc:_mtgSortByDate(_mtgReceiptsById(mid))})).filter(m=>m.rc.length);
+  const independent=(_personMtgData.independentRecs||[]).map(r=>({type:'i',rc:[r]}));
+  const meetings=[...grouped,...independent]
+    .sort((a,b)=>((b.rc[b.rc.length-1].date)||'').localeCompare((a.rc[a.rc.length-1].date)||'')); // 최신순
   const {card,close}=_mtgSheetOpen();
-  const rows=meetings.length?meetings.map(rc=>{
-    const stores=rc.map(x=>x.store||'').filter(Boolean).slice(0,3).join(' · ');
-    return `<button type="button" class="mtg-drow" data-mid="${escapeHtml(rc[0].meetingId)}">
-      <span class="mtg-drow-store">${escapeHtml(_mtgCompactTitle(rc))}</span>
+  const rows=meetings.length?meetings.map((m,i)=>{
+    const rc=m.rc;
+    const title=m.type==='g'?_mtgCompactTitle(rc):(fmtDateKor(rc[0].date)+' · '+(rc[0].store||'(매장명 없음)'));
+    return `<button type="button" class="mtg-drow" data-i="${i}">
+      <span class="mtg-drow-store">${escapeHtml(title)}</span>
       <span class="mtg-drow-amt">${fmtMoney(_mtgSumTotal(rc))}원</span>
-      <span class="mtg-drow-date">${rc.length}건 · ${escapeHtml(stores)}</span>
+      <span class="mtg-drow-date">영수증 ${rc.length}건</span>
     </button>`;}).join('')
-    :'<div class="empty-state" style="padding:22px 8px;">확정된 만남이 없어요.</div>';
+    :'<div class="empty-state" style="padding:22px 8px;">만남이 없어요.</div>';
   card.innerHTML=`
-    <div class="mtg-sheet-hd"><div class="mtg-sheet-title">확정된 만남 ${meetings.length}회</div><button class="mtg-sheet-x" id="mtgClX" type="button" aria-label="닫기">×</button></div>
-    <div class="mtg-sheet-meta">${escapeHtml(_personMtgData.name)}과의 만남 · meetingId 기준</div>
+    <div class="mtg-sheet-hd"><div class="mtg-sheet-title">만남 ${meetings.length}회</div><button class="mtg-sheet-x" id="mtgClX" type="button" aria-label="닫기">×</button></div>
+    <div class="mtg-sheet-meta">${escapeHtml(_personMtgData.name)}과의 만남 · receipt / meetingId 기준</div>
     <div class="mtg-sheet-divider"></div>
     <div class="mtg-drows">${rows}</div>`;
   card.querySelector('#mtgClX').onclick=close;
-  card.querySelectorAll('.mtg-drow[data-mid]').forEach(b=>b.onclick=()=>{const mid=b.dataset.mid;const rc=_mtgReceiptsById(mid);close();if(rc.length)_mtgOpenMeetingDetail(rc[0]);});
+  card.querySelectorAll('.mtg-drow[data-i]').forEach(b=>b.onclick=()=>{const m=meetings[+b.dataset.i];close();if(m.type==='g')_mtgOpenMeetingDetail(m.rc[0]);else selectReceipt(m.rc[0].id);});
 }
 
 // ── v3.47 만남 연결 UX (영수증 상세 ↔ meetingId ↔ 더치페이) ──
@@ -6597,28 +6614,38 @@ function _personRelation(name, payerRecs, partRecs){
   return {me,tgt,pool,tgtPaidAll,tgtWith,tgtDuo,tgtGrp,tgtNoMe,myWith,myDuo,myGrp,myTreat,myTreatDuo,myTreatGrp,together,shareTotal};
 }
 
-// v3.53 — 사람별 '만남 횟수'(meetingId 기준 관계 지표). ⚠️ 금액 분석(receipt 기준)과 완전히 분리 — 계산·저장구조 불변.
-//   확정된 만남 = 같은 meetingId 그룹(런타임). people union = 그 meetingId 전체 receipt의 receiptPeople 합집합(정확일치, 원본 불변).
-//   나+대상이 union에 모두 있는 meetingId만 관계 만남으로 셈(§22). union이 정확히 {나,대상} 2명이면 단둘이, 그 외 여럿이(§9~12).
-//   같은 meetingId는 receipt가 몇 개든 1회(Set, §6·§17). meetingId 없는 '함께한' receipt는 미분류(§8) — 횟수로 환산 안 함(§24).
-//   기간: 현재 기간(rel.pool)에 대상이 등장하는 meetingId만 후보로(§16, person-scoped). 자동 추정·round·DB 추가 없음(§29~31).
+// v3.61 — Meeting 재정의: **receipt 1건(meetingId 없음)도 독립 Meeting 1회**, meetingId는 '같은 Meeting 연결 ID'.
+//   Meeting count = unique meetingId 수(grouped) + meetingId 없는 receipt 수(independent). ⚠️ 금액 분석(receipt 기준)과 완전 분리·불변.
+//   ⚠️ §56 순서: 전체 receipt → Meeting unit(grouped=meetingId 전체 union / independent=receiptPeople) → 나+대상 관계 필터.
+//     (사람 receipt만 먼저 필터하면 grouped union이 잘려 단둘이로 오분류 §57. grouped는 _mtgReceiptsById로 전역 union 사용.)
+//   단둘이 = union 정확히 {나,대상} 2명 / 여럿이 = 그 외(중간 합류·이탈도 union 기준 여럿이). 독립 receipt도 receiptPeople로 동일 판정.
+//   기간: together(현재 기간에 나+대상 모두 있는 receipt)를 기준 — independent는 그 receipt, grouped는 그 meetingId 후보(§31).
+//   ⚠️ 자동 병합·migration·round·DB 추가 없음(§63·§64). '묶이지 않은 영수증'=독립 Meeting(오류/미완성 아님, 이미 count에 포함 §18·§47).
 function _personMeetingStats(rel){
   const me=rel&&rel.me, tgt=rel&&rel.tgt;
   const together=(rel&&rel.together)||[];
-  const unclassified=together.filter(r=>!(r&&r.meetingId)).length; // §8 미분류 = 함께한 receipt 중 meetingId 없는 것
-  if(!me||!tgt)return {confirmed:0,duo:0,group:0,unclassified,meetingIds:[]};
-  const cand=new Set();
-  for(const r of rel.pool)if(r&&r.meetingId)cand.add(r.meetingId); // 기간 내 대상이 등장하는 meetingId 후보(§16)
+  const independentRecs=together.filter(r=>!(r&&r.meetingId)); // meetingId 없는 receipt = 각각 독립 Meeting 1회
+  if(!me||!tgt)return {count:0,duo:0,group:0,grouped:0,independent:independentRecs.length,unlinked:independentRecs.length,meetingIds:[],independentRecs};
   let duo=0,group=0;const ids=[];
+  // ① grouped Meeting: 나+대상이 등장하는 meetingId(전역 union 기준)
+  const cand=new Set();
+  for(const r of rel.pool)if(r&&r.meetingId)cand.add(r.meetingId);
   cand.forEach(mid=>{
-    const recs=_mtgReceiptsById(mid);          // 같은 meetingId 전체(전역, §13 union 기준)
+    const recs=_mtgReceiptsById(mid);          // 같은 meetingId 전체(전역, §13·§56 union 기준)
     if(!recs.length)return;
     const uset=new Set(_mtgPeopleUnion(recs));  // 정규화 people union(정확일치)
-    if(!(uset.has(me)&&uset.has(tgt)))return;   // §22: 나 + 대상 둘 다 union에 있어야
+    if(!(uset.has(me)&&uset.has(tgt)))return;   // 나 + 대상 둘 다 union에 있어야
     ids.push(mid);
-    if(uset.size===2)duo++;else group++;        // union {나,대상} 정확히 2명 → 단둘이, 그 외 → 여럿이
+    if(uset.size===2)duo++;else group++;
   });
-  return {confirmed:ids.length,duo,group,unclassified,meetingIds:ids}; // 불변식: confirmed = duo + group (§23)
+  // ② independent Meeting: meetingId 없는 receipt 각각(receiptPeople이 곧 Meeting people §59). together라 나+대상 이미 포함.
+  independentRecs.forEach(r=>{
+    const P=receiptPeople(r);
+    if(P.size===2)duo++;else group++;
+  });
+  const grouped=ids.length, independent=independentRecs.length;
+  // 불변식: count = grouped + independent = duo + group (§45)
+  return {count:grouped+independent,duo,group,grouped,independent,unlinked:independent,meetingIds:ids,independentRecs};
 }
 
 // ── v3.54 단둘이 Hero 실결제 drill-down ──
@@ -6751,20 +6778,16 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     const treatSub=(myTreatDuo.length||myTreatGrp.length)?`단둘이 ${fmtMoney(sum(myTreatDuo))}원·${myTreatDuo.length}건 · 여럿이 ${fmtMoney(sum(myTreatGrp))}원·${myTreatGrp.length}건`:'내가 결제하고 분담하지 않은 금액';
     const treatRow=myTreat.length?liOne('gift','전체 내가 한턱',treatSub,sum(myTreat),myTreat.length):'';
     const shareRow=liOne('group','참석 부담액',`다른 사람이 결제한 자리에서 ${nm}의 몫`,shareTotal,partRecs.length);
-    // v3.53 — 만남(관계) 지표: meetingId 기준(금액 분석과 분리, §17·§19). 확정된 만남 = 단둘이 + 여럿이(불변식). 큰 공간 안 씀.
-    // v3.59 — 두 row를 클릭 가능하게: 확정된 만남 → 만남 목록, 미분류 → Meeting Organizer(전용 작업 공간). 진행률 sub 추가.
-    //   ⚠️ Meeting은 사람에 종속되지 않는다 — meetingId는 receipt 전역 필드, union의 모든 사람에게 자동 반영(여기 수치도 그 계산 그대로).
+    // v3.61 — 만남(관계) 지표: receipt 1건도 독립 Meeting 1회. count=grouped+independent(§3·§45). '확정/미분류/정리됨' 용어 제거(§6·§7·§20).
+    //   '만남' row → 만남 목록(grouped+independent 둘 다), '묶이지 않은 영수증' row → Organizer. Meeting은 사람 비종속(meetingId 전역).
     const _ms=_personMeetingStats(R);
-    const _mtgTotal=together.length;                       // 함께한 전체 receipt(기간 스코프)
-    const _mtgOrganized=Math.max(0,_mtgTotal-_ms.unclassified);
-    const _progSub=_mtgTotal===0?'':(_ms.unclassified===0?'모든 영수증 정리 완료':`${_mtgOrganized}/${_mtgTotal}건 정리됨`);
-    const _confTap=_ms.confirmed>0, _orgTap=_ms.unclassified>0;
+    const _mtgTap=_ms.count>0, _orgTap=_ms.unlinked>0;
     // Organizer/만남 목록이 읽을 데이터(작업 대상은 이 사람의 together로 좁히지만, 생성되는 meetingId는 전역).
-    _personMtgData={name:tgt, together:together.slice(), meetingIds:(_ms.meetingIds||[]).slice()};
-    const mtgSummary=`<div class="rel-mlabel">만남 · meetingId 기준</div>
+    _personMtgData={name:tgt, together:together.slice(), meetingIds:(_ms.meetingIds||[]).slice(), independentRecs:(_ms.independentRecs||[]).slice()};
+    const mtgSummary=`<div class="rel-mlabel">만남 · receipt / meetingId 기준</div>
       <div class="rel-metrics">
-        <div class="rel-li${_confTap?' rel-li-tap':''}"${_confTap?' id="relMtgConfirmed" role="button" tabindex="0"':''}><div class="rel-li-ic">${_relIco('cal')}</div><div class="rel-li-main"><div class="rel-li-title">확정된 만남</div><div class="rel-li-sub">단둘이 ${_ms.duo}회 · 여럿이 ${_ms.group}회</div></div><div class="rel-li-val"><span class="v${_ms.confirmed?'':' zero'}">${_ms.confirmed}회</span>${_confTap?'<span class="rel-li-go" aria-hidden="true">›</span>':''}</div></div>
-        <div class="rel-li${_orgTap?' rel-li-tap':''}"${_orgTap?' id="relMtgOrganize" role="button" tabindex="0"':''}><div class="rel-li-ic">${_relIco('doc')}</div><div class="rel-li-main"><div class="rel-li-title">미분류 영수증</div>${_progSub?`<div class="rel-li-sub">${_progSub}</div>`:''}</div><div class="rel-li-val"><span class="v${_ms.unclassified?'':' zero'}">${_ms.unclassified}건</span>${_orgTap?'<span class="rel-li-go" aria-hidden="true">›</span>':''}</div></div>
+        <div class="rel-li${_mtgTap?' rel-li-tap':''}"${_mtgTap?' id="relMtgConfirmed" role="button" tabindex="0"':''}><div class="rel-li-ic">${_relIco('cal')}</div><div class="rel-li-main"><div class="rel-li-title">만남</div><div class="rel-li-sub">단둘이 ${_ms.duo}회 · 여럿이 ${_ms.group}회</div></div><div class="rel-li-val"><span class="v${_ms.count?'':' zero'}">${_ms.count}회</span>${_mtgTap?'<span class="rel-li-go" aria-hidden="true">›</span>':''}</div></div>
+        <div class="rel-li${_orgTap?' rel-li-tap':''}"${_orgTap?' id="relMtgOrganize" role="button" tabindex="0"':''}><div class="rel-li-ic">${_relIco('doc')}</div><div class="rel-li-main"><div class="rel-li-title">묶이지 않은 영수증</div></div><div class="rel-li-val"><span class="v${_ms.unlinked?'':' zero'}">${_ms.unlinked}건</span>${_orgTap?'<span class="rel-li-go" aria-hidden="true">›</span>':''}</div></div>
       </div>`;
     heroHtml=hero+`<div class="rel-metrics">${grpRow}${allRow}${noMeNote}${treatRow}${shareRow}</div>`+mtgSummary;
   }else{
@@ -7924,9 +7947,9 @@ async function renderDetail(){
         // v3.41 — 헤더 소제목을 의미가 분명한 표현으로: 상대 전체 결제 건수 · 함께한 영수증(나+상대 모두 포함) 건수.
         const _rel=_personRelation(personName,allPayerF,allPartF);
         title.textContent=`${_rel.tgt||personName}`;
-        // v3.53 — 헤더에 '확정된 만남 N회'(meetingId 기준) 추가. '함께한 영수증'(receipt 기준)과 혼합하지 않고 병기(§7·§20).
+        // v3.61 — 헤더에 '만남 N회'(receipt 1건도 독립 Meeting 1회, count 기준). '함께한 영수증'(receipt 수)과 혼합하지 않고 병기(§46).
         const _relMs=_personMeetingStats(_rel);
-        sub.textContent=_rel.me?`함께한 영수증 ${_rel.together.length}건 · 확정된 만남 ${_relMs.confirmed}회`:`${_rel.tgt} 결제 ${_rel.tgtPaidAll.length}건 · 참석 ${allPartF.length}건`;
+        sub.textContent=_rel.me?`함께한 영수증 ${_rel.together.length}건 · 만남 ${_relMs.count}회`:`${_rel.tgt} 결제 ${_rel.tgtPaidAll.length}건 · 참석 ${allPartF.length}건`;
         if(periodSlot)periodSlot.innerHTML=_personPeriodBarHtml(allRecs,_personTimeFilter); // v3.43 — 기간 컨트롤을 헤더 우측 슬롯으로
         body.innerHTML=renderPersonDashboardHtml(personName,allPayerF,allPartF);
         _bindSectionToggles(body);
