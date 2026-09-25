@@ -95,6 +95,22 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.60` — **Meeting Organizer 보조 기능 2종(추천 보조 — 자동 묶기 절대 없음) + 날짜 헤더 문구 정제. ⚠️ 계산·meetingId·생성 로직 불변.**
+  ① **'여러 건 날짜만' 필터**(`multiOnly` 토글 칩): 현재 표시 중인 receipt를 날짜 grouping한 뒤 **count≥2인 날짜 group만** 표시.
+  미분류만/전체와 **조합**(각각 독립 작동). 묶어볼 후보 날짜를 빠르게 찾는 용도 — meeting 판정 아님. 해당 날짜 없으면
+  '묶어볼 만한 여러 건 날짜가 없어요' empty state. ② **참석자 구성 힌트**: 같은 날짜 group(2건 이상)의 `receiptPeople`(정확일치
+  normalized Set)이 전부 같으면 **'참석자 동일'**, 하나라도 다르면 **'참석자 일부 변경'**(`_orgSamePeople`). 날짜 헤더 아래
+  **중립 caption**(`.org-dmeta` — Text Secondary/Tertiary, success/warning색 금지, 날짜보다 약하게). ⚠️ **판정이 아니라 힌트**:
+  '동일'=같은 만남 확정 아님, '변경'=다른 만남 확정 아님(1차 2명→2차 3명도 같은 만남일 수 있음). **1건 날짜는 표시 없음**,
+  **날짜 내부에서만 비교**(cross-date 비교 없음, 누가 합류/이탈인지 분석 안 함). ③ **날짜 헤더 문구**: 2건 이상 group만
+  **'N건 모두 선택 / N건 선택 해제'**(전체 선택 상태 반영), **1건 group은 버튼 없이 row tap만**. 헤더를 2줄(`.org-dhd-top` +
+  `.org-dmeta`)로. ④ cross-date 선택·자정 넘김·selection 유지(필터 토글 시 선택 receipt.id 안 지움, Action Bar 'N건·합계' 정확)·
+  Action Bar·backdrop 분리·기간 필터 scope 전부 그대로. ⚠️ **Meeting은 사람 비종속**(meetingId 전역) — union 전원 화면에 즉시
+  반영, 다른 사람 미분류에서 즉시 제외(v3.59 불변식 유지). 자동 meeting/시간판단/round/1차2차/payee/treatBy/AI 추천 **미도입**.
+  검증(실데이터 151 + 합성): 칩 3개(multi 기본 off)·여러 건 날짜만 ON 시 모든 group≥2·미분류/전체 조합·참석자 동일(2026-09-07/
+  09-19)/일부 변경(6·4·2명 2026-09-06)·1건 metadata 없음·'3건 모두 선택↔3건 선택 해제'·일부 해제 복귀·1건 버튼 없음·cross-date
+  2건 선택·selection 유지·**사람 비종속 회귀(신유철에서 6/4/2명 3건 생성 → 김영석·정대원·양승모·김아름 각 확정 만남 +1, 본인
+  포함 receipt만 집계)**·Desktop 1280 + Mobile 390·430 필터/가로 overflow 없음·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.59` — **meetingId 생성 UX를 [선택] 혼재 방식 → '만남 정리 전용 작업 공간(Meeting Organizer)'으로 분리 — 계산·meetingId 계약 불변.**
   문제: Person Dashboard에서 [선택]을 누르면 결제/참석 목록에 체크박스가 섞이고, 하단 액션 UI와 기존 콘텐츠가 겹쳐 보였다. →
   **조회(Dashboard)와 만남 정리(Organizer)의 역할을 분리**한다. ① Dashboard의 **[선택] 버튼·체크박스·툴바·액션바 전부 제거**
