@@ -95,6 +95,32 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.65` — **만남 목록에서 묶인 만남 vs 독립 만남 시각 구별(표시/필터만, 계산·기능 불변).** ① **묶인 만남**(같은 meetingId에
+  실제 receipt **2건 이상**, 전역 `_mtgReceiptsById(mid).length>=2` §3·§8)에만 왼쪽 짧은 **Signature Blue 세로바**(width 3·height 32,
+  `.mm-row[data-linked]::before`, row 안·divider와 분리 §1). **독립 receipt(meetingId 없음)·meetingId 1건뿐인 만남은 바 없음**(§2·§3).
+  ② 묶인 만남만 보조정보 **'대표매장 외 N곳 · 영수증 N건'**(§4), 독립 만남은 반복 '영수증 1건' 노이즈 **생략**(제목=날짜·매장, 참석자만).
+  ③ 만남 탭 상단 compact 필터 **[전체 N][묶인 만남 N]**(기본 전체). 전체=grouped+independent=Person Dashboard '만남 N회'와 동일값(§5).
+  ④ 기간 scope로 일부만 보여도 전역 meetingId 2건+면 묶인 만남 유지(§8). ⚠️ 카드/파란 배경/rounded/shadow/큰 badge 없음,
+  straight divider·radius 0 유지(§6). 클릭·Meeting 계산·Organizer·생성/추가/분리/이동·사람 비종속·Person Detail·금액·Dutch Pay·
+  Dropbox 전부 불변(§9). 검증(김영석 실데이터): 전체=묶인+독립 불변식 PASS·바 규칙(2·3건 있음/독립·1건 없음)·필터·Desktop/Mobile
+  390·430·콘솔에러 0. 변경 파일 `index.html`만.
+- `v3.64` — **Meeting Management 완결: CREATE/READ/UPDATE/UNLINK/RECOVERY. ⚠️ 진실원=receipt.meetingId, 금액 계산 전부 불변.**
+  기존 '묶기'만 강했던 것을 "잘못 묶어도 부담 없이 수정"까지 완결. **공통 mutation layer**(§103): `_mtgApply`(dbPutMany atomic +
+  updatedAt + 실패 시 in-memory 롤백 + `_mtgBusy` 경쟁방지, meetingId 외 field 불변 §105) 위에 `_mtgCreateMeeting`(새 만남)·
+  `_mtgAddToMeeting`(기존 추가)·`_mtgDetach`(선택 분리)·`_mtgUnlinkAll`(전체 풀기)·`_mtgMove`(다른 만남 이동)를 통일. 통합 surface
+  **`_mtgManageOpen(tab)`**(org-backdrop full-screen, 내부 뷰 list/detail/edit/addReceipts/pick + 예측 가능한 back §80): Dashboard
+  '만남 N회'→meetings 탭 / '묶이지 않은 영수증'→unlinked 탭(둘 다 `_mtgManageOpen` wrapper, 기존 `_mtgOrganizerOpen`/
+  `_mtgConfirmedListOpen`는 wrapper로 보존). meetings 탭=grouped+independent flat 목록(grouped→detail·independent→receipt 상세),
+  unlinked 탭=기존 Organizer(날짜 grouping·모두 선택·여러 건 날짜만·참석자 동일/일부 변경) + Action Bar 2버튼 [기존 만남에 추가]
+  (1건+ §12·§42)·[새 만남으로 묶기](2건+ §14). detail=조회(union·합계·목록·더치페이)+[편집]. edit=[선택 분리]/[다른 만남으로 이동]+
+  [영수증 추가]/[만남 전체 풀기(danger)]. addReceipts=전역 묶이지 않은 receipt 선택 추가. pick=다른 만남 선택(현재 만남 제외 §73).
+  모두 확인창·atomic·변경 후 renderSide+renderDetail로 `_personMtgData` fresh 재계산 → 사람 비종속 즉시 반영(§53·§87). RECOVERY:
+  잘못 분리→묶이지 않음 재추가 / 잘못 묶음→일부 분리·전체 풀기·다른 만남 이동(§108). ⚠️ Meeting count(=grouped+independent=
+  단둘이+여럿이)·receiptPeople union·단둘이 한턱·일반 분담·여럿이·전체 결제·전체 내가 한턱·참석 부담액·`_receiptShare`·treat·
+  splitExclude·Dutch Pay payload·Dropbox·Person Detail·기간 필터 전부 불변. 새 schema/migration/자동 병합/round/payee/treatBy 없음(§109).
+  Flat List·straight divider·radius 0 유지. 검증(실데이터 151+합성 6명): CREATE(2 independent→만남 −1)·ADD(−1)·DETACH(+1)·RECOVERY
+  재추가·MOVE·UNLINK ALL·데이터 안전(총액·receipt 수 불변, 삭제·손실·중복 0)·불변식·사람 비종속(6명 union·각 화면 반영)·atomic·
+  Desktop/Mobile 390·430·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.63` — **Meeting Organizer receipt row 직선 divider 실제 렌더 완성. ⚠️ CSS 1줄 제거만, 계산·기능 전부 불변.**
   v3.62에서 radius는 제거했으나 **divider가 실제로 안 보였다**(사용자 캡처가 1건 날짜 group). ⚠️ 근본 원인 = v3.59의
   `.org-row:last-child{border-bottom:none}` — 날짜 group이 1건이면 단일 row가 `:last-child`라 divider가 사라졌고, 여러 건
