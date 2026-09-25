@@ -95,6 +95,19 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.69` — **'사람별 분담' 영역 Clean Modern UI 정제(표시만, 계산·명단·금액·한턱·제외·참석만 판정 전부 불변).**
+  기존 `.cat-bar-row.pp-row`(카테고리 막대 공유·rank별 파랑 음영) 구조를 전용 Flat List로 교체. 공통 헬퍼
+  **`_personSplitSectionHtml(list)`**(renderLedgerPanel·renderMonthSummaryHtml 공통): 헤더=제목 '사람별 분담' + 보조설명
+  '함께한 사람들의 부담 금액' + 우측 요약 `N명 · 한턱 N · 제외 N`(⌄, 기존 섹션 collapse 재사용). 본문=`rank | 이름 | progress |
+  금액 | 비율` 5열 grid. **rank** 22px 원(top1만 Signature Blue·나머지 neutral, 메달 emoji 없음), **이름** 고정폭(96px)이라
+  progress 시작점 정렬, **progress** track=`--fill`·fill=Signature Blue 단색(gradient 없음)·7px·모든 bar 시작/끝 X 정렬,
+  **금액** 우측정렬 `tabular-nums`, **비율**=amt/전체부담액 **동적 계산**(top1만 Blue). **기본 상위 5명** + `더보기 N명`/`접기`
+  (위임 토글, `.psplit-list.expanded`). top1은 큰 카드/그림자 없이 연한 `--blue-bg` surface만. 참석만·분담 0원 chips는 divider로
+  분리·더 작고 조용하게(`.psplit .pp-ao-chip`). row 전체 클릭 → 기존 `[data-ppname]` 위임(인물 검색) 유지. **Mobile(≤780px)**
+  은 `rank | 이름 | 금액·비율 / progress` 2단 grid(390·430 overflow 없음). ⚠️ `_participantSplit`/`_receiptShare`/`_attendedOnly`/
+  `treat`/`splitExclude`/`normalizeName`/`receiptPeople`/기간 filter·다른 Dashboard·Meeting·Person Detail·Dutch Pay·Dropbox 전부
+  불변. 검증(실데이터): Top5 순위/금액 = 기존 동일, 비율=amt/총부담액, 참석만 명단 동일, 더보기/접기, Desktop 컬럼 정렬,
+  Mobile 390·430 겹침·overflow 없음, 콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.68` — **만남 목록 UI 2건 정제(표시만, 구조·계산·필터로직·클릭·Meeting Management·데이터 전부 불변).**
   ① **grouped secondary metadata 순서 변경**: `대표매장 외 N곳 · N건 묶음` → **`N건 묶음 · 대표매장 외 N곳`**. sub는 한 줄
   `nowrap`+ellipsis라 **앞의 'N건 묶음'은 긴 매장명에도 항상 노출**되고 뒤의 매장 요약만 잘린다(핵심 상태 정보 우선). Blue Bar
