@@ -650,6 +650,45 @@ svg{display:block;flex-shrink:0;}
 .pp-ao-chip{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--label2);background:var(--fill2);border:1px solid var(--sep);border-radius:999px;padding:4px 11px;transition:.12s;}
 .pp-ao-chip:hover,.pp-ao-chip:focus-visible{border-color:var(--blue);color:var(--blue);outline:none;}
 .attend-only-badge{display:inline-block;font-size:10.5px;font-weight:700;color:var(--blue);background:var(--blue-bg);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:middle;letter-spacing:0;}
+/* v3.69 — 사람별 분담 Clean Modern. Flat List(카드/그림자 없음), rank·이름·progress·금액·비율 5열 정렬. */
+.psplit-head{align-items:flex-start;}
+.psplit-head-l{display:flex;flex-direction:column;gap:2px;align-items:flex-start;min-width:0;}
+.psplit-head-desc{font-size:12px;font-weight:400;color:var(--label3);}
+.psplit-head-r{display:flex;align-items:center;gap:6px;flex:0 0 auto;margin-left:auto;align-self:center;}
+.psplit-head-sum{font-size:12px;color:var(--label2);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.psplit-list{display:flex;flex-direction:column;gap:2px;padding-top:8px;}
+.psplit-row{display:grid;grid-template-columns:24px 96px minmax(0,1fr) 116px 50px;align-items:center;gap:12px;padding:9px 8px;border-radius:8px;cursor:pointer;}
+.psplit-row.top1{background:var(--blue-bg);}
+@media(hover:hover){.psplit-row:not(.top1):hover{background:var(--fill);}}
+.psplit-row:focus-visible{outline:none;background:var(--fill);}
+.psplit-rank{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--label3);background:var(--fill2);font-variant-numeric:tabular-nums;}
+.psplit-row.top1 .psplit-rank{background:var(--blue);color:#fff;}
+.psplit-name{font-size:13.5px;font-weight:500;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.psplit-row.top1 .psplit-name{font-weight:600;}
+.psplit-bar{display:block;height:7px;background:var(--fill);border-radius:999px;overflow:hidden;}
+.psplit-bar-fill{display:block;height:100%;background:var(--blue);border-radius:999px;}
+.psplit-amt{text-align:right;font-size:13.5px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.psplit-pct{text-align:right;font-size:12px;color:var(--label3);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.psplit-row.top1 .psplit-pct{color:var(--blue);font-weight:600;}
+.psplit-list:not(.expanded) .psplit-extra{display:none;}
+.psplit-more{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;margin-top:6px;padding:9px;background:none;border:none;border-top:1px solid var(--sep);font:inherit;font-size:12.5px;font-weight:500;color:var(--label2);cursor:pointer;transition:color .12s;}
+.psplit-more:hover{color:var(--blue);}
+.psplit-more-ic{width:14px;height:14px;transition:transform .15s;}
+.psplit-more.up .psplit-more-ic{transform:rotate(180deg);}
+/* 참석만 chips: 순위와 분리, 더 작고 조용하게(§12) */
+.psplit .pp-attend-only{margin-top:14px;}
+.psplit .pp-ao-chip{font-size:11.5px;font-weight:500;color:var(--label2);background:var(--fill);border-color:transparent;padding:3px 9px;}
+@media(max-width:780px){
+  .psplit-row{grid-template-columns:22px minmax(0,1fr) auto auto;grid-template-areas:"rank name amt pct" "rank bar bar bar";row-gap:6px;column-gap:8px;padding:8px 4px;}
+  .psplit-rank{grid-area:rank;}
+  .psplit-name{grid-area:name;}
+  .psplit-amt{grid-area:amt;}
+  .psplit-pct{grid-area:pct;}
+  .psplit-pct::before{content:'·';margin-right:4px;color:var(--label3);}
+  .psplit-bar{grid-area:bar;margin-top:2px;}
+  .psplit-head-desc{font-size:11.5px;}
+  .psplit-head-sum{font-size:11px;}
+}
 /* v3.35 — 분담 방식(한턱/제외) UI */
 .pp-split-block{display:flex;flex-direction:column;gap:8px;}
 .pp-treatbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--sep);border-radius:var(--rm);background:var(--fill2);cursor:pointer;transition:.12s;}
@@ -2970,6 +3009,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.69 — '사람별 분담' 영역 Clean Modern UI 정제(표시만, 계산·명단·금액·한턱·제외·참석만 판정 전부 불변).
+//   공통 렌더 헬퍼 _personSplitSectionHtml(list): rank(22px, top1만 Blue)·이름(고정폭)·progress(단색 Blue·track 동일 정렬)·
+//   금액(우측 tabular)·비율(amt/전체부담액 동적 계산) 5열 grid. 기본 상위 5명 + '더보기 N명'/'접기'(위임 토글). 참석만 chips는
+//   divider로 분리·더 작고 조용하게. Flat List(카드/그림자 없음). 계산은 _participantSplit/_receiptShare/_attendedOnly 그대로.
+//   Mobile(≤780px)은 rank|이름|금액·비율 / progress 2단 grid(overflow 없음). renderLedgerPanel·renderMonthSummaryHtml 공통 사용.
 // v3.68 — 만남 목록 UI 2건 정제(표시만, 구조·계산·필터로직·클릭·Meeting Management·데이터 전부 불변).
 //   ① grouped 2번째 줄 순서: '대표매장 외 N곳 · N건 묶음' → 'N건 묶음 · 대표매장 외 N곳'. nowrap+ellipsis라 앞의 'N건 묶음'은 항상 보이고 뒤 매장 요약만 잘림.
 //   ② 상단 위계: 2차 필터(전체/묶인 만남, .mm-subfilter .mm-tab)를 primary tab(만남/묶이지 않음)보다 한 단계 작게(font 11.5·weight 500·padding 4/11). 새 색 없음.
@@ -3254,7 +3298,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.68';
+const APP_VERSION='v3.69';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -3948,6 +3992,36 @@ function _attendedOnlyHtml(list){
   if(!names.length)return '';
   const chips=names.map(n=>`<span class="pp-ao-chip" data-ppname="${escapeHtml(n)}" role="button" tabindex="0" title="${escapeHtml(n)} 내역 보기">${escapeHtml(n)}</span>`).join('');
   return `<div class="pp-attend-only"><span class="pp-ao-label">참석만 · 분담 0원</span><div class="pp-ao-chips">${chips}</div></div>`;
+}
+// v3.69 — '사람별 분담' Clean Modern 렌더(표시만). 계산은 _participantSplit/_receiptShare/_attendedOnly 그대로 사용.
+//   rank | 이름 | progress | 금액 | 비율 5열 정렬, 기본 상위 5명 + '더보기 N명'/'접기'. 비율=amt/전체부담액(동적).
+function _personSplitSectionHtml(list){
+  const pparts=_participantSplit(list);
+  if(!pparts.length)return '';
+  const total=pparts.reduce((s,p)=>s+p.amt,0);
+  const maxPP=pparts[0].amt; // 정렬 desc → 첫 항목이 최대(bar 폭 기준)
+  const sum=_splitSubtitle(list,pparts.length).replace(' 반영',''); // "18명 · 한턱 47 · 제외 6"
+  const TOP=5, restN=Math.max(0,pparts.length-TOP);
+  const chev=`<svg class="section-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`;
+  const rows=pparts.map((p,i)=>{
+    const w=maxPP>0?Math.round(p.amt/maxPP*100):0;
+    const pct=total>0?(p.amt/total*100).toFixed(1):'0.0';
+    return `<div class="psplit-row${i===0?' top1':''}${i>=TOP?' psplit-extra':''}" data-ppname="${escapeHtml(p.name)}" role="button" tabindex="0" title="${escapeHtml(p.name)} 내역 보기">`
+      +`<span class="psplit-rank">${i+1}</span>`
+      +`<span class="psplit-name">${escapeHtml(p.name)}</span>`
+      +`<span class="psplit-bar"><span class="psplit-bar-fill" style="width:${w}%"></span></span>`
+      +`<span class="psplit-amt">${fmtMoney(p.amt)}원</span>`
+      +`<span class="psplit-pct">${pct}%</span>`
+    +`</div>`;
+  }).join('');
+  const more=restN>0?`<button type="button" class="psplit-more" data-rest="${restN}"><span class="psplit-more-lbl">더보기 ${restN}명</span><svg class="psplit-more-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button>`:'';
+  return `<div class="budget-section psplit">`
+    +`<button class="section-toggle psplit-head" data-toggle-key="month_participant" data-toggle-default="0">`
+      +`<span class="psplit-head-l"><span class="section-toggle-lbl">사람별 분담</span><span class="psplit-head-desc">함께한 사람들의 부담 금액</span></span>`
+      +`<span class="psplit-head-r"><span class="psplit-head-sum">${escapeHtml(sum)}</span>${chev}</span>`
+    +`</button>`
+    +`<div class="section-body closed"><div class="psplit-list">${rows}</div>${more}${_attendedOnlyHtml(list)}</div>`
+  +`</div>`;
 }
 function dailySparkline(ym){
   const days=daysInMonth(ym);
@@ -7560,33 +7634,8 @@ function renderLedgerPanel(recs){
     <div class="cat-bars stats-cat-grid">${rows.map(r=>catRow(r)+(r.isGroup?r.subRows.map(s=>catRow(s,true)).join(''):'')).join('')}</div>
   </div>`;
 
-  // 참석자별 분담 — 기존 계산(_participantSplit) 그대로 재사용. 선택 기간 recs로 재계산되어
-  // 이번 달·올해·전체·범위 모두 동일하게 갱신된다. 참석자 데이터가 없으면 섹션을 표시하지 않는다.
-  let partHtml='';
-  {
-    const pparts=_participantSplit(recs);
-    if(pparts.length){
-      const maxPP=Math.max(...pparts.map(p=>p.amt));
-      partHtml=`<div class="budget-section ledger-part-section">
-        ${_sectionToggleHtml('사람별 분담',_splitSubtitle(recs,pparts.length),'month_participant',false)}
-        <div class="section-body closed">
-          <div class="cat-bars" style="padding-top:8px;">
-            ${pparts.map((p,i)=>{
-              const w=maxPP>0?(p.amt/maxPP*100):0;
-              return `<div class="cat-bar-row pp-row" data-rank="${Math.min(i,4)}" data-ppname="${escapeHtml(p.name)}" role="button" tabindex="0" title="${escapeHtml(p.name)} 내역 보기">
-                <div class="cat-bar-top">
-                  <span class="cat-bar-name"><span class="pp-name-link">${escapeHtml(p.name)}</span></span>
-                  <span class="cat-bar-amt">${fmtMoney(p.amt)}원</span>
-                </div>
-                <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;background:var(--blue);"></div></div>
-              </div>`;
-            }).join('')}
-          </div>
-          ${_attendedOnlyHtml(recs)}
-        </div>
-      </div>`;
-    }
-  }
+  // 사람별 분담 — v3.69 Clean Modern. 계산(_participantSplit/_attendedOnly)은 선택 기간 recs 그대로.
+  const partHtml=_personSplitSectionHtml(recs);
 
   const filterBar=_monthCatFilter?`<div class="cat-filter-bar"><span>${escapeHtml(periodLabel)} · ${escapeHtml(getCategoryLabel(_monthCatFilter))}</span><button type="button" id="catFilterClearBtn" class="cat-filter-bar-x" aria-label="카테고리 필터 해제">×</button></div>`:'';
   return filterBar+summaryHtml+twoHtml+catHtml+partHtml;
@@ -7762,7 +7811,6 @@ function renderMonthSummaryHtml(ym){
   const sum=monthSummary(ym);
   const prev=monthSummary(ymOffset(ym,-1));
   const cats=categoryBreakdown(ym);
-  const pparts=participantBreakdown(ym);
   const spark=dailySparkline(ym);
 
   // 빈 상태
@@ -7859,31 +7907,8 @@ function renderMonthSummaryHtml(ym){
     `;
   }
 
-  // 참석자별 막대 (기본 접힘)
-  let participantHtml='';
-  if(pparts.length){
-    const maxPP=Math.max(...pparts.map(p=>p.amt));
-    participantHtml=`
-      <div class="budget-section">
-        ${_sectionToggleHtml('사람별 분담',_splitSubtitle(receiptsForMonth(ym),pparts.length),'month_participant',false)}
-        <div class="section-body closed">
-          <div class="cat-bars" style="padding-top:8px;">
-            ${pparts.map((p,i)=>{
-              const w=maxPP>0?(p.amt/maxPP*100):0;
-              return `<div class="cat-bar-row pp-row" data-rank="${Math.min(i,4)}" data-ppname="${escapeHtml(p.name)}" role="button" tabindex="0" title="${escapeHtml(p.name)} 내역 보기">
-                <div class="cat-bar-top">
-                  <span class="cat-bar-name"><span class="pp-name-link">${escapeHtml(p.name)}</span></span>
-                  <span class="cat-bar-amt">${fmtMoney(p.amt)}원</span>
-                </div>
-                <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;background:var(--blue);"></div></div>
-              </div>`;
-            }).join('')}
-          </div>
-          ${_attendedOnlyHtml(receiptsForMonth(ym))}
-        </div>
-      </div>
-    `;
-  }
+  // 사람별 분담 (v3.69 Clean Modern, 기본 접힘) — 계산은 receiptsForMonth(ym) 그대로.
+  const participantHtml=_personSplitSectionHtml(receiptsForMonth(ym));
 
   // 지출 패턴 인사이트 카드
   const insightHtml=_spendingInsightsHtml(ym,sum,prev,cats,spark);
@@ -8184,6 +8209,15 @@ async function renderDetail(){
     const goLink=e=>{const l=e.target.closest('[data-ppname]');if(l&&body.contains(l)){e.preventDefault();_goPersonSearch(l.dataset.ppname);}};
     body.addEventListener('click',goLink);
     body.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('[data-ppname]')){goLink(e);}});
+    // v3.69 — 사람별 분담 '더보기 N명'/'접기' 토글(상위 5명 ↔ 전체). 계산 불변, 표시만.
+    body.addEventListener('click',e=>{
+      const m=e.target.closest('.psplit-more');if(!m||!body.contains(m))return;
+      e.preventDefault();
+      const box=m.parentElement.querySelector('.psplit-list');if(!box)return;
+      const exp=box.classList.toggle('expanded');
+      m.classList.toggle('up',exp);
+      const lbl=m.querySelector('.psplit-more-lbl');if(lbl)lbl.textContent=exp?'접기':('더보기 '+m.dataset.rest+'명');
+    });
     // v3.54 — 단둘이 Hero 금액 클릭 → 근거 영수증 drill-down(위임)
     body.addEventListener('click',e=>{const d=e.target.closest('[data-duo]');if(d&&body.contains(d)){e.preventDefault();_openDuoDrill(d.dataset.duo);}});
     // v3.38 — 지출 추이 칸을 탭하면 툴팁이 고정(pin)돼 손가락을 떼도 남는다. 다른 곳 탭하면 닫힘.
