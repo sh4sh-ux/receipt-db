@@ -95,6 +95,15 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.63` — **Meeting Organizer receipt row 직선 divider 실제 렌더 완성. ⚠️ CSS 1줄 제거만, 계산·기능 전부 불변.**
+  v3.62에서 radius는 제거했으나 **divider가 실제로 안 보였다**(사용자 캡처가 1건 날짜 group). ⚠️ 근본 원인 = v3.59의
+  `.org-row:last-child{border-bottom:none}` — 날짜 group이 1건이면 단일 row가 `:last-child`라 divider가 사라졌고, 여러 건
+  group도 마지막 row는 divider가 없었다(일반 카드/리스트 관행). 이 앱 Flat List 원칙(§10 — 1건·group 마지막 행도 반드시
+  직선으로 닫음)과 충돌하므로 **그 규칙 삭제**. 이제 selected/미선택·hover 모두 각 row 하단 1px 직선 divider(`--divider`) 렌더.
+  Date Header(`border-bottom`)·Action Bar(`border-top`)는 기존대로 straight. ⚠️ Meeting 계산/independent 정의/meetingId/
+  Organizer selection/날짜 grouping/여러 건 날짜만/참석자 비교/만남 생성/사람 비종속/Person Detail/Dutch Pay/Dropbox 전부 불변.
+  검증(computed style + screenshot): 1건 날짜·2건·3건 전체선택 모두 각 row 하단 직선 divider 존재(blue block으로 안 뭉침),
+  Action Bar 상단 divider 표시, Desktop/Mobile 390·430 동일·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.62` — **① 구분선 직선 규칙 완성 + ② 공통 Person Detail(요약→근거→영수증) Drill-down. ⚠️ 계산·데이터 전부 불변, UI/네비만.**
   **① Divider 직선화**: ⚠️ 근본 원인 = 클릭 가능 Flat Row(`.rel-li-tap`·`.org-row`)에 `border-radius`가 있어 그 행의 하단
   `border-bottom`(divider) 양끝이 곡선으로 보였다(전수 조사로 확인). radius 제거(`.rel-li-tap` radius 삭제·`.org-row` radius 0)
