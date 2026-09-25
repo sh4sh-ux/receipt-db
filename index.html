@@ -3069,6 +3069,14 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.73 — 남은 예외 1건: 기간 선택 시트(#lpBackdrop)를 v3.72 오버레이 history 공통 계층에 연결. 새 history 시스템 없음, 계산/기간 로직/UI 디자인 불변.
+//   문제: 기간 시트가 열린 채 iPhone Safari edge swipe-back 시 시트만 닫히지 않고 밑의 ledger route가 pop될 가능성(공통 계층 미연결).
+//   수정: _lpOpenPop에서 _ovPush로 history 엔트리 +1, 모든 UI 닫기(X·backdrop·ESC·트리거 토글·빠른선택·적용)는 _lpClosePop→_ovDismissById로
+//   자기 엔트리 1개만 소비(→popstate→_lpTeardown[+after]). 빠른선택/적용은 _lpClosePop(after)로 필터 적용을 after 콜백에 실어 double teardown 없이 처리.
+//   backdrop 이중 발화(backdrop 리스너+전역 outside-click) double pop은 _lpOvId 즉시 null로 방지. 백그라운드 재렌더로 시트가 사라지면 8685에서
+//   _ovForget로 stale 정리(재열기 차단·유령 stack 방지). 당겨서 새로고침 BLOCK에 .lp-pop-backdrop 추가(시트 열린 중 세로 당김 reload 차단, edge swipe는 미차단).
+//   부수 수정(v3.29부터 있던 모바일 버그): 직접 기간 [적용]이 date input을 pslot(periodSlot)에서 조회했는데 모바일은 시트가 body로 포탈돼 null →
+//   적용 불가였다. document.getElementById로 바꿔(트리거 핸들러와 동일) 모바일 range 적용 복구. 기간 계산(_statsPeriodReceipts)·UI 불변.
 // v3.72 — iPhone Safari edge swipe-back 시 앱이 새로고침/초기화되는 문제 수정(오버레이 history 통합). 기능·계산·데이터 불변.
 //   ⚠️ 진단(계측): Drill-down/Meeting 관리/Meeting 상세/관계 그룹 편집/공동 한턱 상세 오버레이가 열릴 때 history 엔트리를
 //   쌓지 않아, swipe-back(=history back)이 (a) 밑의 '라우트'를 pop → 전체 rerender(리셋처럼 보임) 또는 (b) 초기 엔트리를 넘어
@@ -3383,7 +3391,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.72';
+const APP_VERSION='v3.73';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5140,8 +5148,17 @@ document.getElementById('listSortSel')?.addEventListener('change',e=>{
 });
 // v3.29 — 통합 기간 컨트롤 열기/닫기(팝오버=데스크탑, 바텀시트=모바일). 요소는 renderDetail마다
 // 다시 그려지므로 id로 live query한다. 백드롭·트리거 aria도 함께 갱신.
+// v3.73 — 기간 시트를 v3.72 오버레이 history 공통 계층(_ovPush/_ovDismiss/popstate)에 연결.
+//   실제 hide는 _lpTeardown(멱등), open 시 history 엔트리 +1, 모든 UI 닫기는 _lpClosePop→_ovDismissById로 엔트리 소비.
+let _lpOvId=null;
+function _lpTeardown(){
+  const pop=document.getElementById('lpRangePop'),bd=document.getElementById('lpBackdrop'),tr=document.getElementById('lpTrigger');
+  if(pop)pop.hidden=true; if(bd)bd.hidden=true; if(tr)tr.setAttribute('aria-expanded','false');
+  _lpOvId=null;
+}
 function _lpOpenPop(){
   const pop=document.getElementById('lpRangePop'),bd=document.getElementById('lpBackdrop'),tr=document.getElementById('lpTrigger');
+  if(_lpOvId||!pop)return; // 이미 열림/요소 없음
   // 모바일 바텀시트는 뷰포트 기준으로 떠야 한다. 헤더에 backdrop-filter(반투명 블러)가 있어
   // position:fixed가 헤더 안에 갇히므로, 열 때 backdrop+시트를 body로 이동(포탈)한다.
   // 데스크탑 팝오버는 트리거 기준 absolute라 그대로 둔다. (재렌더 시 slot에 새로 그려지고 잔재는 아래에서 제거)
@@ -5150,10 +5167,15 @@ function _lpOpenPop(){
     if(pop)document.body.appendChild(pop);
   }
   if(pop)pop.hidden=false; if(bd)bd.hidden=false; if(tr)tr.setAttribute('aria-expanded','true');
+  _lpOvId=_ovPush(_lpTeardown); // v3.73 — history 엔트리 +1 → swipe-back이 route pop이 아니라 시트만 닫음
 }
-function _lpClosePop(){
-  const pop=document.getElementById('lpRangePop'),bd=document.getElementById('lpBackdrop'),tr=document.getElementById('lpTrigger');
-  if(pop)pop.hidden=true; if(bd)bd.hidden=true; if(tr)tr.setAttribute('aria-expanded','false');
+// UI 닫기(X·backdrop·ESC·트리거 토글·빠른선택·적용): history 엔트리를 소비(→popstate→_lpTeardown[+after]).
+//   ⚠️ backdrop 클릭은 (backdrop 리스너 + 전역 outside-click) 두 번 들어온다 → _lpOvId를 즉시 비워 history.back 이중 호출(double pop) 방지.
+function _lpClosePop(after){
+  const cb=(typeof after==='function')?after:null;
+  const id=_lpOvId;
+  if(id){_lpOvId=null;_ovDismissById(id,cb,_lpTeardown);}
+  else{_lpTeardown();if(cb)cb();}
 }
 // 바깥 클릭 또는 ESC로 닫기. 트리거 자신·팝오버 내부 클릭은 자체 핸들러가 처리하므로 제외.
 document.addEventListener('click',e=>{
@@ -8671,6 +8693,8 @@ async function renderDetail(){
   // v3.33 — 기간 바텀시트가 body로 포탈된 채 남으면(다른 렌더로 전환 시) 반투명 백드롭이 화면을 덮는다.
   // 어떤 분기로 렌더되든 진입 시 항상 잔재를 제거한다(가계부 분기 전용이던 정리를 전역으로 승격).
   document.querySelectorAll('body > #lpBackdrop, body > #lpRangePop, body > .mtg-sheet-backdrop').forEach(n=>n.remove());
+  // v3.73 — 기간 시트가 _lpClosePop 이외 경로(백그라운드 재렌더 등)로 제거되면 stale _lpOvId를 정리(재열기 차단·유령 stack 방지).
+  if(_lpOvId){_ovForget(_lpOvId);_lpOvId=null;}
   body.classList.toggle('stats-redesign',!selectedId&&!searchQuery);
   body.classList.remove('mob-compact');
   // v3.17 — 기간 컨트롤은 헤더 슬롯(제목 행 우측)에 렌더. 기본은 비워두고 가계부 분기에서만 채운다.
@@ -8838,20 +8862,21 @@ async function renderDetail(){
           else if(lp==='year'){_ledgerTimeFilter={type:'year',value:String(now.getFullYear())};}
           else if(lp==='month'){viewMonth=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;_ledgerTimeFilter={type:'month'};}
           _monthCatFilter=null;
-          renderSide();renderDetail(); // 재렌더 → 팝오버/시트 자동 닫힘
+          _lpClosePop(()=>{renderSide();renderDetail();}); // v3.73 — history 엔트리 소비 후 필터 적용/재렌더
         });
       });
       // 직접 기간 선택: [적용] — 기존 날짜 검증/계산 로직 불변
       const _rApply=pslot.querySelector('#lpRangeApply');
       if(_rApply)_rApply.addEventListener('click',()=>{
-        const from=pslot.querySelector('#lpRangeFrom')?.value||'';
-        const to=pslot.querySelector('#lpRangeTo')?.value||'';
+        // v3.73 — 모바일에선 #lpRangePop이 body로 포탈되므로 id로 조회(line 8846 트리거와 동일 이유). pslot(periodSlot) 조회 시 mobile에서 null → 적용 불가였음.
+        const from=document.getElementById('lpRangeFrom')?.value||'';
+        const to=document.getElementById('lpRangeTo')?.value||'';
         if(!from&&!to){toast('시작일 또는 종료일을 선택해주세요',{type:'error'});return;}
         let f=from,g=to; if(f&&g&&f>g){const t2=f;f=g;g=t2;}
         _ledgerRange={from:f,to:g};
         _ledgerTimeFilter={type:'range',from:f,to:g};
         _monthCatFilter=null;
-        renderSide();renderDetail();
+        _lpClosePop(()=>{renderSide();renderDetail();}); // v3.73 — history 엔트리 소비 후 필터 적용/재렌더
       });
       // 카테고리 정렬 드롭다운
       const _sortSel=body.querySelector('#ledgerCatSort');
@@ -12495,7 +12520,7 @@ function _dbxBindEvents(){
 (()=>{
   if(!('ontouchstart' in window))return;
   // v3.72 — 오버레이가 열려 있으면 당겨서 새로고침(→location.reload) 금지. 최근 추가된 오버레이도 포함.
-  const BLOCK='.modal-overlay,.modal-card,.cat-picker-popover:not([hidden]),.mtg-sheet-backdrop,.org-backdrop,.rg-ov';
+  const BLOCK='.modal-overlay,.modal-card,.cat-picker-popover:not([hidden]),.mtg-sheet-backdrop,.org-backdrop,.rg-ov,.lp-pop-backdrop';
   const TH=70,MAX=104,EDGE=28;
   let y0=0,x0=0,pulling=false,dist=0,busy=false,axisLock=false;
 

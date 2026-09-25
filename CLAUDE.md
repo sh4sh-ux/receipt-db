@@ -95,6 +95,20 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.73` — **기간 선택 시트(`#lpBackdrop`)를 v3.72 오버레이 history 공통 계층에 연결(남은 swipe-back 예외 1건). ⚠️ 새 history 시스템·기간 계산·UI 디자인 없음, 계산/데이터 전부 불변.**
+  v3.72에서 5개 오버레이는 공통 계층(`_ovPush`/`_ovDismiss`/popstate)에 연결됐으나 **기간 선택 시트만 예외**로, 열린 채 edge swipe-back 시 시트만 닫히지 않고
+  밑의 ledger route가 pop될 수 있었다(문서 reload는 아님). **수정**: `_lpOpenPop`에서 `_ovPush(_lpTeardown)`로 history 엔트리 +1, 실제 hide는 멱등 `_lpTeardown`으로
+  분리. 모든 UI 닫기(X·backdrop·ESC·트리거 토글·빠른선택·적용)는 `_lpClosePop`→`_ovDismissById`로 자기 엔트리 1개만 소비(→popstate→`_lpTeardown`[+after]).
+  빠른선택/적용은 `_lpClosePop(after)`로 필터 적용을 after 콜백에 실어 double teardown 없이 처리(적용 순서 유지). **backdrop 이중 발화**(backdrop 리스너 + 전역
+  outside-click → `_lpClosePop` 2회)로 인한 double pop은 `_lpOvId`를 즉시 null로 비워 방지. 백그라운드 재렌더로 시트가 제거되면 renderDetail 정리부에서
+  `_ovForget`로 stale `_lpOvId` 정리(재열기 차단·유령 stack 방지). 당겨서 새로고침 `BLOCK`에 `.lp-pop-backdrop` 추가(시트 열린 중 세로 당김 reload 차단, **edge
+  swipe-back 자체는 미차단**). **부수 수정(v3.29부터 있던 모바일 버그, 검증 중 발견)**: 직접 기간 **[적용]**이 날짜 input을 `pslot`(=periodSlot)에서 조회했는데
+  모바일은 시트가 `body`로 포탈돼 조회 결과가 null → 시작/종료일이 빈값으로 읽혀 **모바일에서 range 적용이 아예 안 됐다**(토스트 후 return). 트리거 핸들러와 동일하게
+  `document.getElementById`로 바꿔 복구. 기간 계산·UI·데스크탑 동작 불변(데스크탑은 포탈 안 해 원래 정상이었음). ⚠️ 기간 필터 계산(`_ledgerTimeFilter`/`_ledgerRange`/
+  `_statsPeriodReceipts`)·기간 UI 디자인·Foundation·SW·Receipt/Person/Meeting/Relation Group/treatBy/공동 한턱/Dutch Pay/Dropbox·v3.72 오버레이 계약 전부 불변.
+  **검증**: 기간 시트 open push +1·UI close(빠른선택/적용/취소/backdrop/ESC) 자기 엔트리 −1·swipe-back single-pop(route/기간 유지·reload 없음)·10회 open/close listener
+  누적 0·ghost 0·double pop 0·**모바일 range 적용 복구(패널 14,000 반영·36,000 아님)**, 기간 range 계산(4건·14,000)/전체(8건·36,000) 불변, v3.72 오버레이(공동 한턱/
+  Meeting/관계 그룹) 회귀 없음, 갈포갈비 불변, Desktop/Mobile 390·430·콘솔에러 0. 변경 파일 `index.html`만. ⚠️ 실제 iPhone Safari는 사용자 Production 확인(에이전트 환경 WebKit 미설치).
 - `v3.72` — **iPhone Safari edge swipe-back 시 앱이 새로고침/초기화되던 문제 수정(오버레이 history 통합). ⚠️ 기능·계산·데이터·기존 라우트 back 전부 불변.**
   ⚠️ **진단(UI Back vs Safari swipe-back 별개 계측)**: Drill-down(공동 한턱/전체 결제 등 `.mtg-sheet-backdrop`)·Meeting 관리(`.org-backdrop`)·
   Meeting 상세(`.mtg-sheet`)·관계 그룹 편집(`.rg-ov`)·공동 한턱 상세 오버레이가 열릴 때 **history 엔트리를 쌓지 않았다**. 그래서 swipe-back(=history
