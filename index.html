@@ -811,8 +811,12 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .rel-duo-click:hover .rel-duo-amt{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;}
 .rel-duo-click:hover .rel-duo-go{opacity:1;color:var(--blue-txt);}
 .rel-duo-click:focus-visible{outline:2px solid var(--blue);outline-offset:3px;}
-.rel-duo-diff{margin-top:10px;text-align:center;font-size:12px;color:var(--label3);font-variant-numeric:tabular-nums;}
-.rel-duo-diff b{font-weight:700;color:var(--label2);}
+/* v3.55 — 결제자 미상 보조 row: secondary 톤, 카드/배경/경고색 없음, 기존 divider로만 구분. */
+.rel-duo-unknown{display:flex;align-items:center;gap:4px;width:100%;margin-top:12px;padding:9px 2px 0;border:none;border-top:1px solid var(--divider);background:none;font-family:inherit;font-size:var(--fs-secondary);color:var(--text-tertiary);cursor:pointer;text-align:left;font-variant-numeric:tabular-nums;}
+.rel-duo-unknown .rel-duo-go{margin-left:auto;}
+.rel-duo-unknown:hover{color:var(--text-secondary);}
+.rel-duo-unknown:hover .rel-duo-go{opacity:1;color:var(--blue-txt);}
+.rel-duo-unknown:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:var(--rs);}
 .duo-drill-foot{display:flex;align-items:baseline;justify-content:space-between;margin-top:10px;padding-top:12px;border-top:1px solid var(--divider);}
 .duo-drill-foot span{font-size:var(--fs-secondary);color:var(--text-secondary);}
 .duo-drill-foot b{font-size:15px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums;}
@@ -2827,6 +2831,18 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.55 — 단둘이 Hero 데이터 표현 정제: 전체 건수 정정 + 결제자 미상 그룹 노출. ⚠️ 계산 로직 불변, 단둘이 표현만.
+//   ① Hero 우측 '영수증 N건'을 tgtDuo+myDuo(결제자 확인분)에서 **단둘이 전체**(receiptPeople 정확히 {나,대상}인 모든
+//   receipt, paidBy 유무 무관 — `duoAll=together.filter(size2&나&대상)`)로 정정(동적, 하드코딩 없음). ② 단둘이를 3그룹으로:
+//   상대 결제(paidBy=대상)·내 결제(paidBy=나)·**결제자 미상**(paidBy가 빈값이거나 어느 쪽도 아님). 불변식
+//   전체=상대+나+미상. ③ 미상 ≥1건일 때만 Hero 하단에 secondary row('결제자 미상 N건 · N원 ›', 경고색·카드·배경 없이
+//   기존 divider·text-tertiary 토큰만), 0건이면 숨김. 클릭 시 기존 drill-down(_openDuoDrill 'unknown') 재사용 →
+//   목록·합계·row 클릭 selectReceipt 동일. ④ **비율 Bar는 그대로**(결제자 확인 실결제 431,900 vs 505,000만, 미상 제외).
+//   ⑤ Hero의 '결제 차이' 캡션 **제거**(정산/채무 오해 방지 — _duoDiffHtml 삭제). ⑥ paidBy 수정 시 다음 렌더에 자동
+//   재계산(미상 -1 / 해당 측 +1, 전체 불변). ⚠️ 여럿이·전체·한턱·참석부담·meetingId/만남통계·_receiptShare/
+//   _participantSplit/treat/splitExclude·Dutch Pay·기간필터·정확일치 전부 불변. 자동 보정 없음(미상은 사용자가 상세에서
+//   수정). 검증(실데이터 신유철 + 합성 A~I): 단둘이 20 = 상대9+나10+미상1(성수불막사우나 22,000), Hero=drill-down 합계,
+//   미상 수정→자동 재계산, 0건 row 숨김, Desktop/Mobile 390·430 overflow 없음·콘솔에러 0. 변경 파일 index.html만.
 // v3.54 — 단둘이 Hero '실결제액' 표현 + 근거 영수증 drill-down. ⚠️ 계산 불변 — 표현/상호작용만 추가.
 //   단둘이(receiptPeople 정확히 {나,대상}) receipt를 paidBy 실제 결제자에게 total 전액 귀속(1/N 아님). 이미 계산돼 있던
 //   tgtDuo(단둘이+상대결제)·myDuo(단둘이+내결제) 그대로 사용 — treat/splitExclude와 무관(실결제 기준). ① Hero 라벨
@@ -2979,7 +2995,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.54';
+const APP_VERSION='v3.55';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6348,22 +6364,24 @@ function _personMeetingStats(rel){
 // ── v3.54 단둘이 Hero 실결제 drill-down ──
 //   단둘이(receiptPeople 정확히 {나,대상}) receipt를 paidBy 실제 결제자에게 total 전액 귀속(1/N 아님).
 //   treat/splitExclude와 무관(실결제 기준). Hero 숫자 = 여기 목록 합(진실원 동일). meetingId/여럿이/전체/한턱/참석부담 불변.
-let _personDuoDrill=null; // {name, tgt:[단둘이+상대결제 recs], me:[단둘이+내결제 recs]} — renderPersonDashboardHtml에서 세팅
+let _personDuoDrill=null; // {name, tgt:[상대결제], me:[내결제], unknown:[결제자 미상]} — renderPersonDashboardHtml에서 세팅
 function _duoSideHtml(which,label,amt,cnt,isMe){
   const inner=`<div class="rel-duo-lbl">${escapeHtml(label)}</div><div class="rel-duo-amt">${fmtMoney(amt)}원${cnt>0?'<span class="rel-duo-go" aria-hidden="true">›</span>':''}</div><div class="rel-duo-cnt">${cnt}건</div>`;
   if(cnt>0)return `<button type="button" class="rel-duo-side rel-duo-click${isMe?' me':''}" data-duo="${which}" aria-label="${escapeHtml(label)} ${fmtMoney(amt)}원 ${cnt}건 — 영수증 보기">${inner}</button>`;
   return `<div class="rel-duo-side rel-duo-zero${isMe?' me':''}">${inner}</div>`;
 }
-function _duoDiffHtml(a,b){
-  if((a+b)<=0)return '';
-  return `<div class="rel-duo-diff">결제 차이 <b>${fmtMoney(Math.abs(a-b))}원</b></div>`;
+// v3.55 — 결제자 미상(단둘이인데 paidBy가 나·대상 어느 쪽도 아님) 보조 row. 1건 이상일 때만, secondary 톤(경고색 금지).
+function _duoUnknownHtml(recs){
+  if(!recs||!recs.length)return '';
+  const sum=recs.reduce((s,r)=>s+(r.total||0),0);
+  return `<button type="button" class="rel-duo-unknown" data-duo="unknown" aria-label="결제자 미상 ${recs.length}건 ${fmtMoney(sum)}원 — 영수증 보기">결제자 미상 ${recs.length}건 · ${fmtMoney(sum)}원<span class="rel-duo-go" aria-hidden="true">›</span></button>`;
 }
 // 금액 클릭 → 그 금액을 구성한 단둘이 영수증 목록(최신순). 데스크탑 중앙 카드 / 모바일 하단 시트(_mtgSheetOpen 재사용).
 function _openDuoDrill(which){
   const d=_personDuoDrill; if(!d)return;
-  const isTgt=which==='tgt';
-  const recs=(isTgt?d.tgt:d.me)||[];
-  const title=isTgt?`${d.name}이 낸 금액`:'내가 낸 금액';
+  const isTgt=which==='tgt', isUnknown=which==='unknown';
+  const recs=(isUnknown?d.unknown:isTgt?d.tgt:d.me)||[];
+  const title=isUnknown?'결제자 미상':isTgt?`${d.name}이 낸 금액`:'내가 낸 금액';
   const sub=isTgt?'나와 단둘이 있었을 때':`${d.name}과 단둘이 있었을 때`;
   const sorted=[...recs].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id))); // 최신순
   const total=sorted.reduce((s,r)=>s+(r.total||0),0);
@@ -6373,7 +6391,7 @@ function _openDuoDrill(which){
       <span class="mtg-drow-amt">${fmtMoney(x.total||0)}원</span>
       <span class="mtg-drow-date">${escapeHtml(fmtDateKor(x.date))}</span>
     </button>`).join('')
-    :`<div class="empty-state" style="padding:22px 8px;">단둘이 있을 때 ${escapeHtml(isTgt?d.name+'이 결제한':'내가 결제한')} 영수증이 없어요.</div>`;
+    :`<div class="empty-state" style="padding:22px 8px;">${escapeHtml(isUnknown?'결제자 미상 영수증이 없어요.':'단둘이 있을 때 '+(isTgt?d.name+'이 결제한':'내가 결제한')+' 영수증이 없어요.')}</div>`;
   card.innerHTML=`
     <div class="mtg-sheet-hd"><div class="mtg-sheet-title">${escapeHtml(title)}</div><button class="mtg-sheet-x" id="duoDrillX" type="button" aria-label="닫기">×</button></div>
     <div class="mtg-sheet-meta">${fmtMoney(total)}원 · ${sorted.length}건 · ${escapeHtml(sub)}</div>
@@ -6388,7 +6406,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
   // v3.41 — 히어로를 '단둘이/여럿이/전체 × 상대 결제/내 결제' 2×3 비교표로 정리.
   //   계산은 v3.40 검증 함수 그대로(_personRelation). 아래 결제/참석 내역 섹션은 불변.
   const R=_personRelation(name,payerRecs,partRecs);
-  const {me,tgt,tgtWith,tgtDuo,tgtGrp,tgtNoMe,myWith,myDuo,myGrp,myTreat,myTreatDuo,myTreatGrp,shareTotal}=R;
+  const {me,tgt,tgtWith,tgtDuo,tgtGrp,tgtNoMe,myWith,myDuo,myGrp,myTreat,myTreatDuo,myTreatGrp,shareTotal,together,pool}=R;
   const totalShare=shareTotal;                                    // '참석 내역' 섹션 소제목용
   const totalPaid=payerRecs.reduce((s,r)=>s+(r.total||0),0);      // '결제 내역' 섹션 소제목용(상대 전체 결제)
   const sum=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
@@ -6399,6 +6417,11 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
   let heroHtml;
   if(me){
     const duoTgt=sum(tgtDuo), duoMe=sum(myDuo), duoSum=duoTgt+duoMe;
+    // v3.55 — 단둘이 전체 = receiptPeople 정확히 {나,대상}인 모든 receipt(paidBy 유무 무관). 세 그룹으로 분류.
+    const _isDuoR=r=>{const Pp=receiptPeople(r);return Pp.size===2&&Pp.has(me)&&Pp.has(tgt);};
+    const duoAll=(together||pool||[]).filter(_isDuoR);
+    const duoUnknown=duoAll.filter(r=>{const pb=normalizeName(r.paidBy);return pb!==me&&pb!==tgt;}); // 상대/나 어느 쪽도 아님(빈값 포함)
+    const duoAllCnt=duoAll.length; // = tgtDuo.length + myDuo.length + duoUnknown.length (불변식)
     let ratioHtml='';
     if(duoSum>0){
       const tp=Math.round(duoTgt/duoSum*100), mp=100-tp; // 반올림 후 합 100 보장(§31)
@@ -6410,16 +6433,16 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     const hero=`<div class="rel-hero">
       <div class="rel-hero-top">
         <div class="rel-hero-tt"><div class="rel-hero-title">단둘이 만났을 때</div><div class="rel-hero-desc">함께한 자리의 결제</div></div>
-        <div class="rel-hero-cnt">영수증 ${duoCnt}건</div>
+        <div class="rel-hero-cnt">영수증 ${duoAllCnt}건</div>
       </div>
       <div class="rel-duo">
         ${_duoSideHtml('tgt',`${nm}이 낸 금액`,duoTgt,tgtDuo.length,false)}
         ${_duoSideHtml('me','내가 낸 금액',duoMe,myDuo.length,true)}
       </div>
-      ${ratioHtml}${_duoDiffHtml(duoTgt,duoMe)}
+      ${ratioHtml}${_duoUnknownHtml(duoUnknown)}
     </div>`;
-    // v3.54 — 단둘이 drill-down 진실원: Hero 숫자에 쓴 바로 그 collection(tgtDuo/myDuo)을 저장해 클릭 시 그대로 목록화.
-    _personDuoDrill={name:tgt, tgt:tgtDuo.slice(), me:myDuo.slice()};
+    // v3.54/55 — 단둘이 drill-down 진실원: Hero 숫자에 쓴 바로 그 collection을 저장해 클릭 시 그대로 목록화(상대/나/미상).
+    _personDuoDrill={name:tgt, tgt:tgtDuo.slice(), me:myDuo.slice(), unknown:duoUnknown.slice()};
     // v3.43 — 여럿이/전체는 카드가 아니라 plain row(하단 divider만). '전체'는 합산 건수 badge를 두지 않는다
     //   (Header의 '함께한 영수증'이 관계 대표 count — 36건을 대표로 오해하지 않게).
     const sideVal=(who,arr,meCol)=>`<span class="rsv${meCol?' me':''}"><i>${who}</i><b class="${sum(arr)?'':'zero'}">${fmtMoney(sum(arr))}원</b><em>${arr.length}건</em></span>`;

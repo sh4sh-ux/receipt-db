@@ -95,6 +95,21 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.55` — **단둘이 Hero 데이터 표현 정제: 전체 건수 정정 + 결제자 미상 그룹 노출(계산 로직 불변, 단둘이 표현만).**
+  ① Hero 우측 '영수증 N건'을 `tgtDuo+myDuo`(결제자 확인분, 19)에서 **단둘이 전체**(`receiptPeople`가 정확히 {나,대상}인
+  모든 receipt, paidBy 유무 무관 = `duoAll`, 20)로 정정 — 동적 계산(하드코딩 없음). ② 단둘이를 **3그룹**으로 분류:
+  상대 결제(`paidBy===대상`)·내 결제(`paidBy===나`)·**결제자 미상**(paidBy가 빈값이거나 어느 쪽도 아님). **불변식
+  전체 = 상대 + 나 + 미상**. ③ 미상 **≥1건일 때만** Hero 하단에 secondary row(`결제자 미상 N건 · N원 ›` — 경고색·카드·
+  배경 없이 기존 `--divider`·`--text-tertiary` 토큰만, 0건이면 숨김). 클릭 → 기존 drill-down(`_openDuoDrill('unknown')`,
+  `_mtgSheetOpen`) 재사용(제목 '결제자 미상'·부제 '○○과 단둘이 있었을 때'·목록 최신순·합계 foot·row 클릭 `selectReceipt`).
+  ④ **비율 Bar는 그대로**(결제자 확인 실결제 431,900 vs 505,000만, 미상은 비율에서 제외 — 누가 냈는지 모르므로).
+  ⑤ Hero의 '결제 차이' 캡션 **제거**(`_duoDiffHtml` 삭제 — 정산/채무 의미 오해 방지). ⑥ 미상 receipt의 `paidBy`를
+  사용자가 상세에서 수정하면 **다음 렌더에 자동 재계산**(미상 −1 / 해당 측 +1, 전체 불변) — 자동 보정은 하지 않음.
+  ⚠️ 여럿이·전체 결제·내가 한턱·참석 부담액·meetingId/만남 통계·`_receiptShare`/`_participantSplit`/`treat`/`splitExclude`·
+  Dutch Pay·기간 필터·정확일치(`receiptPeople`/`normalizeName`) 전부 불변. v3.54 상대/나 drill-down도 그대로.
+  검증(실데이터 신유철 + 합성 A~I): 단둘이 **20 = 상대 9 + 나 10 + 미상 1**(성수불막사우나 22,000·paidBy 빈값), Hero=
+  drill-down 합계·건수 일치(상대 431,900/9·나 505,000/10·미상 22,000/1), 미상 paidBy→나/상대 수정 시 자동 재계산,
+  미상 0건 row 숨김, Desktop/Mobile 390·430 overflow 없음·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.54` — **단둘이 Hero '실결제액' 표현 + 근거 영수증 drill-down(계산 불변 — 표현/상호작용만 추가).**
   단둘이(`receiptPeople`가 정확히 {나,대상} 2명) receipt를 **`paidBy` 실제 결제자에게 `total` 전액 귀속**(1/N 아님).
   이미 계산돼 있던 `tgtDuo`(단둘이+상대결제)·`myDuo`(단둘이+내결제)를 그대로 사용 — **`treat`/`splitExclude`와 무관**(실결제
