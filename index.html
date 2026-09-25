@@ -704,8 +704,9 @@ svg{display:block;flex-shrink:0;}
 .gd-total span{font-size:13px;color:var(--label2);}
 .gd-total b{font-size:20px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
 .gd-sectlabel{font-size:12px;font-weight:600;color:var(--label3);margin:12px 2px 4px;}
-.gd-mrow,.gd-corow{position:relative;padding-right:26px;}
-.gd-chev{position:absolute;right:6px;top:50%;transform:translateY(-50%);color:var(--label3);font-size:16px;line-height:1;}
+/* v3.75 — chevron을 amount와 같은 primary row(grid-row:1)에 배치, 오른쪽 끝 정렬(모든 row X축 통일). absolute 제거 → 금액 아래로 wrap 안 됨. */
+.gd-mrow,.gd-corow{grid-template-columns:1fr auto auto;}
+.gd-chev{grid-column:3;grid-row:1;align-self:center;color:var(--label3);font-size:16px;line-height:1;}
 /* v3.35 — 분담 방식(한턱/제외) UI */
 .pp-split-block{display:flex;flex-direction:column;gap:8px;}
 .pp-treatbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--sep);border-radius:var(--rm);background:var(--fill2);cursor:pointer;transition:.12s;}
@@ -1001,6 +1002,13 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .pd-row-right.em{color:var(--blue-txt);font-size:15px;}
 .pd-row-sub{grid-column:1 / -1;grid-row:2;font-size:11.5px;color:var(--label3);}
 .pd-empty{padding:30px 8px;text-align:center;color:var(--label3);font-size:13px;}
+/* v3.75 — 전체 한턱 종류 표시(개인/공동) — 작고 조용한 secondary. 금액보다 약하게, 새 색 없음(개인=neutral·공동=soft Signature Blue) */
+.pd-kind{margin-left:8px;font-size:10.5px;font-weight:600;color:var(--label3);vertical-align:2px;}
+.pd-kind-co{color:var(--blue-txt);}
+/* v3.75 — 전체 한턱 헤더 breakdown(개인/공동, 동적) */
+.pd-breakdown{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;margin:-6px 0 14px;font-size:12px;color:var(--label2);font-variant-numeric:tabular-nums;}
+.pd-breakdown b{font-weight:700;color:var(--label);}
+.pd-breakdown .pd-bd-sep{color:var(--label3);}
 /* v3.59 Meeting Organizer — 만남 정리 전용 full-screen overlay(Person Dashboard와 완전 분리) */
 .org-backdrop{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:24px;}
 .org-panel{background:var(--card);width:100%;max-width:560px;height:86vh;max-height:900px;border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,.28);}
@@ -3086,6 +3094,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.75 — 개인/공동/전체 한턱 Drill-down 의미 정리(표시만). ⚠️ 새 한턱 계산 없음 — v3.71 _personTreatGiving(solo/co/all, receipt.id 유니크)·_isCoTreat·_treatSubjects/_treatRecipients 그대로.
+//   전체 한턱(gall) drill: ① 각 receipt에 개인/공동 종류 chip(_isCoTreat, 작은 secondary — 개인=neutral·공동=soft Blue, 금액보다 약하게), ② 헤더에 breakdown(개인 X원·N건 · 공동 Y원·N건, 동적). 불변식 개인+공동=전체(금액·건수, receipt.id 유니크).
+//   개인/공동 drill은 제목이 종류라 chip 없음. 공동 주체 표시는 receipt.treatBy.members snapshot(현재 그룹 members 아님·inactive 그룹도 유지). row 클릭 → 기존 selectReceipt. _openPersonDetailShell에 optional row.tagHtml·cfg.metaExtraHtml만 추가(다른 drill 불변).
+//   ⚠️ paidBy/전체 결제(pay)·참석 부담액(share)·단둘이 한턱(treat)·사람별 분담 개인/그룹(v3.74)·Relation Group Detail(v3.74)·기간 filter·overlay history(v3.72~74)·Dutch Pay·Dropbox 전부 불변. migration 없음. 변경 파일 index.html.
 // v3.74 — 사람별 분담 [개인|그룹] 보기 + 관계 그룹 부담 상세. ⚠️ 개인 부담 계산(_participantSplit/_receiptShare) 전부 불변 — 그 결과를 관계 그룹 단위로 aggregate해 다른 관점으로 보여줄 뿐.
 //   보기 모드 _splitViewMode(person 기본, 탭 세션 유지·영구 저장 안 함). 그룹 0개면 toggle 숨김·개인 보기와 완전 동일.
 //   _splitUnits(list): 개인 계산 결과를 unit으로 재구성 — 각 사람은 정확히 하나의 unit(첫 active 그룹 아니면 개인) → double count 0·SUM(개인)=SUM(그룹) 불변. dup=여러 active 그룹 동시소속(있으면 첫 그룹 귀속·조용한 중복합산 아님·보고).
@@ -3413,7 +3425,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.74';
+const APP_VERSION='v3.75';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -4093,7 +4105,8 @@ function _openGroupCoTreatDrill(groupId){
   const recs=[...(_relGroupCoTreat(groupId))].sort((a,b)=>((b.date||'').localeCompare(a.date||''))||String(b.id).localeCompare(String(a.id)));
   const sumT=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
   const flow=r=>{const subj=_treatSubjects(r),rec=_treatRecipients(r);return escapeHtml(subj.join(' · ')+' → '+(rec.length?rec.join(' · '):'참석자'));};
-  _openPersonDetailShell({title:`${escapeHtml(g.name||_suggestRgName(g.members,g.type))} 공동 한턱`, subtitle:`${fmtMoney(sumT(recs))}원 · ${recs.length}건`,
+  // v3.75 — 공동 한턱 제목은 공동 주체 표기(members ' · ' join)로 통일(사용자 지정 name의 '&' 등 노출 방지). title은 shell이 1회 escape(raw 전달·이중 escape 금지).
+  _openPersonDetailShell({title:`${g.members.join(' · ')} 공동 한턱`, subtitle:`${fmtMoney(sumT(recs))}원 · ${recs.length}건`,
     rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, subHtml:flow(r)})),
     foot:()=>({label:'합계', amount:sumT(recs)})});
 }
@@ -4458,7 +4471,7 @@ function _openRelationGroupSplitDetail(groupId,list){
   const coHtml=co.length?`<div class="gd-sectlabel">공동 한턱</div><div class="pd-list"><button type="button" class="pd-row gd-corow" id="gdCo">`
       +`<span class="pd-row-store">공동 한턱</span>`
       +`<span class="pd-row-right">${fmtMoney(coSum)}원</span>`
-      +`<span class="pd-row-sub">${co.length}건 · 총 부담에는 포함되지 않음</span>`
+      +`<span class="pd-row-sub">${co.length}건 · 위 총 부담에 이미 포함된 금액</span>`
       +`<span class="gd-chev" aria-hidden="true">›</span>`
     +`</button></div>`:'';
   card.innerHTML=`
@@ -4480,7 +4493,8 @@ function _openGroupMemberEvidence(g,name,list){
   const recs=[...(list||[]).filter(r=>_receiptShare(r,nm)>0)].sort((a,b)=>((b.date||'').localeCompare(a.date||''))||String(b.id).localeCompare(String(a.id)));
   const tot=recs.reduce((s,r)=>s+_receiptShare(r,nm),0);
   const payer=r=>normalizeName(r.paidBy)||'결제자 미상';
-  _openPersonDetailShell({title:escapeHtml(nm), subtitle:`${escapeHtml(g.name||_suggestRgName(g.members,g.type))} · ${fmtMoney(tot)}원 · ${recs.length}건`, emphasizeRight:true,
+  // v3.75 — title/subtitle은 shell이 1회 escape하므로 여기서 pre-escape 금지(이중 escape → &amp; 노출). subHtml만 caller가 escape.
+  _openPersonDetailShell({title:nm, subtitle:`${g.name||_suggestRgName(g.members,g.type)} · ${fmtMoney(tot)}원 · ${recs.length}건`, emphasizeRight:true,
     rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(_receiptShare(r,nm))}원`, subHtml:escapeHtml([fmtDateKor(r.date),`총 ${fmtMoney(r.total||0)}원`,payer(r)+' 결제'].filter(Boolean).join(' · '))})),
     foot:()=>({label:'합계', amount:tot})});
 }
@@ -4491,7 +4505,8 @@ function _openGroupCoTreatDrillScoped(groupId,list){
   const recs=[..._relGroupCoTreat(groupId).filter(r=>listIds.has(r.id))].sort((a,b)=>((b.date||'').localeCompare(a.date||''))||String(b.id).localeCompare(String(a.id)));
   const sumT=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
   const flow=r=>{const subj=_treatSubjects(r),rec=_treatRecipients(r);return escapeHtml(subj.join(' · ')+' → '+(rec.length?rec.join(' · '):'참석자'));};
-  _openPersonDetailShell({title:`${escapeHtml(g.name||_suggestRgName(g.members,g.type))} 공동 한턱`, subtitle:`${fmtMoney(sumT(recs))}원 · ${recs.length}건`,
+  // v3.75 — 공동 한턱 제목은 공동 주체 표기(members ' · ' join)로 통일·raw 전달(shell 1회 escape, 이중 escape 방지).
+  _openPersonDetailShell({title:`${g.members.join(' · ')} 공동 한턱`, subtitle:`${fmtMoney(sumT(recs))}원 · ${recs.length}건`,
     rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, subHtml:flow(r)})),
     foot:()=>({label:'합계', amount:sumT(recs)})});
 }
@@ -7356,13 +7371,14 @@ function _openPersonDetailShell(cfg){
     const filterHtml=(cfg.filters&&cfg.filters.length>1)?`<div class="pd-filter">${cfg.filters.map(f=>`<button type="button" class="pd-fchip${f.key===fkey?' on':''}" data-k="${escapeHtml(f.key)}">${escapeHtml(f.label)}</button>`).join('')}</div>`:'';
     const listHtml=rows.length?rows.map(row=>`<button type="button" class="pd-row" data-open="${escapeHtml(row.r.id)}">
         <span class="pd-row-store">${escapeHtml(row.r.store||'(매장명 없음)')}</span>
-        <span class="pd-row-right${cfg.emphasizeRight?' em':''}">${row.rightHtml}</span>
+        <span class="pd-row-right${cfg.emphasizeRight?' em':''}">${row.rightHtml}${row.tagHtml||''}</span>
         ${row.subHtml?`<span class="pd-row-sub">${row.subHtml}</span>`:''}
       </button>`).join('')
       :'<div class="pd-empty">해당 내역이 없어요.</div>';
     card.innerHTML=`
       <div class="mtg-sheet-hd"><div class="mtg-sheet-title">${escapeHtml(cfg.title)}</div><button class="mtg-sheet-x" id="pdX" type="button" aria-label="닫기">×</button></div>
       ${cfg.subtitle?`<div class="mtg-sheet-meta">${escapeHtml(cfg.subtitle)}</div>`:''}
+      ${cfg.metaExtraHtml||''}
       ${filterHtml}
       <div class="mtg-sheet-divider"></div>
       <div class="pd-list">${listHtml}</div>
@@ -7389,7 +7405,7 @@ function _openPersonDetail(type){
   }else if(type==='pay'){
     const tgtW=sortD(d.tgtWith), myW=sortD(d.myWith), all=sortD(dedup([...d.tgtWith,...d.myWith]));
     const pick=k=>k==='tgt'?tgtW:k==='me'?myW:all;
-    _openPersonDetailShell({title:'전체 결제', subtitle:`${escapeHtml(nm)}이 결제 ${fmtMoney(sumT(d.tgtWith))}원·${d.tgtWith.length}건 · 내가 결제 ${fmtMoney(sumT(d.myWith))}원·${d.myWith.length}건`,
+    _openPersonDetailShell({title:'전체 결제', subtitle:`${nm}이 결제 ${fmtMoney(sumT(d.tgtWith))}원·${d.tgtWith.length}건 · 내가 결제 ${fmtMoney(sumT(d.myWith))}원·${d.myWith.length}건`,
       filters:[{key:'all',label:'전체'},{key:'tgt',label:nm},{key:'me',label:'나'}], defaultFilter:'all',
       rows:k=>pick(k).map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, subHtml:escapeHtml(sub(r,[payer(r)+' 결제']))})),
       foot:k=>({label:'합계', amount:sumT(pick(k))})});
@@ -7403,19 +7419,32 @@ function _openPersonDetail(type){
       foot:k=>({label:'합계', amount:sumT(pick(k))})});
   }else if(type==='share'){
     const recs=sortD(d.partRecs), tot=recs.reduce((s,r)=>s+share(r),0);
-    _openPersonDetailShell({title:'참석 부담액', subtitle:`${fmtMoney(tot)}원 · ${recs.length}건 · 다른 사람이 결제한 자리에서 ${escapeHtml(nm)}의 몫`, emphasizeRight:true,
+    _openPersonDetailShell({title:'참석 부담액', subtitle:`${fmtMoney(tot)}원 · ${recs.length}건 · 다른 사람이 결제한 자리에서 ${nm}의 몫`, emphasizeRight:true,
       rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(share(r))}원`, subHtml:escapeHtml(sub(r,[`총 ${fmtMoney(r.total||0)}원`, `${receiptPeople(r).size}명`, payer(r)+' 결제']))})),
       foot:()=>({label:'합계', amount:tot})});
   }else if(type==='gsolo'||type==='gco'||type==='gall'){
-    // v3.71 — 이 사람이 준 한턱 drill-down. receipt.total 전액이 한턱 금액(N분할 없음). 공동은 '주체 → 받은 사람' 표시(§8).
+    // v3.71/v3.75 — 이 사람이 준 한턱 drill-down. receipt.total 전액이 한턱 금액(N분할 없음). 공동은 '주체 → 받은 사람' 표시(treatBy.members snapshot).
+    //   ⚠️ 새 계산 없음 — d.gSolo(개인)/d.gCo(공동)/d.gAll(개인∪공동, receipt.id 유니크)는 _personTreatGiving 결과 그대로.
     const arr=type==='gsolo'?(d.gSolo||[]):type==='gco'?(d.gCo||[]):(d.gAll||[]);
     const recs=sortD(arr);
     const title=type==='gsolo'?'개인 한턱':type==='gco'?'공동 한턱':'전체 한턱';
-    const gname=escapeHtml(d.gName||nm);
+    const gname=d.gName||nm; // v3.75 — raw; subtitle은 shell이 1회 escape(이중 escape 방지)
     const flow=r=>{const subj=_treatSubjects(r),rec=_treatRecipients(r);return escapeHtml(subj.join(' · ')+' → '+(rec.length?rec.join(' · '):'참석자'));};
-    _openPersonDetailShell({title, subtitle:`${gname} 기준 · ${fmtMoney(sumT(recs))}원 · ${recs.length}건`,
-      rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, subHtml:flow(r)})),
-      foot:()=>({label:'합계', amount:sumT(recs)})});
+    if(type==='gall'){
+      // v3.75 — 전체 한턱은 개인+공동이 섞이므로 각 receipt 종류를 표시(§11·§12)하고, 헤더에 breakdown(개인/공동, 동적 §13·§14).
+      const solo=d.gSolo||[], co=d.gCo||[];
+      const kindTag=r=>_isCoTreat(r)
+        ?'<span class="pd-kind pd-kind-co">공동</span>'
+        :'<span class="pd-kind">개인</span>';
+      _openPersonDetailShell({title, subtitle:`${gname} 기준 · ${fmtMoney(sumT(recs))}원 · ${recs.length}건`,
+        metaExtraHtml:`<div class="pd-breakdown"><span>개인 <b>${fmtMoney(sumT(solo))}</b>원·${solo.length}건</span><span class="pd-bd-sep">·</span><span>공동 <b>${fmtMoney(sumT(co))}</b>원·${co.length}건</span></div>`,
+        rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, tagHtml:kindTag(r), subHtml:flow(r)})),
+        foot:()=>({label:'합계', amount:sumT(recs)})});
+    }else{
+      _openPersonDetailShell({title, subtitle:`${gname} 기준 · ${fmtMoney(sumT(recs))}원 · ${recs.length}건`,
+        rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, subHtml:flow(r)})),
+        foot:()=>({label:'합계', amount:sumT(recs)})});
+    }
   }
 }
 
