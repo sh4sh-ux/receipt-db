@@ -864,6 +864,32 @@ th.mtg-chk{background:var(--fill2);}
 }
 @media(max-width:780px){.srch-stats{gap:8px;}.srch-stat{padding:10px 8px;}.srch-stat-val{font-size:15px;}}
 
+/* v3.76 — 데이터 정리함(Data Review Inbox). mtg-sheet overlay grammar 재사용 + 내부 list scroll. Flat·straight divider·radius 0. */
+.review-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9990;display:flex;align-items:center;justify-content:center;padding:20px;}
+.review-sheet{display:flex;flex-direction:column;overflow:hidden;max-height:82vh;padding:22px 22px 0;}
+.review-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;flex:0 0 auto;}
+.review-title{font-size:16px;font-weight:var(--fw-strong);color:var(--text-primary);letter-spacing:-.2px;}
+.review-sub{font-size:12px;color:var(--label3);margin-top:3px;line-height:1.45;}
+.review-sub-bd{color:var(--label2);}
+.review-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;flex:0 0 auto;}
+.review-chip{font:inherit;font-size:12px;font-weight:600;color:var(--label2);background:var(--fill);border:none;border-radius:8px;padding:5px 11px;cursor:pointer;font-variant-numeric:tabular-nums;transition:background .12s,color .12s;}
+.review-chip.on{background:var(--blue-bg);color:var(--blue-txt);}
+@media(hover:hover){.review-chip:not(.on):hover{color:var(--label);}}
+.review-list{flex:1;overflow-y:auto;min-height:0;margin:0 -22px;padding:0 22px 18px;}
+.review-row{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:3px 12px;width:100%;padding:11px 4px;border:none;border-bottom:1px solid var(--sep);background:none;border-radius:0;cursor:pointer;font-family:inherit;text-align:left;}
+.review-row:last-child{border-bottom:none;}
+@media(hover:hover){.review-row:hover{background:var(--fill);}}
+.review-row-store{grid-column:1;grid-row:1;font-size:13.5px;font-weight:600;color:var(--label);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.review-row-amt{grid-column:2;grid-row:1;font-size:13.5px;font-weight:700;color:var(--label);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.review-row-sub{grid-column:1;grid-row:2;font-size:11.5px;color:var(--label3);white-space:nowrap;}
+.review-row-issue{grid-column:2;grid-row:2;font-size:11px;font-weight:600;color:var(--amber);white-space:nowrap;justify-self:end;}
+.review-empty{padding:44px 8px;text-align:center;color:var(--label3);font-size:13px;}
+@media(max-width:780px){
+  .review-backdrop{align-items:flex-end;padding:0;}
+  .review-sheet{max-width:none;width:100%;border-radius:var(--r) var(--r) 0 0;max-height:88vh;padding:20px 18px 0;}
+  .review-list{margin:0 -18px;padding:0 18px calc(20px + env(safe-area-inset-bottom,0px));}
+}
+
 /* ── PAYER SUMMARY ── */
 .payer-hero{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
 .payer-stat{background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:16px 18px;}
@@ -3094,6 +3120,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.76 — '확인 필요 N건'을 '데이터 정리함(Data Review Inbox)'으로 발전. ⚠️ 새 검증 항목 없음 — 기존 _receiptCheckReasons 6조건 그대로(count 불변), 진실원 reviewIssues로 통일.
+//   reviewIssues(r): 타입별[{type,label}] 단일 진실원(하단 count·정리함 count·유형 count·row label 공유 §16). type=store/date/amount/photo. _receiptCheckReasons=reviewIssues().map(label)로 하위호환(라벨·dedup 동일 → count byte-identical §3·§38).
+//   '확인 필요' 칩 클릭 → _openReviewInbox: 유형 필터(전체 N·매장명·일자·금액·사진, count>0만) + unique receipt 목록(최신순 _sortForList) → row 클릭 → 기존 selectReceipt(Receipt Detail). 저장 후 하단/정리함 count 즉시 재평가(_updatePhotoFilterUi·reviewIssues runtime, reload 0).
+//   navigation: receiptNavigation route에 boolean reviewInbox — open/close/receipt sub-route를 popstate로(v3.72~73과 동일 시스템). 정리함→Receipt→back→정리함 복귀(type/scroll module 상태 복원 §30·§32). swipe-back 시 정리함만 닫힘·reload 0(§31). 필터 변경은 history 엔트리 안 만듦(list만 재렌더).
+//   ⚠️ scope=전역 receipts(하단 count와 동일 §28). '사진 없음'(missing) 칩은 기존 목록 필터 그대로(정리함과 분리 §18). meetingId/미분류·paidBy 누락·참석자 추론은 review에 미포함(현 Production 정의 유지 §17·§19·§20·§21). 자동 receipt 수정 없음·새 저장 field 없음·Dropbox 계약 불변·schema/migration 없음. 변경 파일 index.html.
 // v3.75 — 개인/공동/전체 한턱 Drill-down 의미 정리(표시만). ⚠️ 새 한턱 계산 없음 — v3.71 _personTreatGiving(solo/co/all, receipt.id 유니크)·_isCoTreat·_treatSubjects/_treatRecipients 그대로.
 //   전체 한턱(gall) drill: ① 각 receipt에 개인/공동 종류 chip(_isCoTreat, 작은 secondary — 개인=neutral·공동=soft Blue, 금액보다 약하게), ② 헤더에 breakdown(개인 X원·N건 · 공동 Y원·N건, 동적). 불변식 개인+공동=전체(금액·건수, receipt.id 유니크).
 //   개인/공동 drill은 제목이 종류라 chip 없음. 공동 주체 표시는 receipt.treatBy.members snapshot(현재 그룹 members 아님·inactive 그룹도 유지). row 클릭 → 기존 selectReceipt. _openPersonDetailShell에 optional row.tagHtml·cfg.metaExtraHtml만 추가(다른 drill 불변).
@@ -3425,7 +3456,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.75';
+const APP_VERSION='v3.76';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5093,18 +5124,30 @@ function _validReceiptDate(v){
   return d.getFullYear()===Number(m[1])&&d.getMonth()===Number(m[2])-1&&d.getDate()===Number(m[3]);
 }
 
-function _receiptCheckReasons(r){
-  const reasons=[];
+// v3.76 — '확인 필요' 단일 진실원. 타입별 issue 목록을 반환(하단 count·정리함 count·유형 count·row label 모두 이걸 사용 §16).
+//   ⚠️ 판별 조건은 기존 _receiptCheckReasons와 100% 동일(추가/제거 없음 §3) — label·순서·dedup 그대로라 count 불변.
+//   type: 'amount'(수량×단가/품목합계/총액) | 'photo'(사진 문제, '사진 없음'=missing과 별개 §18) | 'store'(매장명) | 'date'(일자).
+const REVIEW_TYPES=[
+  {key:'store', short:'매장명', label:'매장명 확인'},
+  {key:'date',  short:'일자',  label:'일자 확인'},
+  {key:'amount',short:'금액',  label:'금액 확인'},
+  {key:'photo', short:'사진',  label:'사진 확인'},
+];
+function reviewIssues(r){
+  const out=[];
   const audit=getAmountAudit(r||{});
-  if(audit.rowMismatches.length)reasons.push(`수량×단가와 금액이 다른 품목 ${audit.rowMismatches.length}개`);
-  if(audit.hasItems&&audit.totalDiff!==0)reasons.push(`품목 합계와 총액이 ${_fmtN(Math.abs(audit.totalDiff))}원 다름`);
+  if(audit.rowMismatches.length)out.push({type:'amount',label:`수량×단가와 금액이 다른 품목 ${audit.rowMismatches.length}개`});
+  if(audit.hasItems&&audit.totalDiff!==0)out.push({type:'amount',label:`품목 합계와 총액이 ${_fmtN(Math.abs(audit.totalDiff))}원 다름`});
   const photoReason=_photoErrorReason(r||{});
-  if(_photoErrorKind(r||{})==='problem'&&photoReason)reasons.push(photoReason);
-  if(!String(r&&r.store||'').trim())reasons.push('매장명이 입력되지 않음');
-  if(!_validReceiptDate(r&&r.date))reasons.push('일자가 없거나 올바르지 않음');
-  if(r&&((r.total===null)||(r.total===undefined)||(r.total==='')||!Number.isFinite(Number(r.total))))reasons.push('총액이 입력되지 않음');
-  return [...new Set(reasons)];
+  if(_photoErrorKind(r||{})==='problem'&&photoReason)out.push({type:'photo',label:photoReason});
+  if(!String(r&&r.store||'').trim())out.push({type:'store',label:'매장명이 입력되지 않음'});
+  if(!_validReceiptDate(r&&r.date))out.push({type:'date',label:'일자가 없거나 올바르지 않음'});
+  if(r&&((r.total===null)||(r.total===undefined)||(r.total==='')||!Number.isFinite(Number(r.total))))out.push({type:'amount',label:'총액이 입력되지 않음'});
+  const seen=new Set();return out.filter(i=>seen.has(i.label)?false:(seen.add(i.label),true)); // 기존 [...new Set(reasons)]와 동일 dedup
 }
+function _receiptCheckReasons(r){return reviewIssues(r).map(i=>i.label);} // 하위호환(label 배열) — 기존 소비자 그대로, count 불변
+// 이 영수증이 가진 issue의 유형 집합(중복 제거, REVIEW_TYPES 순서 유지).
+function _receiptReviewTypes(r){const set=new Set(reviewIssues(r).map(i=>i.type));return REVIEW_TYPES.filter(t=>set.has(t.key)).map(t=>t.key);}
 
 function _receiptStatusIconHtml(r){
   const checkReasons=_receiptCheckReasons(r);
@@ -5168,6 +5211,95 @@ function _setPhotoListFilter(kind){
   selectedId=null;_mobileListMode='list';
   switchTab('list');renderSide();renderDetail();
 }
+
+// ── v3.76 데이터 정리함(Data Review Inbox) ──────────────────────────────────
+//   '확인 필요 N건' → 유형별 파악 + row 클릭으로 기존 Receipt Detail에서 수정 → 저장 후 즉시 재평가.
+//   ⚠️ scope는 하단 count와 동일(전역 receipts). 진실원=reviewIssues. 자동 수정/새 저장 field/Dropbox 변경 없음.
+//   navigation: receiptNavigation route에 boolean reviewInbox를 실어 open/close/receipt sub-route를 popstate로 관리
+//   (v3.72~73 계약과 동일한 popstate history 시스템 — swipe-back에 안전, 정리함↔Receipt 복귀). type/scroll은 module 상태.
+let _reviewInboxState=null;   // null | {type:'all'|'store'|'date'|'amount'|'photo'}
+let _reviewLastType='all';    // 정리함 재열림 시 복원할 필터
+let _reviewLastScroll=0;      // 정리함 재열림 시 복원할 scrollTop(§32)
+function _reviewAllReceipts(){return receipts.filter(r=>reviewIssues(r).length>0);} // 전역 unique receipt(하단 count와 동일)
+function _reviewTypeCount(key){return receipts.filter(r=>_receiptReviewTypes(r).includes(key)).length;}
+function _reviewInboxIsOpen(){return !!document.querySelector('.review-backdrop');}
+function _openReviewInbox(type){
+  if(_reviewInboxIsOpen())return;            // 이미 열림 → no-op
+  _reviewInboxState={type:type||'all'};
+  _reviewLastType=_reviewInboxState.type;
+  _reviewLastScroll=0;
+  _renderReviewInbox();
+  // history push는 이 함수를 부른 사용자 클릭의 _captureNavigation이 담당(route.reviewInbox false→true).
+}
+function _closeReviewInbox(){ // X·backdrop·ESC: history 엔트리 소비 → popstate가 route 복원하며 overlay 제거
+  if(!_reviewInboxIsOpen())return;
+  try{history.back();}catch(e){_syncReviewInbox(false);}
+}
+function _reviewOpenReceipt(id){ // row 클릭: 정리함 닫고 기존 Receipt Detail로. (다음 back에 정리함으로 복귀)
+  const list=document.querySelector('.review-list');
+  _reviewLastType=(_reviewInboxState&&_reviewInboxState.type)||'all';
+  _reviewLastScroll=list?list.scrollTop:0;
+  _reviewInboxState=null;
+  document.querySelectorAll('.review-backdrop').forEach(n=>n.remove());
+  selectReceipt(id); // 이 클릭의 _captureNavigation이 route를 push(reviewInbox true→false, selectedId=id)
+}
+// popstate 복원 시 route.reviewInbox(boolean)에 overlay를 맞춘다.
+function _syncReviewInbox(want){
+  const open=_reviewInboxIsOpen();
+  if(want&&!open){_reviewInboxState={type:_reviewLastType||'all'};_renderReviewInbox();}
+  else if(!want&&open){_reviewInboxState=null;document.querySelectorAll('.review-backdrop').forEach(n=>n.remove());}
+}
+function _reviewRowsHtml(){
+  const type=(_reviewInboxState&&_reviewInboxState.type)||'all';
+  let list=_reviewAllReceipts();
+  if(type!=='all')list=list.filter(r=>_receiptReviewTypes(r).includes(type));
+  list=_sortForList(list); // 기존 정렬(기본 최신순 §27)
+  if(!list.length)return `<div class="review-empty">${type==='all'?'모두 정리됐어요.':'이 유형은 모두 정리됐어요.'}</div>`;
+  return list.map(r=>{
+    const types=_receiptReviewTypes(r);
+    const lbl=types.map(k=>(REVIEW_TYPES.find(t=>t.key===k)||{}).short).filter(Boolean).join(' · ')+' 확인';
+    return `<button type="button" class="review-row" data-review-open="${escapeHtml(r.id)}">`
+      +`<span class="review-row-store">${escapeHtml(r.store||'(매장명 없음)')}</span>`
+      +`<span class="review-row-amt">${fmtMoney(r.total||0)}원</span>`
+      +`<span class="review-row-sub">${escapeHtml(fmtDateKor(r.date)||'날짜 없음')}</span>`
+      +`<span class="review-row-issue">${escapeHtml(lbl)}</span>`
+    +`</button>`;
+  }).join('');
+}
+function _renderReviewInbox(){
+  document.querySelectorAll('.review-backdrop').forEach(n=>n.remove());
+  const type=(_reviewInboxState&&_reviewInboxState.type)||'all';
+  const total=_reviewAllReceipts().length;
+  const chips=[{key:'all',short:'전체',n:total},
+    ...REVIEW_TYPES.map(t=>({key:t.key,short:t.short,n:_reviewTypeCount(t.key)}))]
+    .filter(c=>c.key==='all'||c.n>0)
+    .map(c=>`<button type="button" class="review-chip${c.key===type?' on':''}" data-review-type="${c.key}">${c.short} ${c.n}</button>`).join('');
+  const summary=REVIEW_TYPES.map(t=>{const n=_reviewTypeCount(t.key);return n?`${t.short} ${n}`:null;}).filter(Boolean).join(' · ');
+  const bd=document.createElement('div');
+  bd.className='review-backdrop';
+  bd.innerHTML=`<div class="review-sheet mtg-sheet" role="dialog" aria-modal="true" aria-label="데이터 정리함">
+    <div class="review-hd"><div class="review-hd-l"><div class="review-title">확인 필요</div><div class="review-sub">${total}건 · 확인이 필요한 영수증을 정리해 주세요${summary?` <span class="review-sub-bd">${escapeHtml(summary)}</span>`:''}</div></div><button class="mtg-sheet-x" id="reviewX" type="button" aria-label="닫기">×</button></div>
+    <div class="review-filter">${chips}</div>
+    <div class="mtg-sheet-divider"></div>
+    <div class="review-list">${_reviewRowsHtml()}</div>
+  </div>`;
+  document.body.appendChild(bd);
+  const list=bd.querySelector('.review-list');
+  if(list){list.scrollTop=_reviewLastScroll||0;list.addEventListener('scroll',()=>{_reviewLastScroll=list.scrollTop;});}
+  bd.querySelector('#reviewX').onclick=_closeReviewInbox;
+  bd.addEventListener('click',e=>{if(e.target===bd)_closeReviewInbox();});
+  bd.querySelectorAll('.review-chip[data-review-type]').forEach(b=>b.onclick=()=>{
+    if(!_reviewInboxState)return;
+    _reviewInboxState.type=b.dataset.reviewType;_reviewLastType=_reviewInboxState.type;
+    // 필터는 history 엔트리를 만들지 않는다(route.reviewInbox boolean 불변) — list만 재렌더.
+    const box=bd.querySelector('.review-list');const sc=box?box.scrollTop:0;
+    bd.querySelectorAll('.review-chip').forEach(c=>c.classList.toggle('on',c.dataset.reviewType===_reviewInboxState.type));
+    if(box){box.innerHTML=_reviewRowsHtml();box.scrollTop=0;_reviewLastScroll=0;}
+  });
+  bd.querySelectorAll('.review-row[data-review-open]').forEach(b=>b.onclick=()=>_reviewOpenReceipt(b.dataset.reviewOpen));
+}
+// ESC 전역(1회): 정리함 열려 있으면 닫기.
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&_reviewInboxIsOpen())_closeReviewInbox();});
 
 function _cardHtml(r, reason){
   const sel=(r.id===selectedId)?' sel':'';
@@ -5291,7 +5423,11 @@ function renderSide(){
 }
 
 document.querySelectorAll('[data-photo-filter]').forEach(btn=>{
-  btn.addEventListener('click',()=>_setPhotoListFilter(btn.dataset.photoFilter));
+  // v3.76 — '확인 필요'(problem)는 데이터 정리함 overlay를 연다. '사진 없음'(missing)은 기존 목록 필터 그대로.
+  btn.addEventListener('click',()=>{
+    if(btn.dataset.photoFilter==='problem')_openReviewInbox('all');
+    else _setPhotoListFilter(btn.dataset.photoFilter);
+  });
 });
 // v3.22 — 목록 정렬 dropdown
 document.getElementById('listSortSel')?.addEventListener('change',e=>{
@@ -8571,6 +8707,7 @@ function _navigationSnapshot(){
       mobileMode:_mobileListMode,allMonths:_sideAllMonths,
       category:_monthCatFilter,period:{..._ledgerTimeFilter},
       personPeriod:{..._personTimeFilter},photoFilter:_photoListFilter,
+      reviewInbox:!!_reviewInboxState, // v3.76 — 데이터 정리함 open 여부(popstate로 overlay 동기화·복귀)
       stats:document.getElementById('navLedgerBtn')?.classList.contains('on')||false},
     scroll:[...document.querySelectorAll('#sideList,#detailBody,.main')].map(el=>({id:el.id,main:el.classList.contains('main'),top:el.scrollTop})),
     pageY:window.scrollY
@@ -8642,6 +8779,7 @@ addEventListener('popstate',event=>{
       document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
       document.getElementById('navLedgerBtn')?.classList.add('on');
     }
+    _syncReviewInbox(!!r.reviewInbox); // v3.76 — 정리함 open 상태를 route에 맞춤(닫기/복귀)
     requestAnimationFrame(()=>{
       for(const s of state.scroll||[]){
         const el=s.main?document.querySelector('.main'):document.getElementById(s.id);
@@ -12707,7 +12845,7 @@ function _dbxBindEvents(){
 (()=>{
   if(!('ontouchstart' in window))return;
   // v3.72 — 오버레이가 열려 있으면 당겨서 새로고침(→location.reload) 금지. 최근 추가된 오버레이도 포함.
-  const BLOCK='.modal-overlay,.modal-card,.cat-picker-popover:not([hidden]),.mtg-sheet-backdrop,.org-backdrop,.rg-ov,.lp-pop-backdrop';
+  const BLOCK='.modal-overlay,.modal-card,.cat-picker-popover:not([hidden]),.mtg-sheet-backdrop,.org-backdrop,.rg-ov,.lp-pop-backdrop,.review-backdrop';
   const TH=70,MAX=104,EDGE=28;
   let y0=0,x0=0,pulling=false,dist=0,busy=false,axisLock=false;
 
