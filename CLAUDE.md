@@ -95,6 +95,15 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.68` — **만남 목록 UI 2건 정제(표시만, 구조·계산·필터로직·클릭·Meeting Management·데이터 전부 불변).**
+  ① **grouped secondary metadata 순서 변경**: `대표매장 외 N곳 · N건 묶음` → **`N건 묶음 · 대표매장 외 N곳`**. sub는 한 줄
+  `nowrap`+ellipsis라 **앞의 'N건 묶음'은 긴 매장명에도 항상 노출**되고 뒤의 매장 요약만 잘린다(핵심 상태 정보 우선). Blue Bar
+  높이/폭/색(v3.66)·참석자 줄 미침 그대로. ② **상단 위계 정리**: 1번째 줄 `[만남 N][묶이지 않음 N]`=Management primary tab(기존
+  크기 유지), 2번째 줄 `[전체 N][묶인 만남 N]`=현재 목록 안 secondary filter를 **한 단계 작게**(`.mm-subfilter .mm-tab` font 12.5→11.5·
+  weight 600→500·padding 6/14→4/11, container gap 8→6). **새 색 없음**(선택 시 기존 `--blue-bg`/`--blue-txt` 그대로), 과한 segmented
+  control 아님, Desktop/Mobile 동일 hierarchy. ⚠️ Meeting 계산·Blue Bar 의미·Meeting count·grouped/independent 판정·Management
+  (추가/분리/이동)·Flat List·straight divider·클릭·데이터·Dropbox/Dutch Pay 전부 불변. 검증(김영석+합성): 'N건 묶음' 항상 노출·긴
+  매장명만 ellipsis·secondary filter가 primary보다 작음·bar/필터/클릭 동작 불변·Desktop/Mobile 390·430·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.67` — **만남 목록 표시 문구 최종 정제(표시만, 계산·필터·클릭·Meeting Management·데이터 전부 불변).**
   ① **묶인 만남**(실제 2건 이상) 3단 구조로 통일: 제목=`M월 D일의 만남`, 2번째 줄=**`대표매장 외 N곳 · N건 묶음`**(기존 '영수증 N건'→
   **'N건 묶음'**, `nowrap`+ellipsis 1줄 유지), 3번째 줄=참석자 union. Blue Bar(v3.66)는 title+2번째 줄 높이에 맞고 참석자 줄로

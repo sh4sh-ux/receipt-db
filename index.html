@@ -940,6 +940,7 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .mm-list{padding:0 12px 8px;}
 .mm-row{position:relative;display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;border-bottom:1px solid var(--divider);background:none;font:inherit;padding:12px 4px 12px 12px;cursor:pointer;border-radius:0;}
 .mm-row:hover{background:var(--fill);}
+/* v3.68 — 만남 목록 UI 2건 정제: 묶음 secondary '대표매장 외 N곳' → 'N건 묶음 · 대표매장'(N건 묶음 항상 노출), 2차 필터(전체/묶인)를 primary tab보다 작게(크기만). 구조/기능 불변. */
 /* v3.67 — 만남 목록 문구 최종 정제: 묶인 만남 '대표매장 외 N곳 · N건 묶음'(1줄), meetingId 1건뿐인 만남은 독립 만남과 동일 표시(bar·meetingId·N건 노출 없음). CSS 불변. */
 /* v3.66 — 묶인 만남 Blue Bar를 title+metadata 두 줄 블록(.mm-row-head) 높이에 맞춤(고정 height 폐기). 참석자 줄·divider와 분리, 계산/필터/클릭 불변. */
 /* v3.65 — 묶인 만남(같은 meetingId 실제 2건+) 신호: 짧은 Signature Blue 세로바. row 안에서만, divider와 분리(§1). */
@@ -948,7 +949,9 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
    head는 두 줄(제목 line + 보조정보 line)이라 top/bottom:0이 그 블록에 정확히 맞고, 참석자 줄(.mm-row-ppl, head 바깥)로는 내려가지 않는다.
    left:-10px = row padding-left(12px) 보정 → row 좌측 2px. radius 0·양끝 직선. row/divider와 분리(head 높이 안에만 존재). */
 .mm-row[data-linked] .mm-row-head::before{content:'';position:absolute;left:-10px;top:0;bottom:0;width:3px;border-radius:0;background:var(--blue);}
-.mm-subfilter{margin-top:0;padding:10px 12px 2px;}
+.mm-subfilter{margin-top:0;gap:6px;padding:9px 12px 3px;}
+/* v3.68 — 2차 필터(전체/묶인 만남)는 상위 primary tab(만남/묶이지 않음)보다 한 단계 작게. 새 색 없음, 크기/굵기만 낮춤. */
+.mm-subfilter .mm-tab{font-size:11.5px;font-weight:500;padding:4px 11px;}
 .mm-row-main{flex:1;min-width:0;}
 .mm-row-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
 .mm-row-title{font-size:13.5px;line-height:1.6;font-weight:600;color:var(--label);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
@@ -2967,6 +2970,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.68 — 만남 목록 UI 2건 정제(표시만, 구조·계산·필터로직·클릭·Meeting Management·데이터 전부 불변).
+//   ① grouped 2번째 줄 순서: '대표매장 외 N곳 · N건 묶음' → 'N건 묶음 · 대표매장 외 N곳'. nowrap+ellipsis라 앞의 'N건 묶음'은 항상 보이고 뒤 매장 요약만 잘림.
+//   ② 상단 위계: 2차 필터(전체/묶인 만남, .mm-subfilter .mm-tab)를 primary tab(만남/묶이지 않음)보다 한 단계 작게(font 11.5·weight 500·padding 4/11). 새 색 없음.
+//   Blue Bar 높이/폭/색·참석자 줄 미침·필터 동작·클릭 전부 불변.
 // v3.67 — 만남 목록 표시 문구 최종 정제(표시만, 계산·필터·클릭·Meeting Management·데이터 전부 불변).
 //   ① 묶인 만남(실제 2건 이상) 2번째 줄: '영수증 N건' → 'N건 묶음'(1줄 ellipsis 유지). Blue Bar는 title+2번째 줄 높이(v3.66) 그대로.
 //   ② 독립 만남: bar 없음·'영수증 1건' 반복 제거(제목=날짜·매장, 보조=참석자만) — v3.65부터 유지.
@@ -3247,7 +3254,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.67';
+const APP_VERSION='v3.68';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6555,7 +6562,7 @@ function _mtgManageOpen(initialTab){
           const stores=[...new Set(rc.map(x=>x.store||'').filter(Boolean))];
           const rep=stores[0]||'(매장명 없음)';
           const storeLbl=stores.length>1?`${rep} 외 ${stores.length-1}곳`:rep;
-          const sub=`${storeLbl} · ${rc.length}건 묶음`;
+          const sub=`${rc.length}건 묶음 · ${storeLbl}`; // 'N건 묶음' 먼저 → nowrap+ellipsis에서 항상 보이고 뒤 매장 요약만 잘림
           return mmRow(_mtgCompactTitle(rc),_mtgSumTotal(rc),sub,_mtgPeopleUnion(rc).join(' · '),`data-u="${i}"${linked?' data-linked="1"':''}`);
         }
         // 독립 만남 + meetingId가 있어도 실제 1건뿐인 만남: 동일하게 간결 표시(§2·§3).
