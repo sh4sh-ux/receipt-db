@@ -713,6 +713,58 @@ svg{display:block;flex-shrink:0;}
 .pp-chip.excl .pp-chip-tag.excl{background:rgba(255,82,82,.14);color:var(--red);}
 .pp-chip.zero{opacity:.5;}
 .pp-split-hint{font-size:11.5px;color:var(--label2);}
+/* v3.70 — 공동 한턱 주체(treatBy) 선택 + 요약 문장 */
+.pp-treatby{margin-top:2px;}
+.pp-treatby.on{margin-top:10px;}
+.tb-lbl{font-size:11.5px;font-weight:600;color:var(--label2);margin-bottom:6px;}
+.tb-opts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.tb-opt{font-size:12.5px;font-weight:500;color:var(--label2);background:var(--fill);border:1px solid var(--sep);border-radius:999px;padding:5px 12px;cursor:pointer;transition:.12s;font-family:inherit;}
+.tb-opt:hover{border-color:var(--blue);}
+.tb-opt.on{background:var(--blue-bg);border-color:transparent;color:var(--blue-txt);font-weight:600;}
+.tb-summary{font-size:12px;color:var(--label2);background:var(--blue-bg);border-radius:var(--rs);padding:8px 11px;line-height:1.45;}
+/* v3.70 — 관계 그룹: 설정·Person Detail 공용 리스트 */
+.rel-add-btn{margin-top:10px;width:100%;padding:10px;background:var(--fill);border:1px dashed var(--sep2);border-radius:var(--rm);color:var(--blue);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:.12s;}
+.rel-add-btn:hover{border-color:var(--blue);background:var(--blue-bg);}
+.rel-empty{font-size:12.5px;color:var(--label3);padding:8px 2px;}
+.rel-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid var(--divider);font:inherit;padding:11px 4px;cursor:pointer;border-radius:0;}
+.rel-row:hover{background:var(--fill);}
+.rel-row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.rel-row-name{font-size:13.5px;font-weight:600;color:var(--label);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rel-row-mem{font-size:11.5px;color:var(--label3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rel-row-type{flex:none;font-size:11px;font-weight:600;color:var(--label2);background:var(--fill2);border-radius:999px;padding:2px 9px;}
+.rel-row-chev{flex:none;color:var(--label3);font-size:16px;}
+.rel-row--add .rel-row-name{color:var(--blue);font-weight:600;}
+.person-rel-section{margin-top:14px;}
+.person-rel-hd{font-size:13px;font-weight:700;color:var(--label);padding-bottom:2px;border-bottom:1px solid var(--divider);margin-bottom:2px;}
+.person-rel-list .rel-row:last-child{border-bottom:none;}
+/* v3.71 — Person Detail '한턱'(이 사람이 준 한턱) 섹션 + 관계 그룹 공동 한턱 요약 */
+.person-treat-section{margin-top:14px;}
+.person-treat-hint{font-weight:400;color:var(--label3);font-size:11px;margin-left:6px;}
+.rel-li-strong .rel-li-title{font-weight:700;}
+.rel-li-strong .rel-li-val .v{color:var(--blue);}
+.rg-cotreat{display:flex;align-items:center;gap:8px;width:100%;margin-top:12px;padding:11px 12px;background:var(--fill);border:1px solid var(--sep);border-radius:var(--rm);font:inherit;cursor:default;}
+.rg-cotreat.has{cursor:pointer;}
+.rg-cotreat.has:hover{border-color:var(--blue);}
+.rg-cotreat-l{font-size:13px;font-weight:600;color:var(--label);}
+.rg-cotreat-v{flex:1;text-align:right;font-size:13px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums;}
+.rg-cotreat-chev{flex:none;color:var(--label3);font-size:16px;}
+/* v3.70 — 관계 그룹 생성/편집 모달 */
+.rg-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3200;display:flex;align-items:center;justify-content:center;padding:16px;}
+.rg-modal{background:var(--card);border-radius:var(--r);padding:22px 20px;width:360px;max-width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.28);}
+.rg-title{font-size:17px;font-weight:700;color:var(--label);margin-bottom:16px;}
+.rg-flabel{display:block;font-size:12px;font-weight:600;color:var(--label2);margin:12px 0 6px;}
+.rg-hint{font-weight:400;color:var(--label3);font-size:11px;}
+.rg-input{width:100%;padding:10px 11px;border:1px solid var(--sep2);border-radius:var(--rm);background:var(--fill);color:var(--label);font-size:14px;font-family:inherit;}
+.rg-mems{display:flex;flex-direction:column;gap:2px;max-height:220px;overflow-y:auto;border:1px solid var(--sep);border-radius:var(--rm);padding:6px;margin-top:4px;}
+.rg-mem{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:var(--rs);cursor:pointer;font-size:13.5px;color:var(--label);}
+.rg-mem:hover{background:var(--fill);}
+.rg-mem input{width:17px;height:17px;accent-color:var(--blue);flex:none;}
+.rg-err{font-size:12px;color:var(--red);margin-top:8px;min-height:1px;}
+.rg-actions{display:flex;align-items:center;gap:8px;margin-top:16px;}
+.rg-sp{flex:1;}
+.rg-save{padding:10px 18px;background:var(--blue);color:#fff;border:none;border-radius:var(--rm);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;}
+.rg-cancel{padding:10px 14px;background:var(--fill2);color:var(--label2);border:none;border-radius:var(--rm);font-size:14px;font-family:inherit;cursor:pointer;}
+.rg-del{padding:10px 12px;background:none;color:var(--red);border:1px solid var(--sep2);border-radius:var(--rm);font-size:13px;font-family:inherit;cursor:pointer;}
 .srch-row{cursor:pointer;transition:background .1s;}
 .srch-row:hover{background:var(--fill);}
 .srch-row:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;background:var(--blue-bg);}
@@ -2209,6 +2261,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                     </div>
                     <div class="pp-chips" id="addPpChips"></div>
                     <div class="pp-split-hint" id="addSplitHint"></div>
+                    <div class="pp-treatby" id="addTreatBy"></div>
                   </div>
                   <div class="field-g" style="grid-column:1/-1;">
                     <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
@@ -2260,6 +2313,13 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
               <label class="field-lbl" for="myNameInp">내 이름</label>
               <input id="myNameInp" class="field-inp" type="text" placeholder="예: 조상현" autocomplete="name"/>
             </div>
+          </div>
+
+          <div class="setting-card">
+            <h3>사람 및 관계</h3>
+            <p>커플·가족처럼 함께 다니는 사람들을 관계 그룹으로 묶어, 영수증에서 ‘공동 한턱’ 주체로 쓸 수 있어요. 각 사람은 그대로 독립적으로 유지됩니다.</p>
+            <div id="relGroupsBox"></div>
+            <button type="button" id="relGroupAddBtn" class="rel-add-btn">+ 관계 그룹 추가</button>
           </div>
 
           <div class="setting-card">
@@ -3009,6 +3069,31 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.72 — iPhone Safari edge swipe-back 시 앱이 새로고침/초기화되는 문제 수정(오버레이 history 통합). 기능·계산·데이터 불변.
+//   ⚠️ 진단(계측): Drill-down/Meeting 관리/Meeting 상세/관계 그룹 편집/공동 한턱 상세 오버레이가 열릴 때 history 엔트리를
+//   쌓지 않아, swipe-back(=history back)이 (a) 밑의 '라우트'를 pop → 전체 rerender(리셋처럼 보임) 또는 (b) 초기 엔트리를 넘어
+//   문서를 이탈 → 실제 reload(계측: boot 카운터 증가·switchTab undefined). BFCache 복원/자발적 rerender 아님.
+//   수정: 오버레이 open 시 history 엔트리 1개 push(_ovPush) → 첫 back(swipe/UI)은 '오버레이만 닫기'로 소비(popstate에서 스택
+//   top teardown 후 return, 라우트 복원 skip). UI 닫기(X·backdrop·ESC·취소·저장·행선택)는 history.back()으로 같은 엔트리 소비
+//   → 이중 정리/라우트 pop 없음. 행선택은 close(()=>selectReceipt(id)) after 콜백으로 닫고 이동. 중첩(관계그룹 모달→공동한턱
+//   drill)은 모달을 close(after)로 먼저 소비 후 drill open. 당겨서 새로고침 BLOCK에 새 오버레이 추가(오버레이 중 reload 차단).
+//   기존 receiptNavigation(라우트 back/scroll 복원)·모든 계산/저장/Dropbox 불변. WebKit 바이너리는 이 컨테이너에서 설치 불가(프록시
+//   차단)라 Chromium 모바일 에뮬레이션 + 코드 분석으로 검증(history/pushState/popstate는 엔진 불변, 수정도 엔진 비의존).
+// v3.71 — 관계 그룹 + 공동 한턱 STEP 2/2: treatBy를 Person 분석·관계 그룹에 연결(표시/집계만, 기존 계산 전부 불변).
+//   ⚠️ paidBy·treat·_receiptShare·_participantSplit·_personRelation(myTreat 등 기존 '전체 내가 한턱' me기준)·단둘이/여럿이·참석 부담액 전부 불변(migration 없음).
+//   불변식: paidBy(실결제)≠treat(한턱 여부)≠treatBy(한턱 주체). 공동 한턱=treat&&treatBy(관계그룹,members 2명↑) → receipt.total 전액이 한턱, members로 N분할 안 함.
+//   새 헬퍼: _isCoTreat·_personTreatGiving(개인/공동/전체, receipt.id 유니크→double count 0)·_personTreatReceived(받은 한턱, helper)·_relGroupCoTreat(그룹 id 기준).
+//   UI: ① Person Detail '{이름} 한턱' 섹션(개인/공동/전체 3 row, 이 사람이 '준' 한턱 — 기존 me기준 '전체 내가 한턱'과 별개) + 각 drill-down(_openPersonDetail gsolo/gco/gall, 공동은 '주체 → 받은사람' §8).
+//   ② 관계 그룹 편집 모달에 '공동 한턱 N원·N건 ›' 요약 + drill-down(_openGroupCoTreatDrill, 그룹 id 기준·중복 합산 없음). 과거 treatBy.members snapshot 그대로(현재 그룹 members로 재계산 안 함 §12·§13).
+//   미도입(STEP 이후): 사람별 분담 관계 Ranking·가족 총지출 Dashboard·자동 추론·Person stable ID migration·Dutch Pay relationGroup 전면 migration·Meeting 변경(§21).
+// v3.70 — 관계 그룹(Relation Group) + 공동 한턱(treatBy) 1/2. Person은 이름 문자열 식별(stable ID 없음)이라 병합/마이그레이션 없이 관계 계층만 추가.
+//   ⚠️ 조사 결과: Dutch Pay '커플'은 2명·이름 문자열·localStorage(dutchpay_couple)·별도 앱이라 그대로 재사용 불가 → 개념(커플/공동)만 차용해
+//   Receipt DB에 2명+ 지원 Relation Group으로 일반화. 저장은 settings store(key 'relationGroups', storeCatMap과 동일 계약) + sync JSON.
+//   schema: {id(불변 identity), name(수정 가능·계산 identity 아님), type(couple/family/other), members:[이름], active, createdAt, updatedAt}.
+//   해제=active:false(hard delete 아님 — 과거 treatBy 보존). Receipt: optional treatBy={type:'relationGroup',groupId,members(당시 실제 공동주체 snapshot)}.
+//   ⚠️ paidBy·treat·_receiptShare·_participantSplit 전부 불변(§26·§27, receipt.total N분할 없음). treat OFF 저장 시 treatBy 제거. 기존 treat(no treatBy)=개인 한턱으로 runtime 해석, migration/기본값 없음.
+//   UI: 설정>사람 및 관계(그룹 CRUD), Person Detail '관계' 섹션(동일 그룹 편집), Receipt Detail 한턱 주체 선택([결제자 개인]/[결제자·동행 공동] — 현재 참석한 그룹 멤버만·paidBy 포함, 기본=개인) + 요약 문장.
+//   갈포갈비: paidBy=김영석, treat=true, treatBy=김영석·이종현 → 실결제 김영석 208,000, 공동 한턱 김영석·이종현→조상현. 사람별 분담 관계 Ranking/통계는 STEP 2/2.
 // v3.69 — '사람별 분담' 영역 Clean Modern UI 정제(표시만, 계산·명단·금액·한턱·제외·참석만 판정 전부 불변).
 //   공통 렌더 헬퍼 _personSplitSectionHtml(list): rank(22px, top1만 Blue)·이름(고정폭)·progress(단색 Blue·track 동일 정렬)·
 //   금액(우측 tabular)·비율(amt/전체부담액 동적 계산) 5열 grid. 기본 상위 5명 + '더보기 N명'/'접기'(위임 토글). 참석만 chips는
@@ -3298,7 +3383,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.69';
+const APP_VERSION='v3.72';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -3800,6 +3885,248 @@ async function loadStoreCatMap(){
 }
 async function saveStoreCatMap(){
   try{await dbPut('settings',{key:'storeCatMap',value:storeCatMap});}catch(e){}
+}
+
+// ── v3.70 관계 그룹(Relation Group) — Person 위의 추가 관계 계층 ──────────────
+//   ⚠️ Receipt DB엔 stable Person ID가 없다(사람=이름 문자열). 이번 기능 때문에 대규모 Person migration을
+//   하지 않고, members도 이름 문자열로 둔다(한계는 완료 보고에 명시). identity는 group.id(불변)이며 이름이 아니다.
+//   Person은 절대 병합하지 않는다 — 그룹은 순수 관계 계층. settings store에 storeCatMap과 같은 방식으로 저장·동기화.
+let relationGroups=[]; // [{id,name,type,members:[names],active,createdAt,updatedAt}]
+const REL_TYPES=[{v:'couple',l:'커플'},{v:'family',l:'가족'},{v:'other',l:'기타'}];
+function relTypeLabel(t){return (REL_TYPES.find(x=>x.v===t)||{l:'기타'}).l;}
+async function loadRelationGroups(){
+  try{const rec=await dbGet('settings','relationGroups');relationGroups=Array.isArray(rec&&rec.value)?rec.value.map(_sanitizeRelationGroup).filter(Boolean):[];}
+  catch(e){relationGroups=[];}
+}
+async function saveRelationGroups(){
+  try{await dbPut('settings',{key:'relationGroups',value:relationGroups});}catch(e){}
+}
+function _newRgId(){return 'rg_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function _normRgMembers(arr){return [...new Set((arr||[]).map(s=>normalizeName(s)).filter(Boolean))];}
+function _sanitizeRelationGroup(raw){
+  if(!_isPlainObject(raw))return null;
+  const id=typeof raw.id==='string'?raw.id.trim():'';
+  if(!id||id.length>200)return null;
+  const members=_normRgMembers(raw.members);
+  if(members.length<2)return null; // 관계 그룹은 최소 2명(1명은 관계가 아님)
+  const type=['couple','family','other'].includes(raw.type)?raw.type:'other';
+  return {id,name:String(raw.name||'').slice(0,120),type,members:members.slice(0,50),
+    active:raw.active!==false,createdAt:String(raw.createdAt||nowISO()),updatedAt:String(raw.updatedAt||nowISO())};
+}
+function activeRelationGroups(){return relationGroups.filter(g=>g.active!==false);}
+function relationGroupsForPerson(name){const n=normalizeName(name);return activeRelationGroups().filter(g=>g.members.includes(n));}
+function relationGroupById(id){return relationGroups.find(g=>g.id===id)||null;}
+// 관계 그룹 기본 이름 제안(사용자 수정 가능, 이름은 identity 아님)
+function _suggestRgName(members,type){
+  const m=(members||[]).filter(Boolean);
+  if(!m.length)return '';
+  if(type==='couple'&&m.length===2)return `${m[0]} · ${m[1]}`;
+  return `${m[0]} ${type==='family'?'가족':'관계'}`;
+}
+// 저장/편집 진입점(설정·Person Detail 공용). id=null이면 새로 생성.
+async function _rgUpsert(g){
+  const clean=_sanitizeRelationGroup(g);
+  if(!clean)return false;
+  const i=relationGroups.findIndex(x=>x.id===clean.id);
+  clean.updatedAt=nowISO();
+  if(i>=0){clean.createdAt=relationGroups[i].createdAt||clean.createdAt;relationGroups[i]=clean;}
+  else relationGroups.push(clean);
+  await saveRelationGroups();dbxSyncUpload().catch(()=>{});
+  return true;
+}
+// import/복원용 관계 그룹 머지(id 기준, updatedAt 최신 우선 · 새 그룹 추가). 반환: 변경 여부.
+async function _mergeRelationGroups(arr){
+  if(!Array.isArray(arr))return false;
+  let changed=false;
+  for(const rg of arr){
+    const clean=_sanitizeRelationGroup(rg);if(!clean)continue;
+    const i=relationGroups.findIndex(x=>x.id===clean.id);
+    if(i<0){relationGroups.push(clean);changed=true;}
+    else{const lt=new Date(relationGroups[i].updatedAt||0).getTime();const rt=new Date(clean.updatedAt||0).getTime();if(rt>lt){relationGroups[i]=clean;changed=true;}}
+  }
+  if(changed)await saveRelationGroups();
+  return changed;
+}
+// 해제 = active:false(과거 Receipt의 공동 한턱 treatBy 기록은 그대로 보존, hard delete 아님).
+async function _rgDeactivate(id){
+  const g=relationGroupById(id);if(!g)return;
+  g.active=false;g.updatedAt=nowISO();
+  await saveRelationGroups();dbxSyncUpload().catch(()=>{});
+}
+// 공동 한턱 주체 members(런타임 해석). treat & treatBy.members(2명 이상)면 공동, 아니면 개인(paidBy).
+function _treatSubjects(r){
+  if(!r||!r.treat)return [];
+  const tb=r.treatBy;
+  if(_isPlainObject(tb)&&Array.isArray(tb.members)&&tb.members.length>=2)return tb.members.map(normalizeName).filter(Boolean);
+  const p=normalizeName(r.paidBy);return p?[p]:[];
+}
+// 한턱 받은 사람 = receiptPeople − 한턱 주체(런타임 계산, 별도 recipient 필드 없음).
+function _treatRecipients(r){
+  if(!r||!r.treat)return [];
+  const subj=new Set(_treatSubjects(r));
+  return [...receiptPeople(r)].filter(n=>!subj.has(n));
+}
+// 한턱 요약 문장(공동/개인). 실제 데이터에서 동적 생성.
+function _treatSummarySentence(r){
+  if(!r||!r.treat)return '';
+  const subj=_treatSubjects(r);if(!subj.length)return '';
+  const recip=_treatRecipients(r);
+  const amt=fmtMoney(r.total||0);
+  const subjTxt=subj.join(' · ');
+  const recipTxt=recip.length?recip.join(' · '):'참석자';
+  return `${subjTxt}이 ${recipTxt}에게 ${amt}원 한턱`;
+}
+// v3.71 — 공동 한턱 판정: treat && treatBy(관계그룹·members 2명↑). 개인 한턱은 이 조건이 아니면(=treatBy 없음) 그대로.
+function _isCoTreat(r){return !!(r&&r.treat===true&&_isPlainObject(r.treatBy)&&r.treatBy.type==='relationGroup'&&Array.isArray(r.treatBy.members)&&r.treatBy.members.length>=2);}
+// 한 사람이 '준' 한턱을 개인/공동으로 분류(pool=기간 내 그 사람이 관련된 receipt, receipt.id 유니크). members 수로 나누지 않음.
+//   solo=개인 한턱(treatBy 없음 & 그 사람이 결제자=유일 주체) / co=공동 한턱(treatBy.members에 포함) / all=solo∪co(유니크).
+function _personTreatGiving(name, pool){
+  const n=normalizeName(name); const solo=[], co=[];
+  for(const r of (pool||[])){
+    if(r.treat!==true)continue;
+    if(!_treatSubjects(r).includes(n))continue; // 이 사람이 한턱 '준' 주체가 아니면 제외
+    if(_isCoTreat(r))co.push(r); else solo.push(r);
+  }
+  return {solo,co,all:[...solo,...co]}; // solo/co는 상호배타 → all 유니크
+}
+// 한 사람이 '받은' 공동/개인 한턱(receiptPeople 포함 & 주체 아님). helper 수준(§9) — 정확 구분용.
+function _personTreatReceived(name, pool){
+  const n=normalizeName(name);
+  return (pool||[]).filter(r=>r.treat===true&&receiptPeople(r).has(n)&&!_treatSubjects(r).includes(n));
+}
+// 관계 그룹 단위 공동 한턱 = treatBy.groupId 일치(전역 receipts, id 유니크). members 수만큼 중복 합산 금지(§11).
+function _relGroupCoTreat(groupId){
+  return receipts.filter(r=>_isCoTreat(r)&&r.treatBy.groupId===groupId);
+}
+
+// ── v3.70 관계 그룹 UI(설정·Person Detail 공용) ──────────────────────────────
+// 후보 사람 = 전체 영수증의 사람(참석자+결제자) 합집합 + 내 이름. 이름 문자열(정확일치).
+function _allPeopleNames(){
+  const s=new Set();
+  for(const r of receipts){for(const n of receiptPeople(r))s.add(n);}
+  const me=normalizeName(getMyName());if(me)s.add(me);
+  return [...s];
+}
+// 설정 탭 관계 그룹 목록(렌더). renderDbxSettings에서 호출.
+function renderRelationSettings(){
+  const box=document.getElementById('relGroupsBox');
+  if(!box)return;
+  const gs=activeRelationGroups();
+  box.innerHTML=gs.length
+    ? gs.map(g=>`<button type="button" class="rel-row" data-rgid="${escapeHtml(g.id)}">
+        <span class="rel-row-main"><span class="rel-row-name">${escapeHtml(g.name||_suggestRgName(g.members,g.type))}</span><span class="rel-row-mem">${escapeHtml(g.members.join(' · '))}</span></span>
+        <span class="rel-row-type">${relTypeLabel(g.type)}</span><span class="rel-row-chev" aria-hidden="true">›</span></button>`).join('')
+    : '<div class="rel-empty">아직 관계 그룹이 없어요. 커플·가족을 묶어 보세요.</div>';
+  box.querySelectorAll('[data-rgid]').forEach(b=>b.onclick=()=>openRelationGroupEditor(b.dataset.rgid));
+  const addBtn=document.getElementById('relGroupAddBtn');
+  if(addBtn)addBtn.onclick=()=>openRelationGroupEditor(null);
+}
+// Person Detail '관계' 섹션 HTML. 해당 사람이 속한 활성 그룹 표시 + 설정 진입.
+function _personRelationGroupsHtml(name){
+  const n=normalizeName(name); if(!n)return '';
+  const gs=relationGroupsForPerson(n);
+  const rows=gs.map(g=>{
+    const others=g.members.filter(m=>m!==n);
+    return `<button type="button" class="rel-row" data-rgedit="${escapeHtml(g.id)}">
+      <span class="rel-row-main"><span class="rel-row-name">${escapeHtml(g.name||_suggestRgName(g.members,g.type))}</span><span class="rel-row-mem">${escapeHtml(others.length?others.join(' · '):g.members.join(' · '))}</span></span>
+      <span class="rel-row-type">${relTypeLabel(g.type)}</span><span class="rel-row-chev" aria-hidden="true">›</span></button>`;
+  }).join('');
+  const addRow=`<button type="button" class="rel-row rel-row--add" data-rgnew="${escapeHtml(n)}">
+    <span class="rel-row-name">${gs.length?'관계 그룹 추가':'관계 그룹 설정'}</span><span class="rel-row-chev" aria-hidden="true">›</span></button>`;
+  return `<div class="budget-section person-rel-section"><div class="person-rel-hd">관계</div><div class="person-rel-list">${rows}${addRow}</div></div>`;
+}
+// v3.71 — Person Detail '한턱'(이 사람이 준 한턱) 섹션. 개인/공동/전체 분리(§6). 공동/전체·개인 모두 건수>0면 drill-down(§8).
+function _personTreatGivingSectionHtml(tgt, giv){
+  if(!giv||(!giv.solo.length&&!giv.co.length))return ''; // 준 한턱이 전혀 없으면 섹션 숨김
+  const sum=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
+  const nm=escapeHtml(tgt);
+  const chev='<span class="rel-li-chev" aria-hidden="true">›</span>';
+  const row=(icon,title,arr,tapId,strong)=>{
+    const tap=arr.length&&tapId;
+    return `<div class="rel-li${tap?' rel-li-tap':''}${strong?' rel-li-strong':''}"${tap?` id="${tapId}" role="button" tabindex="0"`:''}>`
+      +`<div class="rel-li-ic">${_relIco(icon)}</div>`
+      +`<div class="rel-li-main"><div class="rel-li-title">${title}</div></div>`
+      +`<div class="rel-li-val"><span class="v${sum(arr)?'':' zero'}">${fmtMoney(sum(arr))}원</span><span class="c">${arr.length}건</span></div>`
+      +`${tap?chev:''}</div>`;
+  };
+  return `<div class="budget-section person-treat-section">`
+    +`<div class="person-rel-hd">${nm} 한턱 <span class="person-treat-hint">이 사람이 낸 한턱</span></div>`
+    +`<div class="rel-metrics">`
+      +row('gift','개인 한턱',giv.solo,'pgTreatSolo',false)
+      +row('group','공동 한턱',giv.co,'pgTreatCo',false)
+      +row('card','전체 한턱',giv.all,'pgTreatAll',true)
+    +`</div></div>`;
+}
+// v3.71 — 관계 그룹 단위 공동 한턱 drill-down(그룹 id 기준, receipt 유니크). v3.72 — 모달 닫기는 호출부(close)에서 history로 처리.
+function _openGroupCoTreatDrill(groupId){
+  const g=relationGroupById(groupId);if(!g)return;
+  const recs=[...(_relGroupCoTreat(groupId))].sort((a,b)=>((b.date||'').localeCompare(a.date||''))||String(b.id).localeCompare(String(a.id)));
+  const sumT=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
+  const flow=r=>{const subj=_treatSubjects(r),rec=_treatRecipients(r);return escapeHtml(subj.join(' · ')+' → '+(rec.length?rec.join(' · '):'참석자'));};
+  _openPersonDetailShell({title:`${escapeHtml(g.name||_suggestRgName(g.members,g.type))} 공동 한턱`, subtitle:`${fmtMoney(sumT(recs))}원 · ${recs.length}건`,
+    rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, subHtml:flow(r)})),
+    foot:()=>({label:'합계', amount:sumT(recs)})});
+}
+// 생성/편집 모달(설정·Person Detail 공용 — 같은 relationGroups를 편집). id=null이면 새로 만들기.
+function openRelationGroupEditor(id,prefillName){
+  document.getElementById('rgEditorOv')?.remove();
+  const existing=id?relationGroupById(id):null;
+  const members=new Set(existing?existing.members:( prefillName?[normalizeName(prefillName)].filter(Boolean):[] ));
+  let type=existing?existing.type:'family';
+  const candidates=[...new Set([..._allPeopleNames(),...members])].sort((a,b)=>a.localeCompare(b,'ko'));
+  const nameVal=existing?(existing.name||_suggestRgName(existing.members,existing.type)):_suggestRgName([...members],type);
+  const typeOpts=REL_TYPES.map(t=>`<option value="${t.v}"${t.v===type?' selected':''}>${t.l}</option>`).join('');
+  const chk=()=>candidates.map(nm=>`<label class="rg-mem"><input type="checkbox" value="${escapeHtml(nm)}"${members.has(nm)?' checked':''}/><span>${escapeHtml(nm)}</span></label>`).join('')
+    || '<div class="rel-empty">저장된 영수증에 참석자가 없어요. 먼저 영수증에 사람을 추가해 주세요.</div>';
+  const ov=document.createElement('div');ov.className='rg-ov';ov.id='rgEditorOv';
+  ov.innerHTML=`<div class="rg-modal" role="dialog" aria-modal="true">
+    <div class="rg-title">${existing?'관계 그룹 편집':'관계 그룹 만들기'}</div>
+    <label class="rg-flabel" for="rgName">그룹명</label>
+    <input id="rgName" class="rg-input" type="text" value="${escapeHtml(nameVal)}" placeholder="예: 김영석 가족"/>
+    <label class="rg-flabel" for="rgType">유형</label>
+    <select id="rgType" class="rg-input">${typeOpts}</select>
+    <label class="rg-flabel">구성원 <span class="rg-hint">2명 이상 · 각 사람은 그대로 독립 유지</span></label>
+    <div class="rg-mems" id="rgMems">${chk()}</div>
+    ${existing?(()=>{const co=_relGroupCoTreat(existing.id);const s=co.reduce((a,r)=>a+(r.total||0),0);return `<button type="button" class="rg-cotreat${co.length?' has':''}" id="rgCoTreat"${co.length?'':' disabled'}><span class="rg-cotreat-l">공동 한턱</span><span class="rg-cotreat-v">${fmtMoney(s)}원 · ${co.length}건</span>${co.length?'<span class="rg-cotreat-chev" aria-hidden="true">›</span>':''}</button>`;})():''}
+    <div class="rg-err" id="rgErr"></div>
+    <div class="rg-actions">
+      ${existing?'<button type="button" class="rg-del" id="rgDel">해제</button>':''}
+      <span class="rg-sp"></span>
+      <button type="button" class="rg-cancel" id="rgCancel">취소</button>
+      <button type="button" class="rg-save" id="rgSave">저장</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  // v3.72 — 관계 그룹 편집도 history 엔트리 1개로: swipe-back/뒤로가기가 모달만 닫는다.
+  let _torn=false;
+  const teardown=()=>{if(_torn)return;_torn=true;ov.remove();};
+  const _ovid=_ovPush(teardown);
+  const close=(after)=>{const cb=(typeof after==='function')?after:null;if(_torn){if(cb)cb();return;}_ovDismissById(_ovid,cb,teardown);};
+  const err=ov.querySelector('#rgErr');
+  ov.addEventListener('click',e=>{if(e.target===ov)close();});
+  ov.querySelector('#rgCancel').onclick=()=>close();
+  ov.querySelector('#rgMems').addEventListener('change',e=>{const cb=e.target;if(cb&&cb.value){cb.checked?members.add(cb.value):members.delete(cb.value);}});
+  ov.querySelector('#rgType').addEventListener('change',e=>{type=e.target.value;});
+  const coBtn=ov.querySelector('#rgCoTreat'); // v3.71 — 그룹 공동 한턱 drill-down
+  if(coBtn&&existing&&_relGroupCoTreat(existing.id).length)coBtn.onclick=()=>close(()=>_openGroupCoTreatDrill(existing.id)); // v3.72 모달 닫고(히스토리 소비) 드릴 열기
+  const afterSave=()=>{renderRelationSettings();if(!selectedId&&searchQuery)renderDetail();};
+  ov.querySelector('#rgSave').onclick=async()=>{
+    const nm=ov.querySelector('#rgName').value.trim();
+    const tp=ov.querySelector('#rgType').value;
+    const mem=[...members];
+    if(mem.length<2){err.textContent='구성원을 2명 이상 선택하세요.';return;}
+    const g={id:existing?existing.id:_newRgId(),name:nm||_suggestRgName(mem,tp),type:tp,members:mem,active:true,createdAt:existing?existing.createdAt:nowISO()};
+    const ok=await _rgUpsert(g);
+    if(!ok){err.textContent='저장에 실패했어요.';return;}
+    close(()=>{afterSave();toast('관계 그룹 저장됨',{type:'success'});});
+  };
+  if(existing){
+    let armed=false;
+    ov.querySelector('#rgDel').onclick=async()=>{
+      if(!armed){armed=true;ov.querySelector('#rgDel').textContent='해제 확인';err.textContent='해제해도 과거 공동 한턱 기록은 그대로 보존됩니다.';return;}
+      await _rgDeactivate(existing.id);close(()=>{afterSave();toast('관계 그룹이 해제됐어요',{type:'success'});});
+    };
+  }
 }
 
 function autocategorize(storeName){
@@ -5716,6 +6043,8 @@ saveBtn.addEventListener('click',async()=>{
     if(sp.treat)rec.treat=true;
     const ex=(sp.splitExclude||[]).filter(n=>participants.includes(n));
     if(ex.length)rec.splitExclude=ex;
+    // v3.70 — 공동 한턱 주체(treatBy). 한턱 ON이고 참석한 공동 주체(2명↑)를 명시 선택했을 때만 기록. paidBy는 그대로.
+    if(sp.treat&&sp.treatBy&&(sp.treatBy.members||[]).every(n=>participants.includes(n)))rec.treatBy=sp.treatBy;
   }
   // ── 중복 검사 ──
   const dup=receipts.find(r=>r.date===rec.date&&(r.store||'').trim()===(rec.store||'').trim()&&r.total===rec.total);
@@ -5757,15 +6086,55 @@ saveBtn.addEventListener('click',async()=>{
 // getState()가 {treat, splitExclude} 를 반환 — 저장 시 그대로 rec에 넣는다.
 function _makeSplitUI(o){
   let treat=false; const excluded=new Set();
+  let treatBy=null; // null=개인(paidBy) 한턱 / {type:'relationGroup',groupId,members:[...]}=공동 한턱
   const parts=()=>o.getParticipants().map(s=>(s||'').trim()).filter(Boolean);
+  // v3.70 — 공동 한턱 주체 후보: [개인(paidBy)] + 현재 참석한 관계 그룹 멤버 조합(paidBy 포함, 2명 이상).
+  //   불참 멤버는 자동 포함하지 않는다(§21). 부분집합 폭발 없이 '참석한 그룹 멤버' 조합만 제시.
+  const _treatCands=()=>{
+    const pp=parts(); const payer=((o.getPayer&&o.getPayer())||'').trim();
+    const cands=[{groupId:null,members:payer?[payer]:[],label:(payer||'결제자')+' 개인'}];
+    if(!payer)return cands;
+    for(const g of activeRelationGroups()){
+      if(!g.members.includes(normalizeName(payer)))continue; // paidBy가 그룹에 있어야 자연스러운 후보(§21)
+      const present=g.members.filter(m=>pp.includes(m)); // 현재 참석한 그룹 멤버만
+      if(present.length<2)continue; // 공동은 2명 이상
+      // payer를 앞에 두고 순서 안정화
+      const members=[payer,...present.filter(m=>m!==payer)];
+      cands.push({groupId:g.id,members,label:members.join(' · ')+' 공동'});
+    }
+    return cands;
+  };
+  const _renderTreatBy=(pp,payer)=>{
+    if(!o.treatByBox)return;
+    if(!treat){o.treatByBox.innerHTML='';o.treatByBox.classList.remove('on');return;}
+    o.treatByBox.classList.add('on');
+    const cands=_treatCands();
+    // 현재 선택 판정: treatBy 없으면 개인, 있으면 members 일치 후보
+    const isSel=c=>{ if(!treatBy)return c.groupId===null; return c.groupId===treatBy.groupId&&c.members.length===(treatBy.members||[]).length&&c.members.every(m=>treatBy.members.includes(m)); };
+    const opts=cands.map((c,i)=>`<button type="button" class="tb-opt${isSel(c)?' on':''}" data-tbi="${i}">${escapeHtml(c.label)}</button>`).join('');
+    const only=cands.length<=1; // 관계 그룹 후보 없음 → 주체 선택 UI 숨김(개인만)
+    // 요약 문장(§25): 실데이터 동적
+    const subj=treatBy&&(treatBy.members||[]).length>=2?treatBy.members:(payer?[payer]:[]);
+    const recip=[...new Set(pp.filter(n=>!subj.includes(n)).concat(payer&&!pp.includes(payer)?[]:[]))].filter(n=>!subj.includes(n));
+    const total=o.getTotal?(o.getTotal()||0):0;
+    const summary=(subj.length&&total)?`<div class="tb-summary">${escapeHtml(subj.join(' · '))}이 ${escapeHtml(recip.length?recip.join(' · '):'참석자')}에게 ${fmtMoney(total)}원 한턱</div>`:'';
+    o.treatByBox.innerHTML=(only?'':`<div class="tb-lbl">한턱 주체</div><div class="tb-opts">${opts}</div>`)+summary;
+    o.treatByBox.querySelectorAll('[data-tbi]').forEach(b=>b.onclick=()=>{
+      const c=cands[+b.dataset.tbi];
+      treatBy=c.groupId?{type:'relationGroup',groupId:c.groupId,members:c.members.slice()}:null;
+      render();o.onChange&&o.onChange();
+    });
+  };
   const render=()=>{
     const pp=parts();
     [...excluded].forEach(n=>{if(!pp.includes(n))excluded.delete(n);}); // 사라진 이름 정리
     const payer=((o.getPayer&&o.getPayer())||'').trim();
+    // 공동 주체가 현재 참석/결제자와 더는 맞지 않으면(참석자 변경 등) 개인으로 안전 복귀
+    if(treatBy){const ms=treatBy.members||[];if(ms.length<2||!ms.every(m=>pp.includes(m))||!ms.includes(payer))treatBy=null;}
     o.treatSw.classList.toggle('on',treat);
     o.treatSw.setAttribute('aria-checked',treat?'true':'false');
     o.treatBar.classList.toggle('on',treat);
-    if(!pp.length){o.chips.innerHTML='<span class="pp-chips-empty">참석자를 입력하면 분담 대상이 표시됩니다</span>';o.hint.textContent='';return;}
+    if(!pp.length){o.chips.innerHTML='<span class="pp-chips-empty">참석자를 입력하면 분담 대상이 표시됩니다</span>';o.hint.textContent='';_renderTreatBy(pp,payer);return;}
     o.chips.innerHTML=pp.map(n=>{
       const isPayer=payer&&n===payer;
       let cls='pp-chip',tag='';
@@ -5785,14 +6154,17 @@ function _makeSplitUI(o){
     else{const ex=[...excluded].filter(n=>pp.includes(n));const sn=pp.length-ex.length;
       const per=(total&&sn>0)?` · 1인당 약 ${fmtMoney(Math.round(total/sn))}원`:'';
       o.hint.textContent=ex.length?`${ex.length}명 제외(참석 유지·0원) · 나머지 ${sn}명 균등${per}`:`참석자 ${pp.length}명 균등 분담 (1/N)${per}`;}
+    _renderTreatBy(pp,payer);
   };
   o.treatSw.addEventListener('click',e=>{e.stopPropagation();treat=!treat;render();o.onChange&&o.onChange();});
   o.treatBar.addEventListener('click',()=>{treat=!treat;render();o.onChange&&o.onChange();});
   return {
     render,
-    getState(){const pp=parts();return {treat,splitExclude:treat?[]:[...excluded].filter(n=>pp.includes(n))};},
-    setState(t,ex){treat=!!t;excluded.clear();(ex||[]).forEach(n=>excluded.add((n||'').trim()));render();},
-    reset(){treat=false;excluded.clear();render();}
+    getState(){const pp=parts();return {treat,splitExclude:treat?[]:[...excluded].filter(n=>pp.includes(n)),treatBy:(treat&&treatBy&&(treatBy.members||[]).length>=2)?treatBy:null};},
+    setState(t,ex,tb){treat=!!t;excluded.clear();(ex||[]).forEach(n=>excluded.add((n||'').trim()));
+      treatBy=(tb&&_isPlainObject(tb)&&Array.isArray(tb.members)&&tb.members.length>=2)?{type:'relationGroup',groupId:tb.groupId||null,members:tb.members.map(v=>String(v||'').trim()).filter(Boolean)}:null;
+      render();},
+    reset(){treat=false;excluded.clear();treatBy=null;render();}
   };
 }
 let _addSplitUI=null, _dSplitUI=null;
@@ -5804,8 +6176,10 @@ let _addSplitUI=null, _dSplitUI=null;
     treatBar:document.getElementById('addTreatBar'),
     treatSw:document.getElementById('addTreatSw'),
     hint:document.getElementById('addSplitHint'),
+    treatByBox:document.getElementById('addTreatBy'),
     getParticipants:()=>(document.getElementById('participantsInp').value||'').split(','),
-    getPayer:()=>document.getElementById('payerInp').value||''
+    getPayer:()=>document.getElementById('payerInp').value||'',
+    getTotal:()=>{const p=_currentParsed;return (p&&p.total)||0;}
   });
   ['participantsInp','payerInp'].forEach(id=>{
     const el=document.getElementById(id);
@@ -5963,6 +6337,8 @@ async function _saveDirectEntry(){
     if(sp.treat)rec.treat=true;
     const ex=(sp.splitExclude||[]).filter(n=>participants.includes(n));
     if(ex.length)rec.splitExclude=ex;
+    // v3.70 — 공동 한턱 주체(treatBy). 한턱 ON이고 참석한 공동 주체(2명↑)를 명시 선택했을 때만 기록. paidBy는 그대로.
+    if(sp.treat&&sp.treatBy&&(sp.treatBy.members||[]).every(n=>participants.includes(n)))rec.treatBy=sp.treatBy;
   }
   const dup=receipts.find(r=>r.date===rec.date&&(r.store||'').trim()===rec.store&&r.total===rec.total);
   if(dup){const ok=await _confirmDup(rec.store,rec.date,rec.total);if(!ok)return;}
@@ -6581,7 +6957,11 @@ function _mtgManageOpen(initialTab){
   let mtgFilter='all'; // v3.65 만남 탭 필터: 'all' | 'grouped'(같은 meetingId 실제 2건 이상)
   const esc=e=>{if(e.key==='Escape')back();};
   document.addEventListener('keydown',esc);
-  function close(){document.removeEventListener('keydown',esc);bd.remove();}
+  // v3.72 — 오버레이 전체를 history 엔트리 1개로 다룬다(내부 뷰 이동은 in-panel ← 사용). swipe-back = 오버레이 닫기.
+  let _torn=false;
+  const teardown=()=>{if(_torn)return;_torn=true;document.removeEventListener('keydown',esc);bd.remove();};
+  const _ovid=_ovPush(teardown);
+  function close(after){const cb=(typeof after==='function')?after:null;if(_torn){if(cb)cb();return;}_ovDismissById(_ovid,cb,teardown);}
   function back(){
     if(view==='list'){close();return;}
     if(view==='detail'){view='list';tab='meetings';render();return;}
@@ -6646,7 +7026,7 @@ function _mtgManageOpen(initialTab){
       panel.innerHTML=`<div class="org-hd">${back_}<div class="org-title">만남 관리</div>${mmTabs(units.length,uCnt)}</div>${filter}<div class="org-list mm-list">${body}</div>`;
       panel.querySelectorAll('.mm-subfilter [data-mf]').forEach(b=>b.onclick=()=>{mtgFilter=b.dataset.mf;render();});
       // 클릭: 필터된 shown 배열 기준
-      panel.querySelectorAll('.mm-row[data-u]').forEach(b=>b.onclick=()=>{const m=shown[+b.dataset.u];if(m.type==='g'){curMid=m.mid;view='detail';render();}else{close();selectReceipt(m.rc[0].id);}});
+      panel.querySelectorAll('.mm-row[data-u]').forEach(b=>b.onclick=()=>{const m=shown[+b.dataset.u];if(m.type==='g'){curMid=m.mid;view='detail';render();}else{close(()=>selectReceipt(m.rc[0].id));}});
       document.getElementById('mmBackLbl').textContent=nm();
       panel.querySelector('#mmBack').onclick=back;
       panel.querySelectorAll('.mm-tab[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;orgSel.clear();render();});
@@ -6659,7 +7039,7 @@ function _mtgManageOpen(initialTab){
     panel.querySelector('#mmBack').onclick=back;
     panel.querySelectorAll('.mm-tab[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;orgSel.clear();render();});
     if(tab==='meetings'){
-      panel.querySelectorAll('.mm-row[data-u]').forEach(b=>b.onclick=()=>{const m=units[+b.dataset.u];if(m.type==='g'){curMid=m.mid;view='detail';render();}else{close();selectReceipt(m.rc[0].id);}});
+      panel.querySelectorAll('.mm-row[data-u]').forEach(b=>b.onclick=()=>{const m=units[+b.dataset.u];if(m.type==='g'){curMid=m.mid;view='detail';render();}else{close(()=>selectReceipt(m.rc[0].id));}});
     }
   }
   function mmTabs(mCnt,uCnt){
@@ -6718,7 +7098,7 @@ function _mtgManageOpen(initialTab){
       <div class="org-actionbar mm-detail-ab"><button type="button" class="mm-btn-sec" id="mmDutch">더치페이로 보내기</button><button type="button" class="org-ab-btn" id="mmEdit">편집</button></div>`;
     document.getElementById('mmBackLbl').textContent='만남';
     panel.querySelector('#mmBack').onclick=back;
-    panel.querySelectorAll('.mm-row[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;close();selectReceipt(id);});
+    panel.querySelectorAll('.mm-row[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;close(()=>selectReceipt(id));});
     panel.querySelector('#mmEdit').onclick=()=>{editSel.clear();view='edit';render();};
     panel.querySelector('#mmDutch').onclick=()=>{const first=rc[0];close();_mtgOpenDutchScope(first);};
   }
@@ -6830,7 +7210,7 @@ function _openPersonDetailShell(cfg){
       ${(foot&&rows.length)?`<div class="duo-drill-foot"><span>${escapeHtml(foot.label)}</span><b>${fmtMoney(foot.amount)}원</b></div>`:''}`;
     card.querySelector('#pdX').onclick=close;
     card.querySelectorAll('.pd-fchip[data-k]').forEach(b=>b.onclick=()=>{fkey=b.dataset.k;paint();});
-    card.querySelectorAll('.pd-row[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;close();selectReceipt(id);});
+    card.querySelectorAll('.pd-row[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;close(()=>selectReceipt(id));});
   };
   paint();
 }
@@ -6867,6 +7247,16 @@ function _openPersonDetail(type){
     _openPersonDetailShell({title:'참석 부담액', subtitle:`${fmtMoney(tot)}원 · ${recs.length}건 · 다른 사람이 결제한 자리에서 ${escapeHtml(nm)}의 몫`, emphasizeRight:true,
       rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(share(r))}원`, subHtml:escapeHtml(sub(r,[`총 ${fmtMoney(r.total||0)}원`, `${receiptPeople(r).size}명`, payer(r)+' 결제']))})),
       foot:()=>({label:'합계', amount:tot})});
+  }else if(type==='gsolo'||type==='gco'||type==='gall'){
+    // v3.71 — 이 사람이 준 한턱 drill-down. receipt.total 전액이 한턱 금액(N분할 없음). 공동은 '주체 → 받은 사람' 표시(§8).
+    const arr=type==='gsolo'?(d.gSolo||[]):type==='gco'?(d.gCo||[]):(d.gAll||[]);
+    const recs=sortD(arr);
+    const title=type==='gsolo'?'개인 한턱':type==='gco'?'공동 한턱':'전체 한턱';
+    const gname=escapeHtml(d.gName||nm);
+    const flow=r=>{const subj=_treatSubjects(r),rec=_treatRecipients(r);return escapeHtml(subj.join(' · ')+' → '+(rec.length?rec.join(' · '):'참석자'));};
+    _openPersonDetailShell({title, subtitle:`${gname} 기준 · ${fmtMoney(sumT(recs))}원 · ${recs.length}건`,
+      rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, subHtml:flow(r)})),
+      foot:()=>({label:'합계', amount:sumT(recs)})});
   }
 }
 
@@ -6905,10 +7295,20 @@ function _mtgSheetOpen(){
   document.body.appendChild(bd);
   const card=bd.querySelector('.mtg-sheet');
   const onKey=e=>{if(e.key==='Escape')close();};
-  function close(){document.removeEventListener('keydown',onKey);bd.remove();}
+  // v3.72 — DOM 정리는 teardown, 사용자 닫기는 history 엔트리 소비(_ovDismiss) → swipe-back이 오버레이만 닫는다.
+  let _torn=false;
+  const teardown=()=>{if(_torn)return;_torn=true;document.removeEventListener('keydown',onKey);bd.remove();};
+  const ovid=_ovPush(teardown);
+  const close=(after)=>{const cb=(typeof after==='function')?after:null;if(_torn){if(cb)cb();return;} _ovDismissById(ovid,cb,teardown);};
   document.addEventListener('keydown',onKey);
   bd.addEventListener('click',e=>{if(e.target===bd)close();});
   return {bd,card,close};
+}
+// 특정 오버레이 id를 UI로 닫기: 스택 top이면 history.back으로 소비, 아니면 직접 teardown(중첩/데스크탑 안전).
+function _ovDismissById(id,after,teardown){
+  const top=_ovStack[_ovStack.length-1];
+  if(top&&top.id===id){top.after=after||null;try{history.back();}catch(e){_ovStack.pop();teardown&&teardown();if(after)after();}}
+  else{_ovForget(id);teardown&&teardown();if(after)after();}
 }
 // 만남 상세 시트: 참석자 union + receipt 목록(현재 열람분 강조) + [만남에서 분리](현재 receipt만).
 function _mtgOpenMeetingDetail(r){
@@ -6932,7 +7332,7 @@ function _mtgOpenMeetingDetail(r){
       </button>`).join('')}</div>
       ${stillIn?`<div class="mtg-sheet-foot"><button type="button" class="mtg-sheet-unlink" id="mtgShUnlink">이 영수증을 만남에서 분리</button></div>`:''}`;
     card.querySelector('#mtgShX').onclick=close;
-    card.querySelectorAll('.mtg-drow[data-open]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.open;close();selectReceipt(id);});
+    card.querySelectorAll('.mtg-drow[data-open]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.open;close(()=>selectReceipt(id));});
     const ub=card.querySelector('#mtgShUnlink');
     if(ub)ub.onclick=async()=>{const ok=await _mtgUnlinkOne(r);if(ok)close();/* _mtgUnlinkOne이 renderDetail 재실행 */};
   };
@@ -7126,7 +7526,7 @@ function _openDuoDrill(which){
     <div class="mtg-drows">${rowsHtml}</div>
     ${sorted.length?`<div class="duo-drill-foot"><span>${footLbl}</span><b>${fmtMoney(total)}원</b></div>`:''}`;
   card.querySelector('#duoDrillX').onclick=close;
-  card.querySelectorAll('.mtg-drow[data-open]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.open;close();selectReceipt(id);});
+  card.querySelectorAll('.mtg-drow[data-open]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.open;close(()=>selectReceipt(id));});
 }
 
 // v3.56 — '자주 함께한 멤버' 섹션(참석 receipt의 동행자 빈도 상위 5). 참석 전용 view에만 있던 것을 통합 대시보드로 이관(데이터 보존).
@@ -7281,8 +7681,13 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
 
   // v3.56 — '자주 함께한 멤버'(참석 receipt 동행자). 참석 기록이 있을 때만, 참석 내역 위에 표시(데이터 보존).
   const coSection=partRecs.length>0?_coMembersHtml(partRecs,name):'';
+  const relSection=_personRelationGroupsHtml(name); // v3.70 — 관계 그룹 표시/설정
+  // v3.71 — 이 사람이 '준' 한턱(개인/공동/전체). 진실원=pool(기간 내 tgt 관련 receipt), receipt.id 유니크(중복 합산 없음).
+  const _giv=_personTreatGiving(tgt,pool);
+  if(_personDetailData){_personDetailData.gSolo=_giv.solo.slice();_personDetailData.gCo=_giv.co.slice();_personDetailData.gAll=_giv.all.slice();_personDetailData.gName=tgt;}
+  const treatGivingSection=_personTreatGivingSectionHtml(tgt,_giv);
   // v3.59 — 만남 묶기 진입은 만남 영역 '미분류 영수증'(Organizer)으로 이동. Dashboard에는 [선택] 툴바/액션바 없음.
-  return heroHtml+payerSection+coSection+partSection;
+  return heroHtml+relSection+treatGivingSection+payerSection+coSection+partSection;
 }
 
 // ── v1.34 날짜 검색 요약 패널 ───────────────────────────────────
@@ -8000,7 +8405,37 @@ function _captureNavigation(event){
 }
 document.addEventListener('click',_captureNavigation,true);
 document.addEventListener('change',_captureNavigation,true);
+// ── v3.72 오버레이 history 통합 ─────────────────────────────────────────────
+//   문제(진단): Drill-down/Meeting 관리/Meeting 상세/관계 그룹 편집/공동 한턱 상세 오버레이가 열릴 때 history 엔트리를
+//   쌓지 않아, iPhone Safari edge swipe-back(또는 뒤로가기)이 밑의 '라우트'를 pop(전체 rerender=리셋처럼 보임)하거나
+//   초기 엔트리를 넘어 문서를 이탈(→reload)했다. 해결: 오버레이가 열리면 엔트리를 하나 쌓아, 첫 back이 '오버레이만 닫히게' 한다.
+let _ovStack=[]; // [{id, closeDom, after}]  위가 top
+let _ovSeq=0;
+function _ovPush(closeDom){
+  const id='ov'+(++_ovSeq);
+  _ovStack.push({id,closeDom,after:null});
+  try{history.pushState({...history.state,_ov:id},'');}catch(e){}
+  return id;
+}
+// UI로 닫기(X·backdrop·ESC·취소·저장·행선택 등): history.back()으로 우리가 쌓은 엔트리를 소비 → popstate가 DOM 정리.
+//   after: 닫은 뒤 실행할 후속(예: selectReceipt). 오버레이가 없으면 즉시 after 실행.
+function _ovDismiss(after){
+  const cb=(typeof after==='function')?after:null;
+  if(!_ovStack.length){if(cb)cb();return;}
+  _ovStack[_ovStack.length-1].after=cb;
+  try{history.back();}catch(e){const top=_ovStack.pop();try{top.closeDom&&top.closeDom();}catch(_){}if(top.after)top.after();}
+}
+// 특정 id 오버레이가 아직 스택에 있으면(직접 DOM이 제거된 예외 상황 등) 정리 — 데스크탑/중첩 안전용.
+function _ovForget(id){const i=_ovStack.findIndex(o=>o.id===id);if(i>=0)_ovStack.splice(i,1);}
 addEventListener('popstate',event=>{
+  // v3.72 — 오버레이가 열려 있으면 이 back은 '오버레이 닫기'로 소비하고 라우트 복원은 하지 않는다.
+  if(_ovStack.length){
+    if(_navigationTimer!==null){clearTimeout(_navigationTimer);_navigationTimer=null;}
+    const top=_ovStack.pop();
+    try{top.closeDom&&top.closeDom();}catch(e){}
+    if(top.after){const af=top.after;top.after=null;try{af();}catch(e){}}
+    return;
+  }
   const state=event.state?.receiptNavigation;
   if(!state)return;
   if(_navigationTimer!==null){clearTimeout(_navigationTimer);_navigationTimer=null;}
@@ -8220,6 +8655,11 @@ async function renderDetail(){
     });
     // v3.54 — 단둘이 Hero 금액 클릭 → 근거 영수증 drill-down(위임)
     body.addEventListener('click',e=>{const d=e.target.closest('[data-duo]');if(d&&body.contains(d)){e.preventDefault();_openDuoDrill(d.dataset.duo);}});
+    // v3.70 — Person Detail 관계 섹션: 그룹 편집 / 새 관계 그룹 설정(위임)
+    body.addEventListener('click',e=>{
+      const ed=e.target.closest('[data-rgedit]');if(ed&&body.contains(ed)){e.preventDefault();openRelationGroupEditor(ed.dataset.rgedit);return;}
+      const nw=e.target.closest('[data-rgnew]');if(nw&&body.contains(nw)){e.preventDefault();openRelationGroupEditor(null,nw.dataset.rgnew);}
+    });
     // v3.38 — 지출 추이 칸을 탭하면 툴팁이 고정(pin)돼 손가락을 떼도 남는다. 다른 곳 탭하면 닫힘.
     body.addEventListener('click',e=>{
       const col=e.target.closest('.lp-col.has');
@@ -8349,7 +8789,8 @@ async function renderDetail(){
       const _orgBtn=body.querySelector('#relMtgOrganize');
       if(_orgBtn){const go=()=>_mtgOrganizerOpen();_orgBtn.addEventListener('click',go);_orgBtn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});}
       // v3.62 — 요약 4개 row Drill-down(여럿이/전체 결제/전체 내가 한턱/참석 부담액) → 공통 Person Detail. chevron=navigation.
-      [['relDetailGrp','grp'],['relDetailPay','pay'],['relDetailTreat','treat'],['relDetailShare','share']].forEach(([id,type])=>{
+      [['relDetailGrp','grp'],['relDetailPay','pay'],['relDetailTreat','treat'],['relDetailShare','share'],
+       ['pgTreatSolo','gsolo'],['pgTreatCo','gco'],['pgTreatAll','gall']].forEach(([id,type])=>{ // v3.71 — 이 사람이 준 한턱 drill-down
         const el=body.querySelector('#'+id);
         if(el){const go=()=>_openPersonDetail(type);el.addEventListener('click',go);el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});}
       });
@@ -8493,6 +8934,7 @@ async function renderDetail(){
         </div>
         <div class="pp-chips" id="dPpChips"></div>
         <div class="pp-split-hint" id="dSplitHint"></div>
+        <div class="pp-treatby" id="dTreatBy"></div>
       </div>
     </div>`;
   const memoFieldsHtml=`
@@ -8773,12 +9215,13 @@ async function renderDetail(){
       treatBar:document.getElementById('dTreatBar'),
       treatSw:document.getElementById('dTreatSw'),
       hint:document.getElementById('dSplitHint'),
+      treatByBox:document.getElementById('dTreatBy'),
       getParticipants:()=>(document.getElementById('dParticipants').value||'').split(','),
       getPayer:()=>dPayerInp?dPayerInp.value:'',
       getTotal:()=>r.total||0,
       onChange:()=>_detailSetDirty(true)
     });
-    _dSplitUI.setState(r.treat,r.splitExclude);
+    _dSplitUI.setState(r.treat,r.splitExclude,r.treatBy);
     if(dp2) dp2.addEventListener('input',()=>_dSplitUI.render());
     if(dPayerInp) dPayerInp.addEventListener('input',()=>_dSplitUI.render());
   }
@@ -8841,6 +9284,8 @@ async function renderDetail(){
       if(sp.treat)r.treat=true;else delete r.treat;
       const ex=(sp.splitExclude||[]).filter(n=>(r.participants||[]).includes(n));
       if(ex.length)r.splitExclude=ex;else delete r.splitExclude;
+      // v3.70 — 공동 한턱 주체(treatBy). 한턱 ON+참석 공동주체(2명↑) 명시 선택 시만 기록, 아니면 제거(§19 stale 방지). paidBy 불변(§26).
+      if(sp.treat&&sp.treatBy&&(sp.treatBy.members||[]).every(n=>(r.participants||[]).includes(n)))r.treatBy=sp.treatBy;else delete r.treatBy;
     }
     // 총액: 품목 있으면 합계 자동계산, 없으면 dTotalAmt 입력값 사용 (직접 입력 영수증)
     if((r.items||[]).length>0){
@@ -9006,7 +9451,7 @@ function _detailSnapshot(){
   document.querySelectorAll('#detailBody .kv .kv-inp').forEach(inp=>{const f=inp.dataset.field;if(f)parts.push(f+'='+inp.value);});
   ['dParticipants','dNotes','dTags','dTotalAmt'].forEach(id=>{const el=document.getElementById(id);if(el)parts.push(id+'='+el.value);});
   document.querySelectorAll('#itemsTable tbody tr[data-idx] input').forEach(inp=>{parts.push((inp.dataset.f||'')+':'+inp.value);});
-  if(_dSplitUI){const sp=_dSplitUI.getState();parts.push('treat='+(sp.treat?1:0));parts.push('excl='+((sp.splitExclude||[]).slice().sort().join('|')));}
+  if(_dSplitUI){const sp=_dSplitUI.getState();parts.push('treat='+(sp.treat?1:0));parts.push('excl='+((sp.splitExclude||[]).slice().sort().join('|')));parts.push('treatBy='+(sp.treatBy?((sp.treatBy.groupId||'')+':'+(sp.treatBy.members||[]).slice().sort().join('|')):''));}
   return parts.join('\u0001');
 }
 function _detailSetDirty(v){
@@ -9223,7 +9668,17 @@ function _validateReceiptRecord(raw){
     splitExclude:Array.isArray(raw.splitExclude)?raw.splitExclude.map(v=>String(v||'')).filter(Boolean):[],
     // v3.46 — 만남 묶기: optional meetingId(문자열)만 보존·정규화. 없으면 키 자체를 두지 않는다(undefined→JSON 제외).
     meetingId:(typeof raw.meetingId==='string'&&raw.meetingId.trim())?raw.meetingId.trim():undefined,
+    // v3.70 — 공동 한턱 주체: optional treatBy 객체만 보존·정규화(손상 값 차단). 없으면 undefined→JSON 제외(기존 Receipt에 기본값 안 씀).
+    treatBy:_validTreatBy(raw.treatBy),
   };
+}
+// treatBy 정규화: {type:'relationGroup', groupId, members:[2명↑]} 형태만 통과. 그 외 undefined.
+function _validTreatBy(tb){
+  if(!_isPlainObject(tb)||tb.type!=='relationGroup')return undefined;
+  const groupId=typeof tb.groupId==='string'?tb.groupId.trim():'';
+  const members=Array.isArray(tb.members)?tb.members.map(v=>String(v||'').trim()).filter(Boolean):[];
+  if(members.length<2)return undefined;
+  return {type:'relationGroup',groupId,members:members.slice(0,50)};
 }
 function _validateImageRecord(raw){
   if(!_isPlainObject(raw)||typeof raw.id!=='string'||!raw.id.trim()||raw.id.length>200)return null;
@@ -9247,8 +9702,14 @@ function _validateDataEnvelope(raw){
       if(typeof k==='string'&&k.length<=300&&typeof v==='string'&&v.length<=100)cleanCatMap[k]=v;
     }
   }
+  // v3.70 — 관계 그룹 정규화(있을 때만; 없으면 키 자체를 두지 않아 기존 백업 완전 호환)
+  const cleanRelGroups=Array.isArray(raw.relationGroups)
+    ?raw.relationGroups.map(_sanitizeRelationGroup).filter(Boolean).slice(0,500)
+    :undefined;
+  const outData={...raw,receipts,images,deletedIds,storeCatMap:cleanCatMap,prepaidRecords:ppValidateRecords(raw.prepaidRecords)};
+  if(cleanRelGroups)outData.relationGroups=cleanRelGroups;else delete outData.relationGroups;
   return {
-    data:{...raw,receipts,images,deletedIds,storeCatMap:cleanCatMap,prepaidRecords:ppValidateRecords(raw.prepaidRecords)},
+    data:outData,
     skippedReceipts:raw.receipts.length-receipts.length,
     skippedImages:(Array.isArray(raw.images)?raw.images.length:0)-images.length,
   };
@@ -9534,6 +9995,7 @@ document.getElementById('exportBtn').addEventListener('click',async()=>{
       receipts:recs,
       images:imgsOut,
       storeCatMap,          // 카테고리 학습 사전
+      relationGroups,       // v3.70 관계 그룹
       prepaidRecords:await ppExport(),
     };
     const json=JSON.stringify(payload,null,2);
@@ -9580,6 +10042,7 @@ document.getElementById('importInp').addEventListener('change',async e=>{
       storeCatMap={...storeCatMap,...data.storeCatMap};
       await saveStoreCatMap();
     }
+    await _mergeRelationGroups(data.relationGroups); // v3.70
     await ppMerge(data.prepaidRecords);
     toast(`복원 완료 — ${added}건, 사진 ${imgN}장${skipped?' · '+skipped:''}`,{type:'success',duration:skipped?5200:3000});
     await loadAll();renderDetail();
@@ -9899,6 +10362,7 @@ async function _dbxRestore(path,name){
       storeCatMap={...storeCatMap,...data.storeCatMap};
       await saveStoreCatMap();
     }
+    await _mergeRelationGroups(data.relationGroups); // v3.70
     _dbxCloseModal();
     await ppMerge(data.prepaidRecords);
     toast(`복원 완료 — ${added}건, 사진 ${imgN}장${skipped?' · '+skipped:''}`,{type:'success',duration:skipped?5200:3000});
@@ -10586,6 +11050,7 @@ async function _dbxBuildSyncPayload(){
     receipts:recs,
     images:[],
     storeCatMap,
+    relationGroups, // v3.70 — storeCatMap과 같은 계약으로 기기 간 동기화
     deletedIds,
   });
 }
@@ -11416,6 +11881,21 @@ async function _dbxMerge(remoteData){
     }
     if(catChanged)await saveStoreCatMap();
   }
+  // ③-2 v3.70 관계 그룹 머지 (id 기준, updatedAt 최신 우선 · 새 그룹 추가). 과거 treatBy는 그룹과 독립이라 안전.
+  if(Array.isArray(remoteData.relationGroups)){
+    let rgChanged=false;
+    for(const rg of remoteData.relationGroups){
+      const clean=_sanitizeRelationGroup(rg);if(!clean)continue;
+      const i=relationGroups.findIndex(x=>x.id===clean.id);
+      if(i<0){relationGroups.push(clean);rgChanged=true;}
+      else{
+        const lt=new Date(relationGroups[i].updatedAt||0).getTime();
+        const rt=new Date(clean.updatedAt||0).getTime();
+        if(rt>lt){relationGroups[i]=clean;rgChanged=true;}
+      }
+    }
+    if(rgChanged)await saveRelationGroups();
+  }
 
   if(changed>0){
     await loadAll();
@@ -11494,6 +11974,7 @@ window.addEventListener('resize',()=>_renderConnWarn());
 
 function renderDbxSettings(){
   _renderConnWarn();
+  renderRelationSettings(); // v3.70 — 설정 탭 관계 그룹 목록 갱신
   const notConn=document.getElementById('dbxNotConnected');
   const conn=document.getElementById('dbxConnected');
   if(!notConn||!conn)return;
@@ -11964,6 +12445,7 @@ function _dbxBindEvents(){
   try{
     await openDB();
     await loadStoreCatMap();
+    await loadRelationGroups();
     await loadAll();
     // 화면 폭 기준 초기 탭: 데스크탑 → 추가, 모바일 → 내역 목록
     if(!_isMobileLayout()) switchTab('input');
@@ -12012,7 +12494,8 @@ function _dbxBindEvents(){
 // (문서 scrollY 로 판단하면 항상 0이라 아무 데서나 발동한다.)
 (()=>{
   if(!('ontouchstart' in window))return;
-  const BLOCK='.modal-overlay,.modal-card,.cat-picker-popover:not([hidden])';
+  // v3.72 — 오버레이가 열려 있으면 당겨서 새로고침(→location.reload) 금지. 최근 추가된 오버레이도 포함.
+  const BLOCK='.modal-overlay,.modal-card,.cat-picker-popover:not([hidden]),.mtg-sheet-backdrop,.org-backdrop,.rg-ov';
   const TH=70,MAX=104,EDGE=28;
   let y0=0,x0=0,pulling=false,dist=0,busy=false,axisLock=false;
 
