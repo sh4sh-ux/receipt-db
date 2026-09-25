@@ -95,6 +95,20 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.56` — **사람 검색 renderer 일관성: 데이터 유무·건수와 무관하게 항상 같은 Person Dashboard(계산 불변, 분기/이관만).**
+  ⚠️ **근본 원인**: 평문 이름 검색이 **데이터 유형에 따라 다른 화면**으로 갈렸다 — `hasPayer&&!hasPart` → 결제자 전용 view,
+  `hasPart&&!hasPayer` → 참석자 전용 view(예: 김승환은 참석 기록만 있어 '김승환 참석 내역'), `hasPayer&&hasPart` → 통합
+  대시보드(예: 김영석). **수정**: 명시 접두어(`결제자 X`/`참석자 X`)만 전용 필터 뷰로 남기고, **평문 이름 검색은
+  `(hasPayer||hasPart)`면 무조건 통합 대시보드**(`renderPersonDashboardHtml`)로 라우팅. 이 renderer는 `payerRecs`/`partRecs`
+  한쪽이 비어도 안전(결제 내역/참석 내역 섹션이 각자 `length>0`일 때만 렌더, Hero는 `_personRelation`이 빈 배열도 처리).
+  §5 **데이터 보존**: 참석 전용 view에만 있던 **'자주 함께한 멤버'**를 재사용 헬퍼 `_coMembersHtml`로 통합 대시보드에
+  이관(참석 receipt 동행자 빈도 top5 — 집계 로직 동일, 칩은 기존 `[data-ppname]` 위임으로 클릭 시 인물 검색). 참석 횟수·
+  참석 부담액·참석 목록은 대시보드가 이미 제공. ⚠️ `normalizeName`/`receiptPeople`/`_receiptShare`/`_participantSplit`/
+  `_personRelation`·단둘이 실결제·여럿이·한턱·참석부담·meetingId/만남 통계·Dutch Pay·기간 필터·v3.54~55 drill-down/결제자
+  미상 전부 불변. 명시 접두어 필터 뷰(`renderPayerSummaryHtml`/`renderParticipantSummaryHtml`)는 그대로 유지(별도 기능).
+  검증(실데이터 151건): 신유철·김영석·김승환 + 1건/참석만/결제만/결제+참석 사용자 모두 `renderPersonDashboardHtml` 단일
+  사용(헤더 구조 동일 person icon·이름·소제목·기간 slot·divider), '자주 함께한 멤버' 표시, drill-down·미상·계산 회귀 없음,
+  Desktop/Mobile 390·430 overflow 없음·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.55` — **단둘이 Hero 데이터 표현 정제: 전체 건수 정정 + 결제자 미상 그룹 노출(계산 로직 불변, 단둘이 표현만).**
   ① Hero 우측 '영수증 N건'을 `tgtDuo+myDuo`(결제자 확인분, 19)에서 **단둘이 전체**(`receiptPeople`가 정확히 {나,대상}인
   모든 receipt, paidBy 유무 무관 = `duoAll`, 20)로 정정 — 동적 계산(하드코딩 없음). ② 단둘이를 **3그룹**으로 분류:

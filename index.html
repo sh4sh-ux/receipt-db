@@ -2831,6 +2831,17 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
+// v3.56 — 사람 검색 renderer 일관성: 데이터 유무·건수와 무관하게 항상 같은 Person Dashboard. ⚠️ 계산 불변, 분기/이관만.
+//   근본 원인: 평문 이름 검색이 데이터 유형으로 갈렸다 — hasPayer&&!hasPart → 결제자 전용 view, hasPart&&!hasPayer →
+//   참석자 전용 view(김승환: 참석 기록만 → '김승환 참석 내역'), hasPayer&&hasPart → 통합 대시보드(김영석). 수정: 명시
+//   접두어('결제자 X'/'참석자 X')만 전용 필터 뷰로 남기고, **평문 이름 검색은 (hasPayer||hasPart)면 무조건 통합
+//   대시보드**(renderPersonDashboardHtml)로 라우팅. renderPersonDashboardHtml은 payerRecs/partRecs 한쪽이 비어도 안전
+//   (결제 내역/참석 내역 섹션이 각자 length>0일 때만 렌더). §5 데이터 보존: 참석 전용 view에만 있던 '자주 함께한 멤버'를
+//   재사용 헬퍼 `_coMembersHtml`로 통합 대시보드에 이관(참석 receipt 동행자 빈도 top5, 집계 로직 동일, 칩은 기존
+//   [data-ppname] 위임으로 클릭 시 인물 검색). 참석 횟수·부담액·참석 목록은 대시보드가 이미 제공. ⚠️ normalizeName/
+//   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
+//   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
+//   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
 // v3.55 — 단둘이 Hero 데이터 표현 정제: 전체 건수 정정 + 결제자 미상 그룹 노출. ⚠️ 계산 로직 불변, 단둘이 표현만.
 //   ① Hero 우측 '영수증 N건'을 tgtDuo+myDuo(결제자 확인분)에서 **단둘이 전체**(receiptPeople 정확히 {나,대상}인 모든
 //   receipt, paidBy 유무 무관 — `duoAll=together.filter(size2&나&대상)`)로 정정(동적, 하드코딩 없음). ② 단둘이를 3그룹으로:
@@ -2995,7 +3006,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.55';
+const APP_VERSION='v3.56';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6402,6 +6413,16 @@ function _openDuoDrill(which){
   card.querySelectorAll('.mtg-drow[data-open]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.open;close();selectReceipt(id);});
 }
 
+// v3.56 — '자주 함께한 멤버' 섹션(참석 receipt의 동행자 빈도 상위 5). 참석 전용 view에만 있던 것을 통합 대시보드로 이관(데이터 보존).
+//   계산·표시 로직은 기존 renderParticipantSummaryHtml의 것 그대로(집계 변경 없음). 칩은 기존 [data-ppname] 위임으로 클릭 시 인물 검색.
+function _coMembersHtml(recs,name){
+  const coMap={};
+  for(const r of (recs||[]))for(const p of (r.participants||[])){const pn=(p||'').trim();if(!pn||pn.toLowerCase()===String(name).toLowerCase())continue;coMap[pn]=(coMap[pn]||0)+1;}
+  const coEntries=Object.entries(coMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(!coEntries.length)return '';
+  return `<div class="budget-section">${_sectionToggleHtml('자주 함께한 멤버',null,'person_companions',true)}<div class="section-body open"><div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:10px;">${coEntries.map(([p,cnt])=>`<div class="pp-ao-chip" data-ppname="${escapeHtml(p)}" role="button" tabindex="0" title="${escapeHtml(p)} 내역 보기"><span style="font-weight:600;">${escapeHtml(p)}</span><span style="color:var(--label3);margin-left:6px;font-size:11px;">${cnt}회</span></div>`).join('')}</div></div></div>`;
+}
+
 function renderPersonDashboardHtml(name, payerRecs, partRecs){
   // v3.41 — 히어로를 '단둘이/여럿이/전체 × 상대 결제/내 결제' 2×3 비교표로 정리.
   //   계산은 v3.40 검증 함수 그대로(_personRelation). 아래 결제/참석 내역 섹션은 불변.
@@ -6546,6 +6567,8 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
     </div>`;
   }
 
+  // v3.56 — '자주 함께한 멤버'(참석 receipt 동행자). 참석 기록이 있을 때만, 참석 내역 위에 표시(데이터 보존).
+  const coSection=partRecs.length>0?_coMembersHtml(partRecs,name):'';
   // v3.46 — 만남 묶기 UI(선택 툴바 + 액션바). 결제·참석 내역에 행이 있을 때만.
   const hasRows=(payerRecs.length+partRecs.length)>0;
   let mtgToolbar='',mtgActionBar='';
@@ -6563,7 +6586,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
       </div>`;
     }
   }
-  return heroHtml+mtgToolbar+payerSection+partSection+mtgActionBar;
+  return heroHtml+mtgToolbar+payerSection+coSection+partSection+mtgActionBar;
 }
 
 // ── v1.34 날짜 검색 요약 패널 ───────────────────────────────────
@@ -7619,8 +7642,8 @@ async function renderDetail(){
 
       const payerName=personName;
       const participantQ=personName;
-      if(isExplicitPayer||(!isExplicitParticipant&&hasPayer&&!hasPart)){
-        // 결제자 전용
+      if(isExplicitPayer){
+        // 결제자 전용(명시 접두어 '결제자 X' 전용 필터 뷰)
         const allRecs=payerRecs;
         const recs=_applyPersonTimeFilter(allRecs,_personTimeFilter);
         eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;
@@ -7629,8 +7652,8 @@ async function renderDetail(){
         body.innerHTML=_personFilterPillsHtml(allRecs,_personTimeFilter)+renderPayerSummaryHtml(payerName,recs);
         _bindSectionToggles(body);
         _setMobPersonView(true);
-      }else if(isExplicitParticipant||(!isExplicitPayer&&hasPart&&!hasPayer)){
-        // 참석자 전용
+      }else if(isExplicitParticipant){
+        // 참석자 전용(명시 접두어 '참석자 X' 전용 필터 뷰)
         const allRecs=partRecs;
         const recs=_applyPersonTimeFilter(allRecs,_personTimeFilter);
         eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><circle cx="20" cy="8" r="3"/><path d="M2 20c0-4 3.6-7 10-7"/><path d="M14 20c1-2.7 3-4.5 6-5"/></svg>`;
@@ -7639,8 +7662,9 @@ async function renderDetail(){
         body.innerHTML=_personFilterPillsHtml(allRecs,_personTimeFilter)+renderParticipantSummaryHtml(participantQ,recs);
         _bindSectionToggles(body);
         _setMobPersonView(true);
-      }else if(!isExplicitPayer&&!isExplicitParticipant&&hasPayer&&hasPart){
-        // ── 결제자 + 참석자 통합 대시보드 ──
+      }else if(hasPayer||hasPart){
+        // ── 사람 검색 통합 대시보드(v3.56) ── 결제/참석 데이터 유무·건수와 무관하게 항상 같은 Person Dashboard.
+        //   결제만/참석만/둘 다/1건이어도 동일 renderer. (결제·참석 어느 쪽이 비어도 renderPersonDashboardHtml이 안전 처리)
         const allPayerF=_applyPersonTimeFilter(payerRecs,_personTimeFilter);
         const allPartF=_applyPersonTimeFilter(partRecs,_personTimeFilter);
         const allRecs=[...new Set([...payerRecs,...partRecs])];
