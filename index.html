@@ -737,6 +737,17 @@ svg{display:block;flex-shrink:0;}
 .person-rel-section{margin-top:14px;}
 .person-rel-hd{font-size:13px;font-weight:700;color:var(--label);padding-bottom:2px;border-bottom:1px solid var(--divider);margin-bottom:2px;}
 .person-rel-list .rel-row:last-child{border-bottom:none;}
+/* v3.71 — Person Detail '한턱'(이 사람이 준 한턱) 섹션 + 관계 그룹 공동 한턱 요약 */
+.person-treat-section{margin-top:14px;}
+.person-treat-hint{font-weight:400;color:var(--label3);font-size:11px;margin-left:6px;}
+.rel-li-strong .rel-li-title{font-weight:700;}
+.rel-li-strong .rel-li-val .v{color:var(--blue);}
+.rg-cotreat{display:flex;align-items:center;gap:8px;width:100%;margin-top:12px;padding:11px 12px;background:var(--fill);border:1px solid var(--sep);border-radius:var(--rm);font:inherit;cursor:default;}
+.rg-cotreat.has{cursor:pointer;}
+.rg-cotreat.has:hover{border-color:var(--blue);}
+.rg-cotreat-l{font-size:13px;font-weight:600;color:var(--label);}
+.rg-cotreat-v{flex:1;text-align:right;font-size:13px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums;}
+.rg-cotreat-chev{flex:none;color:var(--label3);font-size:16px;}
 /* v3.70 — 관계 그룹 생성/편집 모달 */
 .rg-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3200;display:flex;align-items:center;justify-content:center;padding:16px;}
 .rg-modal{background:var(--card);border-radius:var(--r);padding:22px 20px;width:360px;max-width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.28);}
@@ -3058,6 +3069,13 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.71 — 관계 그룹 + 공동 한턱 STEP 2/2: treatBy를 Person 분석·관계 그룹에 연결(표시/집계만, 기존 계산 전부 불변).
+//   ⚠️ paidBy·treat·_receiptShare·_participantSplit·_personRelation(myTreat 등 기존 '전체 내가 한턱' me기준)·단둘이/여럿이·참석 부담액 전부 불변(migration 없음).
+//   불변식: paidBy(실결제)≠treat(한턱 여부)≠treatBy(한턱 주체). 공동 한턱=treat&&treatBy(관계그룹,members 2명↑) → receipt.total 전액이 한턱, members로 N분할 안 함.
+//   새 헬퍼: _isCoTreat·_personTreatGiving(개인/공동/전체, receipt.id 유니크→double count 0)·_personTreatReceived(받은 한턱, helper)·_relGroupCoTreat(그룹 id 기준).
+//   UI: ① Person Detail '{이름} 한턱' 섹션(개인/공동/전체 3 row, 이 사람이 '준' 한턱 — 기존 me기준 '전체 내가 한턱'과 별개) + 각 drill-down(_openPersonDetail gsolo/gco/gall, 공동은 '주체 → 받은사람' §8).
+//   ② 관계 그룹 편집 모달에 '공동 한턱 N원·N건 ›' 요약 + drill-down(_openGroupCoTreatDrill, 그룹 id 기준·중복 합산 없음). 과거 treatBy.members snapshot 그대로(현재 그룹 members로 재계산 안 함 §12·§13).
+//   미도입(STEP 이후): 사람별 분담 관계 Ranking·가족 총지출 Dashboard·자동 추론·Person stable ID migration·Dutch Pay relationGroup 전면 migration·Meeting 변경(§21).
 // v3.70 — 관계 그룹(Relation Group) + 공동 한턱(treatBy) 1/2. Person은 이름 문자열 식별(stable ID 없음)이라 병합/마이그레이션 없이 관계 계층만 추가.
 //   ⚠️ 조사 결과: Dutch Pay '커플'은 2명·이름 문자열·localStorage(dutchpay_couple)·별도 앱이라 그대로 재사용 불가 → 개념(커플/공동)만 차용해
 //   Receipt DB에 2명+ 지원 Relation Group으로 일반화. 저장은 settings store(key 'relationGroups', storeCatMap과 동일 계약) + sync JSON.
@@ -3355,7 +3373,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.70';
+const APP_VERSION='v3.71';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -3948,6 +3966,28 @@ function _treatSummarySentence(r){
   const recipTxt=recip.length?recip.join(' · '):'참석자';
   return `${subjTxt}이 ${recipTxt}에게 ${amt}원 한턱`;
 }
+// v3.71 — 공동 한턱 판정: treat && treatBy(관계그룹·members 2명↑). 개인 한턱은 이 조건이 아니면(=treatBy 없음) 그대로.
+function _isCoTreat(r){return !!(r&&r.treat===true&&_isPlainObject(r.treatBy)&&r.treatBy.type==='relationGroup'&&Array.isArray(r.treatBy.members)&&r.treatBy.members.length>=2);}
+// 한 사람이 '준' 한턱을 개인/공동으로 분류(pool=기간 내 그 사람이 관련된 receipt, receipt.id 유니크). members 수로 나누지 않음.
+//   solo=개인 한턱(treatBy 없음 & 그 사람이 결제자=유일 주체) / co=공동 한턱(treatBy.members에 포함) / all=solo∪co(유니크).
+function _personTreatGiving(name, pool){
+  const n=normalizeName(name); const solo=[], co=[];
+  for(const r of (pool||[])){
+    if(r.treat!==true)continue;
+    if(!_treatSubjects(r).includes(n))continue; // 이 사람이 한턱 '준' 주체가 아니면 제외
+    if(_isCoTreat(r))co.push(r); else solo.push(r);
+  }
+  return {solo,co,all:[...solo,...co]}; // solo/co는 상호배타 → all 유니크
+}
+// 한 사람이 '받은' 공동/개인 한턱(receiptPeople 포함 & 주체 아님). helper 수준(§9) — 정확 구분용.
+function _personTreatReceived(name, pool){
+  const n=normalizeName(name);
+  return (pool||[]).filter(r=>r.treat===true&&receiptPeople(r).has(n)&&!_treatSubjects(r).includes(n));
+}
+// 관계 그룹 단위 공동 한턱 = treatBy.groupId 일치(전역 receipts, id 유니크). members 수만큼 중복 합산 금지(§11).
+function _relGroupCoTreat(groupId){
+  return receipts.filter(r=>_isCoTreat(r)&&r.treatBy.groupId===groupId);
+}
 
 // ── v3.70 관계 그룹 UI(설정·Person Detail 공용) ──────────────────────────────
 // 후보 사람 = 전체 영수증의 사람(참석자+결제자) 합집합 + 내 이름. 이름 문자열(정확일치).
@@ -3985,6 +4025,39 @@ function _personRelationGroupsHtml(name){
     <span class="rel-row-name">${gs.length?'관계 그룹 추가':'관계 그룹 설정'}</span><span class="rel-row-chev" aria-hidden="true">›</span></button>`;
   return `<div class="budget-section person-rel-section"><div class="person-rel-hd">관계</div><div class="person-rel-list">${rows}${addRow}</div></div>`;
 }
+// v3.71 — Person Detail '한턱'(이 사람이 준 한턱) 섹션. 개인/공동/전체 분리(§6). 공동/전체·개인 모두 건수>0면 drill-down(§8).
+function _personTreatGivingSectionHtml(tgt, giv){
+  if(!giv||(!giv.solo.length&&!giv.co.length))return ''; // 준 한턱이 전혀 없으면 섹션 숨김
+  const sum=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
+  const nm=escapeHtml(tgt);
+  const chev='<span class="rel-li-chev" aria-hidden="true">›</span>';
+  const row=(icon,title,arr,tapId,strong)=>{
+    const tap=arr.length&&tapId;
+    return `<div class="rel-li${tap?' rel-li-tap':''}${strong?' rel-li-strong':''}"${tap?` id="${tapId}" role="button" tabindex="0"`:''}>`
+      +`<div class="rel-li-ic">${_relIco(icon)}</div>`
+      +`<div class="rel-li-main"><div class="rel-li-title">${title}</div></div>`
+      +`<div class="rel-li-val"><span class="v${sum(arr)?'':' zero'}">${fmtMoney(sum(arr))}원</span><span class="c">${arr.length}건</span></div>`
+      +`${tap?chev:''}</div>`;
+  };
+  return `<div class="budget-section person-treat-section">`
+    +`<div class="person-rel-hd">${nm} 한턱 <span class="person-treat-hint">이 사람이 낸 한턱</span></div>`
+    +`<div class="rel-metrics">`
+      +row('gift','개인 한턱',giv.solo,'pgTreatSolo',false)
+      +row('group','공동 한턱',giv.co,'pgTreatCo',false)
+      +row('card','전체 한턱',giv.all,'pgTreatAll',true)
+    +`</div></div>`;
+}
+// v3.71 — 관계 그룹 단위 공동 한턱 drill-down(그룹 id 기준, receipt 유니크). 모달 위에서 열어야 하므로 모달을 먼저 닫는다.
+function _openGroupCoTreatDrill(groupId){
+  const g=relationGroupById(groupId);if(!g)return;
+  document.getElementById('rgEditorOv')?.remove();
+  const recs=[...(_relGroupCoTreat(groupId))].sort((a,b)=>((b.date||'').localeCompare(a.date||''))||String(b.id).localeCompare(String(a.id)));
+  const sumT=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
+  const flow=r=>{const subj=_treatSubjects(r),rec=_treatRecipients(r);return escapeHtml(subj.join(' · ')+' → '+(rec.length?rec.join(' · '):'참석자'));};
+  _openPersonDetailShell({title:`${escapeHtml(g.name||_suggestRgName(g.members,g.type))} 공동 한턱`, subtitle:`${fmtMoney(sumT(recs))}원 · ${recs.length}건`,
+    rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, subHtml:flow(r)})),
+    foot:()=>({label:'합계', amount:sumT(recs)})});
+}
 // 생성/편집 모달(설정·Person Detail 공용 — 같은 relationGroups를 편집). id=null이면 새로 만들기.
 function openRelationGroupEditor(id,prefillName){
   document.getElementById('rgEditorOv')?.remove();
@@ -4005,6 +4078,7 @@ function openRelationGroupEditor(id,prefillName){
     <select id="rgType" class="rg-input">${typeOpts}</select>
     <label class="rg-flabel">구성원 <span class="rg-hint">2명 이상 · 각 사람은 그대로 독립 유지</span></label>
     <div class="rg-mems" id="rgMems">${chk()}</div>
+    ${existing?(()=>{const co=_relGroupCoTreat(existing.id);const s=co.reduce((a,r)=>a+(r.total||0),0);return `<button type="button" class="rg-cotreat${co.length?' has':''}" id="rgCoTreat"${co.length?'':' disabled'}><span class="rg-cotreat-l">공동 한턱</span><span class="rg-cotreat-v">${fmtMoney(s)}원 · ${co.length}건</span>${co.length?'<span class="rg-cotreat-chev" aria-hidden="true">›</span>':''}</button>`;})():''}
     <div class="rg-err" id="rgErr"></div>
     <div class="rg-actions">
       ${existing?'<button type="button" class="rg-del" id="rgDel">해제</button>':''}
@@ -4020,6 +4094,8 @@ function openRelationGroupEditor(id,prefillName){
   ov.querySelector('#rgCancel').onclick=close;
   ov.querySelector('#rgMems').addEventListener('change',e=>{const cb=e.target;if(cb&&cb.value){cb.checked?members.add(cb.value):members.delete(cb.value);}});
   ov.querySelector('#rgType').addEventListener('change',e=>{type=e.target.value;});
+  const coBtn=ov.querySelector('#rgCoTreat'); // v3.71 — 그룹 공동 한턱 drill-down
+  if(coBtn&&existing&&_relGroupCoTreat(existing.id).length)coBtn.onclick=()=>_openGroupCoTreatDrill(existing.id);
   const afterSave=()=>{renderRelationSettings();if(!selectedId&&searchQuery)renderDetail();};
   ov.querySelector('#rgSave').onclick=async()=>{
     const nm=ov.querySelector('#rgName').value.trim();
@@ -7154,6 +7230,16 @@ function _openPersonDetail(type){
     _openPersonDetailShell({title:'참석 부담액', subtitle:`${fmtMoney(tot)}원 · ${recs.length}건 · 다른 사람이 결제한 자리에서 ${escapeHtml(nm)}의 몫`, emphasizeRight:true,
       rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(share(r))}원`, subHtml:escapeHtml(sub(r,[`총 ${fmtMoney(r.total||0)}원`, `${receiptPeople(r).size}명`, payer(r)+' 결제']))})),
       foot:()=>({label:'합계', amount:tot})});
+  }else if(type==='gsolo'||type==='gco'||type==='gall'){
+    // v3.71 — 이 사람이 준 한턱 drill-down. receipt.total 전액이 한턱 금액(N분할 없음). 공동은 '주체 → 받은 사람' 표시(§8).
+    const arr=type==='gsolo'?(d.gSolo||[]):type==='gco'?(d.gCo||[]):(d.gAll||[]);
+    const recs=sortD(arr);
+    const title=type==='gsolo'?'개인 한턱':type==='gco'?'공동 한턱':'전체 한턱';
+    const gname=escapeHtml(d.gName||nm);
+    const flow=r=>{const subj=_treatSubjects(r),rec=_treatRecipients(r);return escapeHtml(subj.join(' · ')+' → '+(rec.length?rec.join(' · '):'참석자'));};
+    _openPersonDetailShell({title, subtitle:`${gname} 기준 · ${fmtMoney(sumT(recs))}원 · ${recs.length}건`,
+      rows:()=>recs.map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, subHtml:flow(r)})),
+      foot:()=>({label:'합계', amount:sumT(recs)})});
   }
 }
 
@@ -7569,8 +7655,12 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
   // v3.56 — '자주 함께한 멤버'(참석 receipt 동행자). 참석 기록이 있을 때만, 참석 내역 위에 표시(데이터 보존).
   const coSection=partRecs.length>0?_coMembersHtml(partRecs,name):'';
   const relSection=_personRelationGroupsHtml(name); // v3.70 — 관계 그룹 표시/설정
+  // v3.71 — 이 사람이 '준' 한턱(개인/공동/전체). 진실원=pool(기간 내 tgt 관련 receipt), receipt.id 유니크(중복 합산 없음).
+  const _giv=_personTreatGiving(tgt,pool);
+  if(_personDetailData){_personDetailData.gSolo=_giv.solo.slice();_personDetailData.gCo=_giv.co.slice();_personDetailData.gAll=_giv.all.slice();_personDetailData.gName=tgt;}
+  const treatGivingSection=_personTreatGivingSectionHtml(tgt,_giv);
   // v3.59 — 만남 묶기 진입은 만남 영역 '미분류 영수증'(Organizer)으로 이동. Dashboard에는 [선택] 툴바/액션바 없음.
-  return heroHtml+relSection+payerSection+coSection+partSection;
+  return heroHtml+relSection+treatGivingSection+payerSection+coSection+partSection;
 }
 
 // ── v1.34 날짜 검색 요약 패널 ───────────────────────────────────
@@ -8642,7 +8732,8 @@ async function renderDetail(){
       const _orgBtn=body.querySelector('#relMtgOrganize');
       if(_orgBtn){const go=()=>_mtgOrganizerOpen();_orgBtn.addEventListener('click',go);_orgBtn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});}
       // v3.62 — 요약 4개 row Drill-down(여럿이/전체 결제/전체 내가 한턱/참석 부담액) → 공통 Person Detail. chevron=navigation.
-      [['relDetailGrp','grp'],['relDetailPay','pay'],['relDetailTreat','treat'],['relDetailShare','share']].forEach(([id,type])=>{
+      [['relDetailGrp','grp'],['relDetailPay','pay'],['relDetailTreat','treat'],['relDetailShare','share'],
+       ['pgTreatSolo','gsolo'],['pgTreatCo','gco'],['pgTreatAll','gall']].forEach(([id,type])=>{ // v3.71 — 이 사람이 준 한턱 drill-down
         const el=body.querySelector('#'+id);
         if(el){const go=()=>_openPersonDetail(type);el.addEventListener('click',go);el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});}
       });

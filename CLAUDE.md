@@ -95,6 +95,19 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.71` — **관계 그룹 + 공동 한턱 — STEP 2/2: treatBy를 Person 분석·관계 그룹에 연결(표시/집계만). ⚠️ 기존 계산 전부 불변, migration 없음.**
+  v3.70의 `treatBy`를 기존 Person Detail·관계 그룹에 안전 연결. **불변식**: `paidBy`(실결제)≠`treat`(한턱 여부)≠`treatBy`(한턱 주체). 공동 한턱=`treat && _isCoTreat`
+  (treatBy.type=relationGroup·members 2명↑) → **receipt.total 전액이 한턱 금액, members 수로 N분할 안 함**(§1·§3, 208,000을 104/104로 쪼개지 않음).
+  **새 헬퍼**: `_isCoTreat(r)`·`_personTreatGiving(name,pool)`(그 사람이 '준' 한턱을 solo=개인(treatBy 없음 & 결제자)·co=공동(treatBy.members 포함)·all=solo∪co로 분류,
+  **receipt.id 유니크 → double count 0** §5)·`_personTreatReceived(name,pool)`(받은 한턱 helper §9)·`_relGroupCoTreat(groupId)`(그룹 id 기준 전역 receipt, 중복 합산 없음 §11).
+  **UI**: ① **Person Detail '{이름} 한턱' 섹션**(개인/공동/전체 3 row — 검색된 그 사람이 '준' 한턱, 기간 pool 기준). ⚠️ 이는 기존 me기준 **'전체 내가 한턱'**(myTreat=내가 결제+상대 참석한
+  한턱, 관계 hero의 insight row)과 **의미가 다른 별개 지표**로 둘 다 유지(§7 — 기존 숫자 조용히 안 바꿈). 각 row는 건수>0면 drill-down(`_openPersonDetail` gsolo/gco/gall,
+  공동은 '주체 → 받은 사람' 표시 §8, 기존 `_openPersonDetailShell` 재사용). ② **관계 그룹 편집 모달**에 '공동 한턱 N원·N건 ›' 요약 + drill-down(`_openGroupCoTreatDrill`, 그룹 id 기준).
+  **과거 snapshot 보존**(§12·§13): 공동 한턱 표시는 receipt의 `treatBy.members`(당시 주체)를 그대로 쓰고 현재 그룹 members로 재계산 안 함 — 그룹 members 변경·active:false여도 과거 기록 불변.
+  **Person stable ID 없음 한계**(§14): 이름 문자열 식별 유지, 대규모 Person migration 안 함(별도 STEP). **Dutch Pay**(§15·§16): 커플 계산·payload 손대지 않음(relationGroup 전면 migration 안 함, 향후 settlement group 변환 가능 구조만 확인).
+  **미도입**: 관계 그룹별 사람별 분담 Ranking·가족 총지출 Dashboard·자동 추론·Person ID migration·Meeting 변경(§21). **검증(갈포갈비 + 합성)**: paidBy 김영석·실결제 208,000·개인 한턱 김영석 0/0·
+  공동 한턱 김영석 208,000/1·이종현 208,000/1·김영석 가족 208,000/1·recipient 조상현·조상현 부담 0·전역 공동 한턱 208,000/1·**double count 0**·기존 treatBy 없는 한턱/`_receiptShare`/`_participantSplit` 회귀 없음·
+  Desktop/Mobile 390·430·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.70` — **관계 그룹(Relation Group) + 공동 한턱(treatBy) — STEP 1/2. ⚠️ paidBy·treat·_receiptShare·_participantSplit 계산 전부 불변.**
   ⚠️ **조사 결과**: Dutch Pay '커플'은 `_coupleNames`(정확히 2명·이름 문자열·localStorage `dutchpay_couple`+그룹별 `data.couples`+Dropbox `coupleNames`)로,
   **별도 앱·별도 저장소**라 Receipt DB와 데이터 공유 불가·stable ID 없음. → 개념(커플/공동 한턱)만 차용하고 **2명 이상 지원 Relation Group**으로 일반화.
