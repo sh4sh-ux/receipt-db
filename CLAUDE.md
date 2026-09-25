@@ -95,6 +95,21 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.54` — **단둘이 Hero '실결제액' 표현 + 근거 영수증 drill-down(계산 불변 — 표현/상호작용만 추가).**
+  단둘이(`receiptPeople`가 정확히 {나,대상} 2명) receipt를 **`paidBy` 실제 결제자에게 `total` 전액 귀속**(1/N 아님).
+  이미 계산돼 있던 `tgtDuo`(단둘이+상대결제)·`myDuo`(단둘이+내결제)를 그대로 사용 — **`treat`/`splitExclude`와 무관**(실결제
+  기준). ① Hero 라벨 '○○이 결제/내가 결제' → **'○○이 낸 금액/내가 낸 금액'**. ② 두 금액 side를 **클릭 가능**하게(button,
+  `data-duo=tgt/me`) — 카드·새 배경 없이 미세 affordance만(hover 밑줄+chevron `›`, focus ring). 0건 side는 비활성(div).
+  ③ 클릭 시 **근거 영수증 drill-down**(`_openDuoDrill`, `_mtgSheetOpen` 재사용: 데스크탑 중앙 카드/모바일 하단 시트) —
+  제목·합계·건수·부제('나와 단둘이 있었을 때' / '○○과 단둘이 있었을 때') + 영수증 목록(**최신순**, 매장/금액/날짜) + 합계 foot.
+  **진실원 동일**: Hero 숫자에 쓴 collection을 `_personDuoDrill`에 저장해 그대로 목록화(목록 합계·건수 = Hero). row 클릭 →
+  기존 `selectReceipt`(영수증 상세). ④ **결제 차이**(`abs(내−상대)`) 캡션을 ratio Bar 아래 한 줄로(받을돈/줄돈/빚 등 표현
+  없이 '결제 차이 N원' 중립). ⑤ Empty: 0건 클릭 불가(비활성), drill-down 자체는 빈 목록이면 안내문. ⚠️ **여럿이·전체 결제·
+  내가 한턱·참석 부담액·meetingId/만남 통계·`_receiptShare`/`_participantSplit`/`treat`/`splitExclude`·Dutch Pay·기간 필터·
+  정확일치(`receiptPeople`/`normalizeName`, `이용일`≠`와이프(이용일)`) 전부 불변.** paidBy 누락 단둘이는 어느 쪽에도 귀속하지
+  않음(자동 수정 없음, 보고만). 검증(실데이터 신유철 + 합성 A~L): Hero 상대 431,900/9·나 505,000/10, drill-down 합계·건수 =
+  Hero(PASS), 3명↑ 제외, treat/splitExclude 실결제 포함, row→상세 이동, Desktop/Mobile 390·430 overflow 없음·콘솔에러 0.
+  변경 파일 `index.html`만.
 - `v3.53` — **사람별 '만남 횟수'(meetingId 기준 관계 지표) 계산·표시 — 금액 분석(receipt 기준)은 전부 불변, 새 지표만 추가.**
   **Receipt=결제/금액 단위, Meeting=meetingId 단위**로 명확히 분리. 새 런타임 헬퍼 `_personMeetingStats(rel)`:
   ① **확정된 만남** = 같은 `meetingId` 그룹(런타임 Set — receipt가 몇 개든 **1회**), ② **people union** = 그 meetingId
