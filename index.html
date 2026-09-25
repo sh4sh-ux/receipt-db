@@ -4471,7 +4471,7 @@ function _openRelationGroupSplitDetail(groupId,list){
   const coHtml=co.length?`<div class="gd-sectlabel">공동 한턱</div><div class="pd-list"><button type="button" class="pd-row gd-corow" id="gdCo">`
       +`<span class="pd-row-store">공동 한턱</span>`
       +`<span class="pd-row-right">${fmtMoney(coSum)}원</span>`
-      +`<span class="pd-row-sub">${co.length}건 · 총 부담에는 포함되지 않음</span>`
+      +`<span class="pd-row-sub">${co.length}건 · 위 총 부담에 이미 포함된 금액</span>`
       +`<span class="gd-chev" aria-hidden="true">›</span>`
     +`</button></div>`:'';
   card.innerHTML=`
