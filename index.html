@@ -917,8 +917,8 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .org-dmeta.diff{color:var(--label2);}
 /* v3.60 — '여러 건 날짜만' 토글 칩(기존 .org-fchip 재사용, on=blue-bg) */
 .org-fchip--multi{margin-left:auto;}
-.org-row{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:none;background:none;font:inherit;padding:11px 6px;border-radius:0;cursor:pointer;border-bottom:1px solid var(--sep);}
-.org-row:last-child{border-bottom:none;}
+.org-row{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:none;background:none;font:inherit;padding:11px 6px;border-radius:0;cursor:pointer;border-bottom:1px solid var(--divider);}
+/* v3.63 — ⚠️ last-child border 제거 규칙 삭제. Meeting Organizer는 1건 날짜·group 마지막 행도 반드시 직선 divider로 닫는다(§10). */
 .org-row.sel{background:var(--blue-bg);}
 .org-check{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid var(--sep2);position:relative;box-sizing:border-box;}
 .org-row.sel .org-check{border-color:var(--blue);background:var(--blue);}
@@ -2930,6 +2930,13 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.63 — Meeting Organizer receipt row 직선 divider 실제 렌더 완성. ⚠️ CSS 1줄 제거만, 계산·기능 전부 불변.
+//   ⚠️ 근본 원인: v3.59에서 넣은 `.org-row:last-child{border-bottom:none}`. 날짜 group이 1건이면 그 단일 row가 last-child라
+//   divider가 사라졌고(캡처가 딱 1건 날짜였던 이유), 여러 건 group도 마지막 row divider가 없었다. 일반 카드/리스트 관행이지만
+//   이 앱의 Flat List 원칙(§10 — 1건·group 마지막 행도 반드시 직선으로 닫음)과 충돌 → **규칙 삭제**. 이제 selected/미선택·hover
+//   모두 각 row 하단 1px 직선 divider(--divider) 표시. Date Header(border-bottom)·Action Bar(border-top)는 기존대로 straight.
+//   검증(computed+screenshot): 1건 날짜·2건·3건 전체선택 모두 각 row 직선 divider 존재(blue block으로 안 뭉침), Desktop/Mobile
+//   390·430 동일, 콘솔에러 0. 변경 파일 index.html만.
 // v3.62 — ① 구분선 직선 규칙 완성 + ② 공통 Person Detail(요약→근거→영수증) Drill-down. ⚠️ 계산·데이터 전부 불변, UI/네비만.
 //   ① Divider 직선화: ⚠️ 근본 원인 = 클릭 가능 Flat Row(.rel-li-tap·.org-row)에 border-radius가 있어 하단 border(divider)가
 //   곡선으로 보였다. radius 제거(rel-li-tap radius 삭제·org-row radius 0) → 완전 직선 divider. hover는 full-width 사각 tint만.
@@ -3171,7 +3178,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.62';
+const APP_VERSION='v3.63';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
