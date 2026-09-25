@@ -95,6 +95,21 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.72` — **iPhone Safari edge swipe-back 시 앱이 새로고침/초기화되던 문제 수정(오버레이 history 통합). ⚠️ 기능·계산·데이터·기존 라우트 back 전부 불변.**
+  ⚠️ **진단(UI Back vs Safari swipe-back 별개 계측)**: Drill-down(공동 한턱/전체 결제 등 `.mtg-sheet-backdrop`)·Meeting 관리(`.org-backdrop`)·
+  Meeting 상세(`.mtg-sheet`)·관계 그룹 편집(`.rg-ov`)·공동 한턱 상세 오버레이가 열릴 때 **history 엔트리를 쌓지 않았다**. 그래서 swipe-back(=history
+  back)이 (a) 밑의 **라우트를 pop → `switchTab+renderSide+renderDetail` 전체 rerender**(리셋처럼 보임, personSection이 사라짐) 또는 (b) 스택이
+  얕으면 **초기 엔트리를 넘어 문서를 이탈 → 실제 document reload**(계측: sessionStorage boot 카운터 증가·`switchTab` undefined로 확인)를 유발.
+  **BFCache 복원도, 자발적 전체 rerender도 아니었음** — 순수하게 '오버레이가 history에 없어서 back이 밑을 건드린' 문제. **수정**: 오버레이 open 시
+  `_ovPush`로 history 엔트리 1개 push → 첫 back(swipe/UI)은 popstate에서 **스택 top만 teardown 후 return**(라우트 복원 skip) = **오버레이만 닫힘**.
+  UI 닫기(X·backdrop·ESC·취소·저장·행선택)는 `_ovDismiss`가 **`history.back()`으로 같은 엔트리를 소비**(이중 정리·라우트 pop 없음). 행선택은
+  `close(()=>selectReceipt(id))` after 콜백으로 닫고 이동. 중첩(관계그룹 모달→공동한턱 drill)은 모달을 `close(after)`로 먼저 소비 후 drill open.
+  당겨서 새로고침 `BLOCK`에 새 오버레이 3종 추가(오버레이 열린 중 비-가장자리 세로 당김 reload도 차단). ⚠️ 기존 receiptNavigation(라우트 back·
+  scroll 복원)·`_receiptShare`/`_participantSplit`/treatBy/Person·Meeting·관계 그룹 계산/저장/Dropbox/Dutch Pay 전부 불변(회귀 없음).
+  **검증**: 5개 오버레이 × {swipe-back(goBack), UI-close} — 모두 '오버레이만 닫힘·라우트 유지(personSection 보존)·문서 reload 없음(boot 불변)·JS
+  살아있음', 행선택 시 영수증 상세 이동, 중첩 back, 기준선(오버레이 없이 back=기존 SPA 라우트 pop 유지). Desktop 1280 + Mobile 390·430, 콘솔에러 0
+  (39 check/뷰포트 PASS). ⚠️ **WebKit 바이너리는 이 컨테이너에서 설치 불가**(Playwright 브라우저 CDN이 프록시 allowlist에 없음) → Chromium 모바일
+  에뮬레이션 + 코드 분석으로 검증(history/pushState/popstate 시맨틱은 엔진 불변, 수정도 엔진 비의존). 변경 파일 `index.html`만.
 - `v3.71` — **관계 그룹 + 공동 한턱 — STEP 2/2: treatBy를 Person 분석·관계 그룹에 연결(표시/집계만). ⚠️ 기존 계산 전부 불변, migration 없음.**
   v3.70의 `treatBy`를 기존 Person Detail·관계 그룹에 안전 연결. **불변식**: `paidBy`(실결제)≠`treat`(한턱 여부)≠`treatBy`(한턱 주체). 공동 한턱=`treat && _isCoTreat`
   (treatBy.type=relationGroup·members 2명↑) → **receipt.total 전액이 한턱 금액, members 수로 N분할 안 함**(§1·§3, 208,000을 104/104로 쪼개지 않음).

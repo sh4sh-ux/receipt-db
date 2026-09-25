@@ -3069,6 +3069,16 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.72 — iPhone Safari edge swipe-back 시 앱이 새로고침/초기화되는 문제 수정(오버레이 history 통합). 기능·계산·데이터 불변.
+//   ⚠️ 진단(계측): Drill-down/Meeting 관리/Meeting 상세/관계 그룹 편집/공동 한턱 상세 오버레이가 열릴 때 history 엔트리를
+//   쌓지 않아, swipe-back(=history back)이 (a) 밑의 '라우트'를 pop → 전체 rerender(리셋처럼 보임) 또는 (b) 초기 엔트리를 넘어
+//   문서를 이탈 → 실제 reload(계측: boot 카운터 증가·switchTab undefined). BFCache 복원/자발적 rerender 아님.
+//   수정: 오버레이 open 시 history 엔트리 1개 push(_ovPush) → 첫 back(swipe/UI)은 '오버레이만 닫기'로 소비(popstate에서 스택
+//   top teardown 후 return, 라우트 복원 skip). UI 닫기(X·backdrop·ESC·취소·저장·행선택)는 history.back()으로 같은 엔트리 소비
+//   → 이중 정리/라우트 pop 없음. 행선택은 close(()=>selectReceipt(id)) after 콜백으로 닫고 이동. 중첩(관계그룹 모달→공동한턱
+//   drill)은 모달을 close(after)로 먼저 소비 후 drill open. 당겨서 새로고침 BLOCK에 새 오버레이 추가(오버레이 중 reload 차단).
+//   기존 receiptNavigation(라우트 back/scroll 복원)·모든 계산/저장/Dropbox 불변. WebKit 바이너리는 이 컨테이너에서 설치 불가(프록시
+//   차단)라 Chromium 모바일 에뮬레이션 + 코드 분석으로 검증(history/pushState/popstate는 엔진 불변, 수정도 엔진 비의존).
 // v3.71 — 관계 그룹 + 공동 한턱 STEP 2/2: treatBy를 Person 분석·관계 그룹에 연결(표시/집계만, 기존 계산 전부 불변).
 //   ⚠️ paidBy·treat·_receiptShare·_participantSplit·_personRelation(myTreat 등 기존 '전체 내가 한턱' me기준)·단둘이/여럿이·참석 부담액 전부 불변(migration 없음).
 //   불변식: paidBy(실결제)≠treat(한턱 여부)≠treatBy(한턱 주체). 공동 한턱=treat&&treatBy(관계그룹,members 2명↑) → receipt.total 전액이 한턱, members로 N분할 안 함.
@@ -3373,7 +3383,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.71';
+const APP_VERSION='v3.72';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -4047,10 +4057,9 @@ function _personTreatGivingSectionHtml(tgt, giv){
       +row('card','전체 한턱',giv.all,'pgTreatAll',true)
     +`</div></div>`;
 }
-// v3.71 — 관계 그룹 단위 공동 한턱 drill-down(그룹 id 기준, receipt 유니크). 모달 위에서 열어야 하므로 모달을 먼저 닫는다.
+// v3.71 — 관계 그룹 단위 공동 한턱 drill-down(그룹 id 기준, receipt 유니크). v3.72 — 모달 닫기는 호출부(close)에서 history로 처리.
 function _openGroupCoTreatDrill(groupId){
   const g=relationGroupById(groupId);if(!g)return;
-  document.getElementById('rgEditorOv')?.remove();
   const recs=[...(_relGroupCoTreat(groupId))].sort((a,b)=>((b.date||'').localeCompare(a.date||''))||String(b.id).localeCompare(String(a.id)));
   const sumT=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
   const flow=r=>{const subj=_treatSubjects(r),rec=_treatRecipients(r);return escapeHtml(subj.join(' · ')+' → '+(rec.length?rec.join(' · '):'참석자'));};
@@ -4088,14 +4097,18 @@ function openRelationGroupEditor(id,prefillName){
     </div>
   </div>`;
   document.body.appendChild(ov);
-  const close=()=>ov.remove();
+  // v3.72 — 관계 그룹 편집도 history 엔트리 1개로: swipe-back/뒤로가기가 모달만 닫는다.
+  let _torn=false;
+  const teardown=()=>{if(_torn)return;_torn=true;ov.remove();};
+  const _ovid=_ovPush(teardown);
+  const close=(after)=>{const cb=(typeof after==='function')?after:null;if(_torn){if(cb)cb();return;}_ovDismissById(_ovid,cb,teardown);};
   const err=ov.querySelector('#rgErr');
   ov.addEventListener('click',e=>{if(e.target===ov)close();});
-  ov.querySelector('#rgCancel').onclick=close;
+  ov.querySelector('#rgCancel').onclick=()=>close();
   ov.querySelector('#rgMems').addEventListener('change',e=>{const cb=e.target;if(cb&&cb.value){cb.checked?members.add(cb.value):members.delete(cb.value);}});
   ov.querySelector('#rgType').addEventListener('change',e=>{type=e.target.value;});
   const coBtn=ov.querySelector('#rgCoTreat'); // v3.71 — 그룹 공동 한턱 drill-down
-  if(coBtn&&existing&&_relGroupCoTreat(existing.id).length)coBtn.onclick=()=>_openGroupCoTreatDrill(existing.id);
+  if(coBtn&&existing&&_relGroupCoTreat(existing.id).length)coBtn.onclick=()=>close(()=>_openGroupCoTreatDrill(existing.id)); // v3.72 모달 닫고(히스토리 소비) 드릴 열기
   const afterSave=()=>{renderRelationSettings();if(!selectedId&&searchQuery)renderDetail();};
   ov.querySelector('#rgSave').onclick=async()=>{
     const nm=ov.querySelector('#rgName').value.trim();
@@ -4105,13 +4118,13 @@ function openRelationGroupEditor(id,prefillName){
     const g={id:existing?existing.id:_newRgId(),name:nm||_suggestRgName(mem,tp),type:tp,members:mem,active:true,createdAt:existing?existing.createdAt:nowISO()};
     const ok=await _rgUpsert(g);
     if(!ok){err.textContent='저장에 실패했어요.';return;}
-    close();afterSave();toast('관계 그룹 저장됨',{type:'success'});
+    close(()=>{afterSave();toast('관계 그룹 저장됨',{type:'success'});});
   };
   if(existing){
     let armed=false;
     ov.querySelector('#rgDel').onclick=async()=>{
       if(!armed){armed=true;ov.querySelector('#rgDel').textContent='해제 확인';err.textContent='해제해도 과거 공동 한턱 기록은 그대로 보존됩니다.';return;}
-      await _rgDeactivate(existing.id);close();afterSave();toast('관계 그룹이 해제됐어요',{type:'success'});
+      await _rgDeactivate(existing.id);close(()=>{afterSave();toast('관계 그룹이 해제됐어요',{type:'success'});});
     };
   }
 }
@@ -6944,7 +6957,11 @@ function _mtgManageOpen(initialTab){
   let mtgFilter='all'; // v3.65 만남 탭 필터: 'all' | 'grouped'(같은 meetingId 실제 2건 이상)
   const esc=e=>{if(e.key==='Escape')back();};
   document.addEventListener('keydown',esc);
-  function close(){document.removeEventListener('keydown',esc);bd.remove();}
+  // v3.72 — 오버레이 전체를 history 엔트리 1개로 다룬다(내부 뷰 이동은 in-panel ← 사용). swipe-back = 오버레이 닫기.
+  let _torn=false;
+  const teardown=()=>{if(_torn)return;_torn=true;document.removeEventListener('keydown',esc);bd.remove();};
+  const _ovid=_ovPush(teardown);
+  function close(after){const cb=(typeof after==='function')?after:null;if(_torn){if(cb)cb();return;}_ovDismissById(_ovid,cb,teardown);}
   function back(){
     if(view==='list'){close();return;}
     if(view==='detail'){view='list';tab='meetings';render();return;}
@@ -7009,7 +7026,7 @@ function _mtgManageOpen(initialTab){
       panel.innerHTML=`<div class="org-hd">${back_}<div class="org-title">만남 관리</div>${mmTabs(units.length,uCnt)}</div>${filter}<div class="org-list mm-list">${body}</div>`;
       panel.querySelectorAll('.mm-subfilter [data-mf]').forEach(b=>b.onclick=()=>{mtgFilter=b.dataset.mf;render();});
       // 클릭: 필터된 shown 배열 기준
-      panel.querySelectorAll('.mm-row[data-u]').forEach(b=>b.onclick=()=>{const m=shown[+b.dataset.u];if(m.type==='g'){curMid=m.mid;view='detail';render();}else{close();selectReceipt(m.rc[0].id);}});
+      panel.querySelectorAll('.mm-row[data-u]').forEach(b=>b.onclick=()=>{const m=shown[+b.dataset.u];if(m.type==='g'){curMid=m.mid;view='detail';render();}else{close(()=>selectReceipt(m.rc[0].id));}});
       document.getElementById('mmBackLbl').textContent=nm();
       panel.querySelector('#mmBack').onclick=back;
       panel.querySelectorAll('.mm-tab[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;orgSel.clear();render();});
@@ -7022,7 +7039,7 @@ function _mtgManageOpen(initialTab){
     panel.querySelector('#mmBack').onclick=back;
     panel.querySelectorAll('.mm-tab[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;orgSel.clear();render();});
     if(tab==='meetings'){
-      panel.querySelectorAll('.mm-row[data-u]').forEach(b=>b.onclick=()=>{const m=units[+b.dataset.u];if(m.type==='g'){curMid=m.mid;view='detail';render();}else{close();selectReceipt(m.rc[0].id);}});
+      panel.querySelectorAll('.mm-row[data-u]').forEach(b=>b.onclick=()=>{const m=units[+b.dataset.u];if(m.type==='g'){curMid=m.mid;view='detail';render();}else{close(()=>selectReceipt(m.rc[0].id));}});
     }
   }
   function mmTabs(mCnt,uCnt){
@@ -7081,7 +7098,7 @@ function _mtgManageOpen(initialTab){
       <div class="org-actionbar mm-detail-ab"><button type="button" class="mm-btn-sec" id="mmDutch">더치페이로 보내기</button><button type="button" class="org-ab-btn" id="mmEdit">편집</button></div>`;
     document.getElementById('mmBackLbl').textContent='만남';
     panel.querySelector('#mmBack').onclick=back;
-    panel.querySelectorAll('.mm-row[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;close();selectReceipt(id);});
+    panel.querySelectorAll('.mm-row[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;close(()=>selectReceipt(id));});
     panel.querySelector('#mmEdit').onclick=()=>{editSel.clear();view='edit';render();};
     panel.querySelector('#mmDutch').onclick=()=>{const first=rc[0];close();_mtgOpenDutchScope(first);};
   }
@@ -7193,7 +7210,7 @@ function _openPersonDetailShell(cfg){
       ${(foot&&rows.length)?`<div class="duo-drill-foot"><span>${escapeHtml(foot.label)}</span><b>${fmtMoney(foot.amount)}원</b></div>`:''}`;
     card.querySelector('#pdX').onclick=close;
     card.querySelectorAll('.pd-fchip[data-k]').forEach(b=>b.onclick=()=>{fkey=b.dataset.k;paint();});
-    card.querySelectorAll('.pd-row[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;close();selectReceipt(id);});
+    card.querySelectorAll('.pd-row[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;close(()=>selectReceipt(id));});
   };
   paint();
 }
@@ -7278,10 +7295,20 @@ function _mtgSheetOpen(){
   document.body.appendChild(bd);
   const card=bd.querySelector('.mtg-sheet');
   const onKey=e=>{if(e.key==='Escape')close();};
-  function close(){document.removeEventListener('keydown',onKey);bd.remove();}
+  // v3.72 — DOM 정리는 teardown, 사용자 닫기는 history 엔트리 소비(_ovDismiss) → swipe-back이 오버레이만 닫는다.
+  let _torn=false;
+  const teardown=()=>{if(_torn)return;_torn=true;document.removeEventListener('keydown',onKey);bd.remove();};
+  const ovid=_ovPush(teardown);
+  const close=(after)=>{const cb=(typeof after==='function')?after:null;if(_torn){if(cb)cb();return;} _ovDismissById(ovid,cb,teardown);};
   document.addEventListener('keydown',onKey);
   bd.addEventListener('click',e=>{if(e.target===bd)close();});
   return {bd,card,close};
+}
+// 특정 오버레이 id를 UI로 닫기: 스택 top이면 history.back으로 소비, 아니면 직접 teardown(중첩/데스크탑 안전).
+function _ovDismissById(id,after,teardown){
+  const top=_ovStack[_ovStack.length-1];
+  if(top&&top.id===id){top.after=after||null;try{history.back();}catch(e){_ovStack.pop();teardown&&teardown();if(after)after();}}
+  else{_ovForget(id);teardown&&teardown();if(after)after();}
 }
 // 만남 상세 시트: 참석자 union + receipt 목록(현재 열람분 강조) + [만남에서 분리](현재 receipt만).
 function _mtgOpenMeetingDetail(r){
@@ -7305,7 +7332,7 @@ function _mtgOpenMeetingDetail(r){
       </button>`).join('')}</div>
       ${stillIn?`<div class="mtg-sheet-foot"><button type="button" class="mtg-sheet-unlink" id="mtgShUnlink">이 영수증을 만남에서 분리</button></div>`:''}`;
     card.querySelector('#mtgShX').onclick=close;
-    card.querySelectorAll('.mtg-drow[data-open]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.open;close();selectReceipt(id);});
+    card.querySelectorAll('.mtg-drow[data-open]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.open;close(()=>selectReceipt(id));});
     const ub=card.querySelector('#mtgShUnlink');
     if(ub)ub.onclick=async()=>{const ok=await _mtgUnlinkOne(r);if(ok)close();/* _mtgUnlinkOne이 renderDetail 재실행 */};
   };
@@ -7499,7 +7526,7 @@ function _openDuoDrill(which){
     <div class="mtg-drows">${rowsHtml}</div>
     ${sorted.length?`<div class="duo-drill-foot"><span>${footLbl}</span><b>${fmtMoney(total)}원</b></div>`:''}`;
   card.querySelector('#duoDrillX').onclick=close;
-  card.querySelectorAll('.mtg-drow[data-open]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.open;close();selectReceipt(id);});
+  card.querySelectorAll('.mtg-drow[data-open]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.open;close(()=>selectReceipt(id));});
 }
 
 // v3.56 — '자주 함께한 멤버' 섹션(참석 receipt의 동행자 빈도 상위 5). 참석 전용 view에만 있던 것을 통합 대시보드로 이관(데이터 보존).
@@ -8378,7 +8405,37 @@ function _captureNavigation(event){
 }
 document.addEventListener('click',_captureNavigation,true);
 document.addEventListener('change',_captureNavigation,true);
+// ── v3.72 오버레이 history 통합 ─────────────────────────────────────────────
+//   문제(진단): Drill-down/Meeting 관리/Meeting 상세/관계 그룹 편집/공동 한턱 상세 오버레이가 열릴 때 history 엔트리를
+//   쌓지 않아, iPhone Safari edge swipe-back(또는 뒤로가기)이 밑의 '라우트'를 pop(전체 rerender=리셋처럼 보임)하거나
+//   초기 엔트리를 넘어 문서를 이탈(→reload)했다. 해결: 오버레이가 열리면 엔트리를 하나 쌓아, 첫 back이 '오버레이만 닫히게' 한다.
+let _ovStack=[]; // [{id, closeDom, after}]  위가 top
+let _ovSeq=0;
+function _ovPush(closeDom){
+  const id='ov'+(++_ovSeq);
+  _ovStack.push({id,closeDom,after:null});
+  try{history.pushState({...history.state,_ov:id},'');}catch(e){}
+  return id;
+}
+// UI로 닫기(X·backdrop·ESC·취소·저장·행선택 등): history.back()으로 우리가 쌓은 엔트리를 소비 → popstate가 DOM 정리.
+//   after: 닫은 뒤 실행할 후속(예: selectReceipt). 오버레이가 없으면 즉시 after 실행.
+function _ovDismiss(after){
+  const cb=(typeof after==='function')?after:null;
+  if(!_ovStack.length){if(cb)cb();return;}
+  _ovStack[_ovStack.length-1].after=cb;
+  try{history.back();}catch(e){const top=_ovStack.pop();try{top.closeDom&&top.closeDom();}catch(_){}if(top.after)top.after();}
+}
+// 특정 id 오버레이가 아직 스택에 있으면(직접 DOM이 제거된 예외 상황 등) 정리 — 데스크탑/중첩 안전용.
+function _ovForget(id){const i=_ovStack.findIndex(o=>o.id===id);if(i>=0)_ovStack.splice(i,1);}
 addEventListener('popstate',event=>{
+  // v3.72 — 오버레이가 열려 있으면 이 back은 '오버레이 닫기'로 소비하고 라우트 복원은 하지 않는다.
+  if(_ovStack.length){
+    if(_navigationTimer!==null){clearTimeout(_navigationTimer);_navigationTimer=null;}
+    const top=_ovStack.pop();
+    try{top.closeDom&&top.closeDom();}catch(e){}
+    if(top.after){const af=top.after;top.after=null;try{af();}catch(e){}}
+    return;
+  }
   const state=event.state?.receiptNavigation;
   if(!state)return;
   if(_navigationTimer!==null){clearTimeout(_navigationTimer);_navigationTimer=null;}
@@ -12437,7 +12494,8 @@ function _dbxBindEvents(){
 // (문서 scrollY 로 판단하면 항상 0이라 아무 데서나 발동한다.)
 (()=>{
   if(!('ontouchstart' in window))return;
-  const BLOCK='.modal-overlay,.modal-card,.cat-picker-popover:not([hidden])';
+  // v3.72 — 오버레이가 열려 있으면 당겨서 새로고침(→location.reload) 금지. 최근 추가된 오버레이도 포함.
+  const BLOCK='.modal-overlay,.modal-card,.cat-picker-popover:not([hidden]),.mtg-sheet-backdrop,.org-backdrop,.rg-ov';
   const TH=70,MAX=104,EDGE=28;
   let y0=0,x0=0,pulling=false,dist=0,busy=false,axisLock=false;
 
