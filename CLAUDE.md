@@ -95,6 +95,61 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.68` — **만남 목록 UI 2건 정제(표시만, 구조·계산·필터로직·클릭·Meeting Management·데이터 전부 불변).**
+  ① **grouped secondary metadata 순서 변경**: `대표매장 외 N곳 · N건 묶음` → **`N건 묶음 · 대표매장 외 N곳`**. sub는 한 줄
+  `nowrap`+ellipsis라 **앞의 'N건 묶음'은 긴 매장명에도 항상 노출**되고 뒤의 매장 요약만 잘린다(핵심 상태 정보 우선). Blue Bar
+  높이/폭/색(v3.66)·참석자 줄 미침 그대로. ② **상단 위계 정리**: 1번째 줄 `[만남 N][묶이지 않음 N]`=Management primary tab(기존
+  크기 유지), 2번째 줄 `[전체 N][묶인 만남 N]`=현재 목록 안 secondary filter를 **한 단계 작게**(`.mm-subfilter .mm-tab` font 12.5→11.5·
+  weight 600→500·padding 6/14→4/11, container gap 8→6). **새 색 없음**(선택 시 기존 `--blue-bg`/`--blue-txt` 그대로), 과한 segmented
+  control 아님, Desktop/Mobile 동일 hierarchy. ⚠️ Meeting 계산·Blue Bar 의미·Meeting count·grouped/independent 판정·Management
+  (추가/분리/이동)·Flat List·straight divider·클릭·데이터·Dropbox/Dutch Pay 전부 불변. 검증(김영석+합성): 'N건 묶음' 항상 노출·긴
+  매장명만 ellipsis·secondary filter가 primary보다 작음·bar/필터/클릭 동작 불변·Desktop/Mobile 390·430·콘솔에러 0. 변경 파일 `index.html`만.
+- `v3.67` — **만남 목록 표시 문구 최종 정제(표시만, 계산·필터·클릭·Meeting Management·데이터 전부 불변).**
+  ① **묶인 만남**(실제 2건 이상) 3단 구조로 통일: 제목=`M월 D일의 만남`, 2번째 줄=**`대표매장 외 N곳 · N건 묶음`**(기존 '영수증 N건'→
+  **'N건 묶음'**, `nowrap`+ellipsis 1줄 유지), 3번째 줄=참석자 union. Blue Bar(v3.66)는 title+2번째 줄 높이에 맞고 참석자 줄로
+  안 내려감. ② **독립 만남**: bar 없음·제목=`YYYY.MM.DD · 매장`, 보조='영수증 1건' 반복 제거(참석자만). ③ **meetingId가 있어도
+  실제 동일 meetingId receipt가 1건뿐인 만남**은 **독립 만남과 완전히 동일하게 렌더** — bar 없음, `'meetingId'`·`'1건 묶음'` 미노출,
+  개발/테스트성 문구 `'1건meetingId · 영수증 1건'` 제거(렌더 분기 조건을 `m.type==='g'` → `m.type==='g'&&rc.length>=2`로 좁힘;
+  1건 grouped unit은 독립 렌더 경로로). ④ 상단 `[전체 N][묶인 만남 N]` 필터·클릭(`m.type` 기준, 1건 meetingId 클릭 시 기존대로
+  Meeting Detail)·straight divider·radius 0 불변. ⚠️ Meeting count/grouped/independent 정의·meetingId·`_mtgReceiptsById`·금액·
+  Dutch Pay·Dropbox 전부 불변. 검증(김영석+합성): 묶음 'N건 묶음'·2번째 줄 1줄 ellipsis·bar 두 줄 높이·독립 및 1건 meetingId
+  동일 간결 표시('meetingId'/'N건' 미노출)·Desktop/Mobile 390·430·콘솔에러 0. 변경 파일 `index.html`만.
+- `v3.66` — **묶인 만남 Blue Bar 높이를 title+grouped metadata 두 줄 블록에 맞춤(표시만, 계산·필터·클릭·데이터 전부 불변).**
+  v3.65의 bar가 고정 `height:32px`라 두 줄(제목+보조정보)보다 짧아 '작은 상태표시'처럼 보이던 것 수정. **고정 height 폐기** →
+  목록 row의 제목(`.mm-row-top`)+grouped 보조정보(`.mm-row-sub`)를 새 wrapper **`.mm-row-head`**(position:relative)로 묶고,
+  bar를 `.mm-row[data-linked] .mm-row-head::before{top:0;bottom:0}`로 걸어 **wrapper 실제 높이를 그대로 따라간다**(두 줄이면 두 줄,
+  보조정보가 줄바꿈되면 그만큼 늘어남). 참석자 줄(`.mm-row-ppl`)은 head **바깥**이라 bar가 그 줄로 내려가지 않고, `left:-10px`
+  (row padding-left 12px 보정)로 좌측 2px에 놓여 row/아래 divider와 분리된다. Desktop/Mobile 공통 규칙(고정 px 대신 line-height
+  기반이라 뷰포트별 typography에 자동으로 맞음). ⚠️ width 3px·`border-radius:0`(양끝 직선)·Signature Blue·독립 만남/1건 meetingId
+  bar 없음·[전체][묶인 만남] 필터·Meeting 계산/클릭/편집/데이터 전부 불변. 검증(김영석 실데이터+합성): 2건/3건 묶음 bar 있음·bar가
+  head 두 줄 높이에 정렬(참석자 줄 미침)·긴 매장명 ellipsis·divider 미접촉·독립 bar 없음·Desktop/Mobile 390·430·콘솔에러 0.
+  변경 파일 `index.html`만.
+- `v3.65` — **만남 목록에서 묶인 만남 vs 독립 만남 시각 구별(표시/필터만, 계산·기능 불변).** ① **묶인 만남**(같은 meetingId에
+  실제 receipt **2건 이상**, 전역 `_mtgReceiptsById(mid).length>=2` §3·§8)에만 왼쪽 짧은 **Signature Blue 세로바**(width 3·height 32,
+  `.mm-row[data-linked]::before`, row 안·divider와 분리 §1). **독립 receipt(meetingId 없음)·meetingId 1건뿐인 만남은 바 없음**(§2·§3).
+  ② 묶인 만남만 보조정보 **'대표매장 외 N곳 · 영수증 N건'**(§4), 독립 만남은 반복 '영수증 1건' 노이즈 **생략**(제목=날짜·매장, 참석자만).
+  ③ 만남 탭 상단 compact 필터 **[전체 N][묶인 만남 N]**(기본 전체). 전체=grouped+independent=Person Dashboard '만남 N회'와 동일값(§5).
+  ④ 기간 scope로 일부만 보여도 전역 meetingId 2건+면 묶인 만남 유지(§8). ⚠️ 카드/파란 배경/rounded/shadow/큰 badge 없음,
+  straight divider·radius 0 유지(§6). 클릭·Meeting 계산·Organizer·생성/추가/분리/이동·사람 비종속·Person Detail·금액·Dutch Pay·
+  Dropbox 전부 불변(§9). 검증(김영석 실데이터): 전체=묶인+독립 불변식 PASS·바 규칙(2·3건 있음/독립·1건 없음)·필터·Desktop/Mobile
+  390·430·콘솔에러 0. 변경 파일 `index.html`만.
+- `v3.64` — **Meeting Management 완결: CREATE/READ/UPDATE/UNLINK/RECOVERY. ⚠️ 진실원=receipt.meetingId, 금액 계산 전부 불변.**
+  기존 '묶기'만 강했던 것을 "잘못 묶어도 부담 없이 수정"까지 완결. **공통 mutation layer**(§103): `_mtgApply`(dbPutMany atomic +
+  updatedAt + 실패 시 in-memory 롤백 + `_mtgBusy` 경쟁방지, meetingId 외 field 불변 §105) 위에 `_mtgCreateMeeting`(새 만남)·
+  `_mtgAddToMeeting`(기존 추가)·`_mtgDetach`(선택 분리)·`_mtgUnlinkAll`(전체 풀기)·`_mtgMove`(다른 만남 이동)를 통일. 통합 surface
+  **`_mtgManageOpen(tab)`**(org-backdrop full-screen, 내부 뷰 list/detail/edit/addReceipts/pick + 예측 가능한 back §80): Dashboard
+  '만남 N회'→meetings 탭 / '묶이지 않은 영수증'→unlinked 탭(둘 다 `_mtgManageOpen` wrapper, 기존 `_mtgOrganizerOpen`/
+  `_mtgConfirmedListOpen`는 wrapper로 보존). meetings 탭=grouped+independent flat 목록(grouped→detail·independent→receipt 상세),
+  unlinked 탭=기존 Organizer(날짜 grouping·모두 선택·여러 건 날짜만·참석자 동일/일부 변경) + Action Bar 2버튼 [기존 만남에 추가]
+  (1건+ §12·§42)·[새 만남으로 묶기](2건+ §14). detail=조회(union·합계·목록·더치페이)+[편집]. edit=[선택 분리]/[다른 만남으로 이동]+
+  [영수증 추가]/[만남 전체 풀기(danger)]. addReceipts=전역 묶이지 않은 receipt 선택 추가. pick=다른 만남 선택(현재 만남 제외 §73).
+  모두 확인창·atomic·변경 후 renderSide+renderDetail로 `_personMtgData` fresh 재계산 → 사람 비종속 즉시 반영(§53·§87). RECOVERY:
+  잘못 분리→묶이지 않음 재추가 / 잘못 묶음→일부 분리·전체 풀기·다른 만남 이동(§108). ⚠️ Meeting count(=grouped+independent=
+  단둘이+여럿이)·receiptPeople union·단둘이 한턱·일반 분담·여럿이·전체 결제·전체 내가 한턱·참석 부담액·`_receiptShare`·treat·
+  splitExclude·Dutch Pay payload·Dropbox·Person Detail·기간 필터 전부 불변. 새 schema/migration/자동 병합/round/payee/treatBy 없음(§109).
+  Flat List·straight divider·radius 0 유지. 검증(실데이터 151+합성 6명): CREATE(2 independent→만남 −1)·ADD(−1)·DETACH(+1)·RECOVERY
+  재추가·MOVE·UNLINK ALL·데이터 안전(총액·receipt 수 불변, 삭제·손실·중복 0)·불변식·사람 비종속(6명 union·각 화면 반영)·atomic·
+  Desktop/Mobile 390·430·콘솔에러 0. 변경 파일 `index.html`만.
 - `v3.63` — **Meeting Organizer receipt row 직선 divider 실제 렌더 완성. ⚠️ CSS 1줄 제거만, 계산·기능 전부 불변.**
   v3.62에서 radius는 제거했으나 **divider가 실제로 안 보였다**(사용자 캡처가 1건 날짜 group). ⚠️ 근본 원인 = v3.59의
   `.org-row:last-child{border-bottom:none}` — 날짜 group이 1건이면 단일 row가 `:last-child`라 divider가 사라졌고, 여러 건
