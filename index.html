@@ -2159,6 +2159,81 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .psn-side-amt{font-size:20px;}
   .psn-rrow{grid-template-columns:70px minmax(0,1fr) auto;column-gap:10px;}
 }
+
+/* ════ v3.79 Quick Confirm — 영수증 입력 확인(표시만. 파서·검증·저장 경로 불변) ════ */
+.qc-form{overflow:visible;}
+.qc-hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:12px 14px 10px;}
+.qc-hd-t{font-size:var(--fs-section-title);font-weight:var(--fw-strong);color:var(--text-primary);}
+.qc-hd-s{font-size:11.5px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.qc-row{display:grid;grid-template-columns:52px minmax(0,1fr) 12px;align-items:center;gap:10px;min-height:52px;padding:0 14px;border-top:1px solid var(--divider);cursor:text;transition:background .12s;}
+.qc-row:focus-within{background:var(--fill2);}
+.qc-lbl{font-size:12.5px;font-weight:600;color:var(--text-secondary);}
+.qc-val{min-width:0;display:flex;align-items:center;}
+.qc-go{color:var(--text-tertiary);font-size:17px;line-height:1;text-align:right;transition:transform .15s;}
+.qc-form .qc-inp{font-size:16px;font-weight:650;color:var(--text-primary);padding:8px 0;letter-spacing:-.1px;}
+.qc-form .qc-inp:focus{background:transparent;border-radius:0;}
+.qc-form .prev-date.qc-inp{color:var(--text-primary);}
+.qc-form .prev-total-cell{justify-content:flex-end;gap:4px;width:100%;}
+.qc-form .prev-total-cell::after{content:none;}
+.qc-form .prev-total-cell .prev-total{text-align:right;max-width:none;flex:1 1 auto;min-width:0;}
+.qc-won{font-size:14px;font-weight:600;color:var(--text-secondary);}
+.qc-won[hidden]{display:none;}
+.qc-row.missing .qc-inp::placeholder,.qc-row.missing .qc-ph{color:var(--blue-txt);font-weight:600;opacity:1;}
+.qc-date-wrap{position:relative;display:block;width:100%;}
+.qc-ph{display:none;position:absolute;left:0;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;}
+.qc-date-wrap.empty .qc-ph{display:block;}
+.qc-date-wrap.empty .prev-date{color:transparent;}
+.qc-date-wrap.empty .prev-date:focus{color:var(--text-primary);}
+.qc-date-wrap.empty:focus-within .qc-ph{display:none;}
+.qc-muted{color:var(--text-tertiary);font-weight:500;}
+.qc-warn{color:var(--amber);font-weight:600;}
+.qc-form .prev-total-hint{border-top:1px solid var(--divider);padding:8px 14px;}
+/* 품목(Secondary) — Primary 3개와 굵은 구분선으로 분리, 기본 접힘. 펼치면 같은 자리의 기존 item editor */
+.qc-items{border-top:6px solid var(--fill2);}
+.qc-items-row{width:100%;border:none;border-top:0;background:transparent;font:inherit;color:var(--text-primary);text-align:left;cursor:pointer;}
+.qc-items-row .qc-val{font-size:14px;font-weight:600;gap:4px;white-space:nowrap;overflow:hidden;}
+@media(hover:hover){.qc-items-row:hover{background:var(--fill2);}}
+.qc-items.open .qc-items-row .qc-go{transform:rotate(90deg);}
+.qc-items:not(.open)>.prev-items,.qc-items:not(.open)>.prev-foot{display:none;}
+.qc-items.open>.prev-items{border-top:1px solid var(--divider);}
+/* 사람·결제자 chip — 나=Signature Blue, 상대=Green(사람 화면 identity와 동일) */
+.qc-sec .field-lbl{text-transform:none;letter-spacing:0;font-size:13px;font-weight:650;color:var(--text-primary);}
+.qc-sec .field-lbl .field-lbl-hint{text-transform:none;}
+.qc-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+.qc-chip{height:36px;padding:0 14px;border:1px solid var(--border);border-radius:18px;background:var(--card);color:var(--text-primary);font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;transition:background .12s,border-color .12s,color .12s;}
+.qc-chip .qc-me{font-weight:500;color:var(--text-tertiary);margin-left:1px;}
+.qc-chip.on{background:var(--green-bg);border-color:color-mix(in srgb,var(--green) 45%,transparent);color:var(--green-txt);}
+.qc-chip.me.on{background:var(--blue-bg);border-color:color-mix(in srgb,var(--blue) 40%,transparent);color:var(--blue-txt);}
+.qc-chip.on .qc-me{color:inherit;opacity:.75;}
+.qc-chip-add{border-style:dashed;color:var(--text-secondary);font-weight:500;}
+@media(hover:hover){.qc-chip:not(.on):hover{border-color:var(--text-tertiary);}}
+.qc-chip:focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
+.qc-free{font-size:14px;}
+/* 분담 방식 — 기본 접힘(요약 row), 펼치면 [일반 분담|한턱|분담 제외] + 기존 분담 chip·한턱 주체 */
+.qc-split{gap:0;}
+.qc-split-row{width:100%;border:1px solid var(--border);border-radius:var(--rm);background:var(--card);font:inherit;color:var(--text-primary);text-align:left;cursor:pointer;grid-template-columns:72px minmax(0,1fr) 12px;}
+.qc-split-row .qc-val{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+.qc-split.open .qc-split-row .qc-go{transform:rotate(90deg);}
+.qc-split-body{display:none;flex-direction:column;gap:8px;padding-top:10px;}
+.qc-split.open .qc-split-body{display:flex;}
+.qc-split .pp-treatbar{display:none;}
+.qc-seg{display:flex;padding:3px;gap:3px;border-radius:10px;background:var(--fill2);border:1px solid var(--divider);}
+.qc-seg button{flex:1 1 0;min-width:0;height:34px;border:none;border-radius:8px;background:transparent;color:var(--text-secondary);font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.qc-seg button.on{background:var(--card);color:var(--text-primary);box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.qc-split:not(.mode-exclude) .pp-chips .pp-chip{cursor:default;}
+.qc-more-lbl{font-size:var(--fs-caption);font-weight:var(--fw-med);color:var(--text-tertiary);border-top:1px solid var(--divider);padding-top:14px;margin-top:2px;}
+.qc-parsed .input-row.preview>.field-g>.field-lbl{display:none;}
+/* 붙여넣기 후 원문·사진 영역을 낮춰 확인 영역을 위로(데스크탑) — 원문 편집·사진 추가는 그대로 */
+@media(min-width:781px){#gptModeArea.qc-parsed .input-row.top .field-ta,#gptModeArea.qc-parsed .input-row.top .photo-zone{height:148px;min-height:148px;}}
+@media(max-width:780px){
+  /* 붙여넣기 후에는 원문·사진을 작은 한 줄로 접어 확인 영역이 첫 화면에 오게 한다(원문은 그대로 편집 가능) */
+  #gptModeArea.qc-parsed .input-row.top{grid-template-columns:minmax(0,1fr) 88px;gap:10px;}
+  #gptModeArea.qc-parsed .input-row.top .field-ta,#gptModeArea.qc-parsed .input-row.top .photo-zone{height:84px;min-height:84px;}
+  #gptModeArea.qc-parsed .input-row.top .field-lbl-hint,#gptModeArea.qc-parsed .photo-zone-hint{display:none;}
+  #gptModeArea.qc-parsed .input-row.top .photo-zone:not(.has){padding:8px 4px;}
+  #gptModeArea.qc-parsed .input-row.top .photo-zone-text{font-size:12px;}
+  #gptModeArea.qc-parsed .input-row.top .field-ta{font-size:12px;}
+}
 </style>
 <link rel="stylesheet" href="prepaid.css">
 </head>
@@ -2459,8 +2534,36 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                 </div>
               </div>
             </div><!-- /directModeArea -->
-            <!-- ③ 옵션 (2열 그리드, DOM 순서 = 탭 순서) -->
+            <!-- ③ 옵션 — v3.79 Quick Confirm 순서: 사람 → 결제자 → 분담 방식(접힘) → 추가 정보. DOM 순서 = 탭 순서, id는 전부 기존 그대로. -->
             <div class="input-row options">
+              <div class="field-g qc-sec" style="grid-column:1/-1;">
+                <label class="field-lbl" for="participantsInp">누구와 함께했나요? <span class="field-lbl-hint">눌러서 선택</span></label>
+                <div class="qc-chips" id="qcPeopleChips" role="group" aria-label="참석자 선택"></div>
+                <input id="participantsInp" class="field-inp qc-free" type="text" placeholder="이름 직접 입력 · 쉼표로 구분"/>
+              </div>
+              <div class="field-g qc-sec" style="grid-column:1/-1;">
+                <label class="field-lbl" for="payerInp">결제자</label>
+                <div class="qc-chips" id="qcPayerChips" role="group" aria-label="결제자 선택"></div>
+                <input id="payerInp" class="field-inp qc-free" type="text" placeholder="다른 결제자 · 예: 회사"/>
+              </div>
+              <div class="field-g pp-split-block qc-split" id="addSplitBlock" style="grid-column:1/-1;">
+                <button type="button" class="qc-row qc-split-row" id="qcSplitRow" aria-expanded="false" aria-controls="qcSplitBody"><span class="qc-lbl">분담 방식</span><span class="qc-val" id="qcSplitSum">일반 분담</span><span class="qc-go" aria-hidden="true">›</span></button>
+                <div class="qc-split-body" id="qcSplitBody">
+                  <div class="qc-seg" id="qcSplitSeg" role="group" aria-label="분담 방식 선택">
+                    <button type="button" data-qcsplit="normal">일반 분담</button>
+                    <button type="button" data-qcsplit="treat">한턱</button>
+                    <button type="button" data-qcsplit="exclude">분담 제외</button>
+                  </div>
+                  <div class="pp-treatbar" id="addTreatBar">
+                    <div class="pp-treat-txt"><span class="pp-treat-t">🎉 한턱</span><span class="pp-treat-d">결제자가 전액 부담 · 나머지 참석자는 0원</span></div>
+                    <button type="button" class="pp-switch" id="addTreatSw" role="switch" aria-checked="false" aria-label="한턱 켜기"></button>
+                  </div>
+                  <div class="pp-chips" id="addPpChips"></div>
+                  <div class="pp-split-hint" id="addSplitHint"></div>
+                  <div class="pp-treatby" id="addTreatBy"></div>
+                </div>
+              </div>
+              <div class="qc-more-lbl" style="grid-column:1/-1;">추가 정보</div>
               <div class="field-g">
                 <label class="field-lbl">결제수단</label>
                 <select id="payMethod" class="field-sel">
@@ -2502,32 +2605,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                   </div>
                 </div>
               </div>
-              <!-- 결제자·참석자·태그는 바로 입력할 수 있게 항상 표시 -->
-              <div id="advFields" style="grid-column:1/-1;">
-                <div class="input-row options" style="padding:0;margin:0;gap:16px;">
-                  <div class="field-g">
-                    <label class="field-lbl">결제자 <span class="field-lbl-hint">선택</span></label>
-                    <input id="payerInp" class="field-inp" type="text" placeholder="예: 홍길동, 나, 회사"/>
-                  </div>
-                  <div class="field-g">
-                    <label class="field-lbl">참석자 <span class="field-lbl-hint">쉼표로 구분</span></label>
-                    <input id="participantsInp" class="field-inp" type="text" placeholder="예: 철수, 영희, 민준"/>
-                  </div>
-                  <div class="field-g pp-split-block" id="addSplitBlock" style="grid-column:1/-1;">
-                    <label class="field-lbl">분담 방식 <span class="field-lbl-hint">참석자가 있을 때 적용</span></label>
-                    <div class="pp-treatbar" id="addTreatBar">
-                      <div class="pp-treat-txt"><span class="pp-treat-t">🎉 한턱</span><span class="pp-treat-d">결제자가 전액 부담 · 나머지 참석자는 0원</span></div>
-                      <button type="button" class="pp-switch" id="addTreatSw" role="switch" aria-checked="false" aria-label="한턱 켜기"></button>
-                    </div>
-                    <div class="pp-chips" id="addPpChips"></div>
-                    <div class="pp-split-hint" id="addSplitHint"></div>
-                    <div class="pp-treatby" id="addTreatBy"></div>
-                  </div>
-                  <div class="field-g" style="grid-column:1/-1;">
-                    <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
-                    <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
-                  </div>
-                </div>
+              <div class="field-g" style="grid-column:1/-1;">
+                <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
+                <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
               </div>
               <div class="field-g" style="grid-column:1/-1;">
                 <label class="field-lbl">메모 <span class="field-lbl-hint">선택</span></label>
@@ -3329,6 +3409,14 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.79 — 영수증 입력 Quick Confirm(OCR=초벌 입력 → 틀린 값만 tap 수정 → 저장). ⚠️ 파서·validateParsed·저장 경로(saveBtn)·Receipt schema·
+//   계산·Person·Meeting·Relation Group·treat/treatBy·Review Inbox·Dropbox 불변. 이 앱엔 OCR 엔진이 없다(AI 정리 텍스트 붙여넣기 → parseReceiptText).
+//   ① 미리보기 상단 = '영수증 확인' 3 row(매장·날짜·총액): row 전체 tap = 그 자리 input 편집(모달 없음). 빈 값은 '매장명 입력/날짜 선택/금액 입력'
+//      CTA, 가짜 0원·오늘 날짜 없음(원문에 숫자 총액 줄이 없으면 _totalMissing — 파서는 불변). ✓·신뢰도 표시 없음.
+//   ② 품목 = Secondary row('N개 · 합계 일치/금액 확인 필요', 기본 접힘) → 펼치면 같은 자리의 기존 item editor.
+//   ③ 누구와 함께했나요? chip(나 → 사람 화면 context → 입력된 사람 → 최근 함께한 사람, runtime·자동 선택 없음) + 결제자 chip(나=Blue·상대=Green),
+//      chip은 기존 participantsInp/payerInp 값을 바꿀 뿐. ④ 분담 방식 = 접힌 요약 row → [일반 분담|한턱|분담 제외] + 기존 _makeSplitUI(한턱 주체 포함).
+//   ⑤ 기존 버그 수정: 추가 화면 _setSaveState가 v3.51 상세 _setSaveState와 이름이 같아 덮여 저장 버튼이 켜지지 않던 것 → _setAddSaveState.
 // v3.78 — 사람(Person) 화면 UI/UX 재구성(UI composition만). ⚠️ Receipt·Person 계산·단둘이 한턱·여럿이·전체 결제·전체 내가 한턱·참석 부담액·
 //   개인/공동/전체 한턱·Meeting·meetingId·Relation Group·사람별 분담·기간 Filter·Review Inbox·Dutch Pay·Dropbox·schema·migration 전부 불변.
 //   ① 레일 '사람'(single-person icon, 통계와 같은 비-tab nav). '관계'는 사람 상세 안 분석 용어로만. 장소·품목은 이번 STEP 범위 밖(가짜 메뉴 안 만듦).
@@ -3678,7 +3766,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.78';
+const APP_VERSION='v3.79';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5894,7 +5982,12 @@ function switchTab(name){
   document.querySelector('.side').classList.toggle('non-list-context',name!=='list');
   document.querySelector('.side-search').style.display=(name==='list')?'block':'none';
   _syncMobileSurface(name);
-  if(name==='input'){setTimeout(()=>document.getElementById('pasteTa').focus(),50);}
+  if(name==='input'){
+    // v3.79 — 사람 화면 '+ 영수증 추가'로 들어왔을 때만 그 사람을 참석자 후보 맨 앞에(자동 선택·저장 없음)
+    _qcCtxPerson=_qcCtxNext||null;_qcCtxNext=null; // 다른 경로(레일 '추가' 등)로 오면 context 없음
+    if(typeof _qcRenderPeople==='function')_qcRenderPeople();
+    setTimeout(()=>document.getElementById('pasteTa').focus(),50);
+  }
   if(name==='settings'){renderDbxSettings();}
   if(name==='prepaid'){renderPrepaid();}
 }
@@ -6104,7 +6197,7 @@ let _currentParsed=null;
 let _pasteComposing=false;
 let _catAutoFilled=false;  // 카테고리가 자동 채워진 상태인지
 
-function _setSaveState(disabled,message,{warn=false}={}){
+function _setAddSaveState(disabled,message,{warn=false}={}){
   saveBtn.disabled=disabled;
   if(!saveHint)return;
   saveHint.textContent=message||(disabled?'필수 입력을 채우면 저장할 수 있어요.':'저장할 준비가 됐어요.');
@@ -6199,11 +6292,15 @@ function updatePreview(){
   if(!v.trim()){
     _currentParsed=null;
     previewArea.innerHTML=`<div class="empty-state" style="padding:32px 16px;background:var(--fill2);border-radius:var(--rm);border:1px dashed var(--sep2);">텍스트를 붙여넣으면 자동으로 파싱되어 표시됩니다.<br/><span style="font-size:11px;">붙여넣기 후 미리보기에서 직접 수정 가능해요.</span></div>`;
-    _setSaveState(true,'AI 정리 결과를 붙여넣으면 저장할 수 있어요.');
+    document.getElementById('gptModeArea')?.classList.remove('qc-parsed');
+    _setAddSaveState(true,'AI 정리 결과를 붙여넣으면 저장할 수 있어요.');
     return;
   }
   const p=parseReceiptText(v);
   if(p){
+    // v3.79 — 파서는 총액 줄이 없어도 total=0을 돌려준다(파서 불변). 원문에 숫자 총액 줄이 없으면 '없음'으로 표시해
+    //   가짜 0원을 보이지 않는다. 실제 '총액: 0원'은 그대로 0원.
+    p._totalMissing=!/^\s*(총액|합계)\s*[:：][^\n]*\d/m.test(v);
     // AI가 읽은 원본을 보존한다. 자동 보정으로 불일치를 숨기지 않고 사용자가 사진과 대조하게 한다.
     p._gptTotal=p.total;
     p._totalManual=true;
@@ -6226,11 +6323,32 @@ function updatePreview(){
     }
   }
   if(!p){
+    document.getElementById('gptModeArea')?.classList.remove('qc-parsed');
     previewArea.innerHTML=`<div class="alert err"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>형식을 인식하지 못했어요. 프롬프트 형식을 확인해주세요.</div></div>`;
-    _setSaveState(true,'인식할 수 있는 영수증 형식이 필요해요.');
+    _setAddSaveState(true,'인식할 수 있는 영수증 형식이 필요해요.');
     return;
   }
   renderPreviewForm();
+}
+
+// ── v3.79 Quick Confirm 헬퍼(표시만 — 파서·검증·저장 불변) ──
+let _qcItemsOpen=false; // 품목 editor 펼침(Secondary). 새로 붙여넣어도 사용자가 연 상태는 유지, 초기화 시 닫힘.
+function _qcTotalEmpty(p){return !Number.isFinite(Number(p&&p.total))||(Number(p.total)===0&&!!p._totalMissing);}
+function _qcItemsSummary(p){
+  const named=(p.items||[]).filter(it=>(it.name||'').trim());
+  if(!named.length)return '<span class="qc-muted">품목 없음 · 필요하면 추가</span>';
+  const ok=getAmountAudit(p).ok;
+  return `${named.length}개 · ${ok?'<span class="qc-muted">합계 일치</span>':'<span class="qc-warn">금액 확인 필요</span>'}`;
+}
+// 포커스가 확인 영역 밖으로 나갔을 때만 전체 재렌더(총액 차이 안내 등 갱신). 안에서 다른 row로 옮겨 가면 부분 갱신만.
+function _qcRenderIfIdle(){setTimeout(()=>{if(_currentParsed&&!previewArea.contains(document.activeElement))renderPreviewForm();},0);}
+function _qcSyncRows(){
+  const p=_currentParsed;if(!p||!previewArea)return;
+  const set=(k,m)=>previewArea.querySelector(`.qc-row[data-qc="${k}"]`)?.classList.toggle('missing',m);
+  set('store',!(p.store||'').trim());set('date',!p.date);set('total',!(p.total>0));
+  previewArea.querySelector('.qc-date-wrap')?.classList.toggle('empty',!p.date);
+  const won=previewArea.querySelector('.qc-won');if(won)won.hidden=_qcTotalEmpty(p);
+  const sum=previewArea.querySelector('.qc-items-sum');if(sum)sum.innerHTML=_qcItemsSummary(p);
 }
 
 // 미리보기 폼을 그리고 이벤트 바인딩. 사용자가 어디든 손댈 수 있게.
@@ -6259,15 +6377,9 @@ function renderPreviewForm(){
     : '<div class="prev-empty-items">품목 없음 — 필요하면 우측 <b>+ 추가</b>로 직접 입력</div>';
 
   const v2=validateParsed(p);
-  let alertsHtml='';
-  if(v2.errors.length){
-    alertsHtml+=`<div class="alert err"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>${v2.errors.map(escapeHtml).join('<br>')}</div></div>`;
-  }
-  const nonAmountWarnings=v2.warnings.filter(msg=>!_amountAuditMessages(p).messages.includes(msg));
-  if(nonAmountWarnings.length){
-    alertsHtml+=`<div class="alert warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><div>${nonAmountWarnings.map(escapeHtml).join('<br>')}</div></div>`;
-  }
-  alertsHtml+=amountAuditAlertHtml(p);
+  // v3.79 — 필수값 누락(errors)·품목 없음은 Quick Confirm row가 직접 보여준다(빈 row = 입력 CTA). validateParsed 규칙은 불변.
+  //   금액 불일치 경고만 alert로 남기고, '금액 확인 완료'는 품목 row 요약('합계 일치')으로 대신한다.
+  const alertsHtml=amountAuditAlertHtml(p,{showOk:false});
 
   const autoTotal=_autoTotal();
   const totalDiff=p.total!==autoTotal;
@@ -6280,16 +6392,19 @@ function renderPreviewForm(){
       </div>`
     : `<div class="prev-total-hint">자동 합계 · 품목 금액의 합</div>`;
 
+  // v3.79 Quick Confirm — Primary 3개(매장·날짜·총액)는 row 전체 tap = 그 자리 input 편집(모달 없음).
+  //   값이 없으면 가짜 값(0원·오늘·알 수 없음) 대신 '입력' CTA. ✓·신뢰도 표시는 없다(파서에 confidence가 없음).
+  const _totEmpty=_qcTotalEmpty(p);
+  const qcRow=(key,label,inner,missing)=>`<label class="qc-row${missing?' missing':''}" data-qc="${key}"><span class="qc-lbl">${label}</span><span class="qc-val">${inner}</span><span class="qc-go" aria-hidden="true">›</span></label>`;
   previewArea.innerHTML=`
-    <div class="preview-form">
-      <div class="prev-row">
-        <input class="prev-store" placeholder="매장명" value="${escapeHtml(p.store||'')}" autocomplete="off"/>
-      </div>
-      <div class="prev-row split">
-        <input class="prev-date" type="date" value="${p.date||''}"/>
-        <span class="prev-total-cell"><input class="prev-total" type="text" inputmode="numeric" placeholder="0" value="${_fmtN(p.total||0)}"/></span>
-      </div>
-      ${totalHintHtml}
+    <div class="preview-form qc-form">
+      <div class="qc-hd"><span class="qc-hd-t">영수증 확인</span><span class="qc-hd-s">틀린 값만 눌러서 고치세요</span></div>
+      ${qcRow('store','매장',`<input class="prev-store qc-inp" placeholder="매장명 입력" value="${escapeHtml(p.store||'')}" autocomplete="off"/>`,!(p.store||'').trim())}
+      ${qcRow('date','날짜',`<span class="qc-date-wrap${p.date?'':' empty'}"><input class="prev-date qc-inp" type="date" value="${p.date||''}" aria-label="날짜"/><span class="qc-ph" aria-hidden="true">날짜 선택</span></span>`,!p.date)}
+      ${qcRow('total','총액',`<span class="prev-total-cell"><input class="prev-total qc-inp" type="text" inputmode="numeric" placeholder="금액 입력" value="${_totEmpty?'':_fmtN(p.total)}"/><span class="qc-won"${_totEmpty?' hidden':''}>원</span></span>`,!(p.total>0))}
+      ${(namedItems.length&&totalDiff)?totalHintHtml:''}
+      <div class="qc-items${_qcItemsOpen?' open':''}">
+      <button type="button" class="qc-row qc-items-row" aria-expanded="${_qcItemsOpen?'true':'false'}"><span class="qc-lbl">품목</span><span class="qc-val qc-items-sum">${_qcItemsSummary(p)}</span><span class="qc-go" aria-hidden="true">›</span></button>
       <div class="prev-items">
         <div class="prev-items-hd">
           <span>품목 ${namedItems.length>0?`<span class="prev-items-count">· ${namedItems.length}개</span>`:''}</span>
@@ -6298,13 +6413,15 @@ function renderPreviewForm(){
         ${itemsHtml}
       </div>
       ${namedItems.length>0?`<div class="prev-foot"><span class="prev-foot-lbl">품목 합계</span><span class="prev-foot-val${matchOk?'':' mismatch'}">${fmtMoney(sum)}원${matchOk?'':` ≠ 총액 ${fmtMoney(p.total)}원`}</span></div>`:''}
+      </div>
     </div>
     <div class="preview-alerts">${alertsHtml}</div>
   `;
+  document.getElementById('gptModeArea')?.classList.add('qc-parsed');
 
   bindPreviewFormEvents();
   const saveState=_saveMessageFromValidation(v2);
-  _setSaveState(saveState.disabled,saveState.message,{warn:saveState.warn});
+  _setAddSaveState(saveState.disabled,saveState.message,{warn:saveState.warn});
 }
 
 // 합계·검증·저장 활성화만 부분 갱신 — input 포커스를 깨지 않기 위함
@@ -6328,17 +6445,10 @@ function _refreshPreviewSummary(){
   // 포커스를 유지한 채 검증 알림만 갱신
   const v2=validateParsed(p);
   const alerts=previewArea.querySelector('.preview-alerts');
-  if(alerts){
-    let html='';
-    if(v2.errors.length)html+=`<div class="alert err"><div>${v2.errors.map(escapeHtml).join('<br>')}</div></div>`;
-    const auditMessages=_amountAuditMessages(p).messages;
-    const otherWarnings=v2.warnings.filter(msg=>!auditMessages.includes(msg));
-    if(otherWarnings.length)html+=`<div class="alert warn"><div>${otherWarnings.map(escapeHtml).join('<br>')}</div></div>`;
-    html+=amountAuditAlertHtml(p);
-    alerts.innerHTML=html;
-  }
+  if(alerts)alerts.innerHTML=amountAuditAlertHtml(p,{showOk:false}); // v3.79 — renderPreviewForm과 같은 표시 규칙
+  _qcSyncRows();
   const saveState=_saveMessageFromValidation(v2);
-  _setSaveState(saveState.disabled,saveState.message,{warn:saveState.warn});
+  _setAddSaveState(saveState.disabled,saveState.message,{warn:saveState.warn});
 }
 
 function bindPreviewFormEvents(){
@@ -6351,7 +6461,7 @@ function bindPreviewFormEvents(){
     let composing=false;
     storeInp.addEventListener('compositionstart',()=>{composing=true;});
     storeInp.addEventListener('compositionend',()=>{composing=false;p.store=storeInp.value;});
-    storeInp.addEventListener('input',()=>{if(!composing)p.store=storeInp.value;});
+    storeInp.addEventListener('input',()=>{if(!composing){p.store=storeInp.value;_qcSyncRows();}});
     storeInp.addEventListener('blur',()=>{
       p.store=storeInp.value.trim();
       // 매장명 바뀌면 카테고리 자동 재추정 (자동 채움 상태일 때만 덮어쓰기)
@@ -6359,8 +6469,8 @@ function bindPreviewFormEvents(){
         const auto=autocategorize(p.store);
         if(auto)_setCategoryValue(auto,{auto:true});
       }
-      // 검증 갱신 — 다시 그리지 않고 alert 영역만 갱신하려면 더 복잡해지니 일단 전체 다시
-      renderPreviewForm();
+      // v3.79 — 바로 다음 row를 눌러 고칠 수 있게, 포커스가 확인 영역 안에 남아 있으면 다시 그리지 않고 부분 갱신만.
+      _refreshPreviewSummary();_qcRenderIfIdle();
     });
   }
   // ── 일자 — 클릭/포커스 시 달력 즉시 열기 ──
@@ -6382,18 +6492,19 @@ function bindPreviewFormEvents(){
       p._totalManual=true;
       p._totalSource='manual';
       p.total=_parseN(totalInp.value);
+      p._totalMissing=!totalInp.value.trim(); // v3.79 — 비우면 다시 '금액 입력'(가짜 0원 아님)
       _refreshPreviewSummary();
     };
     totalInp.addEventListener('input',commit);
     totalInp.addEventListener('focus',()=>{
-      // 포커스 시 쉼표 제거해서 편집 편하게
-      totalInp.value=String(p.total||0);
+      // 포커스 시 쉼표 제거해서 편집 편하게(없는 값은 빈칸 그대로)
+      totalInp.value=_qcTotalEmpty(p)?'':String(p.total||0);
       totalInp.select();
     });
     totalInp.addEventListener('blur',()=>{
       commit();
-      totalInp.value=_fmtN(p.total);
-      renderPreviewForm();
+      totalInp.value=_qcTotalEmpty(p)?'':_fmtN(p.total);
+      _qcRenderIfIdle(); // v3.79 — 다음 row로 이동 중이면 포커스를 깨지 않는다
     });
   }
   // ── 자동 복귀 버튼 ↺ ──
@@ -6404,6 +6515,16 @@ function bindPreviewFormEvents(){
       p._totalSource='auto';
       _recalcTotalIfAuto();
       renderPreviewForm();
+    });
+  }
+
+  // ── v3.79 품목(Secondary) 펼치기/접기 — 같은 자리의 기존 item editor를 연다(새 editor·모달 없음) ──
+  const itemsRow=previewArea.querySelector('.qc-items-row');
+  if(itemsRow){
+    itemsRow.addEventListener('click',()=>{
+      _qcItemsOpen=!_qcItemsOpen;
+      itemsRow.closest('.qc-items')?.classList.toggle('open',_qcItemsOpen);
+      itemsRow.setAttribute('aria-expanded',String(_qcItemsOpen));
     });
   }
 
@@ -6865,13 +6986,91 @@ let _addSplitUI=null, _dSplitUI=null;
     treatByBox:document.getElementById('addTreatBy'),
     getParticipants:()=>(document.getElementById('participantsInp').value||'').split(','),
     getPayer:()=>document.getElementById('payerInp').value||'',
-    getTotal:()=>{const p=_currentParsed;return (p&&p.total)||0;}
+    getTotal:()=>{const p=_currentParsed;return (p&&p.total)||0;},
+    onChange:()=>_qcSyncSplit()
   });
   ['participantsInp','payerInp'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el)el.addEventListener('input',()=>_addSplitUI.render());
+    if(el)el.addEventListener('input',()=>{_addSplitUI.render();_qcRenderPeople();_qcSyncSplit();});
   });
   _addSplitUI.render();
+})();
+
+// ── v3.79 Quick Confirm — 사람·결제자 chip + 분담 방식 접기 ─────────────────────
+//   ⚠️ 새 저장 필드·새 계산 없음. chip은 기존 participantsInp/payerInp 텍스트 값을 바꾸고 input 이벤트를 보내는 것뿐이라
+//   저장은 기존 saveBtn 경로가 그대로 읽는다. 추천 = 최근 영수증에 등장한 사람(runtime, 캐시 없음) — 자동 선택 없음.
+var _qcCtxPerson=null, _qcCtxNext=null; // var — switchTab(상단 정의)이 초기화 순서와 무관하게 읽을 수 있게 // 사람 화면 '+ 영수증 추가'로 들어오면 그 사람을 후보 맨 앞에(선택은 사용자)
+let _qcSplitMode=null;                  // 'exclude' — 제외할 사람을 아직 안 고른 상태 표시용(표시만)
+const _QC_RECENT_MAX=6;
+function _qcNames(id){return (document.getElementById(id)?.value||'').split(',').map(v=>v.trim()).filter(Boolean);}
+function _qcRecentPeople(){
+  const me=normalizeName(getMyName());const out=[];const seen=new Set();
+  const sorted=receipts.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
+  for(const r of sorted){
+    for(const n of (r.participants||[]).concat(r.paidBy?[r.paidBy]:[])){
+      const t=String(n||'').trim();if(!t||normalizeName(t)===me||seen.has(t))continue;
+      seen.add(t);out.push(t);if(out.length>=_QC_RECENT_MAX)return out;
+    }
+  }
+  return out;
+}
+function _qcChip(name,{on,me,attr}){
+  return `<button type="button" class="qc-chip${on?' on':''}${me?' me':''}" ${attr}="${escapeHtml(name)}" aria-pressed="${on?'true':'false'}">${escapeHtml(name)}${me?'<span class="qc-me">(나)</span>':''}</button>`;
+}
+function _qcRenderPeople(){
+  const pBox=document.getElementById('qcPeopleChips'), yBox=document.getElementById('qcPayerChips');
+  if(!pBox||!yBox)return;
+  const me=(getMyName()||'').trim();
+  const sel=_qcNames('participantsInp');
+  const selN=new Set(sel.map(normalizeName));
+  // 후보 순서: 나 → 사람 화면 context → 이미 입력된 사람 → 최근 함께한 사람
+  const cands=[];const push=n=>{const t=(n||'').trim();if(t&&!cands.some(c=>normalizeName(c)===normalizeName(t)))cands.push(t);};
+  if(me)push(me);if(_qcCtxPerson)push(_qcCtxPerson);sel.forEach(push);_qcRecentPeople().forEach(push);
+  pBox.innerHTML=cands.map(n=>_qcChip(n,{on:selN.has(normalizeName(n)),me:me&&normalizeName(n)===normalizeName(me),attr:'data-qcp'})).join('')
+    +`<button type="button" class="qc-chip qc-chip-add" data-qcadd="1">+ 사람</button>`;
+  // 결제자 후보: 나 + 선택한 참석자(+ 지금 입력된 결제자). 나=Blue, 상대=Green(사람 화면과 같은 identity)
+  const payer=(document.getElementById('payerInp')?.value||'').trim();
+  const pc=[];const pp=n=>{const t=(n||'').trim();if(t&&!pc.some(c=>normalizeName(c)===normalizeName(t)))pc.push(t);};
+  if(me)pp(me);sel.forEach(pp);if(payer)pp(payer);
+  // 결제자 칸이 비어 있으면 저장 경로가 getMyName()을 쓰므로(기존 규칙) '나'를 선택된 상태로 보여 준다.
+  const eff=payer||me;
+  yBox.innerHTML=pc.map(n=>_qcChip(n,{on:!!eff&&normalizeName(n)===normalizeName(eff),me:me&&normalizeName(n)===normalizeName(me),attr:'data-qcy'})).join('');
+}
+function _qcSetField(id,val){const el=document.getElementById(id);if(!el)return;el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}));}
+function _qcSyncSplit(){
+  if(!_addSplitUI)return;
+  const st=_addSplitUI.getState();const sum=document.getElementById('qcSplitSum');
+  const mode=st.treat?'treat':(st.splitExclude.length||_qcSplitMode==='exclude')?'exclude':'normal';
+  if(sum)sum.textContent=st.treat?(st.treatBy?`한턱 · ${st.treatBy.members.join(' · ')} 공동`:'한턱')
+    :st.splitExclude.length?`${st.splitExclude.length}명 분담 제외`:mode==='exclude'?'분담 제외 · 제외할 사람을 눌러 주세요':'일반 분담';
+  document.querySelectorAll('#qcSplitSeg [data-qcsplit]').forEach(b=>{const on=b.dataset.qcsplit===mode;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));});
+  document.getElementById('addSplitBlock')?.classList.toggle('mode-exclude',mode==='exclude');
+}
+(function _initQuickConfirm(){
+  const pBox=document.getElementById('qcPeopleChips'), yBox=document.getElementById('qcPayerChips');
+  if(!pBox||!yBox)return;
+  pBox.addEventListener('click',e=>{
+    if(e.target.closest('[data-qcadd]')){document.getElementById('participantsInp')?.focus();return;}
+    const c=e.target.closest('[data-qcp]');if(!c)return;
+    const n=c.dataset.qcp;const cur=_qcNames('participantsInp');
+    const i=cur.findIndex(x=>normalizeName(x)===normalizeName(n));
+    if(i>=0)cur.splice(i,1);else cur.push(n);
+    _qcSetField('participantsInp',cur.join(', '));
+  });
+  yBox.addEventListener('click',e=>{const c=e.target.closest('[data-qcy]');if(c)_qcSetField('payerInp',c.dataset.qcy);});
+  const row=document.getElementById('qcSplitRow'), blk=document.getElementById('addSplitBlock');
+  row?.addEventListener('click',()=>{const open=!blk.classList.contains('open');blk.classList.toggle('open',open);row.setAttribute('aria-expanded',String(open));});
+  document.getElementById('qcSplitSeg')?.addEventListener('click',e=>{
+    const b=e.target.closest('[data-qcsplit]');if(!b||!_addSplitUI)return;
+    const m=b.dataset.qcsplit;const st=_addSplitUI.getState();
+    _qcSplitMode=m==='exclude'?'exclude':null;
+    // 기존 컨트롤러 setState만 사용(한턱=treat, 분담 제외=splitExclude chip 토글). 새 규칙 없음.
+    if(m==='treat')_addSplitUI.setState(true,[],st.treatBy);
+    else if(m==='normal')_addSplitUI.setState(false,[],null);
+    else _addSplitUI.setState(false,st.splitExclude,null);
+    _qcSyncSplit();
+  });
+  _qcRenderPeople();_qcSyncSplit();
 })();
 
 function clearInputs(){
@@ -6881,6 +7080,10 @@ function clearInputs(){
   _setCategoryValue('',{auto:false});
   document.getElementById('participantsInp').value='';
   if(_addSplitUI)_addSplitUI.reset();
+  _qcItemsOpen=false;_qcSplitMode=null;_qcCtxPerson=null; // v3.79
+  document.getElementById('addSplitBlock')?.classList.remove('open');
+  document.getElementById('qcSplitRow')?.setAttribute('aria-expanded','false');
+  _qcRenderPeople();_qcSyncSplit();
   document.getElementById('tagInp').value='';
   document.getElementById('noteInp').value='';
   document.getElementById('gjPersonInp').value='';
@@ -6900,7 +7103,7 @@ function clearInputs(){
   if(dd)dd.value=new Date().toISOString().slice(0,10);
   if(dt)dt.value='';
   _clearDirectPhoto();
-  if(_inputMode==='direct')_setSaveState(true,'상호명과 금액을 입력하면 저장할 수 있어요.');
+  if(_inputMode==='direct')_setAddSaveState(true,'상호명과 금액을 입력하면 저장할 수 있어요.');
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -6950,7 +7153,7 @@ function _updateDirectSaveBtn(){
   const store=(document.getElementById('directStore').value||'').trim();
   const total=(document.getElementById('directTotal').value||'').trim();
   const ready=!!((store||_gjComposed())&&total);
-  _setSaveState(!ready,ready?'저장할 준비가 됐어요.':'상호명과 금액을 입력하면 저장할 수 있어요.');
+  _setAddSaveState(!ready,ready?'저장할 준비가 됐어요.':'상호명과 금액을 입력하면 저장할 수 있어요.');
 }
 
 function _setInputMode(mode){
@@ -6968,10 +7171,10 @@ function _setInputMode(mode){
   if(mode==='direct'){
     _updateDirectSaveBtn();
   } else if(!_currentParsed){
-    _setSaveState(true,'AI 정리 결과를 붙여넣으면 저장할 수 있어요.');
+    _setAddSaveState(true,'AI 정리 결과를 붙여넣으면 저장할 수 있어요.');
   } else {
     const saveState=_saveMessageFromValidation(validateParsed(_currentParsed));
-    _setSaveState(saveState.disabled,saveState.message,{warn:saveState.warn});
+    _setAddSaveState(saveState.disabled,saveState.message,{warn:saveState.warn});
   }
 }
 
@@ -9520,7 +9723,7 @@ async function renderDetail(){
       }
       // 영수증 추가 = 레일 '추가'와 같은 경로(사람 모드 종료 후 추가 탭). 참석자 자동 전달 경로는 기존에 없어 만들지 않음.
       const ad=e.target.closest('[data-psnadd]');
-      if(ad&&body.contains(ad)){e.preventDefault();document.querySelector('.nav-btn.tab[data-tab="input"]')?.click();}
+      if(ad&&body.contains(ad)){e.preventDefault();_qcCtxNext=_personSel||null;document.querySelector('.nav-btn.tab[data-tab="input"]')?.click();}
     });
     // v3.78 — div[role=button][data-duo](주요 항목 '일반 분담') 키보드 접근: Enter/Space → 기존 data-duo drill-down
     body.addEventListener('keydown',e=>{
