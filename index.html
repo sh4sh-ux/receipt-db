@@ -2276,29 +2276,37 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   #gptModeArea.qc-parsed .input-row.top .photo-zone-text{font-size:12px;}
   #gptModeArea.qc-parsed .input-row.top .field-ta{font-size:12px;}
 }
-/* v3.80 참석자 카드 — 이름 영역(결제자 💳) · 상태 영역(분담/깍두기) · ×(빼기) hit area 분리. 나=Blue·상대=Green identity 유지 */
 .mobile-save-bar.off-tab{display:none!important;}
-.ppc{display:inline-grid;grid-template-columns:auto auto;grid-template-areas:"name x" "state x";align-items:center;column-gap:2px;padding:3px 4px 4px 3px;border:1px solid color-mix(in srgb,var(--green) 38%,var(--border));border-radius:12px;background:var(--card);max-width:100%;min-width:0;}
-.ppc.me{border-color:color-mix(in srgb,var(--blue) 40%,var(--border));}
-.ppc-name{grid-area:name;display:flex;align-items:center;gap:4px;min-height:30px;padding:0 8px;border:none;border-radius:8px;background:transparent;font:inherit;font-size:14px;font-weight:650;color:var(--green-txt);cursor:pointer;min-width:0;max-width:100%;white-space:nowrap;}
-.ppc.me .ppc-name{color:var(--blue-txt);}
-.ppc-nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
-.ppc-card{flex:none;font-size:13px;line-height:1;}
-.ppc-state{grid-area:state;justify-self:start;min-height:26px;margin:0 0 0 4px;padding:0 9px;border:1px solid var(--divider);border-radius:13px;background:var(--fill2);font:inherit;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;white-space:nowrap;}
-.ppc-state.excl{border-style:dashed;color:var(--red);background:transparent;}
-.ppc-state[disabled]{cursor:default;opacity:.8;}
-.ppc-paylbl{color:var(--text-tertiary);font-weight:500;}
-.ppc.excl .ppc-nm{text-decoration:line-through;opacity:.7;}
-.ppc-x{grid-area:x;align-self:stretch;width:28px;min-height:44px;border:none;border-radius:8px;background:transparent;color:var(--text-tertiary);font:inherit;font-size:16px;line-height:1;cursor:pointer;}
-@media(hover:hover){.ppc-name:hover,.ppc-x:hover{background:var(--fill2);}.ppc-state:not([disabled]):hover{border-color:var(--text-tertiary);}}
-.ppc-name:focus-visible,.ppc-state:focus-visible,.ppc-x:focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
-.qc-people-row{align-items:flex-start;}
+/* v3.81 참석자 칩(Add·Detail 공통) — 한 줄: 이름(표시만, 나=Blue·상대=Green identity) · 분담 badge(탭=분담↔깍두기) · ×(빼기).
+   hit area 분리: badge 30px·× 34px(겹침 없음). 결제자는 칩이 아니라 아래 결제자 row에서만 바꾼다. */
+.ppc{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:0 0 0 12px;border:1px solid color-mix(in srgb,var(--green) 34%,var(--border));border-radius:20px;background:var(--card);max-width:100%;min-width:0;}
+.ppc.me{border-color:color-mix(in srgb,var(--blue) 38%,var(--border));}
+.ppc-nm{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:650;color:var(--green-txt);}
+.ppc.me .ppc-nm{color:var(--blue-txt);}
+.ppc-nm .pp-me{color:inherit;}
+.ppc-state{flex:none;min-height:30px;margin-left:4px;padding:0 10px;border:1px solid var(--divider);border-radius:15px;background:var(--fill2);font:inherit;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;white-space:nowrap;}
+.ppc-state.excl{background:transparent;border-style:dashed;border-color:var(--border);color:var(--text-tertiary);font-weight:500;}
+.ppc-state[disabled]{cursor:default;}
+.ppc.excl .ppc-nm{opacity:.62;}
+.ppc-x{flex:none;width:34px;min-height:38px;margin-left:-2px;border:none;border-radius:0 19px 19px 0;background:transparent;color:var(--text-tertiary);font:inherit;font-size:17px;line-height:1;cursor:pointer;}
+@media(hover:hover){.ppc-x:hover{background:var(--fill2);color:var(--text-primary);}.ppc-state:not([disabled]):hover{border-color:var(--text-tertiary);}}
+.ppc-state:focus-visible,.ppc-x:focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
+/* 결제자 row(Add·Detail 공통) — 💳 + 이름(나=Blue·상대=Green) › · 누르면 결제자 picker */
+.qc-payer-row{grid-template-columns:52px minmax(0,1fr) 12px;min-height:48px;}
+.qc-payer-row .qc-val{display:flex;align-items:center;gap:6px;min-width:0;}
+.qc-payer-row .qc-val b{font-weight:650;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qc-payer-card{flex:none;font-size:14px;line-height:1;}
+.qc-payer-sub{flex:none;font-size:12px;font-weight:500;color:var(--text-tertiary);}
+.detail-people .qc-people{gap:8px;}
+.detail-people .qc-sec-lbl{margin-bottom:0;}
+.qc-pk-row.radio.on .qc-pk-ck{border-color:var(--green);background:var(--card);box-shadow:inset 0 0 0 4px var(--card),inset 0 0 0 10px var(--green);}
+.qc-pk-row.radio.me.on .qc-pk-ck{border-color:var(--blue);box-shadow:inset 0 0 0 4px var(--card),inset 0 0 0 10px var(--blue);}
+.qc-pk-card{margin-right:5px;}
+.qc-pk-sub{margin-left:6px;font-size:12px;font-weight:500;color:var(--text-tertiary);}
+.qc-pk-hint{flex:none;font-size:12px;font-weight:500;color:var(--text-tertiary);}
+.qc-pk-q[hidden]{display:none;}
+.qc-people-row{align-items:center;}
 .qc-people-row>.qc-chip{align-self:center;}
-.qc-payer-note{font-size:12.5px;color:var(--text-secondary);display:flex;flex-wrap:wrap;align-items:center;gap:4px;}
-.qc-payer-note[hidden]{display:none;}
-.qc-payer-note b{font-weight:650;}
-.qc-payer-note-sub{color:var(--text-tertiary);}
-.qc-payer-other{border:none;background:none;padding:2px 4px;font:inherit;font-size:12.5px;font-weight:600;color:var(--blue-txt);cursor:pointer;}
 </style>
 <link rel="stylesheet" href="prepaid.css">
 </head>
@@ -2603,26 +2611,12 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                  Receipt Detail과 같은 _makeSplitUI) → 결제자 1 row → 추가 정보(결제수단·카테고리·메모·태그, 접힘).
                  id는 전부 기존 그대로(participantsInp/payerInp는 picker가 값을 채우는 저장 경로 input으로 유지). -->
             <div class="input-row options qc-opts">
+              <!-- v3.81 — 참석자·분담 + 결제자 row + 한턱 = Receipt Detail과 같은 공통 블록(_peopleBlockHtml('add'), init에서 주입).
+                   participantsInp/payerInp는 저장 경로 input으로 유지(picker·칩이 값을 채움). -->
               <div class="field-g qc-sec" style="grid-column:1/-1;">
-                <div class="field-lbl qc-sec-lbl">함께한 사람 <span class="field-lbl-hint">이름 = 결제자 💳 · 분담 = 깍두기 전환</span></div>
-                <div class="pp-split-block qc-people" id="addSplitBlock">
-                  <div class="qc-people-row">
-                    <button type="button" class="qc-chip qc-chip-me-add" id="qcMeAdd" hidden></button>
-                    <div class="pp-chips" id="addPpChips"></div>
-                    <button type="button" class="qc-chip qc-chip-add" id="qcPeopleAdd">+ 추가</button>
-                  </div>
-                  <div class="qc-payer-note" id="qcPayerNote" hidden></div>
-                  <div class="pp-split-hint" id="addSplitHint"></div>
-                  <div class="pp-treatbar" id="addTreatBar">
-                    <div class="pp-treat-txt"><span class="pp-treat-t">🎉 한턱</span><span class="pp-treat-d">결제자가 전액 부담 · 나머지 참석자는 0원</span></div>
-                    <button type="button" class="pp-switch" id="addTreatSw" role="switch" aria-checked="false" aria-label="한턱 켜기"></button>
-                  </div>
-                  <div class="pp-treatby" id="addTreatBy"></div>
-                </div>
-                <div hidden><input id="participantsInp" type="text" tabindex="-1" aria-hidden="true"/></div>
+                <div id="addPeopleMount"></div>
+                <div hidden><input id="participantsInp" type="text" tabindex="-1" aria-hidden="true"/><input id="payerInp" type="text" tabindex="-1" aria-hidden="true"/></div>
               </div>
-              <!-- 결제자 = 참석자 카드의 이름 영역(별도 row 없음). payerInp는 저장 경로 input으로 유지 -->
-              <div hidden><input id="payerInp" type="text" tabindex="-1" aria-hidden="true"/></div>
               <div class="qc-more" id="qcMore" style="grid-column:1/-1;">
                 <button type="button" class="qc-row qc-box-row qc-more-row" id="qcMoreRow" aria-expanded="false" aria-controls="qcMoreBody"><span class="qc-lbl">추가 정보</span><span class="qc-val" id="qcMoreSum"></span><span class="qc-go" aria-hidden="true">›</span></button>
                 <div class="qc-more-body" id="qcMoreBody">
@@ -3472,6 +3466,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.81 — Add·Receipt Detail 참석자·결제자·분담 UX 통일: A 참석자+분담(칩: 이름·분담 badge 탭=분담↔깍두기·×) / B 결제자(별도 row → picker,
+//   기본 후보=참석자 radio 💳 + '다른 사람', 참석자에 강제 추가 없음) / C 🎉 한턱(참석자 2명↑). 이름 탭=결제자 방식 폐기. 공통 _peopleBlockHtml·
+//   _bindPeopleUI·_qcOpenPicker(mode,c)를 두 화면이 같이 쓴다. ⚠️ schema·계산(_participantSplit/_receiptShare)·저장 경로·파서 불변.
 // v3.80 — 추가 화면 compact: '항상 펼쳐놓기' → '필요할 때 선택'(기능 삭제 없음). ⚠️ 파서·검증·저장 경로·schema·계산·Person·Meeting·
 //   Relation Group·Review Inbox·Dropbox·_setAddSaveState 불변. ① 함께한 사람 = 선택된 사람만 '참석자 카드'(_makeSplitUI의 opt-in 모드):
 //   이름 영역 탭=결제자 💳(항상 1명, paidBy) · 상태 영역 탭=분담↔깍두기(splitExclude) · ×=빼기 — hit area 분리. 나=Blue·상대=Green.
@@ -3835,7 +3832,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.80';
+const APP_VERSION='v3.81';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -7003,27 +7000,24 @@ function _makeSplitUI(o){
       render();o.onChange&&o.onChange();
     });
   };
-  // v3.80 — 참석자 카드(추가 화면 전용, o.onPickPayer가 있을 때만): 한 카드에 hit area 3개를 분리한다.
-  //   이름 영역 = 결제자 지정(o.onPickPayer) · 상태 영역 = 분담↔깍두기(기존 excluded 토글, 한턱이면 전액/0원 고정) · × = 참석자 빼기(o.onRemove).
-  //   계산·저장 계약은 기존 칩과 동일(getState 그대로). 상세 화면은 이 옵션을 넘기지 않아 기존 칩 그대로.
+  // v3.81 — 참석자 카드(o.cards — Add·Detail 공통): 이름(표시만) · 분담 badge(탭=분담↔깍두기, 기존 excluded 토글) · ×(빼기).
+  //   결제자는 카드에서 고르지 않는다(별도 결제자 row). 계산·저장 계약은 기존 칩과 동일(getState 그대로).
   const _renderPersonCards=(pp,payer)=>{
     const meN=o.meName?normalizeName(o.meName()):'';
     o.chips.innerHTML=pp.map(n=>{
-      const isPayer=!!payer&&normalizeName(n)===normalizeName(payer);
       const isMe=!!meN&&normalizeName(n)===meN;
+      const isPayer=!!payer&&normalizeName(n)===normalizeName(payer);
       const ex=!treat&&excluded.has(n);
       const st=treat?(isPayer?'전액':'0원'):(ex?'깍두기':'분담');
       const e=escapeHtml(n);
-      return `<div class="ppc${isMe?' me':''}${isPayer?' payer':''}${ex?' excl':''}${treat?' treat':''}" data-n="${e}">`
-        +`<button type="button" class="ppc-name" data-pay="1" aria-pressed="${isPayer}" aria-label="${e}${isPayer?' — 결제자':' — 결제자로 지정'}" title="${isPayer?'결제자':'눌러서 결제자로 지정'}">`
-        +`${isPayer?'<span class="ppc-card" aria-hidden="true">💳</span>':''}<span class="ppc-nm">${e}${isMe?'<span class="pp-me">(나)</span>':''}</span></button>`
-        +`<button type="button" class="ppc-state${ex?' excl':''}" data-st="1"${treat?' disabled':''} aria-label="${e} 분담 방식: ${st}${treat?'':' — 눌러서 '+(ex?'분담':'깍두기')+'로 변경'}">${isPayer&&!treat?'<span class="ppc-paylbl">결제 · </span>':''}${st}</button>`
+      return `<div class="ppc${isMe?' me':''}${ex?' excl':''}${treat?' treat':''}" data-n="${e}">`
+        +`<span class="ppc-nm">${e}${isMe?'<span class="pp-me">(나)</span>':''}</span>`
+        +`<button type="button" class="ppc-state${ex?' excl':''}" data-st="1"${treat?' disabled':''} aria-label="${e} ${st}${treat?'':' — 눌러서 '+(ex?'분담':'깍두기')+'으로'}">${st}</button>`
         +(o.onRemove?`<button type="button" class="ppc-x" data-rm="1" aria-label="${e} 빼기">×</button>`:'')
         +`</div>`;
     }).join('');
     o.chips.querySelectorAll('.ppc').forEach(c=>{
       const n=c.dataset.n;
-      c.querySelector('[data-pay]').onclick=()=>o.onPickPayer(n);
       c.querySelector('[data-st]').onclick=()=>{if(treat)return;if(excluded.has(n))excluded.delete(n);else excluded.add(n);render();o.onChange&&o.onChange();};
       const x=c.querySelector('[data-rm]');if(x)x.onclick=()=>o.onRemove(n);
     });
@@ -7044,14 +7038,14 @@ function _makeSplitUI(o){
     o.treatSw.setAttribute('aria-checked',treat?'true':'false');
     o.treatBar.classList.toggle('on',treat);
     if(!pp.length){o.chips.innerHTML='<span class="pp-chips-empty">참석자를 입력하면 분담 대상이 표시됩니다</span>';o.hint.textContent='';_renderTreatBy(pp,payer);return;}
-    if(o.onPickPayer){_renderPersonCards(pp,payer);return;}
+    if(o.cards){_renderPersonCards(pp,payer);return;}
     o.chips.innerHTML=pp.map(n=>{
       const isPayer=payer&&n===payer;
       let cls='pp-chip',tag='';
       if(treat){ if(isPayer){cls+=' payer';tag='<span class="pp-chip-tag">전액</span>';} else {cls+=' zero';tag='<span class="pp-chip-tag">0원</span>';} }
       else if(excluded.has(n)){cls+=' excl';tag='<span class="pp-chip-tag excl">제외</span>';}
       else {cls+=' split';if(isPayer)cls+=' payer';tag='<span class="pp-chip-tag split">분담</span>';}
-      // v3.80 — 추가 화면만 선택적으로 '(나)' 표기·× 제거 버튼(o.meName/o.onRemove). 상세 화면은 옵션을 안 넘겨 그대로.
+      // (v3.81부터 Add·Detail 모두 o.cards 칩을 쓴다 — 이 기본 칩 경로는 옵션 없이 호출하는 경우용으로 남김)
       const isMe=o.meName&&normalizeName(o.meName())===normalizeName(n);
       const rm=o.onRemove?`<span class="pp-chip-x" data-rm="1" role="button" aria-label="${escapeHtml(n)} 빼기">×</span>`:'';
       return `<button type="button" class="${cls}" data-n="${escapeHtml(n)}"${treat&&!o.onRemove?' disabled':''}><span class="pp-chip-nm">${escapeHtml(n)}${isMe?'<span class="pp-me">(나)</span>':''}</span>${tag}${rm}</button>`;
@@ -7081,8 +7075,57 @@ function _makeSplitUI(o){
     reset(){treat=false;excluded.clear();treatBy=null;render();}
   };
 }
-let _addSplitUI=null, _dSplitUI=null;
+// v3.81 — 참석자·분담 / 결제자 / 한턱 공통 블록(Add·Receipt Detail 동일 markup·동일 interaction).
+//   A 참석자+분담(사람 칩: 이름 · 분담 badge(탭=분담↔깍두기) · ×) · B 결제자(별도 row → 결제자 picker, 항상 1명) · C 🎉 한턱(참석자 2명↑).
+//   ⚠️ 새 저장 필드·새 계산 없음 — 칩/picker는 기존 참석자·결제자 input 값을 바꾸고 input 이벤트를 보낼 뿐(저장은 각 화면 기존 경로).
+function _peopleBlockHtml(p){
+  return `<div class="pp-split-block qc-people" id="${p}SplitBlock">
+    <div class="field-lbl qc-sec-lbl">참석자 · 분담 <span class="field-lbl-hint">분담 표시를 누르면 깍두기로 전환</span></div>
+    <div class="qc-people-row">
+      <div class="pp-chips" id="${p}PpChips"></div>
+      <button type="button" class="qc-chip qc-chip-me-add" id="${p}MeAdd" hidden></button>
+      <button type="button" class="qc-chip qc-chip-add" id="${p}PeopleAdd">+ 사람</button>
+    </div>
+    <div class="pp-split-hint" id="${p}SplitHint"></div>
+    <button type="button" class="qc-row qc-box-row qc-payer-row" id="${p}PayerRow" aria-haspopup="dialog"><span class="qc-lbl">결제자</span><span class="qc-val" id="${p}PayerVal"></span><span class="qc-go" aria-hidden="true">›</span></button>
+    <div class="pp-treatbar" id="${p}TreatBar">
+      <div class="pp-treat-txt"><span class="pp-treat-t">🎉 한턱</span><span class="pp-treat-d">결제자가 전액 부담 · 나머지 참석자는 0원</span></div>
+      <button type="button" class="pp-switch" id="${p}TreatSw" role="switch" aria-checked="false" aria-label="한턱 켜기"></button>
+    </div>
+    <div class="pp-treatby" id="${p}TreatBy"></div>
+  </div>`;
+}
+// 공통 컨트롤러: c={p, partsId, payerId, split:()=>splitUI, emptyIsMe:bool(Add=저장 시 getMyName() 규칙), ctx:()=>사람 화면 context}
+function _bindPeopleUI(c){
+  const $=s=>document.getElementById(c.p+s);
+  const refresh=()=>{
+    const me=(getMyName()||'').trim();
+    const sel=_qcNames(c.partsId);const selN=new Set(sel.map(normalizeName));
+    const meBtn=$('MeAdd');
+    // 참석자 0명일 때만 [+ 나][+ 사람] — 자동 참석 없음. 1명 이상이면 [+ 사람]만(나도 picker에서 추가 가능)
+    if(meBtn){const show=!!me&&!sel.length;meBtn.hidden=!show;if(show){meBtn.textContent='나';meBtn.title=`${me}(나) 추가`;}}
+    const addBtn=$('PeopleAdd');if(addBtn){addBtn.textContent=sel.length?'+':'+ 사람';addBtn.setAttribute('aria-label','참석자 추가');}
+    const raw=(document.getElementById(c.payerId)?.value||'').trim();
+    const eff=raw||(c.emptyIsMe?me:'');
+    const pv=$('PayerVal');
+    if(pv){
+      if(!eff){pv.innerHTML='<span class="qc-cta">결제자 선택</span>';}
+      else{const isMe=!!me&&normalizeName(eff)===normalizeName(me);const out=sel.length>0&&!selN.has(normalizeName(eff));
+        pv.innerHTML=`<span class="qc-payer-card" aria-hidden="true">💳</span><b class="${isMe?'qc-who-me':'qc-who-other'}">${escapeHtml(eff)}${isMe?'<span class="qc-me">(나)</span>':''}</b>${out?'<span class="qc-payer-sub">참석자 아님</span>':''}`;}
+    }
+    const st=c.split&&c.split()?c.split().getState():{treat:false};
+    $('SplitBlock')?.classList.toggle('qc-solo',sel.length<2&&!st.treat);
+  };
+  $('PeopleAdd')?.addEventListener('click',()=>_qcOpenPicker('people',c));
+  $('PayerRow')?.addEventListener('click',()=>_qcOpenPicker('payer',c));
+  $('MeAdd')?.addEventListener('click',()=>{const me=(getMyName()||'').trim();if(!me)return;const cur=_qcNames(c.partsId);if(!cur.some(x=>normalizeName(x)===normalizeName(me)))cur.unshift(me);_qcSetField(c.partsId,cur.join(', '));});
+  [c.partsId,c.payerId].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>{c.split&&c.split()&&c.split().render();refresh();}));
+  refresh();
+  return {refresh};
+}
+let _addSplitUI=null, _dSplitUI=null, _addPeople=null;
 (function _initAddSplitUI(){
+  const mount=document.getElementById('addPeopleMount');if(mount)mount.outerHTML=_peopleBlockHtml('add'); // v3.81 공통 블록
   const chips=document.getElementById('addPpChips');
   if(!chips)return;
   _addSplitUI=_makeSplitUI({
@@ -7096,14 +7139,11 @@ let _addSplitUI=null, _dSplitUI=null;
     getTotal:()=>{const p=_currentParsed;return (p&&p.total)||0;},
     meName:()=>getMyName()||'',
     onRemove:n=>{const cur=_qcNames('participantsInp').filter(x=>normalizeName(x)!==normalizeName(n));_qcSetField('participantsInp',cur.join(', '));},
-    onPickPayer:n=>_qcSetField('payerInp',n), // 이름 영역 = 결제자(항상 1명 — payerInp 하나의 값)
+    cards:true,
     onChange:()=>_qcRenderPeople()
   });
-  ['participantsInp','payerInp'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el)el.addEventListener('input',()=>{_addSplitUI.render();_qcRenderPeople();});
-  });
   _addSplitUI.render();
+  _addPeople=_bindPeopleUI({p:'add',partsId:'participantsInp',payerId:'payerInp',split:()=>_addSplitUI,emptyIsMe:true,ctx:()=>_qcCtxPerson});
 })();
 
 // ── v3.80 compact 입력 — '항상 펼쳐놓기' → '필요할 때 선택' ──────────────────────────────────────
@@ -7126,69 +7166,62 @@ function _qcRecentPeople(max){
 }
 function _qcSetField(id,val){const el=document.getElementById(id);if(!el)return;el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}));}
 const _qcPayLabel={card:'카드',cash:'현금',transfer:'계좌이체',other:'기타'};
-// 기본 화면 표시만 갱신: '나' 빠른 추가 chip·결제자 row·한턱 bar 노출·추가 정보 요약
+// 추가 화면 표시 갱신: 공통 참석자 블록(_addPeople) + 추가 정보 요약
 function _qcRenderPeople(){
-  const me=(getMyName()||'').trim();
-  const sel=_qcNames('participantsInp');const selN=new Set(sel.map(normalizeName));
-  const meBtn=document.getElementById('qcMeAdd');
-  if(meBtn){const show=!!me&&!selN.has(normalizeName(me));meBtn.hidden=!show;if(show){meBtn.textContent='나';meBtn.title=`${me}(나) 추가`;}}
-  const addBtn=document.getElementById('qcPeopleAdd');
-  if(addBtn){addBtn.textContent=sel.length?'+':'+ 사람';addBtn.setAttribute('aria-label','함께한 사람 추가');}
-  // 결제자 = 참석자 카드 💳. 결제자가 참석자에 없을 때(비어 있으면 저장 규칙 getMyName())만 한 줄 안내 + 변경(자동 재지정 없음)
-  const payer=(document.getElementById('payerInp')?.value||'').trim();const eff=payer||me;
-  const note=document.getElementById('qcPayerNote');
-  if(note){const inParts=!!eff&&selN.has(normalizeName(eff));const show=sel.length>0&&!inParts;note.hidden=!show;
-    if(show){const isMe=!!eff&&normalizeName(eff)===normalizeName(me);
-      note.innerHTML=`<span aria-hidden="true">💳</span> 결제 <b class="${isMe?'qc-who-me':'qc-who-other'}">${eff?escapeHtml(eff)+(isMe?'<span class="qc-me">(나)</span>':''):'미지정'}</b> <span class="qc-payer-note-sub">· 참석자 이름을 누르면 결제자가 바뀌어요</span> <button type="button" class="qc-payer-other" id="qcPayerOther">다른 사람</button>`;}}
-  // 🎉 한턱은 참석자 2명 이상일 때만 의미가 있어 그때만 노출(이미 켜져 있으면 유지) — 계산·저장 불변
-  const st=_addSplitUI?_addSplitUI.getState():{treat:false};
-  document.getElementById('addSplitBlock')?.classList.toggle('qc-solo',sel.length<2&&!st.treat);
-  // 추가 정보 요약: 결제수단 · 카테고리 (+ 메모/태그 있으면 표시)
+  if(_addPeople)_addPeople.refresh();
   const sum=document.getElementById('qcMoreSum');
   if(sum){const pm=document.getElementById('payMethod')?.value;const cat=(document.getElementById('catInp')?.value||'').trim();
     const note=(document.getElementById('noteInp')?.value||'').trim();const tags=_qcNames('tagInp');
     sum.textContent=[_qcPayLabel[pm]||'',cat?getCategoryLabel(cat):'카테고리 없음',note?'메모':'',tags.length?`태그 ${tags.length}`:''].filter(Boolean).join(' · ');}
 }
-// 사람/결제자 picker — 기존 _mtgSheetOpen(데스크탑 중앙·모바일 하단 시트, overlay history 계약) 재사용.
-//   people: 여러 명 토글(선택된 사람만 기본 화면에 chip). payer: 한 명 선택 후 닫힘. 목록에 없는 이름은 '직접 추가'(기존 직접 입력 기능 이동).
-function _qcOpenPicker(mode){
+// 사람/결제자 picker — 기존 _mtgSheetOpen(데스크탑 중앙·모바일 하단 시트, overlay history 계약) 재사용. Add·Detail 공통(c=_bindPeopleUI 설정).
+//   people: 여러 명 토글 + 검색·초성·최근·'직접 추가'. payer: 기본 후보 = 현재 참석자(radio, 선택 💳) + '다른 사람'(참석자 밖 결제자 — 검색·최근·직접 추가).
+//   결제자를 참석자에 강제로 넣지 않는다. 결제자 선택은 분담 상태·한턱을 바꾸지 않는다(payer input 값만 변경).
+function _qcOpenPicker(mode,c){
   const {card,close}=_mtgSheetOpen();
   card.classList.add('qc-pk');
   const me=(getMyName()||'').trim();
-  let q='';
+  const ctx=(c.ctx&&c.ctx())||null;
+  let q='', other=false;
+  const payerNow=()=>((document.getElementById(c.payerId)?.value||'').trim())||(c.emptyIsMe?me:'');
   const draw=()=>{
-    const sel=_qcNames('participantsInp');const selN=new Set(sel.map(normalizeName));
-    const payer=((document.getElementById('payerInp')?.value||'').trim())||me;
-    const cands=[];const push=n=>{const t=(n||'').trim();if(t&&!cands.some(c=>normalizeName(c)===normalizeName(t)))cands.push(t);};
-    if(me)push(me);
-    if(mode==='payer'){sel.forEach(push);if(_qcCtxPerson)push(_qcCtxPerson);}
-    else{if(_qcCtxPerson)push(_qcCtxPerson);sel.forEach(push);}
-    _qcRecentPeople(0).forEach(push);
+    const sel=_qcNames(c.partsId);const selN=new Set(sel.map(normalizeName));
+    const payer=payerNow();
+    const cands=[];const push=n=>{const t=(n||'').trim();if(t&&!cands.some(x=>normalizeName(x)===normalizeName(t)))cands.push(t);};
+    if(mode==='payer'){
+      sel.forEach(push);if(payer)push(payer);if(!sel.length&&me)push(me);
+      if(other){if(me)push(me);if(ctx)push(ctx);_qcRecentPeople(0).forEach(push);}
+    }else{if(me)push(me);if(ctx)push(ctx);sel.forEach(push);_qcRecentPeople(0).forEach(push);}
     const qq=q.trim();
     let list=cands;
     if(qq){if(_isChoQuery(qq)){const cq=_normChoQuery(qq);list=cands.filter(n=>_toCho(n).includes(cq));}else{const ql=qq.toLowerCase();list=cands.filter(n=>n.toLowerCase().includes(ql));}}
     const exact=qq&&cands.some(n=>normalizeName(n)===normalizeName(qq));
-    const on=n=>mode==='payer'?normalizeName(n)===normalizeName(payer):selN.has(normalizeName(n));
+    const on=n=>mode==='payer'?(!!payer&&normalizeName(n)===normalizeName(payer)):selN.has(normalizeName(n));
     const row=n=>{const isMe=me&&normalizeName(n)===normalizeName(me);const o=on(n);
-      return `<button type="button" class="qc-pk-row${o?' on':''}${isMe?' me':''}" data-pk="${escapeHtml(n)}" aria-pressed="${o}"><span class="qc-pk-nm">${escapeHtml(n)}${isMe?'<span class="qc-me">(나)</span>':''}</span><span class="qc-pk-ck" aria-hidden="true"></span></button>`;};
+      const sub=mode==='payer'&&!selN.has(normalizeName(n))&&sel.length?'<span class="qc-pk-sub">참석자 아님</span>':'';
+      return `<button type="button" class="qc-pk-row${mode==='payer'?' radio':''}${o?' on':''}${isMe?' me':''}" data-pk="${escapeHtml(n)}" ${mode==='payer'?`role="radio" aria-checked="${o}"`:`aria-pressed="${o}"`}><span class="qc-pk-nm">${mode==='payer'&&o?'<span class="qc-pk-card" aria-hidden="true">💳</span>':''}${escapeHtml(n)}${isMe?'<span class="qc-me">(나)</span>':''}${sub}</span><span class="qc-pk-ck" aria-hidden="true"></span></button>`;};
+    card.querySelector('.qc-pk-q').hidden=mode==='payer'&&!other;
     const listEl=card.querySelector('.qc-pk-list');
-    listEl.innerHTML=(qq&&!exact?`<button type="button" class="qc-pk-row qc-pk-new" data-pknew="${escapeHtml(qq)}"><span class="qc-pk-nm">‘${escapeHtml(qq)}’ 직접 추가</span><span class="qc-pk-plus" aria-hidden="true">+</span></button>`:'')
-      +(list.length?list.map(row).join(''):(qq?'':'<div class="qc-pk-empty">아직 함께한 사람이 없어요 · 이름을 입력해 추가하세요</div>'));
+    const showNew=qq&&!exact&&(mode!=='payer'||other);
+    listEl.innerHTML=(showNew?`<button type="button" class="qc-pk-row qc-pk-new" data-pknew="${escapeHtml(qq)}"><span class="qc-pk-nm">‘${escapeHtml(qq)}’ 직접 추가</span><span class="qc-pk-plus" aria-hidden="true">+</span></button>`:'')
+      +(list.length?list.map(row).join(''):(qq?'':(mode==='payer'?'':'<div class="qc-pk-empty">아직 함께한 사람이 없어요 · 이름을 입력해 추가하세요</div>')))
+      +(mode==='payer'&&!other?`<button type="button" class="qc-pk-row qc-pk-new qc-pk-other" data-pkother="1"><span class="qc-pk-nm">+ 다른 사람</span><span class="qc-pk-hint">참석자 밖 결제자(회사·가족 등)</span></button>`:'');
   };
-  card.innerHTML=`<div class="mtg-sheet-hd"><div class="mtg-sheet-title">${mode==='payer'?'결제자 선택':'함께한 사람'}</div><button class="mtg-sheet-x" type="button" aria-label="닫기">×</button></div>
+  card.innerHTML=`<div class="mtg-sheet-hd"><div class="mtg-sheet-title">${mode==='payer'?'결제자 선택':'참석자'}</div><button class="mtg-sheet-x" type="button" aria-label="닫기">×</button></div>
     <input class="field-inp qc-pk-q" type="text" placeholder="이름 검색 · 초성 · 새 이름 입력" autocomplete="off"/>
-    <div class="qc-pk-list"></div>
+    <div class="qc-pk-list"${mode==='payer'?' role="radiogroup" aria-label="결제자"':''}></div>
     ${mode==='payer'?'':'<div class="mtg-sheet-foot qc-pk-foot"><button type="button" class="primary-btn qc-pk-done">완료</button></div>'}`;
   const inp=card.querySelector('.qc-pk-q');
   const pick=n=>{
-    if(mode==='payer'){_qcSetField('payerInp',n);close();return;}
-    const cur=_qcNames('participantsInp');const i=cur.findIndex(x=>normalizeName(x)===normalizeName(n));
+    if(mode==='payer'){_qcSetField(c.payerId,n);close();return;}
+    const cur=_qcNames(c.partsId);const i=cur.findIndex(x=>normalizeName(x)===normalizeName(n));
     if(i>=0)cur.splice(i,1);else cur.push(n);
-    _qcSetField('participantsInp',cur.join(', '));draw();
+    _qcSetField(c.partsId,cur.join(', '));draw();
   };
   card.querySelector('.mtg-sheet-x').addEventListener('click',()=>close());
   card.querySelector('.qc-pk-done')?.addEventListener('click',()=>close());
   card.querySelector('.qc-pk-list').addEventListener('click',e=>{
+    if(e.target.closest('[data-pkother]')){other=true;draw();inp.focus();return;}
     const nw=e.target.closest('[data-pknew]');if(nw){const n=nw.dataset.pknew.trim();q='';inp.value='';pick(n);return;}
     const r=e.target.closest('[data-pk]');if(r)pick(r.dataset.pk);
   });
@@ -7200,9 +7233,6 @@ function _qcOpenPicker(mode){
   draw();
 }
 (function _initQuickConfirm(){
-  document.getElementById('qcPeopleAdd')?.addEventListener('click',()=>_qcOpenPicker('people'));
-  document.getElementById('qcPayerNote')?.addEventListener('click',e=>{if(e.target.closest('#qcPayerOther'))_qcOpenPicker('payer');}); // 참석자 밖 결제자(회사 등) — v3.80 picker 그대로
-  document.getElementById('qcMeAdd')?.addEventListener('click',()=>{const me=(getMyName()||'').trim();if(!me)return;const cur=_qcNames('participantsInp');cur.unshift(me);_qcSetField('participantsInp',cur.join(', '));});
   const mr=document.getElementById('qcMoreRow'), more=document.getElementById('qcMore');
   mr?.addEventListener('click',()=>{_qcMoreOpen=!_qcMoreOpen;more.classList.toggle('open',_qcMoreOpen);mr.setAttribute('aria-expanded',String(_qcMoreOpen));});
   ['payMethod','catInp','noteInp','tagInp'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',_qcRenderPeople);el.addEventListener('change',_qcRenderPeople);}});
@@ -10167,22 +10197,13 @@ async function renderDetail(){
       ${kvHtml('매장명','store',r.store||'','','','full')}
       ${kvHtml('일자','date',r.date||'','date')}
       ${detailCategoryKvHtml(r.category||'')}
-      ${kvHtml('결제자','paidBy',r.paidBy||'')}
       ${kvHtml('결제수단','paymentMethod',r.paymentMethod||'card','select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
-      <div class="kv full">
-        <div class="kv-lbl">참석자</div>
-        <input id="dParticipants" class="kv-inp" type="text" value="${escapeHtml((r.participants||[]).join(', '))}" placeholder="예: 철수, 영희, 민준"/>
+      <!-- v3.81 — 참석자·분담 / 결제자 row / 🎉 한턱 = 추가 화면과 같은 공통 블록. 참석자·결제자 input은 저장 경로용(hidden) -->
+      <div class="kv full qc-sec detail-people">
+        ${_peopleBlockHtml('d')}
+        <div style="display:none"><input id="dParticipants" type="text" value="${escapeHtml((r.participants||[]).join(', '))}" tabindex="-1" aria-hidden="true"/></div>
       </div>
-      <div class="kv full pp-split-block" id="dSplitBlock">
-        <div class="kv-lbl">분담 방식 <span class="field-lbl-hint">참석자가 있을 때 적용</span></div>
-        <div class="pp-treatbar" id="dTreatBar">
-          <div class="pp-treat-txt"><span class="pp-treat-t">🎉 한턱</span><span class="pp-treat-d">결제자가 전액 부담 · 나머지 참석자는 0원</span></div>
-          <button type="button" class="pp-switch" id="dTreatSw" role="switch" aria-checked="false" aria-label="한턱 켜기"></button>
-        </div>
-        <div class="pp-chips" id="dPpChips"></div>
-        <div class="pp-split-hint" id="dSplitHint"></div>
-        <div class="pp-treatby" id="dTreatBy"></div>
-      </div>
+      <div class="kv" style="display:none"><input class="kv-inp" type="text" id="dPayerInp" data-field="paidBy" value="${escapeHtml(r.paidBy||'')}" tabindex="-1" aria-hidden="true"/></div>
     </div>`;
   const memoFieldsHtml=`
     <div class="field-g">
@@ -10456,7 +10477,8 @@ async function renderDetail(){
   _dSplitUI=null;
   const dChips=document.getElementById('dPpChips');
   if(dChips){
-    const dPayerInp=body.querySelector('[data-field="paidBy"]');
+    const dPayerInp=document.getElementById('dPayerInp');
+    let dPeople=null;
     _dSplitUI=_makeSplitUI({
       chips:dChips,
       treatBar:document.getElementById('dTreatBar'),
@@ -10466,11 +10488,14 @@ async function renderDetail(){
       getParticipants:()=>(document.getElementById('dParticipants').value||'').split(','),
       getPayer:()=>dPayerInp?dPayerInp.value:'',
       getTotal:()=>r.total||0,
-      onChange:()=>_detailSetDirty(true)
+      meName:()=>getMyName()||'',
+      onRemove:n=>{const cur=_qcNames('dParticipants').filter(x=>normalizeName(x)!==normalizeName(n));_qcSetField('dParticipants',cur.join(', '));},
+      cards:true,
+      onChange:()=>{_detailSetDirty(true);dPeople&&dPeople.refresh();}
     });
     _dSplitUI.setState(r.treat,r.splitExclude,r.treatBy);
-    if(dp2) dp2.addEventListener('input',()=>_dSplitUI.render());
-    if(dPayerInp) dPayerInp.addEventListener('input',()=>_dSplitUI.render());
+    // v3.81 — 추가 화면과 같은 컨트롤러(참석자 picker·결제자 row). 빈 결제자는 저장 규칙 그대로('' 유지) → '결제자 선택' 표시
+    dPeople=_bindPeopleUI({p:'d',partsId:'dParticipants',payerId:'dPayerInp',split:()=>_dSplitUI,emptyIsMe:false,ctx:()=>null});
   }
   const dn=document.getElementById('dNotes');
   if(dn) dn.addEventListener('input',()=>_detailSetDirty(true));
