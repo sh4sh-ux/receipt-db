@@ -2458,6 +2458,53 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .app-eye,.main-eye{letter-spacing:.9px;line-height:1.25;margin-bottom:11px;}
   .app-title,.main-title{line-height:1.18;}
 }
+
+/* ══ v3.94 추가 화면 = 영수증 상세와 같은 배치 ══ */
+.addx{display:flex;flex-direction:column;gap:14px;}
+.addx-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.addx-top .input-mode-row{margin-bottom:0;}
+.addx-top .guide-copy{margin-top:0;}
+#gptModeArea{display:flex;flex-direction:column;gap:14px;}
+.addx-paste .field-ta{height:132px;min-height:132px;}
+.addx-pasted{display:none;align-items:center;gap:10px;padding:9px 12px 9px 14px;border:1px solid var(--sep);border-radius:var(--rm);background:var(--fill);font-size:13px;color:var(--label2);}
+#gptModeArea.qc-parsed .addx-pasted{display:flex;}
+#gptModeArea.qc-parsed:not(.addx-raw) .addx-paste .field-ta{display:none;}
+#gptModeArea.addx-raw .addx-paste .field-ta{margin-bottom:8px;}
+.addx-ok{color:var(--green);font-weight:700;}
+.addx-pasted-txt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.addx-raw-btn{height:28px!important;font-size:12px;padding:0 12px;}
+.addx-info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;padding:18px;background:var(--fill);border:1px solid var(--sep);border-radius:var(--rm);align-items:stretch;}
+.addx-info-copy{min-width:0;display:flex;flex-direction:column;gap:8px;}
+.addx-sec-lbl{font-size:12px;font-weight:600;color:var(--text-secondary);margin:0 0 2px;}
+.addx-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.addx-kv{padding:10px 12px;background:var(--fill2);border-radius:var(--rm);border:1px solid var(--sep);margin:0!important;min-width:0;}
+.addx-kv>.field-lbl{font-size:var(--fs-caption);font-weight:var(--fw-med);color:var(--text-secondary);text-transform:none;letter-spacing:0;margin-bottom:4px;}
+.addx-kv>.field-lbl .field-lbl-hint{display:none;}
+.addx-kv .field-sel{border:none;background-color:transparent;padding:2px 18px 2px 0;min-height:0;height:auto;font-size:var(--fs-body);color:var(--text-primary);box-shadow:none;}
+.addx-kv .cat-picker-trigger{border:none;background:transparent;padding:0;min-height:0;box-shadow:none;}
+.addx-people{padding:12px;}
+.addx-info-photo{display:flex;flex-direction:column;margin:0!important;min-width:0;}
+.addx-info-photo>.field-lbl{font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:none;letter-spacing:0;}
+.addx-info-photo .photo-zone{flex:1;min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.addx-info-photo .photo-zone.has{display:block;}
+.addx-info-photo .photo-preview{width:100%;height:100%;max-height:none;object-fit:contain;}
+.addx.addx-direct .addx-info{grid-template-columns:1fr;}
+.addx.addx-direct .addx-info-photo{display:none;}
+.addx-memo>.field-g:last-child{margin-bottom:0;}
+.addx-hdr-act .detail-header-btn.primary:disabled{background:var(--fill2);border-color:var(--border);color:var(--text-tertiary);cursor:default;filter:none;}
+.addx-top .input-mode-row{flex:0 0 auto;}
+.addx-top .input-mode-btn{white-space:nowrap;}
+#previewArea>.empty-state{display:none;} /* 붙여넣기 전 빈 미리보기 안내는 붙여넣기 칸과 중복 — 숨김(파싱 오류 안내는 그대로 보임) */
+.addx-kv .cat-picker-trigger-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+@media(min-width:781px){
+  #viewInput>.input-row.actions{display:none;} /* 데스크탑은 헤더 [초기화][저장] — 영수증 상세와 같은 자리 */
+}
+@media(max-width:780px){
+  .addx-hdr-act{display:none!important;}
+  .addx-info{grid-template-columns:1fr;gap:12px;padding:14px;}
+  .addx-info-photo .photo-zone{min-height:140px;}
+  .addx-paste .field-ta{height:104px;min-height:104px;}
+}
 </style>
 <link rel="stylesheet" href="prepaid.css">
 </head>
@@ -2687,32 +2734,39 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
               <div class="main-eye">Receipt DB</div>
               <span class="app-version js-app-version" title="앱 버전"></span>
             </div>
-            <div class="main-title" id="inputModeTitle">영수증 정리 결과 붙여넣기</div>
-            <div class="main-sub" id="inputModeSub">AI가 정리한 결과를 그대로 붙여넣으세요.</div>
+            <div class="main-title" id="inputModeTitle">새 영수증</div>
+            <div class="main-sub" id="inputModeSub">AI 정리 결과를 붙여넣고 확인한 뒤 저장하세요.</div>
+          </div>
+          <!-- v3.94 — 영수증 상세의 [되돌리기][저장]과 같은 자리(데스크탑). 실제 동작은 아래 #clearBtn/#saveBtn(모바일 하단 바)을 그대로 누른다. -->
+          <div class="main-actions addx-hdr-act">
+            <div class="detail-header-save">
+              <button class="detail-header-btn" id="addHdrClear" type="button">초기화</button>
+              <button class="detail-header-btn primary" id="addHdrSave" type="button" disabled>저장</button>
+            </div>
           </div>
         </div>
         <div class="main-body">
-          <div class="input-mode-row">
+          <!-- v3.94 — 추가 화면 = 영수증 상세와 같은 배치: 붙여넣기 줄 → 품목·금액 확인 카드 → '정보' 상자(왼쪽 결제수단·카테고리·참석자·결제자 / 오른쪽 사진) → 메모·태그.
+               입력칸 id·파싱·저장 로직은 전부 그대로(배치만). 붙여넣은 뒤(#gptModeArea.qc-parsed)엔 붙여넣기 칸이 한 줄 요약으로 접힌다. -->
+          <div class="addx" id="addx">
+            <div class="addx-top">
+              <div class="input-mode-row">
             <button class="input-mode-btn on" id="modeGptBtn" type="button">AI 붙여넣기</button>
             <button class="input-mode-btn" id="modeDirectBtn" type="button">
               <svg class="input-mode-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16.5 16.5 3l4.5 4.5L7.5 21 3 21z"/><path d="m14.5 5 4.5 4.5M3 16.5 7.5 21"/><path d="m16.5 3 1.4-1.4a1.4 1.4 0 0 1 2 0l2.5 2.5a1.4 1.4 0 0 1 0 2L21 7.5"/></svg>
               <span>직접 입력</span>
             </button>
           </div>
-          <div class="input-stack">
-            <div id="gptModeArea">
-            <div class="prompt-tools-row">
               <button class="guide-copy" id="promptCopyBtn">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 프롬프트 복사
               </button>
             </div>
+            <div id="gptModeArea">
+              <div class="addx-paste">
+                <textarea id="pasteTa" class="field-ta" placeholder="AI 정리 결과를 여기에 붙여넣으세요
 
-            <!-- ① 붙여넣기 + 사진 (위, 좌우) -->
-            <div class="input-row top">
-              <div class="field-g">
-                <label class="field-lbl">붙여넣기 <span class="field-lbl-hint">AI 정리 결과 그대로</span></label>
-                <textarea id="pasteTa" class="field-ta" placeholder="매장명: 하나로마트 청담점
+매장명: 하나로마트 청담점
 일자: 2026.05.19
 총액: 27,020원
 
@@ -2720,31 +2774,17 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 
 테라 4.6%(캔) 453ml*8 | 2 | 12,720 | 25,440
 ..."></textarea>
+                <div class="addx-pasted"><span class="addx-ok" aria-hidden="true">✓</span><span class="addx-pasted-txt" id="addxPastedTxt">붙여넣은 내용으로 채웠어요</span><button type="button" class="detail-header-btn addx-raw-btn" id="addxRawBtn">원문</button></div>
               </div>
-
-              <div class="field-g">
-                <label class="field-lbl">영수증 사진 <span class="field-lbl-hint">선택, 카메라 또는 갤러리</span></label>
-                <input id="photoInp" type="file" accept="image/*" style="display:none;"/>
-                <div class="photo-zone" id="photoZone">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                  <div class="photo-zone-text">사진 추가</div>
-                  <div class="photo-zone-hint">탭하여 카메라 또는 갤러리 열기</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- ② 미리보기 (가운데, 전체 폭) -->
-            <div class="input-row preview">
-              <div class="field-g" style="margin-bottom:0;">
-                <label class="field-lbl">미리보기 <span class="field-lbl-hint">직접 수정 가능 · 금액은 자동 계산</span></label>
-                <div id="previewArea">
+              <div class="input-row preview">
+                <div class="field-g" style="margin-bottom:0;">
+                  <div id="previewArea">
                   <div class="empty-state" style="padding:32px 16px;background:var(--fill2);border-radius:var(--rm);border:1px dashed var(--sep2);">
                     텍스트를 붙여넣으면 자동으로 파싱되어 표시됩니다.<br/><span style="font-size:11px;">붙여넣기 후 미리보기에서 직접 수정 가능해요.</span>
                   </div>
                 </div>
+                </div>
               </div>
-            </div>
-
             </div><!-- /gptModeArea -->
             <div id="directModeArea" style="display:none;">
               <div class="direct-grid">
@@ -2771,20 +2811,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                 </div>
               </div>
             </div><!-- /directModeArea -->
-            <!-- ③ 옵션 — v3.80 compact: '항상 펼쳐놓기' → '필요할 때 선택'. 함께한 사람(선택된 사람만 chip, 분담 interaction은
-                 Receipt Detail과 같은 _makeSplitUI) → 결제자 1 row → 추가 정보(결제수단·카테고리·메모·태그, 접힘).
-                 id는 전부 기존 그대로(participantsInp/payerInp는 picker가 값을 채우는 저장 경로 input으로 유지). -->
-            <div class="input-row options qc-opts">
-              <!-- v3.82 — 참석자·분담 + 결제자 select + 한턱 = Receipt Detail과 같은 공통 블록(_peopleBlockHtml('add'), init에서 주입).
-                   participantsInp/payerInp는 저장 경로 input으로 유지(picker·칩이 값을 채움). -->
-              <div class="field-g qc-sec" style="grid-column:1/-1;">
-                <div id="addPeopleMount"></div>
-                <div hidden><input id="participantsInp" type="text" tabindex="-1" aria-hidden="true"/><input id="payerInp" type="text" tabindex="-1" aria-hidden="true"/></div>
-              </div>
-              <div class="qc-more" id="qcMore" style="grid-column:1/-1;">
-                <button type="button" class="qc-row qc-box-row qc-more-row" id="qcMoreRow" aria-expanded="false" aria-controls="qcMoreBody"><span class="qc-lbl">추가 정보</span><span class="qc-val" id="qcMoreSum"></span><span class="qc-go" aria-hidden="true">›</span></button>
-                <div class="qc-more-body" id="qcMoreBody">
-                  <div class="field-g qc-kv">
+            <div class="addx-info">
+              <div class="addx-info-copy">
+                <div class="addx-sec-lbl">정보</div>
+                <div class="addx-grid2">
+                  <div class="field-g addx-kv">
                     <label class="field-lbl">결제수단</label>
                     <select id="payMethod" class="field-sel">
                       <option value="card">카드</option>
@@ -2793,7 +2824,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                       <option value="other">기타</option>
                     </select>
                   </div>
-                  <div class="field-g category-field qc-kv">
+                  <div class="field-g category-field addx-kv">
                     <label class="field-lbl">카테고리 <span class="field-lbl-hint" id="catAutoHint">자동 분류돼요</span></label>
                     <input id="catInp" type="hidden" value=""/>
                     <button class="cat-picker-trigger" id="catPickerBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="catPickerPopover">
@@ -2803,7 +2834,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                     </button>
                     <div class="cat-picker-popover" id="catPickerPopover" role="listbox" aria-label="카테고리 선택" hidden></div>
                   </div>
-                  <!-- 경조사 컨텍스트 필드 -->
+                </div>
+                <!-- 경조사 컨텍스트 필드 -->
                   <div id="gyeongjoFields" style="grid-column:1/-1;display:none;">
                     <div class="gyeongjo-box">
                       <div class="field-g">
@@ -2825,17 +2857,35 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                       </div>
                     </div>
                   </div>
-                  <div class="field-g" style="grid-column:1/-1;">
-                    <label class="field-lbl">메모 <span class="field-lbl-hint">선택</span></label>
-                    <textarea id="noteInp" class="field-ta" style="min-height:80px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="기억할 내용이 있다면..."></textarea>
-                  </div>
-                  <div class="field-g" style="grid-column:1/-1;">
-                    <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
-                    <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
-                  </div>
+                <div class="field-g qc-sec addx-kv addx-people">
+                  <div id="addPeopleMount"></div>
+                <div hidden><input id="participantsInp" type="text" tabindex="-1" aria-hidden="true"/><input id="payerInp" type="text" tabindex="-1" aria-hidden="true"/></div>
+              
                 </div>
               </div>
+              <div class="field-g addx-info-photo">
+                <label class="field-lbl">영수증 사진 <span class="field-lbl-hint">선택</span></label>
+                <input id="photoInp" type="file" accept="image/*" style="display:none;"/>
+                <div class="photo-zone" id="photoZone">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  <div class="photo-zone-text">사진 추가</div>
+                  <div class="photo-zone-hint">탭하여 카메라 또는 갤러리 열기</div>
+                </div>
+              
+              </div>
             </div>
+            <div class="addx-memo">
+              <div class="field-g">
+                <label class="field-lbl">메모 <span class="field-lbl-hint">선택</span></label>
+                <textarea id="noteInp" class="field-ta" style="min-height:80px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="기억할 내용이 있다면..."></textarea>
+              </div>
+              <div class="field-g">
+                <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
+                <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
+              </div>
+            </div>
+            <!-- v3.80 '추가 정보' 접힘 줄은 없앴다(항목이 위에 바로 보임). JS 호환용 빈 요소만 남김. -->
+            <div class="qc-more" id="qcMore" hidden><button type="button" id="qcMoreRow" hidden></button><span id="qcMoreSum" hidden></span><div id="qcMoreBody" hidden></div></div>
           </div>
         </div>
         <!-- ④ 저장/초기화 — .main-body 밖(.view의 직접 자식).
@@ -3630,6 +3680,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.94 — 추가 화면을 영수증 상세와 같은 배치로: 붙여넣기 줄(붙여넣으면 한 줄 요약+원문) → 영수증 확인 카드 → '정보' 상자(결제수단·카테고리·참석자·결제자 | 사진) → 메모·태그, 데스크탑 저장은 헤더 [초기화][저장]. id·파싱·저장 로직 불변.
 // v3.93 — 헤더 규칙화: 좌측·오른쪽 헤더를 <style> 끝 Header Contract 한 곳에서(눈썹·버전·제목 동일), 영수증 상세 ‹ 돌아가기 줄 높이·숨긴 버전 자리 유지, 헤더 버튼은 제목 줄 가운데.
 // v3.92 — 모든 탭 오른쪽 헤더 글자 통일: 선불권 공통 .main-eye, 통계 제목 줄 높이(기간 버튼), 사람 눈썹 'RECEIPT DB', 모바일 사람 상세 버전 숨김.
 // v3.91 — 선불권을 다른 레일과 같은 3단으로: 좌측 패널 선불권 모드(총 잔액·등록·검색·정렬·flat row) + 오른쪽 상세, 모바일 목록→상세. 계산·저장 불변.
@@ -4012,7 +4063,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.93';
+const APP_VERSION='v3.94';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6470,6 +6521,9 @@ let _catAutoFilled=false;  // 카테고리가 자동 채워진 상태인지
 
 function _setAddSaveState(disabled,message,{warn=false}={}){
   saveBtn.disabled=disabled;
+  // v3.94 — 데스크탑은 하단 저장 바 대신 헤더 [저장](상세와 같은 자리) + 안내는 헤더 부제에
+  const hs=document.getElementById('addHdrSave');if(hs)hs.disabled=disabled;
+  const sub=document.getElementById('inputModeSub');if(sub&&message&&!_isMobileLayout())sub.textContent=message; // 모바일은 하단 바 안내가 따로 있음
   if(!saveHint)return;
   saveHint.textContent=message||(disabled?'필수 입력을 채우면 저장할 수 있어요.':'저장할 준비가 됐어요.');
   saveHint.classList.toggle('ready',!disabled&&!warn);
@@ -6689,6 +6743,7 @@ function renderPreviewForm(){
     <div class="preview-alerts">${alertsHtml}</div>
   `;
   document.getElementById('gptModeArea')?.classList.add('qc-parsed');
+  { const pt=document.getElementById('addxPastedTxt'); if(pt)pt.innerHTML='붙여넣은 내용으로 채웠어요 · 품목 '+_qcItemsSummary(p); } // v3.94 — 접힌 붙여넣기 줄 요약
 
   bindPreviewFormEvents();
   const saveState=_saveMessageFromValidation(v2);
@@ -7485,6 +7540,11 @@ function _qcOpenPicker(mode,c){
   draw();
   if(payerMode)setTimeout(()=>{try{inp.focus();}catch(_){}},0);
 }
+// v3.94 — 헤더 [초기화][저장] = 기존 버튼 그대로 누름(저장 경로 하나). [원문] = 접힌 붙여넣기 칸 다시 보기.
+document.getElementById('addHdrClear')?.addEventListener('click',()=>document.getElementById('clearBtn').click());
+document.getElementById('addHdrSave')?.addEventListener('click',()=>{const b=document.getElementById('saveBtn');if(!b.disabled)b.click();});
+new MutationObserver(()=>{const hs=document.getElementById('addHdrSave');if(hs)hs.disabled=saveBtn.disabled;}).observe(saveBtn,{attributes:true,attributeFilter:['disabled']});
+document.getElementById('addxRawBtn')?.addEventListener('click',()=>{const g=document.getElementById('gptModeArea');const on=g.classList.toggle('addx-raw');document.getElementById('addxRawBtn').textContent=on?'접기':'원문';if(on)setTimeout(()=>pasteTa.focus(),0);});
 (function _initQuickConfirm(){
   const mr=document.getElementById('qcMoreRow'), more=document.getElementById('qcMore');
   mr?.addEventListener('click',()=>{_qcMoreOpen=!_qcMoreOpen;more.classList.toggle('open',_qcMoreOpen);mr.setAttribute('aria-expanded',String(_qcMoreOpen));});
@@ -7494,6 +7554,7 @@ function _qcOpenPicker(mode,c){
 
 function clearInputs(){
   pasteTa.value='';
+  document.getElementById('gptModeArea')?.classList.remove('addx-raw');{const rb=document.getElementById('addxRawBtn');if(rb)rb.textContent='원문';} // v3.94
   document.getElementById('payMethod').value='card';
   document.getElementById('payerInp').value=getMyName();
   _setCategoryValue('',{auto:false});
@@ -7583,7 +7644,8 @@ function _setInputMode(mode){
   document.getElementById('directModeArea').style.display=mode==='direct'?'':'none';
   const titleEl=document.getElementById('inputModeTitle');
   const subEl=document.getElementById('inputModeSub');
-  if(titleEl)titleEl.textContent=mode==='gpt'?'영수증 정리 결과 붙여넣기':'금액 직접 입력';
+  if(titleEl)titleEl.textContent=mode==='gpt'?'새 영수증':'새 영수증 · 직접 입력';
+  document.getElementById('addx')?.classList.toggle('addx-direct',mode==='direct'); // v3.94 — 직접 입력은 자체 사진칸 사용
   if(subEl)subEl.textContent=mode==='gpt'
     ?'AI가 정리한 결과를 그대로 붙여넣으세요.'
     :'상호명과 금액만 입력하면 저장됩니다. 부고장·청첩장 등 참고 이미지를 첨부할 수 있어요.';
