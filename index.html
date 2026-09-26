@@ -870,19 +870,25 @@ th.mtg-chk{background:var(--fill2);}
 .review-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;flex:0 0 auto;}
 .review-title{font-size:16px;font-weight:var(--fw-strong);color:var(--text-primary);letter-spacing:-.2px;}
 .review-sub{font-size:12px;color:var(--label3);margin-top:3px;line-height:1.45;}
+.review-sub b{color:var(--label);font-weight:700;font-variant-numeric:tabular-nums;}
 .review-sub-bd{color:var(--label2);}
 .review-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;flex:0 0 auto;}
 .review-chip{font:inherit;font-size:12px;font-weight:600;color:var(--label2);background:var(--fill);border:none;border-radius:8px;padding:5px 11px;cursor:pointer;font-variant-numeric:tabular-nums;transition:background .12s,color .12s;}
 .review-chip.on{background:var(--blue-bg);color:var(--blue-txt);}
 @media(hover:hover){.review-chip:not(.on):hover{color:var(--label);}}
 .review-list{flex:1;overflow-y:auto;min-height:0;margin:0 -22px;padding:0 22px 18px;}
-.review-row{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:3px 12px;width:100%;padding:11px 4px;border:none;border-bottom:1px solid var(--sep);background:none;border-radius:0;cursor:pointer;font-family:inherit;text-align:left;}
+/* v3.77 — row: [작은 유형 icon] 매장명 …… 금액 › / 날짜 / 문제 사유. 금액·chevron 우측 X축 통일, 문제는 neutral 텍스트+muted icon(§5·§6·§7). */
+.review-row{display:grid;grid-template-columns:auto 1fr auto auto;grid-template-areas:"ic store amt chev" "ic date date chev" "ic issue issue chev";column-gap:10px;row-gap:2px;align-items:center;width:100%;padding:12px 4px;border:none;border-bottom:1px solid var(--sep);background:none;border-radius:0;cursor:pointer;font-family:inherit;text-align:left;}
 .review-row:last-child{border-bottom:none;}
 @media(hover:hover){.review-row:hover{background:var(--fill);}}
-.review-row-store{grid-column:1;grid-row:1;font-size:13.5px;font-weight:600;color:var(--label);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.review-row-amt{grid-column:2;grid-row:1;justify-self:end;font-size:13.5px;font-weight:700;color:var(--label);white-space:nowrap;font-variant-numeric:tabular-nums;}
-.review-row-sub{grid-column:1;grid-row:2;font-size:11.5px;color:var(--label3);white-space:nowrap;}
-.review-row-issue{grid-column:2;grid-row:2;font-size:11px;font-weight:600;color:var(--amber);white-space:nowrap;justify-self:end;}
+.review-row-ic{grid-area:ic;align-self:center;width:18px;height:18px;display:flex;align-items:center;justify-content:center;color:var(--amber);}
+.review-row-ic svg{width:16px;height:16px;}
+.review-row-store{grid-area:store;font-size:14px;font-weight:600;color:var(--label);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.review-row-amt{grid-area:amt;justify-self:end;font-size:14px;font-weight:700;color:var(--label);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.review-row.no-amt .review-row-amt{color:var(--label3);font-weight:500;} /* §2 — 총액 없음/invalid는 강조하지 않음(가짜 0원 금지) */
+.review-row-date{grid-area:date;font-size:11.5px;color:var(--label3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.review-row-issue{grid-area:issue;font-size:12px;color:var(--label2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} /* §6 — 문제 설명은 neutral/secondary */
+.review-row-chev{grid-area:chev;align-self:center;color:var(--label3);font-size:16px;line-height:1;padding-left:2px;}
 .review-empty{padding:44px 8px;text-align:center;color:var(--label3);font-size:13px;}
 @media(max-width:780px){
   .review-backdrop{align-items:flex-end;padding:0;}
@@ -3120,6 +3126,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.77 — 데이터 정리함 UI/UX 폴리시(표시만). ⚠️ reviewIssues 판정/6조건/count·Receipt 계산·navigation·저장 전부 불변.
+//   ① 0원 정렬: row를 grid-area(icon|store|amt|chev)로 재구성, 금액·chevron 우측 X축 통일. ② §2 '0원' 의미: reviewIssues의 amount는 total이 null/''/undefined/NaN일 때만(0은 유한수라 미판정) → 화면 '0원'은 사실상 '총액 없음'(B). total 유한(0 포함)이면 실제 금액, 없음/invalid면 강조 안 하고 muted '—'(가짜 0원 금지)+아래 '총액 없음' 사유. ③ issue 문구 친화화(reviewIssues.short — 매장명 없음/날짜 없음/총액 없음/품목 합계 불일치/수량·단가 확인/사진 확인; 새 issue 없음). ④ 헤더 '확인 필요 + 전체 N건'(primary), 유형 count는 필터 chip(secondary)로 이관(장문 요약 제거). ⑤ Flat List + 작은 유형 icon(_reviewTypeIcon), 문제별 큰 Card 없음. ⑥ 색 절제: icon만 muted amber, 문제 설명 neutral(--label2), 금액·매장명 primary(Red/Orange 남발 제거). ⑦ 3줄 row(매장명·금액 / 날짜 / 문제 사유), 긴 매장명 ellipsis, 금액/chevron wrap 없음, row 클릭=기존 selectReceipt. 정렬은 최신순 유지(issue 2개+ 우선 노출은 제안만·미구현 §8). 저장 후 즉시 반영/count 감소/reload 0 불변(§9). Empty '확인할 영수증이 없습니다.'. 변경 파일 index.html.
 // v3.76 — '확인 필요 N건'을 '데이터 정리함(Data Review Inbox)'으로 발전. ⚠️ 새 검증 항목 없음 — 기존 _receiptCheckReasons 6조건 그대로(count 불변), 진실원 reviewIssues로 통일.
 //   reviewIssues(r): 타입별[{type,label}] 단일 진실원(하단 count·정리함 count·유형 count·row label 공유 §16). type=store/date/amount/photo. _receiptCheckReasons=reviewIssues().map(label)로 하위호환(라벨·dedup 동일 → count byte-identical §3·§38).
 //   '확인 필요' 칩 클릭 → _openReviewInbox: 유형 필터(전체 N·매장명·일자·금액·사진, count>0만) + unique receipt 목록(최신순 _sortForList) → row 클릭 → 기존 selectReceipt(Receipt Detail). 저장 후 하단/정리함 count 즉시 재평가(_updatePhotoFilterUi·reviewIssues runtime, reload 0).
@@ -3456,7 +3464,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.76';
+const APP_VERSION='v3.77';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5134,20 +5142,30 @@ const REVIEW_TYPES=[
   {key:'photo', short:'사진',  label:'사진 확인'},
 ];
 function reviewIssues(r){
+  // v3.77 — short: 사용자 친화 표현(표시용). ⚠️ label/판정 조건은 불변 → _receiptCheckReasons(=.label)로 count byte-identical.
   const out=[];
   const audit=getAmountAudit(r||{});
-  if(audit.rowMismatches.length)out.push({type:'amount',label:`수량×단가와 금액이 다른 품목 ${audit.rowMismatches.length}개`});
-  if(audit.hasItems&&audit.totalDiff!==0)out.push({type:'amount',label:`품목 합계와 총액이 ${_fmtN(Math.abs(audit.totalDiff))}원 다름`});
+  if(audit.rowMismatches.length)out.push({type:'amount',label:`수량×단가와 금액이 다른 품목 ${audit.rowMismatches.length}개`,short:'수량·단가 확인'});
+  if(audit.hasItems&&audit.totalDiff!==0)out.push({type:'amount',label:`품목 합계와 총액이 ${_fmtN(Math.abs(audit.totalDiff))}원 다름`,short:'품목 합계 불일치'});
   const photoReason=_photoErrorReason(r||{});
-  if(_photoErrorKind(r||{})==='problem'&&photoReason)out.push({type:'photo',label:photoReason});
-  if(!String(r&&r.store||'').trim())out.push({type:'store',label:'매장명이 입력되지 않음'});
-  if(!_validReceiptDate(r&&r.date))out.push({type:'date',label:'일자가 없거나 올바르지 않음'});
-  if(r&&((r.total===null)||(r.total===undefined)||(r.total==='')||!Number.isFinite(Number(r.total))))out.push({type:'amount',label:'총액이 입력되지 않음'});
+  if(_photoErrorKind(r||{})==='problem'&&photoReason)out.push({type:'photo',label:photoReason,short:'사진 확인'});
+  if(!String(r&&r.store||'').trim())out.push({type:'store',label:'매장명이 입력되지 않음',short:'매장명 없음'});
+  if(!_validReceiptDate(r&&r.date))out.push({type:'date',label:'일자가 없거나 올바르지 않음',short:'날짜 없음'});
+  if(r&&((r.total===null)||(r.total===undefined)||(r.total==='')||!Number.isFinite(Number(r.total))))out.push({type:'amount',label:'총액이 입력되지 않음',short:'총액 없음'});
   const seen=new Set();return out.filter(i=>seen.has(i.label)?false:(seen.add(i.label),true)); // 기존 [...new Set(reasons)]와 동일 dedup
 }
 function _receiptCheckReasons(r){return reviewIssues(r).map(i=>i.label);} // 하위호환(label 배열) — 기존 소비자 그대로, count 불변
 // 이 영수증이 가진 issue의 유형 집합(중복 제거, REVIEW_TYPES 순서 유지).
 function _receiptReviewTypes(r){const set=new Set(reviewIssues(r).map(i=>i.type));return REVIEW_TYPES.filter(t=>set.has(t.key)).map(t=>t.key);}
+// v3.77 — 문제 유형별 작은 아이콘(muted). 정리함 row 좌측에 표시(receipt의 첫 issue 유형).
+function _reviewTypeIcon(type){
+  const s='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+  if(type==='store') return s+'<path d="M4 9h16l-1.2-4.2A1 1 0 0 0 17.8 4H6.2a1 1 0 0 0-1 .8L4 9Z"/><path d="M5 9v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M9.5 19v-5h5v5"/></svg>';
+  if(type==='date')  return s+'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/></svg>';
+  if(type==='amount')return s+'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 9.5h7M8.5 12.5h7M12 9.5V16"/></svg>';
+  if(type==='photo') return s+'<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><circle cx="9" cy="11" r="1.8"/><path d="m5 18 5-4.5 3.5 3 3-2.5 2.5 2.5"/></svg>';
+  return s+'<path d="M10.3 3.6 2.4 17.4A2 2 0 0 0 4.1 20h15.8a2 2 0 0 0 1.7-2.6L13.7 3.6a2 2 0 0 0-3.4 0Z"/><path d="M12 8v5M12 17h.01"/></svg>';
+}
 
 function _receiptStatusIconHtml(r){
   const checkReasons=_receiptCheckReasons(r);
@@ -5254,15 +5272,22 @@ function _reviewRowsHtml(){
   let list=_reviewAllReceipts();
   if(type!=='all')list=list.filter(r=>_receiptReviewTypes(r).includes(type));
   list=_sortForList(list); // 기존 정렬(기본 최신순 §27)
-  if(!list.length)return `<div class="review-empty">${type==='all'?'모두 정리됐어요.':'이 유형은 모두 정리됐어요.'}</div>`;
+  if(!list.length)return `<div class="review-empty">${type==='all'?'확인할 영수증이 없습니다.':'이 유형은 모두 정리됐어요.'}</div>`;
   return list.map(r=>{
-    const types=_receiptReviewTypes(r);
-    const lbl=types.map(k=>(REVIEW_TYPES.find(t=>t.key===k)||{}).short).filter(Boolean).join(' · ')+' 확인';
-    return `<button type="button" class="review-row" data-review-open="${escapeHtml(r.id)}">`
+    const issues=reviewIssues(r);
+    const reasonTxt=issues.map(i=>i.short).filter(Boolean).join(' · '); // 친화 문구(§3)
+    const firstType=_receiptReviewTypes(r)[0]||'store';
+    // §2 — total이 유한수(0 포함)면 실제 금액, 없음/invalid면 강조하지 않고 muted '—'(가짜 0원 금지). 사유는 아래 issue 줄에 '총액 없음'.
+    //   ⚠️ Number(null)·Number('')는 0(finite)이라 reviewIssues의 '총액 없음' 판정과 동일 조건을 써야 함(null/''/undefined/NaN 제외).
+    const hasTotal=!((r.total===null)||(r.total===undefined)||(r.total==='')||!Number.isFinite(Number(r.total)));
+    const amtHtml=hasTotal?`${fmtMoney(r.total)}원`:'—';
+    return `<button type="button" class="review-row${hasTotal?'':' no-amt'}" data-review-open="${escapeHtml(r.id)}">`
+      +`<span class="review-row-ic">${_reviewTypeIcon(firstType)}</span>`
       +`<span class="review-row-store">${escapeHtml(r.store||'(매장명 없음)')}</span>`
-      +`<span class="review-row-amt">${fmtMoney(r.total||0)}원</span>`
-      +`<span class="review-row-sub">${escapeHtml(fmtDateKor(r.date)||'날짜 없음')}</span>`
-      +`<span class="review-row-issue">${escapeHtml(lbl)}</span>`
+      +`<span class="review-row-amt">${amtHtml}</span>`
+      +`<span class="review-row-date">${escapeHtml(fmtDateKor(r.date)||'날짜 없음')}</span>`
+      +`<span class="review-row-issue">${escapeHtml(reasonTxt)}</span>`
+      +`<span class="review-row-chev" aria-hidden="true">›</span>`
     +`</button>`;
   }).join('');
 }
@@ -5274,11 +5299,11 @@ function _renderReviewInbox(){
     ...REVIEW_TYPES.map(t=>({key:t.key,short:t.short,n:_reviewTypeCount(t.key)}))]
     .filter(c=>c.key==='all'||c.n>0)
     .map(c=>`<button type="button" class="review-chip${c.key===type?' on':''}" data-review-type="${c.key}">${c.short} ${c.n}</button>`).join('');
-  const summary=REVIEW_TYPES.map(t=>{const n=_reviewTypeCount(t.key);return n?`${t.short} ${n}`:null;}).filter(Boolean).join(' · ');
   const bd=document.createElement('div');
   bd.className='review-backdrop';
+  // §4 — 헤더는 확인 필요 + 전체 건수(primary). 유형별 count는 아래 필터 chip(secondary)이 담당(장문 요약 제거).
   bd.innerHTML=`<div class="review-sheet mtg-sheet" role="dialog" aria-modal="true" aria-label="데이터 정리함">
-    <div class="review-hd"><div class="review-hd-l"><div class="review-title">확인 필요</div><div class="review-sub">${total}건 · 확인이 필요한 영수증을 정리해 주세요${summary?` <span class="review-sub-bd">${escapeHtml(summary)}</span>`:''}</div></div><button class="mtg-sheet-x" id="reviewX" type="button" aria-label="닫기">×</button></div>
+    <div class="review-hd"><div class="review-hd-l"><div class="review-title">확인 필요</div><div class="review-sub">확인이 필요한 영수증 <b>${total}건</b></div></div><button class="mtg-sheet-x" id="reviewX" type="button" aria-label="닫기">×</button></div>
     <div class="review-filter">${chips}</div>
     <div class="mtg-sheet-divider"></div>
     <div class="review-list">${_reviewRowsHtml()}</div>
