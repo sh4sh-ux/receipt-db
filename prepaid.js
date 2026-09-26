@@ -172,14 +172,14 @@ function renderPrepaidSide(){
   }
   listEl.innerHTML='<div class="list-group">'+view.map(x=>{
     const sel=x.w.id===prepaidSelectedId;
-    const meta=[getCategoryLabel(x.w.category),x.expired?'유효기간 지남':x.last?'최근 '+(typeof _psnMD==='function'?_psnMD(x.last):x.last):'사용 기록 없음'].filter(Boolean).join(' · ');
-    return `<div class="r-card pp-row${sel?' sel':''}" data-wallet="${esc(x.w.id)}" role="button" tabindex="0"${sel?' aria-current="true"':''}>`
+    // v3.91 — 내역 목록(.r-card)과 같은 형태: 매장명 / 메타(카테고리 · 최근 사용일 YYYY.MM.DD) … 금액. 막대 없음(행 높이 동일).
+    const meta=[getCategoryLabel(x.w.category),x.expired?'유효기간 지남':x.last?'최근 '+x.last.replace(/-/g,'.'):'사용 기록 없음'].filter(Boolean).join(' · ');
+    return `<div class="r-card ppw-row${sel?' sel':''}" data-wallet="${esc(x.w.id)}" role="button" tabindex="0"${sel?' aria-current="true"':''}>`
       +`<div class="r-card-info"><div class="r-card-store-row"><span class="r-card-store">${esc(x.w.name)}</span></div>`
-      +`<div class="pl-meta${x.expired?' danger':''}">${esc(meta)}</div>`
-      +(x.pct!==null?`<div class="pp-row-bar" aria-hidden="true"><span style="width:${Math.max(0,Math.min(100,x.pct))}%"></span></div>`:'')
-      +`</div><div class="r-card-amt">${money(x.t.balance)}</div></div>`;
+      +`<div class="r-card-meta${x.expired?' danger':''}">${esc(meta)}</div></div>`
+      +`<div class="r-card-amt">${money(x.t.balance)}</div></div>`;
   }).join('')+'</div>';
-  listEl.querySelectorAll('.pp-row').forEach(el=>{
+  listEl.querySelectorAll('.ppw-row').forEach(el=>{
     const go=()=>ppOpen(el.dataset.wallet);
     el.addEventListener('click',go);
     el.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;e.preventDefault();go();});

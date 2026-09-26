@@ -2004,10 +2004,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .pp-scope-total span{font-size:12px;color:var(--label3);white-space:nowrap;}
 .pp-scope-total b{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pp-scope-new{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;}
-.pp-row{align-items:center;}
-.pp-row-bar{height:4px;border-radius:3px;background:var(--fill2);overflow:hidden;margin-top:7px;max-width:180px;}
-.pp-row-bar>span{display:block;height:100%;border-radius:3px;background:var(--blue);}
-.pp-row .pl-meta.danger{color:var(--red);}
+.ppw-row{align-items:center;} /* ⚠️ .pp-row는 사람별 분담 행(radius 있음)이 이미 쓰는 이름 — 겹치면 선택 행이 둥글어진다 */
+.ppw-row .r-card-meta.danger{color:var(--red);}
 .side.person-mode .lt-sort-person{display:inline-flex;}
 .side.person-mode .lt-sort:not(.lt-sort-person){display:none;}
 .ps-chip{height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--sep);background:transparent;color:var(--label2);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .12s,color .12s,border-color .12s;}
