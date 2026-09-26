@@ -2009,7 +2009,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 
 /* ── Person Detail ── */
 .psn{container:psn/inline-size;
-  --psn-t:var(--green);--psn-t-ink:color-mix(in srgb,var(--green) 72%,var(--label));--psn-t-soft:color-mix(in srgb,var(--green) 14%,transparent);
+  /* v3.82 — 관계 분석의 상대 = Dutch Pay Orange(--amber: 라이트 #FF9500 · 다크 #FF9F0A, dutch-pay --txn-amber와 동일), 나 = Blue */
+  --psn-t:var(--amber);--psn-t-ink:color-mix(in srgb,var(--amber) 70%,var(--label));--psn-t-soft:color-mix(in srgb,var(--amber) 14%,transparent);
   --psn-m:var(--blue);--psn-m-ink:var(--blue-txt);--psn-m-soft:var(--blue-bg);}
 .psn-tabs{display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--sep);margin:-6px 0 20px;}
 .psn-tab{position:relative;height:38px;padding:0 12px;border:0;background:none;color:var(--label3);font:inherit;font-size:14px;font-weight:600;cursor:pointer;}
@@ -2082,7 +2083,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .psn-v-who{display:flex;align-items:center;gap:7px;min-width:0;font-size:13px;color:var(--label2);}
 .psn-v-who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .psn-v-who i{width:8px;height:8px;border-radius:999px;flex:0 0 8px;}
-.psn-v.t .psn-v-who i{background:var(--psn-t);}.psn-v.m .psn-v-who i{background:var(--psn-m);}
+.psn-v.t .psn-v-who{color:var(--psn-t-ink);}.psn-v.m .psn-v-who{color:var(--psn-m-ink);}
 .psn-v-amt{font-size:14.5px;font-weight:650;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;}
 .psn-v.t .psn-v-amt{color:var(--psn-t-ink);}.psn-v.m .psn-v-amt{color:var(--psn-m-ink);}
 .psn-v .psn-v-amt.zero{color:var(--label3);font-weight:500;} /* 0원은 색 identity보다 약하게(초록/파랑으로 강조하지 않음) */
@@ -2249,21 +2250,6 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .qc-opts>.field-g{margin-bottom:0;}
 .qc-more-body>#gyeongjoFields{margin-bottom:14px;}
 /* 사람/결제자 picker(시트) */
-.qc-pk .qc-pk-q{font-size:16px;margin:2px 0 10px;}
-.qc-pk-list{display:flex;flex-direction:column;max-height:46vh;overflow-y:auto;border-top:1px solid var(--divider);}
-.qc-pk-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;padding:0 4px;border:none;border-bottom:1px solid var(--divider);background:transparent;font:inherit;font-size:15px;font-weight:600;color:var(--text-primary);text-align:left;cursor:pointer;}
-@media(hover:hover){.qc-pk-row:hover{background:var(--fill2);}}
-.qc-pk-nm{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.qc-pk-ck{flex:none;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);}
-.qc-pk-row.on .qc-pk-ck{border-color:var(--green);background:var(--green) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'><polyline points='20 6 9 17 4 12'/></svg>") center/12px no-repeat;}
-.qc-pk-row.me.on .qc-pk-ck{border-color:var(--blue);background-color:var(--blue);}
-.qc-pk-row.on{color:var(--green-txt);}
-.qc-pk-row.me.on{color:var(--blue-txt);}
-.qc-pk-new{color:var(--blue-txt);}
-.qc-pk-plus{flex:none;font-size:18px;}
-.qc-pk-empty{padding:16px 4px;font-size:13px;color:var(--text-tertiary);}
-.qc-pk-foot{display:flex;justify-content:flex-end;}
-.qc-pk-foot .primary-btn{min-width:96px;}
 .qc-parsed .input-row.preview>.field-g>.field-lbl{display:none;}
 /* 붙여넣기 후 원문·사진 영역을 낮춰 확인 영역을 위로(데스크탑) — 원문 편집·사진 추가는 그대로 */
 @media(min-width:781px){#gptModeArea.qc-parsed .input-row.top .field-ta,#gptModeArea.qc-parsed .input-row.top .photo-zone{height:148px;min-height:148px;}}
@@ -2277,36 +2263,84 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   #gptModeArea.qc-parsed .input-row.top .field-ta{font-size:12px;}
 }
 .mobile-save-bar.off-tab{display:none!important;}
-/* v3.81 참석자 칩(Add·Detail 공통) — 한 줄: 이름(표시만, 나=Blue·상대=Green identity) · 분담 badge(탭=분담↔깍두기) · ×(빼기).
-   hit area 분리: badge 30px·× 34px(겹침 없음). 결제자는 칩이 아니라 아래 결제자 row에서만 바꾼다. */
-.ppc{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:0 0 0 12px;border:1px solid color-mix(in srgb,var(--green) 34%,var(--border));border-radius:20px;background:var(--card);max-width:100%;min-width:0;}
-.ppc.me{border-color:color-mix(in srgb,var(--blue) 38%,var(--border));}
-.ppc-nm{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:650;color:var(--green-txt);}
+/* v3.82 참석자·분담 compact(Add·Detail 공통) — 헤더 [참석자 · 분담 · N명 · + 추가] + 행 [이름 · 분담 badge · ×].
+   큰 pill/card·avatar·'(나)' 없음. 이름 색: 나=Blue, 그 외=neutral. 행은 flat(구분선 직선·radius 없음), 폭이 되면 2~4열. */
+.qc-people{gap:6px;}
+.ppl-hd{display:flex;align-items:center;gap:8px;min-height:32px;}
+.ppl-hd .qc-sec-lbl{margin:0;}
+.ppl-cnt{font-size:12.5px;font-weight:600;color:var(--text-tertiary);}
+.ppl-add{margin-left:auto;height:32px;padding:0 10px;border:none;border-radius:var(--rs);background:transparent;font:inherit;font-size:13.5px;font-weight:650;color:var(--blue-txt);cursor:pointer;}
+.ppl-add[hidden]{display:none;}
+@media(hover:hover){.ppl-add:hover{background:var(--fill2);}}
+.ppl-empty{display:flex;gap:8px;flex-wrap:wrap;}
+.ppl-empty[hidden]{display:none;}
+.ppl-empty .qc-chip{height:34px;}
+.ppl-list{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));column-gap:18px;row-gap:0;}
+.ppl-list:empty{display:none!important;}
+.ppl-list .pp-chips-empty{display:none;}
+.ppc{display:flex;align-items:center;gap:4px;min-height:36px;min-width:0;border-bottom:1px solid var(--divider);}
+.ppc-nm{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14.5px;font-weight:600;color:var(--text-primary);}
 .ppc.me .ppc-nm{color:var(--blue-txt);}
-.ppc-nm .pp-me{color:inherit;}
-.ppc-state{flex:none;min-height:30px;margin-left:4px;padding:0 10px;border:1px solid var(--divider);border-radius:15px;background:var(--fill2);font:inherit;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;white-space:nowrap;}
-.ppc-state.excl{background:transparent;border-style:dashed;border-color:var(--border);color:var(--text-tertiary);font-weight:500;}
+.ppc.excl .ppc-nm{color:var(--text-secondary);}
+.ppc-state{flex:none;display:flex;align-items:center;height:32px;padding:0 2px;border:none;background:transparent;font:inherit;cursor:pointer;}
+.ppc-state>span{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:11px;background:var(--fill2);border:1px solid var(--divider);font-size:11.5px;font-weight:600;color:var(--text-secondary);white-space:nowrap;}
+.ppc-state.excl>span{background:transparent;border-style:dashed;border-color:var(--border);color:var(--text-tertiary);font-weight:500;}
 .ppc-state[disabled]{cursor:default;}
-.ppc.excl .ppc-nm{opacity:.62;}
-.ppc-x{flex:none;width:34px;min-height:38px;margin-left:-2px;border:none;border-radius:0 19px 19px 0;background:transparent;color:var(--text-tertiary);font:inherit;font-size:17px;line-height:1;cursor:pointer;}
-@media(hover:hover){.ppc-x:hover{background:var(--fill2);color:var(--text-primary);}.ppc-state:not([disabled]):hover{border-color:var(--text-tertiary);}}
-.ppc-state:focus-visible,.ppc-x:focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
-/* 결제자 row(Add·Detail 공통) — 💳 + 이름(나=Blue·상대=Green) › · 누르면 결제자 picker */
-.qc-payer-row{grid-template-columns:52px minmax(0,1fr) 12px;min-height:48px;}
-.qc-payer-row .qc-val{display:flex;align-items:center;gap:6px;min-width:0;}
-.qc-payer-row .qc-val b{font-weight:650;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.qc-payer-card{flex:none;font-size:14px;line-height:1;}
-.qc-payer-sub{flex:none;font-size:12px;font-weight:500;color:var(--text-tertiary);}
-.detail-people .qc-people{gap:8px;}
-.detail-people .qc-sec-lbl{margin-bottom:0;}
-.qc-pk-row.radio.on .qc-pk-ck{border-color:var(--green);background:var(--card);box-shadow:inset 0 0 0 4px var(--card),inset 0 0 0 10px var(--green);}
-.qc-pk-row.radio.me.on .qc-pk-ck{border-color:var(--blue);box-shadow:inset 0 0 0 4px var(--card),inset 0 0 0 10px var(--blue);}
-.qc-pk-card{margin-right:5px;}
-.qc-pk-sub{margin-left:6px;font-size:12px;font-weight:500;color:var(--text-tertiary);}
-.qc-pk-hint{flex:none;font-size:12px;font-weight:500;color:var(--text-tertiary);}
-.qc-pk-q[hidden]{display:none;}
-.qc-people-row{align-items:center;}
-.qc-people-row>.qc-chip{align-self:center;}
+.ppc-x{flex:none;width:28px;height:32px;margin-right:-6px;border:none;background:transparent;color:var(--text-tertiary);font:inherit;font-size:16px;line-height:1;cursor:pointer;}
+@media(hover:hover){.ppc-x:hover{color:var(--text-primary);}.ppc-state:not([disabled]):hover>span{border-color:var(--text-tertiary);}}
+.ppc-state:focus-visible,.ppc-x:focus-visible,.ppl-add:focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
+/* 한턱 = 한 줄 compact(참석자 2명↑일 때만 — qc-solo) */
+.qc-people .pp-treatbar{padding:6px 10px 6px 12px;min-height:40px;}
+.qc-people .pp-treat-t{font-size:13.5px;font-weight:650;}
+/* 결제자 select — 일반 select field와 같은 높이(텍스트 + chevron). 나=Blue */
+.ppl-payer{margin:4px 0 0;}
+.ppl-payer-sel.me{color:var(--blue-txt);font-weight:600;}
+.ppl-payer-sel.empty{color:var(--blue-txt);}
+.detail-people .qc-people{gap:6px;}
+/* 사람 추가 picker — keyboard-safe(backdrop 높이 = visualViewport, 목록만 스크롤) */
+.qc-pk{display:flex;flex-direction:column;overflow:hidden;}
+.qc-pk-bd .qc-pk{max-height:min(82vh,calc(100% - 16px));}
+.qc-pk-hd{flex:none;}
+.qc-pk-cnt{font-size:13px;font-weight:600;color:var(--text-tertiary);margin-left:4px;}
+.qc-pk-done{height:34px;padding:0 14px;border:none;border-radius:var(--rs);background:var(--blue);color:#fff;font:inherit;font-size:13.5px;font-weight:650;cursor:pointer;}
+.qc-pk .qc-pk-q{flex:none;font-size:16px;margin:2px 0 8px;}
+.qc-pk-sel{flex:none;display:flex;flex-wrap:wrap;gap:6px;max-height:68px;overflow-y:auto;margin:0 0 8px;}
+.qc-pk-sel[hidden]{display:none;}
+.qc-pk-selc{display:inline-flex;align-items:center;height:28px;padding:0 2px 0 10px;border:1px solid var(--border);border-radius:14px;font-size:13px;font-weight:600;color:var(--text-primary);}
+.qc-pk-selc.me{color:var(--blue-txt);}
+.qc-pk-selc button{width:26px;height:26px;border:none;background:transparent;color:var(--text-tertiary);font:inherit;font-size:15px;cursor:pointer;}
+.qc-pk-list{flex:1 1 auto;min-height:0;max-height:none;display:flex;flex-direction:column;overflow-y:auto;border-top:1px solid var(--divider);-webkit-overflow-scrolling:touch;}
+.qc-pk-row{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:46px;padding:0 4px;border:none;border-bottom:1px solid var(--divider);background:transparent;font:inherit;font-size:15px;font-weight:500;color:var(--text-primary);text-align:left;cursor:pointer;}
+@media(hover:hover){.qc-pk-row:hover{background:var(--fill2);}}
+.qc-pk-nm{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qc-pk-row.me .qc-pk-nm{color:var(--blue-txt);}
+.qc-pk-row.on{background:color-mix(in srgb,var(--blue) 6%,transparent);font-weight:650;}
+.qc-pk-ck{flex:none;width:18px;height:18px;}
+.qc-pk-row.on .qc-pk-ck{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234355E8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") center/16px no-repeat;}
+.qc-pk-new{color:var(--blue-txt);font-weight:600;}
+.qc-pk-new .qc-pk-nm{white-space:normal;}
+.qc-pk-plus{flex:none;font-size:18px;}
+.qc-pk-empty{padding:16px 4px;font-size:13px;color:var(--text-tertiary);}
+@media(max-width:780px){
+  .qc-pk-bd .qc-pk{max-height:min(88vh,calc(100% - 8px));}
+}
+/* v3.83 만남 차수 — 상세(보기)·편집(≡ drag). Flat List grammar 그대로, 차수 = 작은 secondary text */
+.mm-ord{flex:none;min-width:30px;font-size:12px;font-weight:650;color:var(--text-tertiary);font-variant-numeric:tabular-nums;}
+.mm-orow{padding-left:10px;}
+.mtg-drow.ord{grid-template-columns:32px minmax(0,1fr) auto;}
+.mtg-drow-ord{grid-column:1;grid-row:1;align-self:center;font-size:12px;font-weight:650;color:var(--label3);}
+.mtg-drow.ord .mtg-drow-store{grid-column:2;}
+.mtg-drow.ord .mtg-drow-amt{grid-column:3;}
+.mtg-drow.ord .mtg-drow-date{grid-column:2;}
+.mm-erow{display:flex;align-items:stretch;border-bottom:1px solid var(--divider);background:var(--card);position:relative;}
+.mm-elist.reordering .mm-erow:not(.dragging){transition:transform .12s ease;}
+.mm-erow>.org-row{flex:1 1 auto;min-width:0;border-bottom:none;}
+.mm-erow.sel{background:var(--blue-bg);}
+.mm-handle{flex:none;display:flex;align-items:center;justify-content:center;width:44px;color:var(--text-tertiary);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;}
+.mm-handle:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
+.mm-erow.dragging{background:var(--fill2);box-shadow:0 4px 14px rgba(0,0,0,.12);position:relative;z-index:2;}
+.mm-erow.dragging .mm-handle{cursor:grabbing;color:var(--text-primary);}
+.mm-elist.reordering{user-select:none;-webkit-user-select:none;}
 </style>
 <link rel="stylesheet" href="prepaid.css">
 </head>
@@ -2611,7 +2645,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                  Receipt Detail과 같은 _makeSplitUI) → 결제자 1 row → 추가 정보(결제수단·카테고리·메모·태그, 접힘).
                  id는 전부 기존 그대로(participantsInp/payerInp는 picker가 값을 채우는 저장 경로 input으로 유지). -->
             <div class="input-row options qc-opts">
-              <!-- v3.81 — 참석자·분담 + 결제자 row + 한턱 = Receipt Detail과 같은 공통 블록(_peopleBlockHtml('add'), init에서 주입).
+              <!-- v3.82 — 참석자·분담 + 결제자 select + 한턱 = Receipt Detail과 같은 공통 블록(_peopleBlockHtml('add'), init에서 주입).
                    participantsInp/payerInp는 저장 경로 input으로 유지(picker·칩이 값을 채움). -->
               <div class="field-g qc-sec" style="grid-column:1/-1;">
                 <div id="addPeopleMount"></div>
@@ -3466,6 +3500,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.83 — 만남 차수(meetingOrder, optional 정수): 만남 상세에서 1차·2차… 표시(보기 전용), 만남 편집에서만 ≡ drag(키보드 ↑↓)로 변경.
+//   추가·이동=마지막 차수, 분리·이동 원래 만남=재번호, 전체 풀기·분리=차수 제거. 계산·Dutch Pay payload에 쓰지 않음, migration 없음.
+// v3.82 — 사람 UI 최종 정리: 결제자 = select field(참석자 후보 + 다른 사람…) · 참석자 = compact row(이름 · 분담 badge · ×) ·
+//   '(나)'·이름 앞 avatar/icon 제거 · Add/Detail 나=Blue·그 외 neutral · 관계 분석 상대=Dutch Pay Orange(--amber) ·
+//   사람 추가 시트 keyboard-safe(visualViewport) + 쉼표 여러 명 직접 입력. ⚠️ schema·계산·저장 경로 불변.
 // v3.81 — Add·Receipt Detail 참석자·결제자·분담 UX 통일: A 참석자+분담(칩: 이름·분담 badge 탭=분담↔깍두기·×) / B 결제자(별도 row → picker,
 //   기본 후보=참석자 radio 💳 + '다른 사람', 참석자에 강제 추가 없음) / C 🎉 한턱(참석자 2명↑). 이름 탭=결제자 방식 폐기. 공통 _peopleBlockHtml·
 //   _bindPeopleUI·_qcOpenPicker(mode,c)를 두 화면이 같이 쓴다. ⚠️ schema·계산(_participantSplit/_receiptShare)·저장 경로·파서 불변.
@@ -3832,7 +3871,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.81';
+const APP_VERSION='v3.83';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5981,7 +6020,6 @@ function _renderPersonSide(){
   list.innerHTML='<div class="list-group">'+view.map(p=>{
     const sel=p.name===_personSel;
     return `<div class="r-card pl-row${sel?' sel':''}" data-person="${escapeHtml(p.name)}" role="button" tabindex="0"${sel?' aria-current="true"':''}>`
-      +`<span class="pl-av" aria-hidden="true">${escapeHtml(p.name.slice(0,1))}</span>`
       +`<div class="r-card-info"><div class="r-card-store-row"><span class="r-card-store">${escapeHtml(p.name)}</span>${p.grp?`<span class="pl-grp">${escapeHtml(p.grp)}</span>`:''}</div>`
       +`<div class="pl-meta">함께한 영수증 ${p.together}건 · 만남 ${p.meet}회</div></div></div>`;
   }).join('')+'</div>';
@@ -7011,8 +7049,8 @@ function _makeSplitUI(o){
       const st=treat?(isPayer?'전액':'0원'):(ex?'깍두기':'분담');
       const e=escapeHtml(n);
       return `<div class="ppc${isMe?' me':''}${ex?' excl':''}${treat?' treat':''}" data-n="${e}">`
-        +`<span class="ppc-nm">${e}${isMe?'<span class="pp-me">(나)</span>':''}</span>`
-        +`<button type="button" class="ppc-state${ex?' excl':''}" data-st="1"${treat?' disabled':''} aria-label="${e} ${st}${treat?'':' — 눌러서 '+(ex?'분담':'깍두기')+'으로'}">${st}</button>`
+        +`<span class="ppc-nm">${e}</span>`
+        +`<button type="button" class="ppc-state${ex?' excl':''}" data-st="1"${treat?' disabled':''} aria-label="${e} ${st}${treat?'':' — 눌러서 '+(ex?'분담':'깍두기')+'으로'}"><span>${st}</span></button>`
         +(o.onRemove?`<button type="button" class="ppc-x" data-rm="1" aria-label="${e} 빼기">×</button>`:'')
         +`</div>`;
     }).join('');
@@ -7046,9 +7084,8 @@ function _makeSplitUI(o){
       else if(excluded.has(n)){cls+=' excl';tag='<span class="pp-chip-tag excl">제외</span>';}
       else {cls+=' split';if(isPayer)cls+=' payer';tag='<span class="pp-chip-tag split">분담</span>';}
       // (v3.81부터 Add·Detail 모두 o.cards 칩을 쓴다 — 이 기본 칩 경로는 옵션 없이 호출하는 경우용으로 남김)
-      const isMe=o.meName&&normalizeName(o.meName())===normalizeName(n);
       const rm=o.onRemove?`<span class="pp-chip-x" data-rm="1" role="button" aria-label="${escapeHtml(n)} 빼기">×</span>`:'';
-      return `<button type="button" class="${cls}" data-n="${escapeHtml(n)}"${treat&&!o.onRemove?' disabled':''}><span class="pp-chip-nm">${escapeHtml(n)}${isMe?'<span class="pp-me">(나)</span>':''}</span>${tag}${rm}</button>`;
+      return `<button type="button" class="${cls}" data-n="${escapeHtml(n)}"${treat&&!o.onRemove?' disabled':''}><span class="pp-chip-nm">${escapeHtml(n)}</span>${tag}${rm}</button>`;
     }).join('');
     o.chips.querySelectorAll('[data-n]').forEach(c=>c.onclick=e=>{
       if(o.onRemove&&e&&e.target.closest('[data-rm]')){o.onRemove(c.dataset.n);return;}
@@ -7075,21 +7112,26 @@ function _makeSplitUI(o){
     reset(){treat=false;excluded.clear();treatBy=null;render();}
   };
 }
-// v3.81 — 참석자·분담 / 결제자 / 한턱 공통 블록(Add·Receipt Detail 동일 markup·동일 interaction).
-//   A 참석자+분담(사람 칩: 이름 · 분담 badge(탭=분담↔깍두기) · ×) · B 결제자(별도 row → 결제자 picker, 항상 1명) · C 🎉 한턱(참석자 2명↑).
-//   ⚠️ 새 저장 필드·새 계산 없음 — 칩/picker는 기존 참석자·결제자 input 값을 바꾸고 input 이벤트를 보낼 뿐(저장은 각 화면 기존 경로).
-function _peopleBlockHtml(p){
+// v3.82 — 참석자·분담 / 결제자 / 한턱 공통 블록(Add·Receipt Detail 동일 markup·동일 interaction).
+//   참석자 = compact row(이름 · 분담 badge(탭=분담↔깍두기) · ×). 결제자 = 일반 select field(참석자 후보 + '다른 사람…').
+//   이름 앞 avatar/icon·'(나)' 없음. 색: 나=Blue · 그 외=neutral. ⚠️ 새 저장 필드·새 계산 없음 — 기존 참석자·결제자 input 값만 바꾼다.
+function _payerFieldHtml(p,inKv){
+  return inKv
+    ?`<div class="kv ppl-payer-kv"><div class="kv-lbl">결제자</div><select id="${p}PayerSel" class="kv-inp ppl-payer-sel" aria-label="결제자"></select></div>`
+    :`<div class="field-g ppl-payer"><label class="field-lbl" for="${p}PayerSel">결제자</label><select id="${p}PayerSel" class="field-sel ppl-payer-sel"></select></div>`;
+}
+function _peopleBlockHtml(p,withPayer){
   return `<div class="pp-split-block qc-people" id="${p}SplitBlock">
-    <div class="field-lbl qc-sec-lbl">참석자 · 분담 <span class="field-lbl-hint">분담 표시를 누르면 깍두기로 전환</span></div>
-    <div class="qc-people-row">
-      <div class="pp-chips" id="${p}PpChips"></div>
-      <button type="button" class="qc-chip qc-chip-me-add" id="${p}MeAdd" hidden></button>
-      <button type="button" class="qc-chip qc-chip-add" id="${p}PeopleAdd">+ 사람</button>
+    <div class="ppl-hd"><span class="field-lbl qc-sec-lbl">참석자 · 분담</span><span class="ppl-cnt" id="${p}PplCnt"></span><button type="button" class="ppl-add" id="${p}PeopleAdd" aria-label="참석자 추가">+ 추가</button></div>
+    <div class="ppl-empty" id="${p}PplEmpty">
+      <button type="button" class="qc-chip qc-chip-add" id="${p}MeAdd">+ 나</button>
+      <button type="button" class="qc-chip qc-chip-add" id="${p}PeopleAdd0">+ 사람</button>
     </div>
+    <div class="pp-chips ppl-list" id="${p}PpChips"></div>
     <div class="pp-split-hint" id="${p}SplitHint"></div>
-    <button type="button" class="qc-row qc-box-row qc-payer-row" id="${p}PayerRow" aria-haspopup="dialog"><span class="qc-lbl">결제자</span><span class="qc-val" id="${p}PayerVal"></span><span class="qc-go" aria-hidden="true">›</span></button>
+    ${withPayer?_payerFieldHtml(p,false):''}
     <div class="pp-treatbar" id="${p}TreatBar">
-      <div class="pp-treat-txt"><span class="pp-treat-t">🎉 한턱</span><span class="pp-treat-d">결제자가 전액 부담 · 나머지 참석자는 0원</span></div>
+      <div class="pp-treat-txt"><span class="pp-treat-t">한턱</span></div>
       <button type="button" class="pp-switch" id="${p}TreatSw" role="switch" aria-checked="false" aria-label="한턱 켜기"></button>
     </div>
     <div class="pp-treatby" id="${p}TreatBy"></div>
@@ -7098,34 +7140,47 @@ function _peopleBlockHtml(p){
 // 공통 컨트롤러: c={p, partsId, payerId, split:()=>splitUI, emptyIsMe:bool(Add=저장 시 getMyName() 규칙), ctx:()=>사람 화면 context}
 function _bindPeopleUI(c){
   const $=s=>document.getElementById(c.p+s);
+  const sel=$('PayerSel');
   const refresh=()=>{
     const me=(getMyName()||'').trim();
-    const sel=_qcNames(c.partsId);const selN=new Set(sel.map(normalizeName));
-    const meBtn=$('MeAdd');
-    // 참석자 0명일 때만 [+ 나][+ 사람] — 자동 참석 없음. 1명 이상이면 [+ 사람]만(나도 picker에서 추가 가능)
-    if(meBtn){const show=!!me&&!sel.length;meBtn.hidden=!show;if(show){meBtn.textContent='나';meBtn.title=`${me}(나) 추가`;}}
-    const addBtn=$('PeopleAdd');if(addBtn){addBtn.textContent=sel.length?'+':'+ 사람';addBtn.setAttribute('aria-label','참석자 추가');}
-    const raw=(document.getElementById(c.payerId)?.value||'').trim();
-    const eff=raw||(c.emptyIsMe?me:'');
-    const pv=$('PayerVal');
-    if(pv){
-      if(!eff){pv.innerHTML='<span class="qc-cta">결제자 선택</span>';}
-      else{const isMe=!!me&&normalizeName(eff)===normalizeName(me);const out=sel.length>0&&!selN.has(normalizeName(eff));
-        pv.innerHTML=`<span class="qc-payer-card" aria-hidden="true">💳</span><b class="${isMe?'qc-who-me':'qc-who-other'}">${escapeHtml(eff)}${isMe?'<span class="qc-me">(나)</span>':''}</b>${out?'<span class="qc-payer-sub">참석자 아님</span>':''}`;}
+    const parts=_qcNames(c.partsId);
+    const n=parts.length;
+    const cnt=$('PplCnt');if(cnt)cnt.textContent=n?`${n}명`:'';
+    const add=$('PeopleAdd');if(add)add.hidden=!n;
+    const empty=$('PplEmpty');if(empty)empty.hidden=!!n;
+    const meBtn=$('MeAdd');if(meBtn)meBtn.hidden=!me;
+    // 결제자 select — 후보 = 현재 참석자 (+ 참석자 밖 현재 결제자) (+ 참석자가 없으면 나) + '다른 사람…'. 결제자는 항상 1명(paidBy 하나).
+    if(sel){
+      const raw=(document.getElementById(c.payerId)?.value||'').trim();
+      const eff=raw||(c.emptyIsMe?me:'');
+      const opts=[];const push=v=>{const t=(v||'').trim();if(t&&!opts.some(x=>normalizeName(x)===normalizeName(t)))opts.push(t);};
+      parts.forEach(push);if(!n&&me)push(me);if(eff)push(eff);
+      const isMe=v=>!!me&&normalizeName(v)===normalizeName(me);
+      sel.innerHTML=(eff?'':'<option value="" selected disabled>결제자 선택</option>')
+        +opts.map(v=>`<option value="${escapeHtml(v)}"${eff&&normalizeName(v)===normalizeName(eff)?' selected':''}>${escapeHtml(v)}</option>`).join('')
+        +'<option value="__other__">+ 다른 사람…</option>';
+      sel.classList.toggle('me',!!eff&&isMe(eff));
+      sel.classList.toggle('empty',!eff);
     }
     const st=c.split&&c.split()?c.split().getState():{treat:false};
-    $('SplitBlock')?.classList.toggle('qc-solo',sel.length<2&&!st.treat);
+    $('SplitBlock')?.classList.toggle('qc-solo',n<2&&!st.treat);
   };
-  $('PeopleAdd')?.addEventListener('click',()=>_qcOpenPicker('people',c));
-  $('PayerRow')?.addEventListener('click',()=>_qcOpenPicker('payer',c));
+  const openPeople=()=>_qcOpenPicker('people',c);
+  $('PeopleAdd')?.addEventListener('click',openPeople);
+  $('PeopleAdd0')?.addEventListener('click',openPeople);
   $('MeAdd')?.addEventListener('click',()=>{const me=(getMyName()||'').trim();if(!me)return;const cur=_qcNames(c.partsId);if(!cur.some(x=>normalizeName(x)===normalizeName(me)))cur.unshift(me);_qcSetField(c.partsId,cur.join(', '));});
+  sel?.addEventListener('change',()=>{
+    const v=sel.value;
+    if(v==='__other__'){refresh();_qcOpenPicker('payer',c);return;} // 표시를 현재 값으로 되돌리고 참석자 밖 결제자 picker
+    _qcSetField(c.payerId,v);
+  });
   [c.partsId,c.payerId].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>{c.split&&c.split()&&c.split().render();refresh();}));
   refresh();
   return {refresh};
 }
 let _addSplitUI=null, _dSplitUI=null, _addPeople=null;
 (function _initAddSplitUI(){
-  const mount=document.getElementById('addPeopleMount');if(mount)mount.outerHTML=_peopleBlockHtml('add'); // v3.81 공통 블록
+  const mount=document.getElementById('addPeopleMount');if(mount)mount.outerHTML=_peopleBlockHtml('add',true); // v3.82 공통 블록(결제자 select 포함)
   const chips=document.getElementById('addPpChips');
   if(!chips)return;
   _addSplitUI=_makeSplitUI({
@@ -7174,63 +7229,89 @@ function _qcRenderPeople(){
     const note=(document.getElementById('noteInp')?.value||'').trim();const tags=_qcNames('tagInp');
     sum.textContent=[_qcPayLabel[pm]||'',cat?getCategoryLabel(cat):'카테고리 없음',note?'메모':'',tags.length?`태그 ${tags.length}`:''].filter(Boolean).join(' · ');}
 }
-// 사람/결제자 picker — 기존 _mtgSheetOpen(데스크탑 중앙·모바일 하단 시트, overlay history 계약) 재사용. Add·Detail 공통(c=_bindPeopleUI 설정).
-//   people: 여러 명 토글 + 검색·초성·최근·'직접 추가'. payer: 기본 후보 = 현재 참석자(radio, 선택 💳) + '다른 사람'(참석자 밖 결제자 — 검색·최근·직접 추가).
-//   결제자를 참석자에 강제로 넣지 않는다. 결제자 선택은 분담 상태·한턱을 바꾸지 않는다(payer input 값만 변경).
+// 사람 추가 / 다른 결제자 picker — 기존 _mtgSheetOpen(데스크탑 중앙·모바일 하단 시트, overlay history 계약) 재사용. Add·Detail 공통.
+//   people: 검색(초성) · 선택된 사람 · 목록(탭=토글) · 직접 입력(목록에 없는 이름, 쉼표로 여러 명). payer: 참석자 밖 결제자 1명 선택 후 닫힘.
+//   v3.82 keyboard-safe: 모바일에서 backdrop을 visualViewport(키보드 위 보이는 영역)에 맞춰, 키보드가 열려도
+//   검색칸·선택된 사람·결과 일부가 보이고 결과 목록만 스크롤된다. 결제자를 참석자에 강제로 넣지 않는다.
+function _qcSplitNames(v){ // 쉼표 여러 명 — 참석자 input과 같은 규칙(split(',')·trim·빈값 제외) + 정규화 중복 제거
+  const out=[];String(v||'').split(',').map(x=>x.trim()).filter(Boolean).forEach(n=>{if(!out.some(o=>normalizeName(o)===normalizeName(n)))out.push(n);});
+  return out;
+}
 function _qcOpenPicker(mode,c){
-  const {card,close}=_mtgSheetOpen();
+  const {bd,card,close}=_mtgSheetOpen();
+  bd.classList.add('qc-pk-bd');
   card.classList.add('qc-pk');
   const me=(getMyName()||'').trim();
   const ctx=(c.ctx&&c.ctx())||null;
-  let q='', other=false;
-  const payerNow=()=>((document.getElementById(c.payerId)?.value||'').trim())||(c.emptyIsMe?me:'');
+  const payerMode=mode==='payer';
+  let q='';
   const draw=()=>{
     const sel=_qcNames(c.partsId);const selN=new Set(sel.map(normalizeName));
-    const payer=payerNow();
+    const payer=((document.getElementById(c.payerId)?.value||'').trim())||(c.emptyIsMe?me:'');
     const cands=[];const push=n=>{const t=(n||'').trim();if(t&&!cands.some(x=>normalizeName(x)===normalizeName(t)))cands.push(t);};
-    if(mode==='payer'){
-      sel.forEach(push);if(payer)push(payer);if(!sel.length&&me)push(me);
-      if(other){if(me)push(me);if(ctx)push(ctx);_qcRecentPeople(0).forEach(push);}
-    }else{if(me)push(me);if(ctx)push(ctx);sel.forEach(push);_qcRecentPeople(0).forEach(push);}
+    if(me)push(me);if(ctx)push(ctx);sel.forEach(push);_qcRecentPeople(0).forEach(push);
     const qq=q.trim();
+    const multi=_qcSplitNames(qq);
+    const term=multi.length>1?'':qq;
     let list=cands;
-    if(qq){if(_isChoQuery(qq)){const cq=_normChoQuery(qq);list=cands.filter(n=>_toCho(n).includes(cq));}else{const ql=qq.toLowerCase();list=cands.filter(n=>n.toLowerCase().includes(ql));}}
-    const exact=qq&&cands.some(n=>normalizeName(n)===normalizeName(qq));
-    const on=n=>mode==='payer'?(!!payer&&normalizeName(n)===normalizeName(payer)):selN.has(normalizeName(n));
-    const row=n=>{const isMe=me&&normalizeName(n)===normalizeName(me);const o=on(n);
-      const sub=mode==='payer'&&!selN.has(normalizeName(n))&&sel.length?'<span class="qc-pk-sub">참석자 아님</span>':'';
-      return `<button type="button" class="qc-pk-row${mode==='payer'?' radio':''}${o?' on':''}${isMe?' me':''}" data-pk="${escapeHtml(n)}" ${mode==='payer'?`role="radio" aria-checked="${o}"`:`aria-pressed="${o}"`}><span class="qc-pk-nm">${mode==='payer'&&o?'<span class="qc-pk-card" aria-hidden="true">💳</span>':''}${escapeHtml(n)}${isMe?'<span class="qc-me">(나)</span>':''}${sub}</span><span class="qc-pk-ck" aria-hidden="true"></span></button>`;};
-    card.querySelector('.qc-pk-q').hidden=mode==='payer'&&!other;
-    const listEl=card.querySelector('.qc-pk-list');
-    const showNew=qq&&!exact&&(mode!=='payer'||other);
-    listEl.innerHTML=(showNew?`<button type="button" class="qc-pk-row qc-pk-new" data-pknew="${escapeHtml(qq)}"><span class="qc-pk-nm">‘${escapeHtml(qq)}’ 직접 추가</span><span class="qc-pk-plus" aria-hidden="true">+</span></button>`:'')
-      +(list.length?list.map(row).join(''):(qq?'':(mode==='payer'?'':'<div class="qc-pk-empty">아직 함께한 사람이 없어요 · 이름을 입력해 추가하세요</div>')))
-      +(mode==='payer'&&!other?`<button type="button" class="qc-pk-row qc-pk-new qc-pk-other" data-pkother="1"><span class="qc-pk-nm">+ 다른 사람</span><span class="qc-pk-hint">참석자 밖 결제자(회사·가족 등)</span></button>`:'');
+    if(term){if(_isChoQuery(term)){const cq=_normChoQuery(term);list=cands.filter(n=>_toCho(n).includes(cq));}else{const ql=term.toLowerCase();list=cands.filter(n=>n.toLowerCase().includes(ql));}}
+    const on=n=>payerMode?(!!payer&&normalizeName(n)===normalizeName(payer)):selN.has(normalizeName(n));
+    const row=n=>{const isMe=!!me&&normalizeName(n)===normalizeName(me);const o=on(n);
+      return `<button type="button" class="qc-pk-row${o?' on':''}${isMe?' me':''}" data-pk="${escapeHtml(n)}" ${payerMode?`role="radio" aria-checked="${o}"`:`aria-pressed="${o}"`}><span class="qc-pk-nm">${escapeHtml(n)}</span><span class="qc-pk-ck" aria-hidden="true"></span></button>`;};
+    // 직접 입력: 목록에 없는 이름(여러 명이면 쉼표) — 결제자 모드는 한 명만
+    const fresh=(payerMode?(multi.length?[multi[0]]:[]):multi).filter(n=>!cands.some(x=>normalizeName(x)===normalizeName(n))||(!payerMode&&multi.length>1&&!selN.has(normalizeName(n))));
+    const newRow=fresh.length?`<button type="button" class="qc-pk-row qc-pk-new" data-pknew="1"><span class="qc-pk-nm">${fresh.length>1?`${fresh.map(escapeHtml).join(' · ')} — ${fresh.length}명 추가`:`‘${escapeHtml(fresh[0])}’ ${payerMode?'결제자로 지정':'추가'}`}</span><span class="qc-pk-plus" aria-hidden="true">+</span></button>`:'';
+    card.querySelector('.qc-pk-list').innerHTML=newRow
+      +(multi.length>1?'':(list.length?list.map(row).join(''):(qq?'':'<div class="qc-pk-empty">아직 함께한 사람이 없어요 · 이름을 입력해 추가하세요</div>')));
+    const selBox=card.querySelector('.qc-pk-sel');
+    if(selBox){selBox.hidden=!sel.length;
+      selBox.innerHTML=sel.map(n=>{const isMe=!!me&&normalizeName(n)===normalizeName(me);return `<span class="qc-pk-selc${isMe?' me':''}">${escapeHtml(n)}<button type="button" data-pkrm="${escapeHtml(n)}" aria-label="${escapeHtml(n)} 빼기">×</button></span>`;}).join('');}
+    const cntEl=card.querySelector('.qc-pk-cnt');if(cntEl)cntEl.textContent=sel.length?`${sel.length}명`:'';
+    card._fresh=fresh;
   };
-  card.innerHTML=`<div class="mtg-sheet-hd"><div class="mtg-sheet-title">${mode==='payer'?'결제자 선택':'참석자'}</div><button class="mtg-sheet-x" type="button" aria-label="닫기">×</button></div>
-    <input class="field-inp qc-pk-q" type="text" placeholder="이름 검색 · 초성 · 새 이름 입력" autocomplete="off"/>
-    <div class="qc-pk-list"${mode==='payer'?' role="radiogroup" aria-label="결제자"':''}></div>
-    ${mode==='payer'?'':'<div class="mtg-sheet-foot qc-pk-foot"><button type="button" class="primary-btn qc-pk-done">완료</button></div>'}`;
+  card.innerHTML=`<div class="mtg-sheet-hd qc-pk-hd"><div class="mtg-sheet-title">${payerMode?'다른 결제자':'사람 추가'} <span class="qc-pk-cnt"></span></div>`
+    +(payerMode?'<button class="mtg-sheet-x" type="button" aria-label="닫기">×</button>':'<button type="button" class="qc-pk-done">완료</button>')+`</div>`
+    +`<input class="field-inp qc-pk-q" type="text" enterkeyhint="done" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="${payerMode?'이름 검색 · 회사·가족 등 직접 입력':'이름 검색 · 쉼표로 여러 명 입력'}"/>`
+    +(payerMode?'':'<div class="qc-pk-sel" hidden></div>')
+    +`<div class="qc-pk-list"${payerMode?' role="radiogroup" aria-label="결제자"':''}></div>`;
   const inp=card.querySelector('.qc-pk-q');
+  const setParts=arr=>_qcSetField(c.partsId,arr.join(', '));
   const pick=n=>{
-    if(mode==='payer'){_qcSetField(c.payerId,n);close();return;}
+    if(payerMode){_qcSetField(c.payerId,n);close();return;}
     const cur=_qcNames(c.partsId);const i=cur.findIndex(x=>normalizeName(x)===normalizeName(n));
     if(i>=0)cur.splice(i,1);else cur.push(n);
-    _qcSetField(c.partsId,cur.join(', '));draw();
+    setParts(cur);draw();
   };
-  card.querySelector('.mtg-sheet-x').addEventListener('click',()=>close());
+  const addFresh=()=>{
+    const fresh=card._fresh||[];if(!fresh.length)return false;
+    if(payerMode){pick(fresh[0]);return true;}
+    const cur=_qcNames(c.partsId);fresh.forEach(n=>{if(!cur.some(x=>normalizeName(x)===normalizeName(n)))cur.push(n);});
+    setParts(cur);q='';inp.value='';draw();return true;
+  };
+  card.querySelector('.mtg-sheet-x')?.addEventListener('click',()=>close());
   card.querySelector('.qc-pk-done')?.addEventListener('click',()=>close());
   card.querySelector('.qc-pk-list').addEventListener('click',e=>{
-    if(e.target.closest('[data-pkother]')){other=true;draw();inp.focus();return;}
-    const nw=e.target.closest('[data-pknew]');if(nw){const n=nw.dataset.pknew.trim();q='';inp.value='';pick(n);return;}
-    const r=e.target.closest('[data-pk]');if(r)pick(r.dataset.pk);
+    if(e.target.closest('[data-pknew]')){addFresh();return;}
+    const r=e.target.closest('[data-pk]');if(r){pick(r.dataset.pk);if(!payerMode&&q){q='';inp.value='';draw();}}
   });
+  card.querySelector('.qc-pk-sel')?.addEventListener('click',e=>{const b=e.target.closest('[data-pkrm]');if(b)pick(b.dataset.pkrm);});
   let comp=false;
   inp.addEventListener('compositionstart',()=>{comp=true;});
   inp.addEventListener('compositionend',()=>{comp=false;q=inp.value;draw();});
   inp.addEventListener('input',()=>{q=inp.value;draw();});
-  inp.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing||comp)return;e.preventDefault();const nw=card.querySelector('[data-pknew]');if(nw)nw.click();});
+  inp.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing||comp)return;e.preventDefault();q=inp.value;draw();addFresh();});
+  // keyboard-safe: 보이는 영역(visualViewport)에 backdrop을 맞춘다 — iOS는 키보드가 열려도 layout viewport를 그대로 둬서
+  // 하단 고정 시트가 키보드 뒤로 숨는다(v2.30과 같은 함정). 데스크탑은 vv=창 크기라 영향 없음.
+  const vv=window.visualViewport;
+  if(vv){
+    const fit=()=>{
+      if(!bd.isConnected){vv.removeEventListener('resize',fit);vv.removeEventListener('scroll',fit);return;}
+      bd.style.top=Math.max(0,vv.offsetTop)+'px';bd.style.height=vv.height+'px';bd.style.bottom='auto';
+    };
+    vv.addEventListener('resize',fit);vv.addEventListener('scroll',fit);fit();
+  }
   draw();
+  if(payerMode)setTimeout(()=>{try{inp.focus();}catch(_){}},0);
 }
 (function _initQuickConfirm(){
   const mr=document.getElementById('qcMoreRow'), more=document.getElementById('qcMore');
@@ -7888,6 +7969,60 @@ async function _mtgApply(recs, mutate){
   dbxSyncUpload().catch(()=>{});
   return true;
 }
+// ── v3.83 만남 차수(meetingOrder) — 표시·기록 순서 전용 optional metadata ──
+//   ⚠️ 계산(total·paidBy·participants·splitExclude·treat·treatBy·Person·Meeting count·단둘이/여럿이·Relation Group·분담·통계)과
+//   Dutch Pay payload에 절대 쓰지 않는다. 같은 meetingId에 실제 receipt 2건 이상일 때만 의미가 있고, 만남 상세/편집에서만 보인다.
+//   기존 데이터 migration 없음 — 값이 없으면 기존 순서(_mtgSortByDate), 손상/중복 값이 있어도 화면은 runtime 1..N으로 정상 표시.
+//   DB 기록은 편집 시점(순서 변경·추가·이동·분리)에만.
+function _mtgHasOrder(r){const n=r&&r.meetingOrder;return Number.isInteger(n)&&n>0;}
+function _mtgOrdered(recs){
+  const base=_mtgSortByDate(recs||[]);
+  if(!base.some(_mtgHasOrder))return base;
+  const idx=new Map(base.map((r,i)=>[r.id,i]));
+  return [...base].sort((a,b)=>{const ha=_mtgHasOrder(a),hb=_mtgHasOrder(b);
+    if(ha&&hb&&a.meetingOrder!==b.meetingOrder)return a.meetingOrder-b.meetingOrder;
+    if(ha!==hb)return ha?-1:1;
+    return idx.get(a.id)-idx.get(b.id);});
+}
+// 목표 순서(ids) → 바뀌는 receipt만 [{r,order}]
+function _mtgOrderChanges(orderedRecs){
+  return orderedRecs.map((r,i)=>({r,order:i+1})).filter(x=>x.r.meetingOrder!==x.order);
+}
+// 남은 receipt 재번호(분리·이동 후). 순서가 기록된 적 있는 만남만(없으면 runtime 순서 그대로라 쓰기 불필요).
+function _mtgRenumberAfter(mid,removedIds){
+  if(!mid)return [];
+  const rest=_mtgReceiptsById(mid).filter(r=>!removedIds.has(r.id));
+  if(!rest.some(_mtgHasOrder))return [];
+  return _mtgOrderChanges(_mtgOrdered(rest));
+}
+// 추가·이동 대상 만남: 기존 순서 1..N 확정 + 새 receipt는 마지막 차수(날짜순으로 N+1…)
+function _mtgAppendPlan(targetMid,list){
+  const ids=new Set(list.map(r=>r.id));
+  const existing=_mtgOrdered(_mtgReceiptsById(targetMid).filter(r=>!ids.has(r.id)));
+  return _mtgOrderChanges([...existing,..._mtgSortByDate(list)]);
+}
+// 여러 변경을 한 번의 atomic 저장으로(_mtgApply: dbPutMany + updatedAt + 실패 시 rollback)
+async function _mtgApplyPlan(entries){
+  const fn=new Map();entries.forEach(({r,f})=>{const prev=fn.get(r.id);fn.set(r.id,prev?(x=>{prev(x);f(x);}):f);});
+  const list=[...new Map(entries.map(e=>[e.r.id,e.r])).values()];
+  return _mtgApply(list,r=>fn.get(r.id)(r));
+}
+// 편집 화면 drag 결과 저장: 해당 만남 receipt들의 meetingOrder만.
+async function _mtgSaveOrder(mid,orderedIds){
+  const rc=_mtgReceiptsById(mid);if(rc.length<2)return false;
+  const byId=new Map(rc.map(r=>[r.id,r]));
+  const ordered=orderedIds.map(id=>byId.get(id)).filter(Boolean);
+  if(ordered.length!==rc.length)return false;
+  const ch=_mtgOrderChanges(ordered);if(!ch.length)return true;
+  return _mtgApplyPlan(ch.map(({r,order})=>({r,f:x=>{x.meetingOrder=order;}})));
+}
+// 분리·전체 풀기·이동 원래 만남: meetingId와 함께 meetingOrder도 제거(stale 방지) + 남은 receipt 재번호
+function _mtgDetachEntries(list){
+  const out=list.map(r=>({r,f:x=>{delete x.meetingId;delete x.meetingOrder;}}));
+  const bySrc=new Map();list.forEach(r=>{if(r.meetingId){if(!bySrc.has(r.meetingId))bySrc.set(r.meetingId,new Set());bySrc.get(r.meetingId).add(r.id);}});
+  bySrc.forEach((ids,mid)=>_mtgRenumberAfter(mid,ids).forEach(({r,order})=>out.push({r,f:x=>{x.meetingOrder=order;}})));
+  return out;
+}
 // 기존 만남에 추가: 선택 receipt(1건+)를 targetMid로. 이미 다른 만남이면 이동 확인(§20).
 async function _mtgAddToMeeting(recs, targetMid){
   const list=(recs||[]).filter(Boolean); if(!list.length||!targetMid)return false;
@@ -7902,7 +8037,10 @@ async function _mtgAddToMeeting(recs, targetMid){
         <b style="color:var(--label);font-size:13px;">추가 후 ${bN+list.length}건 · ${fmtMoney(bSum+aSum)}원</b>
       </span>`, okLabel:'추가'});
   if(!ok)return false;
-  const done=await _mtgApply(list, r=>{r.meetingId=targetMid;});
+  // v3.83 — 새 receipt는 마지막 차수. 다른 만남에서 옮겨온 경우 원래 만남은 재번호.
+  const src=_mtgDetachEntries(list.filter(r=>r.meetingId&&r.meetingId!==targetMid)).filter(e=>!list.includes(e.r));
+  const plan=[...list.map(r=>({r,f:x=>{x.meetingId=targetMid;}})),..._mtgAppendPlan(targetMid,list).map(({r,order})=>({r,f:x=>{x.meetingOrder=order;}})),...src];
+  const done=await _mtgApplyPlan(plan);
   if(done)toast(`${list.length}건을 만남에 추가했어요.`,{type:'success'});
   return done;
 }
@@ -7911,7 +8049,7 @@ async function _mtgDetach(recs){
   const list=(recs||[]).filter(r=>r&&r.meetingId); if(!list.length)return false;
   const ok=await _mtgConfirm({title:'만남에서 분리', bodyHtml:`선택한 <b>${list.length}건</b>을 만남에서 분리할까요?<br>영수증은 삭제되지 않고 각각 독립된 만남으로 남아요.`, okLabel:'분리'});
   if(!ok)return false;
-  const done=await _mtgApply(list, r=>{delete r.meetingId;});
+  const done=await _mtgApplyPlan(_mtgDetachEntries(list)); // v3.83 — meetingOrder 제거 + 남은 receipt 재번호
   if(done)toast(`${list.length}건을 만남에서 분리했어요.`,{type:'success'});
   return done;
 }
@@ -7920,7 +8058,7 @@ async function _mtgUnlinkAll(mid){
   const list=_mtgReceiptsById(mid); if(!list.length)return false;
   const ok=await _mtgConfirm({title:'만남 전체 풀기', bodyHtml:`이 만남을 모두 풀까요?<br>영수증 <b>${list.length}건</b>은 삭제되지 않고 각각 독립된 만남으로 돌아가요.`, okLabel:'전체 분리'});
   if(!ok)return false;
-  const done=await _mtgApply(list, r=>{delete r.meetingId;});
+  const done=await _mtgApply(list, r=>{delete r.meetingId;delete r.meetingOrder;}); // v3.83 — stale 차수 제거
   if(done)toast(`만남을 풀었어요(${list.length}건).`,{type:'success'});
   return done;
 }
@@ -7930,7 +8068,10 @@ async function _mtgMove(recs, targetMid){
   const tRecs=_mtgReceiptsById(targetMid);
   const ok=await _mtgConfirm({title:'다른 만남으로 이동', bodyHtml:`선택한 <b>${list.length}건</b>을 <b>${escapeHtml(_mtgCompactTitle(tRecs))}</b>(으)로 이동할까요?`, okLabel:'이동'});
   if(!ok)return false;
-  const done=await _mtgApply(list, r=>{r.meetingId=targetMid;});
+  // v3.83 — 원래 만남 재번호 + 대상 만남 마지막 차수
+  const src=_mtgDetachEntries(list.filter(r=>r.meetingId&&r.meetingId!==targetMid)).filter(e=>!list.includes(e.r));
+  const plan=[...list.map(r=>({r,f:x=>{x.meetingId=targetMid;}})),..._mtgAppendPlan(targetMid,list).map(({r,order})=>({r,f:x=>{x.meetingOrder=order;}})),...src];
+  const done=await _mtgApplyPlan(plan);
   if(done)toast(`${list.length}건을 다른 만남으로 이동했어요.`,{type:'success'});
   return done;
 }
@@ -7969,7 +8110,9 @@ async function _mtgCreateMeeting(recs){
     okLabel:'만남으로 묶기'});
   if(!ok)return false;
   const mid=_mtgNewId(recs);
-  const done=await _mtgApply(recs, r=>{r.meetingId=mid;});
+  // v3.83 — 새 만남은 차수 미기록(runtime 날짜 순서). 옮겨온 receipt의 이전 차수는 제거, 원래 만남은 재번호.
+  const src=_mtgDetachEntries(recs.filter(r=>r.meetingId)).filter(e=>!recs.includes(e.r));
+  const done=await _mtgApplyPlan([...recs.map(r=>({r,f:x=>{x.meetingId=mid;delete x.meetingOrder;}})),...src]);
   if(done)toast(`${recs.length}개 영수증을 만남으로 묶었어요.`,{type:'success'});
   return done;
 }
@@ -8048,8 +8191,8 @@ function _mtgManageOpen(initialTab){
     if(view==='addReceipts')return renderAddV();
     if(view==='pick')return renderPickV();
   }
-  function mmRow(title,amt,sub,ppl,attr){
-    return `<button type="button" class="mm-row" ${attr}>
+  function mmRow(title,amt,sub,ppl,attr,ord){
+    return `<button type="button" class="mm-row${ord?' mm-orow':''}" ${attr}>${ord?`<span class="mm-ord">${ord}차</span>`:''}
       <span class="mm-row-main"><span class="mm-row-head"><span class="mm-row-top"><span class="mm-row-title">${esc2(title)}</span><span class="mm-row-amt">${fmtMoney(amt)}원</span></span>${sub?`<span class="mm-row-sub">${esc2(sub)}</span>`:''}</span>${ppl?`<span class="mm-row-ppl">${esc2(ppl)}</span>`:''}</span>
       <span class="mm-chev" aria-hidden="true">›</span></button>`;
   }
@@ -8145,11 +8288,11 @@ function _mtgManageOpen(initialTab){
   }
   // DETAIL(조회)
   function renderDetailV(){
-    const rc=_mtgSortByDate(_mtgReceiptsById(curMid));
+    const rc=_mtgOrdered(_mtgReceiptsById(curMid)); // v3.83 — 차수 순서(보기 전용, 변경은 편집에서만)
     if(!rc.length){view='list';tab='meetings';render();return;}
     const people=_mtgPeopleUnion(rc);
     panel.innerHTML=`<div class="org-hd">${back_}<div class="org-title">${esc2(_mtgCompactTitle(rc))}</div><div class="org-sub">${esc2(_mtgDateLabel(rc))} · 영수증 ${rc.length}건 · ${fmtMoney(_mtgSumTotal(rc))}원</div>${people.length?`<div class="mm-people">참석자 · ${people.map(esc2).join(' · ')}</div>`:''}</div>
-      <div class="org-list mm-list">${rc.map(x=>mmRow(x.store||'(매장명 없음)',x.total||0,fmtDateKor(x.date),null,`data-open="${esc2(x.id)}"`)).join('')}</div>
+      <div class="org-list mm-list">${rc.map((x,i)=>mmRow(x.store||'(매장명 없음)',x.total||0,fmtDateKor(x.date),null,`data-open="${esc2(x.id)}"`,rc.length>=2?i+1:0)).join('')}</div>
       <div class="org-actionbar mm-detail-ab"><button type="button" class="mm-btn-sec" id="mmDutch">더치페이로 보내기</button><button type="button" class="org-ab-btn" id="mmEdit">편집</button></div>`;
     document.getElementById('mmBackLbl').textContent='만남';
     panel.querySelector('#mmBack').onclick=back;
@@ -8159,26 +8302,97 @@ function _mtgManageOpen(initialTab){
   }
   // EDIT(편집)
   function renderEditV(){
-    const rc=_mtgSortByDate(_mtgReceiptsById(curMid));
+    const rc=_mtgOrdered(_mtgReceiptsById(curMid)); // v3.83 — 차수 순서
     if(!rc.length){view='list';tab='meetings';render();return;}
-    const rows=rc.map(x=>{const on=editSel.has(x.id);const ppl=[...receiptPeople(x)].join(' · ');
-      return `<button type="button" class="org-row${on?' sel':''}" data-id="${esc2(x.id)}" aria-pressed="${on}"><span class="org-check" aria-hidden="true"></span><span class="org-row-main"><span class="org-row-top"><span class="org-row-store">${esc2(x.store||'(매장명 없음)')}</span><span class="org-row-amt">${fmtMoney(x.total||0)}원</span></span><span class="org-row-ppl">${esc2(fmtDateKor(x.date))} · ${esc2(ppl)}</span></span></button>`;}).join('');
-    panel.innerHTML=`<div class="org-hd">${back_}<div class="org-title">만남 편집</div><div class="org-sub">${esc2(_mtgCompactTitle(rc))} · 영수증 ${rc.length}건</div></div>
-      <div class="org-list">${rows}</div>
+    const ord=rc.length>=2;
+    // v3.83 — row 선택(분리·이동)과 차수 이동(≡ handle drag)은 역할 분리: handle은 row 밖 형제 요소라 drag가 선택·상세 열기를 일으키지 않는다.
+    const rows=rc.map((x,i)=>{const on=editSel.has(x.id);const ppl=[...receiptPeople(x)].join(' · ');
+      return `<div class="mm-erow${on?' sel':''}" data-eid="${esc2(x.id)}"><button type="button" class="org-row${on?' sel':''}" data-id="${esc2(x.id)}" aria-pressed="${on}"><span class="org-check" aria-hidden="true"></span>${ord?`<span class="mm-ord">${i+1}차</span>`:''}<span class="org-row-main"><span class="org-row-top"><span class="org-row-store">${esc2(x.store||'(매장명 없음)')}</span><span class="org-row-amt">${fmtMoney(x.total||0)}원</span></span><span class="org-row-ppl">${esc2(fmtDateKor(x.date))} · ${esc2(ppl)}</span></span></button>`
+        +(ord?`<span class="mm-handle" role="button" tabindex="0" aria-label="${esc2(x.store||'영수증')} 순서 이동 — 드래그 또는 위·아래 화살표" title="드래그해서 순서 변경"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 8h14M5 12h14M5 16h14"/></svg></span>`:'')+`</div>`;}).join('');
+    panel.innerHTML=`<div class="org-hd">${back_}<div class="org-title">만남 편집</div><div class="org-sub">${esc2(_mtgCompactTitle(rc))} · 영수증 ${rc.length}건${ord?' · ≡ 드래그로 차수 변경':''}</div></div>
+      <div class="org-list mm-elist" id="mmEditList">${rows}</div>
       <div class="mm-edit-tools"><button type="button" class="mm-tool" id="mmAddRcp">＋ 영수증 추가</button><button type="button" class="mm-tool mm-tool-danger" id="mmUnlinkAll">만남 전체 풀기</button></div>
       <div class="org-actionbar mm-ab2"><div class="org-ab-info" id="mmEditInfo"></div><div class="mm-ab-btns"><button type="button" class="mm-btn-sec" id="mmMove" disabled>다른 만남으로 이동</button><button type="button" class="org-ab-btn mm-btn-detach" id="mmDetach" disabled>선택 분리</button></div></div>`;
     document.getElementById('mmBackLbl').textContent='만남';
     panel.querySelector('#mmBack').onclick=back;
     panel.querySelectorAll('.org-row[data-id]').forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(editSel.has(id))editSel.delete(id);else editSel.add(id);editBar();});
+    if(ord)bindReorder(panel.querySelector('#mmEditList'));
     panel.querySelector('#mmAddRcp').onclick=()=>{addSel.clear();view='addReceipts';render();};
     panel.querySelector('#mmUnlinkAll').onclick=async()=>{const ok=await _mtgUnlinkAll(curMid);if(ok){await refresh();view='list';tab='meetings';render();}};
     panel.querySelector('#mmMove').onclick=()=>{const recs=idsToRecs(editSel);if(recs.length<1)return;pendingIds=[...editSel];pickMode='move';view='pick';render();};
     panel.querySelector('#mmDetach').onclick=async()=>{const recs=idsToRecs(editSel);if(!recs.length)return;const ok=await _mtgDetach(recs);if(ok){editSel.clear();await refresh();if(_mtgReceiptsById(curMid).length){view='edit';render();}else{view='list';tab='meetings';render();}}};
     editBar();
   }
+  // v3.83 — 차수 drag & drop(≡ handle, pointer — 마우스·터치 공통) + 키보드(↑/↓). 놓는 순간 1..N 재번호 후 atomic 저장.
+  function bindReorder(list){
+    if(!list)return;
+    const relabel=()=>list.querySelectorAll('.mm-erow').forEach((row,i)=>{const o=row.querySelector('.mm-ord');if(o)o.textContent=(i+1)+'차';});
+    const idsNow=()=>[...list.querySelectorAll('.mm-erow')].map(r=>r.dataset.eid);
+    const commit=async before=>{
+      const after=idsNow();
+      if(after.join('\u0001')===before.join('\u0001'))return;
+      const ok=await _mtgSaveOrder(curMid,after);
+      if(ok){toast('차수를 저장했어요.',{type:'success'});await refresh();}
+      if(document.body.contains(bd)&&view==='edit')render(); // 실패 시 rollback된 순서로 다시 그림
+    };
+    list.querySelectorAll('.mm-handle').forEach(h=>{
+      const row=h.closest('.mm-erow');
+      h.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();});
+      h.addEventListener('keydown',e=>{
+        if(e.key!=='ArrowUp'&&e.key!=='ArrowDown')return;
+        e.preventDefault();const before=idsNow();
+        if(e.key==='ArrowUp'&&row.previousElementSibling)list.insertBefore(row,row.previousElementSibling);
+        else if(e.key==='ArrowDown'&&row.nextElementSibling)list.insertBefore(row.nextElementSibling,row);
+        relabel();h.focus();commit(before);
+      });
+      // drag 중에는 DOM 순서를 바꾸지 않는다(요소를 옮기면 pointer capture가 풀려 move/up을 잃음) —
+      // 끄는 row는 손가락을 따라 translateY, 사이 row들은 한 칸씩 비켜 서고 차수 라벨이 즉시 바뀐다. 놓는 순간 DOM 재배치 + 저장.
+      h.addEventListener('pointerdown',e=>{
+        if(e.button!=null&&e.button>0)return;
+        e.preventDefault();e.stopPropagation();
+        const before=idsNow();
+        const rowsAll=[...list.querySelectorAll('.mm-erow')];
+        const from=rowsAll.indexOf(row);
+        const tops=rowsAll.map(r=>r.offsetTop),hts=rowsAll.map(r=>r.offsetHeight);
+        const startY=e.clientY,startScroll=list.scrollTop;
+        let to=from,lastY=e.clientY,timer=0;
+        try{h.setPointerCapture(e.pointerId);}catch(_){}
+        row.classList.add('dragging');list.classList.add('reordering');
+        const paint=()=>{
+          const dy=lastY-startY+(list.scrollTop-startScroll);
+          const center=tops[from]+hts[from]/2+dy;
+          to=from;
+          for(let i=0;i<rowsAll.length;i++){if(i===from)continue;const c=tops[i]+hts[i]/2;if(i<from&&center<c){to=Math.min(to,i);}if(i>from&&center>c){to=Math.max(to,i);}}
+          rowsAll.forEach((r,i)=>{
+            if(i===from){r.style.transform=`translateY(${dy}px)`;return;}
+            let sh=0;if(from<to&&i>from&&i<=to)sh=-hts[from];else if(from>to&&i>=to&&i<from)sh=hts[from];
+            r.style.transform=sh?`translateY(${sh}px)`:'';
+          });
+          const order=rowsAll.filter((_,i)=>i!==from);order.splice(to,0,rowsAll[from]);
+          order.forEach((r,i)=>{const o=r.querySelector('.mm-ord');if(o)o.textContent=(i+1)+'차';});
+        };
+        const edge=()=>{ // 가장자리 자동 스크롤
+          const lr=list.getBoundingClientRect();let d=0;
+          if(lastY<lr.top+40)d=-10;else if(lastY>lr.bottom-40)d=10;
+          if(d){list.scrollTop+=d;paint();}
+        };
+        timer=setInterval(edge,40);
+        const move=ev=>{lastY=ev.clientY;paint();};
+        const end=()=>{
+          clearInterval(timer);
+          h.removeEventListener('pointermove',move);h.removeEventListener('pointerup',end);h.removeEventListener('pointercancel',end);
+          rowsAll.forEach(r=>{r.style.transform='';});
+          row.classList.remove('dragging');list.classList.remove('reordering');
+          if(to!==from){const ref=to>from?rowsAll[to].nextElementSibling:rowsAll[to];list.insertBefore(row,ref);}
+          relabel();commit(before);
+        };
+        h.addEventListener('pointermove',move);h.addEventListener('pointerup',end);h.addEventListener('pointercancel',end);
+      });
+    });
+  }
   function editBar(){
     // 재바인딩 없이 상태만: sel 강조는 재렌더가 필요하므로 간단히 render는 안 하고 클래스 토글
-    panel.querySelectorAll('.org-row[data-id]').forEach(b=>{const on=editSel.has(b.dataset.id);b.classList.toggle('sel',on);b.setAttribute('aria-pressed',String(on));});
+    panel.querySelectorAll('.org-row[data-id]').forEach(b=>{const on=editSel.has(b.dataset.id);b.classList.toggle('sel',on);b.setAttribute('aria-pressed',String(on));b.closest('.mm-erow')?.classList.toggle('sel',on);});
     const info=panel.querySelector('#mmEditInfo'),mv=panel.querySelector('#mmMove'),dt=panel.querySelector('#mmDetach');
     const n=editSel.size; if(info)info.textContent=n?`${n}건 선택`:'분리·이동할 영수증 선택';
     if(mv)mv.disabled=n<1; if(dt)dt.disabled=n<1;
@@ -8385,7 +8599,7 @@ function _mtgOpenMeetingDetail(r){
   const mid=r.meetingId;
   const {card,close}=_mtgSheetOpen();
   const render=()=>{
-    const rc=_mtgSortByDate(_mtgReceiptsById(mid));
+    const rc=_mtgOrdered(_mtgReceiptsById(mid)); // v3.83 — 차수 순서(보기 전용)
     if(rc.length<1){close();return;}
     const people=_mtgPeopleUnion(rc);
     const stillIn=rc.some(x=>x.id===r.id);
@@ -8394,8 +8608,8 @@ function _mtgOpenMeetingDetail(r){
       <div class="mtg-sheet-meta">${escapeHtml(_mtgDateLabel(rc))} · 영수증 ${rc.length}건 · ${fmtMoney(_mtgSumTotal(rc))}원</div>
       ${people.length?`<div class="mtg-sheet-people"><div class="mtg-sheet-plbl">참석자</div><div class="mtg-sheet-pnames">${people.map(escapeHtml).join(' · ')}</div></div>`:''}
       <div class="mtg-sheet-divider"></div>
-      <div class="mtg-drows">${rc.map(x=>`<button type="button" class="mtg-drow${x.id===r.id?' cur':''}" data-open="${escapeHtml(x.id)}">
-        <span class="mtg-drow-store">${escapeHtml(x.store||'(매장명 없음)')}</span>
+      <div class="mtg-drows">${rc.map((x,i)=>`<button type="button" class="mtg-drow${x.id===r.id?' cur':''}${rc.length>=2?' ord':''}" data-open="${escapeHtml(x.id)}">
+        ${rc.length>=2?`<span class="mtg-drow-ord">${i+1}차</span>`:''}<span class="mtg-drow-store">${escapeHtml(x.store||'(매장명 없음)')}</span>
         <span class="mtg-drow-amt">${fmtMoney(x.total||0)}원</span>
         <span class="mtg-drow-date">${escapeHtml(fmtDateKor(x.date))}</span>
       </button>`).join('')}</div>
@@ -8414,11 +8628,10 @@ async function _mtgUnlinkOne(r){
     bodyHtml:'이 영수증을 만남에서 분리할까요?<br>영수증 자체는 그대로 남고 만남 연결만 해제돼요.',
     okLabel:'분리'});
   if(!ok)return false;
-  delete r.meetingId;r.updatedAt=nowISO();
-  try{await dbPut('receipts',r);}
-  catch(e){console.error('meeting unlink(one) 실패',e);receipts=await dbAll('receipts');toast('분리에 실패했어요. 다시 시도해 주세요.',{type:'error'});return false;}
+  // v3.83 — meetingOrder도 제거 + 남은 receipt 재번호(한 번의 atomic 저장)
+  const done=await _mtgApplyPlan(_mtgDetachEntries([r]));
+  if(!done)return false; // _mtgApply가 동기화 업로드까지 처리
   renderSide();await renderDetail();
-  dbxSyncUpload().catch(()=>{});
   toast('만남에서 분리했어요.',{type:'success'});
   return true;
 }
@@ -8547,7 +8760,7 @@ function _relIco(k){
   return s+'<circle cx="12" cy="8" r="3.4"/><path d="M5.5 19.5a6.5 6.5 0 0 1 13 0"/></svg>';
 }
 function _duoSideHtml(which,label,amt,cnt,isMe){
-  const inner=`<div class="rel-duo-ic">${_PERSON_ICO}</div><div class="rel-duo-lbl">${escapeHtml(label)}</div><div class="rel-duo-amt">${fmtMoney(amt)}원${cnt>0?'<span class="rel-duo-go" aria-hidden="true">›</span>':''}</div><div class="rel-duo-cnt">${cnt}건</div>`;
+  const inner=`<div class="rel-duo-lbl">${escapeHtml(label)}</div><div class="rel-duo-amt">${fmtMoney(amt)}원${cnt>0?'<span class="rel-duo-go" aria-hidden="true">›</span>':''}</div><div class="rel-duo-cnt">${cnt}건</div>`;
   if(cnt>0)return `<button type="button" class="rel-duo-side rel-duo-click${isMe?' me':''}" data-duo="${which}" aria-label="${escapeHtml(label)} ${fmtMoney(amt)}원 ${cnt}건 — 영수증 보기">${inner}</button>`;
   return `<div class="rel-duo-side rel-duo-zero${isMe?' me':''}">${inner}</div>`;
 }
@@ -8781,10 +8994,10 @@ function _psnLayoutHtml(d){
   const pct=(a,b)=>{const t=a+b;if(t<=0)return null;const x=Math.round(a/t*100);return [x,100-x];};
   const bal=(a,b,cls)=>{const p=pct(a,b);return `<div class="psn-bal${cls?' '+cls:''}" aria-hidden="true">${p?`<i class="t" style="width:${p[0]}%"></i><i class="m" style="width:${p[1]}%"></i>`:''}</div>`;};
 
-  // ① 한턱 밸런스(단둘이 한턱 — v3.57 의미 그대로). 이름 우선: 신유철 / 조상현(나).
+  // ① 한턱 밸런스(단둘이 한턱 — v3.57 의미 그대로). 이름 우선: 신유철 / 조상현(v3.82 — '(나)'·이름 앞 아이콘 없음).
   const tA=sum(d.duoTreatTgt), mA=sum(d.duoTreatMe), tN=d.duoTreatTgt.length, mN=d.duoTreatMe.length;
   const side=(cls,which,label,amt,cnt)=>{
-    const inner=`<span class="psn-side-ic">${_PERSON_ICO}</span><span class="psn-side-name">${label}</span>`
+    const inner=`<span class="psn-side-name">${label}</span>`
       +`<span class="psn-side-amt">${fmtMoney(amt)}원</span><span class="psn-side-cnt">${cnt}건</span>`;
     return cnt>0
       ?`<button type="button" class="psn-side ${cls}" data-duo="${which}" aria-label="${label} 한턱 ${fmtMoney(amt)}원 ${cnt}건 — 영수증 보기">${inner}</button>`
@@ -8797,7 +9010,7 @@ function _psnLayoutHtml(d){
     :'서로 비슷하게 한턱냈어요';
   const hero=`<section class="psn-hero psn-card" aria-label="한턱 밸런스">`
     +`<div class="psn-hero-hd"><div><div class="psn-hero-title">한턱 밸런스</div><div class="psn-hero-desc">단둘이 만났을 때 서로에게 한턱낸 금액</div></div><div class="psn-hero-r">영수증 ${d.duoAllCnt}건</div></div>`
-    +`<div class="psn-duo">${side('t','tgt',nm,tA,tN)}<div class="psn-duo-div" aria-hidden="true"></div>${side('m','me',meNm+'(나)',mA,mN)}</div>`
+    +`<div class="psn-duo">${side('t','tgt',nm,tA,tN)}<div class="psn-duo-div" aria-hidden="true"></div>${side('m','me',meNm,mA,mN)}</div>`
     +bal(tA,mA)
     +(p?`<div class="psn-bal-pct"><span class="t">${p[0]}%</span><span class="m">${p[1]}%</span></div>`:'')
     +`<div class="psn-diff">${diffTxt}</div>`
@@ -8823,7 +9036,7 @@ function _psnLayoutHtml(d){
   // ③ 함께한 씀씀이 — 여럿이 / 전체 결제(기존 값). Green=상대 · Blue=나.
   const cmp=(title,tArr,mArr,tapId)=>{
     const ta=sum(tArr), ma=sum(mArr);
-    const v=(cls,who,amt,cnt)=>`<div class="psn-v ${cls}"><span class="psn-v-who"><i></i><span>${who}</span></span><span class="psn-v-amt${amt?'':' zero'}">${fmtMoney(amt)}원</span><span class="psn-v-cnt">${cnt}건</span></div>`;
+    const v=(cls,who,amt,cnt)=>`<div class="psn-v ${cls}"><span class="psn-v-who"><span>${who}</span></span><span class="psn-v-amt${amt?'':' zero'}">${fmtMoney(amt)}원</span><span class="psn-v-cnt">${cnt}건</span></div>`;
     return `<div class="psn-cmp"${tapAttr(tapId,title+' — 영수증 보기')}>`
       +`<div class="psn-cmp-top"><span class="psn-cmp-title">${title}</span>${tapId?chev:''}</div>`
       +v('t',nm,ta,tArr.length)+v('m',meNm,ma,mArr.length)+bal(ta,ma)+`</div>`;
@@ -10198,9 +10411,11 @@ async function renderDetail(){
       ${kvHtml('일자','date',r.date||'','date')}
       ${detailCategoryKvHtml(r.category||'')}
       ${kvHtml('결제수단','paymentMethod',r.paymentMethod||'card','select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
-      <!-- v3.81 — 참석자·분담 / 결제자 row / 🎉 한턱 = 추가 화면과 같은 공통 블록. 참석자·결제자 input은 저장 경로용(hidden) -->
+      ${_payerFieldHtml('d',true)}
+      <!-- v3.82 — 결제자 = 기본 정보 칸의 select(추가 화면과 같은 컨트롤), 참석자·분담·한턱 = 추가 화면과 같은 공통 블록.
+           참석자·결제자 input은 저장 경로용(hidden) -->
       <div class="kv full qc-sec detail-people">
-        ${_peopleBlockHtml('d')}
+        ${_peopleBlockHtml('d',false)}
         <div style="display:none"><input id="dParticipants" type="text" value="${escapeHtml((r.participants||[]).join(', '))}" tabindex="-1" aria-hidden="true"/></div>
       </div>
       <div class="kv" style="display:none"><input class="kv-inp" type="text" id="dPayerInp" data-field="paidBy" value="${escapeHtml(r.paidBy||'')}" tabindex="-1" aria-hidden="true"/></div>
@@ -10940,6 +11155,8 @@ function _validateReceiptRecord(raw){
     splitExclude:Array.isArray(raw.splitExclude)?raw.splitExclude.map(v=>String(v||'')).filter(Boolean):[],
     // v3.46 — 만남 묶기: optional meetingId(문자열)만 보존·정규화. 없으면 키 자체를 두지 않는다(undefined→JSON 제외).
     meetingId:(typeof raw.meetingId==='string'&&raw.meetingId.trim())?raw.meetingId.trim():undefined,
+    // v3.83 — 만남 차수: optional 양의 정수만 보존(손상 값은 키 제외 → runtime 기존 순서). 계산에 쓰지 않음.
+    meetingOrder:(Number.isInteger(raw.meetingOrder)&&raw.meetingOrder>0&&raw.meetingOrder<10000)?raw.meetingOrder:undefined,
     // v3.70 — 공동 한턱 주체: optional treatBy 객체만 보존·정규화(손상 값 차단). 없으면 undefined→JSON 제외(기존 Receipt에 기본값 안 씀).
     treatBy:_validTreatBy(raw.treatBy),
   };

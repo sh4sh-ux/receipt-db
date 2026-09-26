@@ -95,6 +95,19 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.83` — **만남 차수(Order) — 같은 만남에 묶인 영수증의 순서를 1차·2차…로 기록, '만남 편집'에서만 drag로 변경. 정산 기능 아님(그날의 흐름 기록용). ⚠️ 계산(total·paidBy·participants·splitExclude·treat·treatBy·Person·Meeting count·단둘이/여럿이·Relation Group·사람별 분담·통계)·Dutch Pay payload·Meeting List(Blue Bar·'N건 묶음 · 대표매장')·Add/Receipt Detail/Quick Confirm/Person/Review Inbox 전부 불변, migration 없음.**
+  **필드**: optional `receipt.meetingOrder`(양의 정수). `_validateReceiptRecord`가 정수만 보존(손상 값은 키 제외) → Dropbox merge(`{...raw}`·updatedAt 최신 우선)·백업 export/import roundtrip 그대로. **runtime 순서 `_mtgOrdered`**: 값이 없으면 기존 순서(`_mtgSortByDate`), 있으면 오름차순(중복·null·손상도 화면은 1..N으로 정상, DB 자동 수정 없음). 같은 meetingId에 실제 2건 이상일 때만 차수 표시(1건 만남·독립 receipt는 표시 0).
+  **표시**: 만남 상세(관리 화면 detail + 영수증 상세의 만남 시트)는 `1차 | 매장 … 금액` 보기 전용. **편집**: 만남 편집 row = `[선택] 1차 | 매장 … 금액 | ≡`. ≡ handle(44px, `touch-action:none`)만 drag — row 탭(선택)과 역할 분리라 drag 중 상세 열림·선택 토글 0. drag 중 DOM 재배치 없이 `translateY`로 미리보기(끄는 row 그림자·나머지 한 칸씩 비킴·차수 라벨 즉시 갱신, 가장자리 자동 스크롤) → 놓는 순간 재배치 + `_mtgSaveOrder`(바뀐 receipt의 meetingOrder만 `_mtgApply` atomic·rollback). 키보드 ↑/↓도 지원. ⚠️ drag 중 요소를 DOM에서 옮기면 pointer capture가 풀려 move/up을 잃는다(첫 구현 실패 원인).
+  **편집 연동**(`_mtgApplyPlan` — 여러 receipt 변경을 한 번에): 추가·다른 만남으로 이동 = 대상 만남 기존 순서 1..N 확정 + 새 receipt 마지막 차수 · 분리·이동의 원래 만남 = 남은 receipt 재번호(순서가 기록된 만남만) · 분리·전체 풀기·영수증 상세 '분리' = meetingId와 함께 meetingOrder 제거(stale 0) · 새 만남 묶기 = 차수 미기록(runtime 날짜 순서).
+  **검증**(실데이터 151 + 5건/2건/1건 만남 fixture, Desktop 1280·Mobile 390·430 각 18항목 ALL PASS): A 순서 없음 → 1~5차(DB 미기록) · B drag 5차→2차(1280 mouse·390/430 CDP touch) → 1~5 재번호 저장 · drag 중 상세 열림/선택 0 · handle 44×57px · Edit→Back→Detail 새 순서 · C 3차 분리 → 1~4 · D 추가 → 마지막 · E 이동 → 원래 재번호·대상 마지막 · F 전체 풀기 stale 0 · G 1건 만남 차수 0 · 손상 order(1,1,4,null) 화면 1~4·DB 불변 · 계산 영향 0(meetingOrder 변경 전후 `_participantSplit`·`_receiptShare` 동일) · Dutch Pay 전송 함수 meetingOrder 없음 · validator/JSON/merge roundtrip · swipe-back 오버레이만 닫힘·reload 0 · overflow 0 · 콘솔 에러 0. iPhone Safari 실기기 drag 미검증. 변경 파일 `index.html`·`CLAUDE.md`.
+- `v3.82` — **사람 UI 최종 정리 — 결제자 select · 참석자 compact · '(나)'/avatar 제거 · 관계 분석 상대 Orange · keyboard-safe 사람 추가. ⚠️ `parseReceiptText`·schema·계산(`_participantSplit`/`_receiptShare`/Person/Meeting)·저장 경로·Relation Group·Review Inbox·기간 Filter·Dropbox·Dutch Pay·migration 전부 불변(표시·입력 UI만).**
+  ① **결제자 = 일반 select field**(`_payerFieldHtml`, Add는 참석자 아래·Detail은 기본 정보 칸 — 같은 컨트롤). 후보 = 현재 참석자(+ 참석자 밖 현재 결제자, 참석자 0명이면 나) + `+ 다른 사람…`(→ picker, 회사·가족 등 직접 입력). 💳·큰 payer card 없음, 1명만(paidBy 단일 — 복수 결제 미도입). 빈 결제자: Add=저장 규칙대로 나 표시, Detail='결제자 선택'.
+  ② **참석자 = compact row**: 헤더 `참석자 · 분담  N명  + 추가` + 행 `[이름 · 분담 badge · ×]`(행 36px·badge 22px/탭 영역 32px·× 28×32, flat 구분선·radius 없음, 폭 따라 2~4열 — 6명도 390px에서 3줄). 0명이면 `[+ 나][+ 사람]`(자동 참석 없음). badge 탭 = 분담↔깍두기(기존 `splitExclude`).
+  ③ **'(나)'·이름 앞 avatar/icon 제거**(참석자·picker·결제자·Person 한턱 밸런스·사람 목록 이니셜 `.pl-av`·`psn-side-ic`·`rel-duo-ic`·지출 비교 점). 저장 이름은 그대로(표시만).
+  ④ **색**: Add/Detail = 나 Blue · 그 외 neutral(Green 제거). **관계 분석만** 상대 = Dutch Pay Orange(`--psn-t`=`--amber` — 라이트 #FF9500·다크 #FF9F0A, dutch-pay `--txn-amber`와 동일), 나 = Blue.
+  ⑤ **사람 추가 시트 keyboard-safe**: 모바일에서 backdrop을 `visualViewport`(키보드 위 보이는 영역)에 맞추고 시트를 flex column으로 — 키보드가 열려도 검색칸·입력값·선택된 사람·결과가 보이고 결과 목록만 스크롤(iOS layout viewport 함정, v2.30과 같은 원인). 구조 = 헤더(사람 추가 N명·완료) → 검색 → 선택된 사람(× 빼기) → 결과/직접 입력. **쉼표 여러 명**(`김승환, 박지훈, 이민수` → `3명 추가`, Enter 가능 — 참석자 input과 같은 split 규칙 + 정규화 중복 제거).
+  ⑥ **한턱** = 한 줄 compact(`한턱` + 스위치), 참석자 2명↑일 때만. 개인/공동 주체 선택 그대로.
+  **검증**(실데이터 151 + 관계 그룹 fixture, Desktop 1280·Mobile 390·430 각 29항목 ALL PASS): A 참석자 없음 · B 나만 · C 둘 다 분담 · D 깍두기 · E 개인 한턱(결제자 불변) · F 공동 한턱 · G 결제자 select 왕복(분담 불변)+다른 사람 '회사'(참석자 강제 추가 없음) · H 결제자 삭제(재지정 없음) · I 6명·긴 이름(행 ≤36px·이름 1줄·badge/× 안 밀림) · J 쉼표 3명 — 각 저장 → DB 일치 → Detail 재오픈 = Add. Detail에서 select/깍두기/한턱 → DIRTY → 저장 → 재오픈 CLEAN. keyboard-safe(visualViewport 508px 시뮬레이션: 시트 하단 508·입력 391·결과 2행 보임). 관계 분석 bar rgb(255,149,0)·나 Blue·'(나)' 0·avatar 0. overflow 0·콘솔 에러 0. iPhone Safari 실기기 미검증. 변경 파일 `index.html`·`CLAUDE.md`.
 - `v3.81` — **Add / Receipt Detail 참석자·결제자·분담 UX 통일 — 세 개념 분리(A 참석자+분담 = 사람 단위 · B 결제자 = 영수증 속성 1개 · C 한턱 = 이벤트). ⚠️ `parseReceiptText`·schema·계산(`_participantSplit`/`_receiptShare`)·저장 경로(`saveBtn`·상세 `_doConfirm`)·Person·Meeting·Relation Group·Review Inbox·기간 Filter·Dropbox·Dutch Pay·migration 전부 불변.**
   ① **v3.80의 '이름 탭 = 결제자' 폐기.** 참석자 칩 = `[이름(나=Blue·상대=Green) | 분담 badge | ×]` 한 줄 — 이름은 표시만, **badge 탭 = 분담↔깍두기**(기존 `splitExclude` 토글, 한턱이면 전액/0원 고정), ×=참석자 빼기. badge 색은 identity와 겹치지 않게 **분담=neutral(fill2)·깍두기=secondary gray 점선**. 0명=`[+ 나][+ 사람]`(자동 참석 없음), 1명↑=`[+]`.
   ② **결제자 = 별도 row** `결제자 💳 조상현(나) ›` → 결제자 picker(`_qcOpenPicker('payer',c)`): 기본 후보=현재 참석자 radio(선택 💳) + **`+ 다른 사람`**(참석자 밖 결제자 — 검색·초성·최근·직접 추가, 참석자에 강제 추가 없음). 참석자 밖이면 row에 '참석자 아님'. 결제자 × 삭제 시 **자동 재지정 없음**(paidBy 유지). 빈 결제자: Add는 저장 규칙대로 `getMyName()` 표시, Detail은 '결제자 선택'.
@@ -1209,6 +1222,8 @@ Receipt {
     }
   ],
   imageId: "img_xxx",        // 이미지 store의 별도 키 (Blob)
+  meetingId: "mtg_xxx",      // optional (v3.46~) — 같은 만남으로 묶인 receipt 연결 ID
+  meetingOrder: 2,           // optional (v3.83~) — 만남 안 차수(표시 전용, 계산·Dutch Pay에 안 씀)
   notes: "",
   tags: ["식료품"],
   createdAt: ISO,
