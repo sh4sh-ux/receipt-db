@@ -2459,10 +2459,12 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .app-title,.main-title{line-height:1.18;}
 }
 
-/* ══ v3.94 추가 화면 = 영수증 상세와 같은 배치 ══ */
+/* ══ v3.95 추가 화면 = 영수증 상세와 같은 화면(상단 금액 카드 · '정보' 상자 · 메모·태그) ══
+   상세의 클래스(detail-expense-block · det-hd 카드 · detail-info-card · kv · pp-split-block)를 그대로 쓰고, 추가 화면에만 필요한 것만 아래에 둔다. */
 .addx{display:flex;flex-direction:column;gap:14px;}
 .addx-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
-.addx-top .input-mode-row{margin-bottom:0;}
+.addx-top .input-mode-row{margin-bottom:0;flex:0 0 auto;}
+.addx-top .input-mode-btn{white-space:nowrap;}
 .addx-top .guide-copy{margin-top:0;}
 #gptModeArea{display:flex;flex-direction:column;gap:14px;}
 .addx-paste .field-ta{height:132px;min-height:132px;}
@@ -2473,37 +2475,64 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .addx-ok{color:var(--green);font-weight:700;}
 .addx-pasted-txt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .addx-raw-btn{height:28px!important;font-size:12px;padding:0 12px;}
-.addx-info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;padding:18px;background:var(--fill);border:1px solid var(--sep);border-radius:var(--rm);align-items:stretch;}
-.addx-info-copy{min-width:0;display:flex;flex-direction:column;gap:8px;}
-.addx-sec-lbl{font-size:12px;font-weight:600;color:var(--text-secondary);margin:0 0 2px;}
-.addx-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
-.addx-kv{padding:10px 12px;background:var(--fill2);border-radius:var(--rm);border:1px solid var(--sep);margin:0!important;min-width:0;}
-.addx-kv>.field-lbl{font-size:var(--fs-caption);font-weight:var(--fw-med);color:var(--text-secondary);text-transform:none;letter-spacing:0;margin-bottom:4px;}
-.addx-kv>.field-lbl .field-lbl-hint{display:none;}
-.addx-kv .field-sel{border:none;background-color:transparent;padding:2px 18px 2px 0;min-height:0;height:auto;font-size:var(--fs-body);color:var(--text-primary);box-shadow:none;}
-.addx-kv .cat-picker-trigger{border:none;background:transparent;padding:0;min-height:0;box-shadow:none;}
-.addx-people{padding:12px;}
-.addx-info-photo{display:flex;flex-direction:column;margin:0!important;min-width:0;}
-.addx-info-photo>.field-lbl{font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:none;letter-spacing:0;}
-.addx-info-photo .photo-zone{flex:1;min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.addx-info-photo .photo-zone.has{display:block;}
-.addx-info-photo .photo-preview{width:100%;height:100%;max-height:none;object-fit:contain;}
-.addx.addx-direct .addx-info{grid-template-columns:1fr;}
-.addx.addx-direct .addx-info-photo{display:none;}
+#previewArea>.empty-state{display:none;} /* 붙여넣기 전 빈 미리보기 안내는 붙여넣기 칸과 중복 — 숨김(파싱 오류 안내는 그대로 보임) */
+.addx .detail-expense-block{margin-bottom:0;}
+.addx .detail-info-card{margin:6px 0 0;} /* 카드와 정보 상자 사이 20px — 상세와 같게 */
+.addx-items .prev-item-row input{background:transparent;border-color:transparent;}
+.addx-items .prev-item-row input:hover{background:var(--fill2);}
+.addx-items .prev-item-row input:focus{background:var(--card);border-color:var(--blue);}
+.addx-items .prev-item-amt.readonly{background:transparent;border-color:transparent;}
+.addx .preview-alerts:empty{display:none;}
+.addx-hd-ph{color:var(--label3);}
+.det-hd-amt.addx-amt-empty{color:var(--blue);font-size:15px;font-weight:700;}
+/* 품목 펼침: 상세 품목 표와 같은 바탕 위에 기존 품목 편집기 */
+.addx-items .prev-items{padding:0 14px;}
+.addx-items .prev-empty-items{padding:10px 0;}
+.addx-total-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 14px 0;padding-top:9px;border-top:2px solid var(--sep2);font-size:13px;font-weight:700;}
+.addx-total-row .prev-total-cell{flex:0 1 180px;gap:4px;}
+.addx-total-row .prev-total-cell::after{content:none;}
+.addx-total-row .prev-total{font-size:14px;border:1px solid transparent;border-radius:5px;padding:5px 4px;}
+.addx-total-row .prev-total:focus{border-color:var(--blue);background:var(--card);}
+.addx-total-row .prev-total::placeholder{color:var(--blue);font-weight:700;}
+.addx-items .prev-total-hint{background:transparent;padding:6px 14px 0;}
+.addx-items .prev-foot{margin:8px 14px 0;border:1px solid var(--sep);border-radius:var(--rs);}
+.addx-items .prev-foot[hidden]{display:none;}
+/* 직접 입력: 같은 카드의 금액 자리가 입력칸 */
+.addx-dhd{cursor:default;grid-template-columns:minmax(0,1fr) auto;}
+.addx-dhd:hover{background:var(--card);}
+.addx-direct-amt{display:flex;align-items:baseline;justify-content:flex-end;gap:2px;margin:0;cursor:text;}
+.addx-direct-amt input{width:8.5em;border:1px solid transparent;border-radius:6px;background:transparent;text-align:right;font:inherit;color:inherit;outline:none;padding:2px 4px;}
+.addx-direct-amt input:focus{border-color:var(--blue);background:var(--fill2);}
+.addx-direct-amt input::placeholder{color:var(--blue);font-size:15px;}
+.addx-won{font-size:14px;font-weight:600;color:var(--text-secondary);}
+.addx-direct-amt input:placeholder-shown+.addx-won{display:none;}
+/* 정보 상자 */
+.addx-info .kv.addx-miss{border-color:color-mix(in srgb,var(--blue) 55%,var(--sep));}
+.addx-info .kv.addx-miss .kv-inp::placeholder{color:var(--blue);}
+.addx-info .kv-inp[type=date]{min-height:20px;}
+.addx-info .detail-cat-trigger-label.empty{color:var(--label3);font-weight:500;}
+.addx-info .detail-cat-trigger-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.addx-info #gyeongjoFields .gyeongjo-box{margin:0;}
+.addx-info .detail-info-photo .photo-zone{position:absolute;inset:0;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px dashed var(--sep2);background:var(--card);color:var(--label3);}
+.addx-info .photo-zone svg{color:var(--sep2);}
+.addx-info .photo-zone-text{font-size:11px;}
+.addx-info .photo-zone-hint{display:none;}
+.addx-info .detail-info-photo .photo-zone.has{display:block;border:1px solid var(--sep);overflow:hidden;}
+.addx-info .photo-zone.has .photo-preview{width:100%;height:100%;max-height:none;object-fit:cover;object-position:center top;border-radius:0;}
+.addx-memo>.section-hd{margin-top:0;}
 .addx-memo>.field-g:last-child{margin-bottom:0;}
 .addx-hdr-act .detail-header-btn.primary:disabled{background:var(--fill2);border-color:var(--border);color:var(--text-tertiary);cursor:default;filter:none;}
-.addx-top .input-mode-row{flex:0 0 auto;}
-.addx-top .input-mode-btn{white-space:nowrap;}
-#previewArea>.empty-state{display:none;} /* 붙여넣기 전 빈 미리보기 안내는 붙여넣기 칸과 중복 — 숨김(파싱 오류 안내는 그대로 보임) */
-.addx-kv .cat-picker-trigger-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 @media(min-width:781px){
   #viewInput>.input-row.actions{display:none;} /* 데스크탑은 헤더 [초기화][저장] — 영수증 상세와 같은 자리 */
+  .addx-info .detail-info-photo{min-height:220px;}
 }
 @media(max-width:780px){
   .addx-hdr-act{display:none!important;}
-  .addx-info{grid-template-columns:1fr;gap:12px;padding:14px;}
-  .addx-info-photo .photo-zone{min-height:140px;}
   .addx-paste .field-ta{height:104px;min-height:104px;}
+  .addx-info .detail-info-photo .photo-zone{position:relative;inset:auto;height:160px;}
+  .addx-info .detail-info-photo .photo-zone.has{height:220px;}
+  .addx-items .prev-items{padding:0 8px;}
+  .addx-total-row,.addx-items .prev-foot{margin-left:8px;margin-right:8px;}
 }
 </style>
 <link rel="stylesheet" href="prepaid.css">
@@ -2746,8 +2775,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
           </div>
         </div>
         <div class="main-body">
-          <!-- v3.94 — 추가 화면 = 영수증 상세와 같은 배치: 붙여넣기 줄 → 품목·금액 확인 카드 → '정보' 상자(왼쪽 결제수단·카테고리·참석자·결제자 / 오른쪽 사진) → 메모·태그.
-               입력칸 id·파싱·저장 로직은 전부 그대로(배치만). 붙여넣은 뒤(#gptModeArea.qc-parsed)엔 붙여넣기 칸이 한 줄 요약으로 접힌다. -->
+          <!-- v3.95 — 추가 화면 = 영수증 상세와 같은 화면: 붙여넣기 줄 → 상단 금액 카드(누르면 품목) → '정보' 상자(상세와 같은 칸·순서 + 사진) → 메모·태그.
+               붙여넣은 뒤(#gptModeArea.qc-parsed)엔 붙여넣기 칸이 한 줄 요약으로 접힌다. 저장 경로(saveBtn·_saveDirectEntry)는 그대로. -->
           <div class="addx" id="addx">
             <div class="addx-top">
               <div class="input-mode-row">
@@ -2786,57 +2815,55 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                 </div>
               </div>
             </div><!-- /gptModeArea -->
+            <!-- v3.95 — 직접 입력: 상세의 금액 카드와 같은 자리에 금액 칸만. 매장명·일자·사진은 아래 '정보' 상자(붙여넣기와 같은 칸)를 쓴다. -->
             <div id="directModeArea" style="display:none;">
-              <div class="direct-grid">
-                <div class="field-g">
-                  <label class="field-lbl">상호명 / 내역 <span class="field-lbl-hint">*필수</span></label>
-                  <input id="directStore" class="field-inp" type="text" placeholder="예: 故 홍길동 부친상, GS마트 강남점"/>
-                </div>
-                <div class="field-g">
-                  <label class="field-lbl">날짜</label>
-                  <input id="directDate" class="field-inp" type="date"/>
-                </div>
-                <div class="field-g">
-                  <label class="field-lbl">금액 <span class="field-lbl-hint">*필수</span></label>
-                  <input id="directTotal" class="field-inp" type="text" inputmode="numeric" placeholder="0" style="text-align:right;font-size:16px;font-weight:700;"/>
-                </div>
-                <div class="field-g">
-                  <label class="field-lbl">참고 사진 <span class="field-lbl-hint">부고장·청첩장 등</span></label>
-                  <input id="directPhotoInp" type="file" accept="image/*" style="display:none;"/>
-                  <div class="photo-zone" id="directPhotoZone" style="min-height:80px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                    <div class="photo-zone-text">사진 추가</div>
-                    <div class="photo-zone-hint">탭하여 추가</div>
-                  </div>
+              <div class="detail-expense-block addx-exp">
+                <div class="det-hd-card addx-dhd">
+                  <div class="det-hd-info"><div class="det-hd-store addx-hd-store" data-addhd="store"></div></div>
+                  <label class="det-hd-amt addx-direct-amt"><input id="directTotal" type="text" inputmode="numeric" placeholder="금액 입력" autocomplete="off" aria-label="금액"/><span class="addx-won">원</span></label>
+                  <div class="det-hd-people" data-addhd="people"></div>
                 </div>
               </div>
             </div><!-- /directModeArea -->
-            <div class="addx-info">
-              <div class="addx-info-copy">
-                <div class="addx-sec-lbl">정보</div>
-                <div class="addx-grid2">
-                  <div class="field-g addx-kv">
-                    <label class="field-lbl">결제수단</label>
-                    <select id="payMethod" class="field-sel">
+            <!-- v3.95 — '정보' 상자 = 영수증 상세와 같은 칸·같은 순서(매장명 / 일자·카테고리 / 결제자·결제수단 / 참석자 / 분담 방식 + 사진). -->
+            <div class="detail-info-card addx-info">
+              <div class="detail-info-copy">
+                <div class="section-hd">정보</div>
+                <div class="detail-kv-grid">
+                  <div class="kv full" data-addkv="store"><div class="kv-lbl">매장명</div><input id="addStore" class="kv-inp" type="text" placeholder="매장명 입력" autocomplete="off"/></div>
+                  <div class="kv" data-addkv="date"><div class="kv-lbl">일자</div><input id="addDate" class="kv-inp" type="date"/></div>
+                  <div class="kv detail-category-kv category-field">
+                    <div class="kv-lbl">카테고리 <span id="catAutoHint" hidden></span></div>
+                    <input id="catInp" type="hidden" value=""/>
+                    <button class="detail-cat-trigger" id="catPickerBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="catPickerPopover">
+                      <span class="detail-cat-trigger-icon" id="catPickerIcon"></span>
+                      <span class="detail-cat-trigger-label empty" id="catPickerLabel">카테고리 선택</span>
+                      <svg class="detail-cat-trigger-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <div class="cat-picker-popover detail-cat-popover" id="catPickerPopover" role="listbox" aria-label="카테고리 선택" hidden></div>
+                  </div>
+                  <div class="kv"><div class="kv-lbl">결제자</div><select id="addPayerSel" class="kv-inp" aria-label="결제자"></select><input type="hidden" id="payerInp"/></div>
+                  <div class="kv"><div class="kv-lbl">결제수단</div>
+                    <select id="payMethod" class="kv-inp" aria-label="결제수단">
                       <option value="card">카드</option>
                       <option value="cash">현금</option>
                       <option value="transfer">계좌이체</option>
                       <option value="other">기타</option>
                     </select>
                   </div>
-                  <div class="field-g category-field addx-kv">
-                    <label class="field-lbl">카테고리 <span class="field-lbl-hint" id="catAutoHint">자동 분류돼요</span></label>
-                    <input id="catInp" type="hidden" value=""/>
-                    <button class="cat-picker-trigger" id="catPickerBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="catPickerPopover">
-                      <span class="cat-picker-trigger-icon" id="catPickerIcon"></span>
-                      <span class="cat-picker-trigger-label empty" id="catPickerLabel">카테고리 선택</span>
-                      <svg class="cat-picker-trigger-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                    </button>
-                    <div class="cat-picker-popover" id="catPickerPopover" role="listbox" aria-label="카테고리 선택" hidden></div>
+                  <div class="kv full"><div class="kv-lbl">참석자</div><input id="participantsInp" class="kv-inp" type="text" placeholder="예: 철수, 영희, 민준" autocomplete="off"/></div>
+                  <div class="kv full pp-split-block" id="addSplitBlock">
+                    <div class="kv-lbl">분담 방식 <span class="field-lbl-hint">참석자가 있을 때 적용</span></div>
+                    <div class="pp-treatbar" id="addTreatBar">
+                      <div class="pp-treat-txt"><span class="pp-treat-t">🎉 한턱</span><span class="pp-treat-d">결제자가 전액 부담 · 나머지 참석자는 0원</span></div>
+                      <button type="button" class="pp-switch" id="addTreatSw" role="switch" aria-checked="false" aria-label="한턱 켜기"></button>
+                    </div>
+                    <div class="pp-chips" id="addPpChips"></div>
+                    <div class="pp-split-hint" id="addSplitHint"></div>
+                    <div class="pp-treatby" id="addTreatBy"></div>
                   </div>
-                </div>
-                <!-- 경조사 컨텍스트 필드 -->
-                  <div id="gyeongjoFields" style="grid-column:1/-1;display:none;">
+                  <!-- 경조사 컨텍스트 필드(카테고리 = 경조사일 때만) -->
+                  <div id="gyeongjoFields" class="full" style="display:none;">
                     <div class="gyeongjo-box">
                       <div class="field-g">
                         <label class="field-lbl">관계자 <span class="field-lbl-hint">아는 사람 이름</span></label>
@@ -2857,34 +2884,28 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                       </div>
                     </div>
                   </div>
-                <div class="field-g qc-sec addx-kv addx-people">
-                  <div id="addPeopleMount"></div>
-                <div hidden><input id="participantsInp" type="text" tabindex="-1" aria-hidden="true"/><input id="payerInp" type="text" tabindex="-1" aria-hidden="true"/></div>
-              
                 </div>
               </div>
-              <div class="field-g addx-info-photo">
-                <label class="field-lbl">영수증 사진 <span class="field-lbl-hint">선택</span></label>
+              <div class="detail-info-photo addx-info-photo">
                 <input id="photoInp" type="file" accept="image/*" style="display:none;"/>
                 <div class="photo-zone" id="photoZone">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
                   <div class="photo-zone-text">사진 추가</div>
                   <div class="photo-zone-hint">탭하여 카메라 또는 갤러리 열기</div>
                 </div>
-              
               </div>
             </div>
             <div class="addx-memo">
+              <div class="section-hd">메모·태그</div>
               <div class="field-g">
-                <label class="field-lbl">메모 <span class="field-lbl-hint">선택</span></label>
-                <textarea id="noteInp" class="field-ta" style="min-height:80px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="기억할 내용이 있다면..."></textarea>
+                <label class="field-lbl">메모</label>
+                <textarea id="noteInp" class="field-ta" style="min-height:60px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="메모"></textarea>
               </div>
               <div class="field-g">
                 <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
                 <input id="tagInp" class="field-inp" type="text" placeholder="예: 식료품, 가족"/>
               </div>
             </div>
-            <!-- v3.80 '추가 정보' 접힘 줄은 없앴다(항목이 위에 바로 보임). JS 호환용 빈 요소만 남김. -->
             <div class="qc-more" id="qcMore" hidden><button type="button" id="qcMoreRow" hidden></button><span id="qcMoreSum" hidden></span><div id="qcMoreBody" hidden></div></div>
           </div>
         </div>
@@ -3680,6 +3701,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.95 — 추가 화면 = 영수증 상세와 같은 화면. 상단 카드 [매장 · 결제자 결제 … 총액 ▾ / 참석자](누르면 품목·합계), '정보' 상자 = 매장명 / 일자·카테고리 / 결제자·결제수단 / 참석자(쉼표 입력칸) / 분담 방식(🎉 한턱·칩) + 사진, 메모·태그.
+//   영수증 확인 카드·[+ 나][+ 사람] 버튼 제거. 직접 입력도 같은 정보 상자·사진칸(금액만 상단 카드). 파서·검증·저장 경로·schema 불변.
 // v3.94 — 추가 화면을 영수증 상세와 같은 배치로: 붙여넣기 줄(붙여넣으면 한 줄 요약+원문) → 영수증 확인 카드 → '정보' 상자(결제수단·카테고리·참석자·결제자 | 사진) → 메모·태그, 데스크탑 저장은 헤더 [초기화][저장]. id·파싱·저장 로직 불변.
 // v3.93 — 헤더 규칙화: 좌측·오른쪽 헤더를 <style> 끝 Header Contract 한 곳에서(눈썹·버전·제목 동일), 영수증 상세 ‹ 돌아가기 줄 높이·숨긴 버전 자리 유지, 헤더 버튼은 제목 줄 가운데.
 // v3.92 — 모든 탭 오른쪽 헤더 글자 통일: 선불권 공통 .main-eye, 통계 제목 줄 높이(기간 버튼), 사람 눈썹 'RECEIPT DB', 모바일 사람 상세 버전 숨김.
@@ -4063,7 +4086,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.94';
+const APP_VERSION='v3.95';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6630,6 +6653,9 @@ function updatePreview(){
     p._gptTotal=p.total;
     p._totalManual=true;
     p._totalSource='ai';
+    // v3.95 — 매장명·일자는 '정보' 상자 칸에서 고친다. 원문에 없으면 그 칸에 이미 적어 둔 값을 살린다.
+    if(!(p.store||'').trim())p.store=(document.getElementById('addStore')?.value||'').trim();
+    if(!p.date)p.date=document.getElementById('addDate')?.value||'';
   }
   _currentParsed=p;
   // 가게명 인식되면 카테고리 자동 채움 (입력란이 비어있거나 이전에 자동 채웠을 때만)
@@ -6669,11 +6695,32 @@ function _qcItemsSummary(p){
 function _qcRenderIfIdle(){setTimeout(()=>{if(_currentParsed&&!previewArea.contains(document.activeElement))renderPreviewForm();},0);}
 function _qcSyncRows(){
   const p=_currentParsed;if(!p||!previewArea)return;
-  const set=(k,m)=>previewArea.querySelector(`.qc-row[data-qc="${k}"]`)?.classList.toggle('missing',m);
-  set('store',!(p.store||'').trim());set('date',!p.date);set('total',!(p.total>0));
-  previewArea.querySelector('.qc-date-wrap')?.classList.toggle('empty',!p.date);
   const won=previewArea.querySelector('.qc-won');if(won)won.hidden=_qcTotalEmpty(p);
-  const sum=previewArea.querySelector('.qc-items-sum');if(sum)sum.innerHTML=_qcItemsSummary(p);
+  const pt=document.getElementById('addxPastedTxt');if(pt)pt.innerHTML='붙여넣은 내용으로 채웠어요 · 품목 '+_qcItemsSummary(p);
+  _addxSyncHeader();
+}
+// v3.95 — 추가 화면 = 영수증 상세와 같은 화면. 상단 카드(매장 · 결제자 … 총액 / 참석자)는 '정보' 상자 값을 그대로 비춘다.
+function _addxIsDirect(){return !!document.getElementById('addx')?.classList.contains('addx-direct');}
+function _addxSyncHeader(){
+  const store=(document.getElementById('addStore')?.value||'').trim();
+  const name=_gjComposed()||store;
+  const payer=(document.getElementById('payerInp')?.value||'').trim()||(getMyName()||'').trim();
+  const people=_qcNames('participantsInp');
+  document.querySelectorAll('#addx [data-addhd="store"]').forEach(el=>{
+    el.innerHTML=(name?escapeHtml(name):'<span class="addx-hd-ph">매장명 없음</span>')+(payer?`<span class="det-payer-badge">${escapeHtml(payer)} 결제</span>`:'');
+  });
+  document.querySelectorAll('#addx [data-addhd="people"]').forEach(el=>{
+    el.classList.toggle('is-empty',!people.length);
+    el.innerHTML=people.length?people.map(n=>`<span class="det-hd-person">${escapeHtml(n)}</span>`).join(''):'참석자 없음';
+  });
+  const p=_currentParsed;
+  const amt=previewArea&&previewArea.querySelector('[data-addhd="amt"]');
+  if(amt&&p){const e=_qcTotalEmpty(p);amt.classList.toggle('addx-amt-empty',e);amt.textContent=e?'금액 입력':fmtMoney(p.total)+'원';}
+  // 필수칸(매장명·일자)이 비었으면 칸 테두리로 알려 준다 — 붙여넣은 뒤(또는 직접 입력)만.
+  const direct=_addxIsDirect(), active=direct||!!p;
+  const miss=(k,m)=>document.querySelector(`#addx [data-addkv="${k}"]`)?.classList.toggle('addx-miss',m);
+  miss('store',active&&!name);
+  miss('date',!!p&&!direct&&!(document.getElementById('addDate')?.value));
 }
 
 // 미리보기 폼을 그리고 이벤트 바인딩. 사용자가 어디든 손댈 수 있게.
@@ -6717,33 +6764,36 @@ function renderPreviewForm(){
       </div>`
     : `<div class="prev-total-hint">자동 합계 · 품목 금액의 합</div>`;
 
-  // v3.79 Quick Confirm — Primary 3개(매장·날짜·총액)는 row 전체 tap = 그 자리 input 편집(모달 없음).
-  //   값이 없으면 가짜 값(0원·오늘·알 수 없음) 대신 '입력' CTA. ✓·신뢰도 표시는 없다(파서에 confidence가 없음).
+  // v3.95 — 영수증 상세의 상단 카드와 같은 모양: [매장 · 결제자 결제 … 총액 ▾ / 참석자]. 누르면 품목·합계가 펼쳐진다.
+  //   매장명·일자는 아래 '정보' 상자 칸에서 고친다(상세와 같은 자리). 총액이 없으면 입력할 수 있게 펼친 채로 보여 준다.
   const _totEmpty=_qcTotalEmpty(p);
-  const qcRow=(key,label,inner,missing)=>`<label class="qc-row${missing?' missing':''}" data-qc="${key}"><span class="qc-lbl">${label}</span><span class="qc-val">${inner}</span><span class="qc-go" aria-hidden="true">›</span></label>`;
+  if(_totEmpty)_qcItemsOpen=true;
+  const st=document.getElementById('addStore'),dt=document.getElementById('addDate');
+  if(st&&document.activeElement!==st)st.value=p.store||'';
+  if(dt&&document.activeElement!==dt)dt.value=p.date||'';
   previewArea.innerHTML=`
-    <div class="preview-form qc-form">
-      <div class="qc-hd"><span class="qc-hd-t">영수증 확인</span><span class="qc-hd-s">틀린 값만 눌러서 고치세요</span></div>
-      ${qcRow('store','매장',`<input class="prev-store qc-inp" placeholder="매장명 입력" value="${escapeHtml(p.store||'')}" autocomplete="off"/>`,!(p.store||'').trim())}
-      ${qcRow('date','날짜',`<span class="qc-date-wrap${p.date?'':' empty'}"><input class="prev-date qc-inp" type="date" value="${p.date||''}" aria-label="날짜"/><span class="qc-ph" aria-hidden="true">날짜 선택</span></span>`,!p.date)}
-      ${qcRow('total','총액',`<span class="prev-total-cell"><input class="prev-total qc-inp" type="text" inputmode="numeric" placeholder="금액 입력" value="${_totEmpty?'':_fmtN(p.total)}"/><span class="qc-won"${_totEmpty?' hidden':''}>원</span></span>`,!(p.total>0))}
-      ${(namedItems.length&&totalDiff)?totalHintHtml:''}
-      <div class="qc-items${_qcItemsOpen?' open':''}">
-      <button type="button" class="qc-row qc-items-row" aria-expanded="${_qcItemsOpen?'true':'false'}"><span class="qc-lbl">품목</span><span class="qc-val qc-items-sum">${_qcItemsSummary(p)}</span><span class="qc-go" aria-hidden="true">›</span></button>
-      <div class="prev-items">
-        <div class="prev-items-hd">
-          <span>품목 ${namedItems.length>0?`<span class="prev-items-count">· ${namedItems.length}개</span>`:''}</span>
-          <button type="button" class="prev-add-item">+ 추가</button>
-        </div>
-        ${itemsHtml}
+    <div class="detail-expense-block addx-exp">
+      <div class="det-hd-card" id="addItemsHeader">
+        <div class="det-hd-info"><div class="det-hd-store addx-hd-store" data-addhd="store"></div></div>
+        <div class="det-hd-amt" data-addhd="amt"></div>
+        <button class="det-expense-toggle" id="addItemsToggle" type="button" aria-expanded="${_qcItemsOpen}" aria-controls="addItemsPanel" aria-label="품목 내역 ${_qcItemsOpen?'접기':'펼치기'}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="det-hd-people" data-addhd="people"></div>
       </div>
-      ${namedItems.length>0?`<div class="prev-foot"><span class="prev-foot-lbl">품목 합계</span><span class="prev-foot-val${matchOk?'':' mismatch'}">${fmtMoney(sum)}원${matchOk?'':` ≠ 총액 ${fmtMoney(p.total)}원`}</span></div>`:''}
+      <div class="detail-items-panel addx-items${_qcItemsOpen?'':' closed'}" id="addItemsPanel">
+        <div class="detail-items-tools"><button type="button" class="ghost-mini prev-add-item">+ 추가</button></div>
+        <div class="prev-items">${itemsHtml}</div>
+        <div class="addx-total-row"><span class="addx-total-lbl">합계</span><span class="prev-total-cell"><input class="prev-total" type="text" inputmode="numeric" placeholder="금액 입력" aria-label="총액" value="${_totEmpty?'':_fmtN(p.total)}"/><span class="qc-won"${_totEmpty?' hidden':''}>원</span></span></div>
+        ${(namedItems.length&&totalDiff)?totalHintHtml:''}
+        ${namedItems.length>0?`<div class="prev-foot"${matchOk?' hidden':''}><span class="prev-foot-lbl">품목 합계</span><span class="prev-foot-val${matchOk?'':' mismatch'}">${fmtMoney(sum)}원${matchOk?'':` ≠ 총액 ${fmtMoney(p.total)}원`}</span></div>`:''}
       </div>
     </div>
     <div class="preview-alerts">${alertsHtml}</div>
   `;
   document.getElementById('gptModeArea')?.classList.add('qc-parsed');
   { const pt=document.getElementById('addxPastedTxt'); if(pt)pt.innerHTML='붙여넣은 내용으로 채웠어요 · 품목 '+_qcItemsSummary(p); } // v3.94 — 접힌 붙여넣기 줄 요약
+  _addxSyncHeader();
 
   bindPreviewFormEvents();
   const saveState=_saveMessageFromValidation(v2);
@@ -6762,6 +6812,7 @@ function _refreshPreviewSummary(){
   if(foot){
     foot.textContent=`${fmtMoney(sum)}원${matchOk?'':` ≠ 총액 ${fmtMoney(p.total)}원`}`;
     foot.classList.toggle('mismatch',!matchOk);
+    foot.closest('.prev-foot').hidden=matchOk; // v3.95 — 합계가 맞으면 숨김(상세처럼 합계 한 줄만)
   }
   // 행별 불일치 강조
   const mismatchIndexes=new Set(getAmountAudit(p).rowMismatches.map(m=>m.index));
@@ -6781,36 +6832,6 @@ function bindPreviewFormEvents(){
   const p=_currentParsed;
   if(!p)return;
 
-  // ── 헤더: 매장명 ──
-  const storeInp=previewArea.querySelector('.prev-store');
-  if(storeInp){
-    let composing=false;
-    storeInp.addEventListener('compositionstart',()=>{composing=true;});
-    storeInp.addEventListener('compositionend',()=>{composing=false;p.store=storeInp.value;});
-    storeInp.addEventListener('input',()=>{if(!composing){p.store=storeInp.value;_qcSyncRows();}});
-    storeInp.addEventListener('blur',()=>{
-      p.store=storeInp.value.trim();
-      // 매장명 바뀌면 카테고리 자동 재추정 (자동 채움 상태일 때만 덮어쓰기)
-      if(_catAutoFilled||catInpEl.value.trim()===''){
-        const auto=autocategorize(p.store);
-        if(auto)_setCategoryValue(auto,{auto:true});
-      }
-      // v3.79 — 바로 다음 row를 눌러 고칠 수 있게, 포커스가 확인 영역 안에 남아 있으면 다시 그리지 않고 부분 갱신만.
-      _refreshPreviewSummary();_qcRenderIfIdle();
-    });
-  }
-  // ── 일자 — 클릭/포커스 시 달력 즉시 열기 ──
-  const dateInp=previewArea.querySelector('.prev-date');
-  if(dateInp){
-    const openPicker=()=>{
-      if(typeof dateInp.showPicker==='function'){
-        try{dateInp.showPicker();}catch(_){/* iOS 등 일부에서 안 됨 */}
-      }
-    };
-    dateInp.addEventListener('click',openPicker);
-    dateInp.addEventListener('focus',openPicker);
-    dateInp.addEventListener('change',()=>{p.date=dateInp.value;renderPreviewForm();});
-  }
   // ── 총액 ── (사용자가 직접 손대면 수동 모드로 전환, 쉼표 표시)
   const totalInp=previewArea.querySelector('.prev-total');
   if(totalInp){
@@ -6844,14 +6865,12 @@ function bindPreviewFormEvents(){
     });
   }
 
-  // ── v3.79 품목(Secondary) 펼치기/접기 — 같은 자리의 기존 item editor를 연다(새 editor·모달 없음) ──
-  const itemsRow=previewArea.querySelector('.qc-items-row');
-  if(itemsRow){
-    itemsRow.addEventListener('click',()=>{
-      _qcItemsOpen=!_qcItemsOpen;
-      itemsRow.closest('.qc-items')?.classList.toggle('open',_qcItemsOpen);
-      itemsRow.setAttribute('aria-expanded',String(_qcItemsOpen));
-    });
+  // ── v3.95 품목 펼치기/접기 — 상세와 같이 상단 카드(또는 ▾)를 누른다 ──
+  const itemsHd=previewArea.querySelector('#addItemsHeader'), itemsTg=previewArea.querySelector('#addItemsToggle'), itemsPn=previewArea.querySelector('#addItemsPanel');
+  if(itemsHd&&itemsTg&&itemsPn){
+    const tg=()=>{_qcItemsOpen=!_qcItemsOpen;itemsPn.classList.toggle('closed',!_qcItemsOpen);itemsTg.setAttribute('aria-expanded',String(_qcItemsOpen));itemsTg.setAttribute('aria-label',_qcItemsOpen?'품목 내역 접기':'품목 내역 펼치기');};
+    itemsTg.addEventListener('click',e=>{e.stopPropagation();tg();});
+    itemsHd.addEventListener('click',tg);
   }
 
   // ── 품목 행 ──
@@ -7085,7 +7104,7 @@ function clearPhoto(){
   photoInp.value='';
   photoZone.classList.remove('has');
   photoZone.innerHTML=`
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
     <div class="photo-zone-text">사진 추가</div>
     <div class="photo-zone-hint">${_photoHint}</div>
   `;
@@ -7119,6 +7138,7 @@ saveBtn.addEventListener('click',async()=>{
   if(_inputMode==='direct'){await _saveDirectEntry();return;}
   if(!_currentParsed)return;
   const p=_currentParsed;
+  { const st=document.getElementById('addStore'),dt=document.getElementById('addDate'); if(st)p.store=st.value.trim(); if(dt&&dt.value)p.date=dt.value; } // v3.95
   const v2=validateParsed(p);
   if(v2.errors.length){toast('필수 항목이 비어있어요',{type:'error'});return;}
   const {audit:amountAudit}=_amountAuditMessages(p);
@@ -7407,25 +7427,53 @@ function _bindPeopleUI(c){
 }
 let _addSplitUI=null, _dSplitUI=null, _addPeople=null;
 (function _initAddSplitUI(){
-  const mount=document.getElementById('addPeopleMount');if(mount)mount.outerHTML=_peopleBlockHtml('add',true); // v3.82 공통 블록(결제자 select 포함)
+  // v3.95 — 영수증 상세와 같은 컨트롤: 참석자 = 쉼표 입력칸, 결제자 = 드롭다운(_payerSelectRender), 분담 방식 = 🎉 한턱 + 참석자 칩.
+  //   저장은 그대로 participantsInp·payerInp·_addSplitUI.getState()를 읽는다(저장 경로 불변).
   const chips=document.getElementById('addPpChips');
   if(!chips)return;
+  const partsEl=document.getElementById('participantsInp'), payerEl=document.getElementById('payerInp');
   _addSplitUI=_makeSplitUI({
     chips,
     treatBar:document.getElementById('addTreatBar'),
     treatSw:document.getElementById('addTreatSw'),
     hint:document.getElementById('addSplitHint'),
     treatByBox:document.getElementById('addTreatBy'),
-    getParticipants:()=>(document.getElementById('participantsInp').value||'').split(','),
-    getPayer:()=>document.getElementById('payerInp').value||'',
-    getTotal:()=>{const p=_currentParsed;return (p&&p.total)||0;},
-    meName:()=>getMyName()||'',
-    onRemove:n=>{const cur=_qcNames('participantsInp').filter(x=>normalizeName(x)!==normalizeName(n));_qcSetField('participantsInp',cur.join(', '));},
-    cards:true,
-    onChange:()=>_qcRenderPeople()
+    getParticipants:()=>(partsEl.value||'').split(','),
+    getPayer:()=>(payerEl.value||'').trim()||getMyName()||'', // 비어 있으면 저장 때 '내 이름'(기존 규칙)
+    getTotal:()=>_addxIsDirect()?_parseN(document.getElementById('directTotal')?.value||''):((_currentParsed&&_currentParsed.total)||0),
+    onChange:()=>{}
   });
-  _addSplitUI.render();
-  _addPeople=_bindPeopleUI({p:'add',partsId:'participantsInp',payerId:'payerInp',split:()=>_addSplitUI,emptyIsMe:true,ctx:()=>_qcCtxPerson});
+  const sel=document.getElementById('addPayerSel');
+  const pc={partsId:'participantsInp',payerId:'payerInp',emptyIsMe:true,ctx:()=>_qcCtxPerson};
+  const refreshPay=()=>{if(sel)_payerSelectRender(sel,pc);};
+  if(sel)_payerSelectBindChange(sel,pc,refreshPay);
+  [partsEl,payerEl].forEach(el=>el.addEventListener('input',()=>{_addSplitUI.render();refreshPay();_addxSyncHeader();}));
+  _addSplitUI.render();refreshPay();
+  _addPeople={refresh(){refreshPay();_addxSyncHeader();}};
+  // 매장명·일자 — 붙여넣은 값(_currentParsed)과 연결. 직접 입력도 같은 칸을 쓴다.
+  const stEl=document.getElementById('addStore'), dtEl=document.getElementById('addDate');
+  let comp=false;
+  const pushStore=()=>{
+    if(_currentParsed&&!_addxIsDirect()){_currentParsed.store=stEl.value;_refreshPreviewSummary();}
+    else{_addxSyncHeader();_updateDirectSaveBtn();}
+  };
+  stEl.addEventListener('compositionstart',()=>{comp=true;});
+  stEl.addEventListener('compositionend',()=>{comp=false;pushStore();});
+  stEl.addEventListener('input',()=>{if(!comp)pushStore();});
+  stEl.addEventListener('blur',()=>{
+    const v=stEl.value.trim();
+    if(_currentParsed&&!_addxIsDirect())_currentParsed.store=v;
+    // 매장명이 바뀌면 카테고리 자동 재추정(자동 채움 상태이거나 비어 있을 때만)
+    if(v&&(_catAutoFilled||catInpEl.value.trim()==='')){const auto=autocategorize(v);if(auto)_setCategoryValue(auto,{auto:true});}
+    pushStore();
+  });
+  const openPicker=()=>{if(typeof dtEl.showPicker==='function'){try{dtEl.showPicker();}catch(_){}}};
+  dtEl.addEventListener('click',openPicker);
+  dtEl.addEventListener('focus',openPicker);
+  dtEl.addEventListener('change',()=>{
+    if(_currentParsed&&!_addxIsDirect()){_currentParsed.date=dtEl.value;_refreshPreviewSummary();}
+    else{_addxSyncHeader();_updateDirectSaveBtn();}
+  });
 })();
 
 // ── v3.80 compact 입력 — '항상 펼쳐놓기' → '필요할 때 선택' ──────────────────────────────────────
@@ -7559,6 +7607,8 @@ function clearInputs(){
   document.getElementById('payerInp').value=getMyName();
   _setCategoryValue('',{auto:false});
   document.getElementById('participantsInp').value='';
+  document.getElementById('addStore').value=''; // v3.95
+  document.getElementById('addDate').value=_addxIsDirect()?new Date().toISOString().slice(0,10):'';
   if(_addSplitUI)_addSplitUI.reset();
   _qcItemsOpen=false;_qcCtxPerson=null;_qcMoreOpen=false; // v3.79·v3.80
   document.getElementById('qcMore')?.classList.remove('open');
@@ -7574,63 +7624,21 @@ function clearInputs(){
   _catAutoFilled=false;
   _updateCatHint();
   updatePreview();
-  // 직접 입력 모드 필드 초기화
-  const ds=document.getElementById('directStore');
-  const dd=document.getElementById('directDate');
+  // 직접 입력 모드 필드 초기화(매장명·일자는 위 정보 상자 칸)
   const dt=document.getElementById('directTotal');
-  if(ds)ds.value='';
-  if(dd)dd.value=new Date().toISOString().slice(0,10);
   if(dt)dt.value='';
-  _clearDirectPhoto();
   if(_inputMode==='direct')_setAddSaveState(true,'상호명과 금액을 입력하면 저장할 수 있어요.');
   _qcRenderPeople(); // v3.80 — 결제자 row·추가 정보 요약을 초기값으로
+  { const pb=document.getElementById('payerInp'); if(pb)pb.dispatchEvent(new Event('input',{bubbles:true})); } // v3.95 — 결제자 드롭다운·분담 칩 갱신
 }
 
 // ════════════════════════════════════════════════════════════════
 // 직접 입력 모드
 // ════════════════════════════════════════════════════════════════
 let _inputMode='gpt';
-let _directPhotoBlob=null,_directPhotoUrl=null;
-
-function _applyDirectPhoto(f){
-  if(!f||!f.type.startsWith('image/'))return;
-  if(_directPhotoUrl)URL.revokeObjectURL(_directPhotoUrl);
-  _directPhotoBlob=f;
-  _directPhotoUrl=URL.createObjectURL(f);
-  const zone=document.getElementById('directPhotoZone');
-  if(!zone)return;
-  zone.classList.add('has');
-  zone.innerHTML=`
-    <img src="${_directPhotoUrl}" class="photo-preview" alt="참고 사진"/>
-    <button class="photo-remove" type="button" aria-label="사진 제거">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
-    </button>
-  `;
-  zone.querySelector('.photo-remove').addEventListener('click',e=>{
-    e.stopPropagation();_clearDirectPhoto();
-  });
-}
-
-function _clearDirectPhoto(){
-  if(_directPhotoUrl){URL.revokeObjectURL(_directPhotoUrl);_directPhotoUrl=null;}
-  _directPhotoBlob=null;
-  const inp=document.getElementById('directPhotoInp');
-  if(inp)inp.value='';
-  const zone=document.getElementById('directPhotoZone');
-  if(!zone)return;
-  zone.classList.remove('has');
-  zone.innerHTML=`
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-    <div class="photo-zone-text">사진 추가</div>
-    <div class="photo-zone-hint">탭하여 추가</div>
-  `;
-  // 이벤트 재연결
-  zone.onclick=()=>document.getElementById('directPhotoInp').click();
-}
-
 function _updateDirectSaveBtn(){
   if(_inputMode!=='direct')return;
-  const store=(document.getElementById('directStore').value||'').trim();
+  const store=(document.getElementById('addStore').value||'').trim();
   const total=(document.getElementById('directTotal').value||'').trim();
   const ready=!!((store||_gjComposed())&&total);
   _setAddSaveState(!ready,ready?'저장할 준비가 됐어요.':'상호명과 금액을 입력하면 저장할 수 있어요.');
@@ -7645,7 +7653,9 @@ function _setInputMode(mode){
   const titleEl=document.getElementById('inputModeTitle');
   const subEl=document.getElementById('inputModeSub');
   if(titleEl)titleEl.textContent=mode==='gpt'?'새 영수증':'새 영수증 · 직접 입력';
-  document.getElementById('addx')?.classList.toggle('addx-direct',mode==='direct'); // v3.94 — 직접 입력은 자체 사진칸 사용
+  document.getElementById('addx')?.classList.toggle('addx-direct',mode==='direct'); // v3.95 — 직접 입력: 금액 카드만 바뀌고 정보 상자는 같다
+  { const dt=document.getElementById('addDate'); if(mode==='direct'&&dt&&!dt.value)dt.value=new Date().toISOString().slice(0,10); }
+  _addxSyncHeader();
   if(subEl)subEl.textContent=mode==='gpt'
     ?'AI가 정리한 결과를 그대로 붙여넣으세요.'
     :'상호명과 금액만 입력하면 저장됩니다. 부고장·청첩장 등 참고 이미지를 첨부할 수 있어요.';
@@ -7660,7 +7670,7 @@ function _setInputMode(mode){
 }
 
 async function _saveDirectEntry(){
-  const store=(document.getElementById('directStore').value||'').trim();
+  const store=(document.getElementById('addStore').value||'').trim();
   const totalRaw=(document.getElementById('directTotal').value||'').trim();
   const total=_parseN(totalRaw);
   // 경조사 컨텍스트 — 관계자 태그 자동 추가, 매장명 재구성
@@ -7668,15 +7678,15 @@ async function _saveDirectEntry(){
   const finalStore=_gjName||store;
   if(!finalStore){toast('상호명/내역을 입력해주세요',{type:'error'});return;}
   if(!total){toast('금액을 입력해주세요',{type:'error'});return;}
-  const dateVal=document.getElementById('directDate').value||new Date().toISOString().slice(0,10);
+  const dateVal=document.getElementById('addDate').value||new Date().toISOString().slice(0,10);
   const id=_newId(dateVal);
   let imageId=null;
   let imageHash='',photoClaim=null;
-  if(_directPhotoBlob){
+  if(pendingPhotoBlob){ // v3.95 — 직접 입력도 정보 상자의 사진 칸을 쓴다
     imageId='img_'+id.slice(4);
-    const meta=await _photoMetaForFile(_directPhotoBlob);
+    const meta=await _photoMetaForFile(pendingPhotoBlob);
     imageHash=meta.contentHash;photoClaim=meta.claim;
-    await dbPut('images',{id:imageId,blob:_directPhotoBlob,mime:_directPhotoBlob.type||'image/jpeg',contentHash:imageHash});
+    await dbPut('images',{id:imageId,blob:pendingPhotoBlob,mime:pendingPhotoBlob.type||'image/jpeg',contentHash:imageHash});
     _dbxUploadImage(imageId);
   }
   const participants=(document.getElementById('participantsInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
@@ -7732,58 +7742,18 @@ async function _saveDirectEntry(){
   document.getElementById('modeGptBtn').addEventListener('click',()=>_setInputMode('gpt'));
   document.getElementById('modeDirectBtn').addEventListener('click',()=>_setInputMode('direct'));
 
-  const directPhotoZone=document.getElementById('directPhotoZone');
-  const directPhotoInp=document.getElementById('directPhotoInp');
-  directPhotoZone.addEventListener('click',()=>directPhotoInp.click());
-  directPhotoInp.addEventListener('change',e=>_applyDirectPhoto(e.target.files&&e.target.files[0]));
-
-  // 드래그&드롭 (데스크톱)
-  ['dragenter','dragover'].forEach(ev=>directPhotoZone.addEventListener(ev,e=>{
-    e.preventDefault();e.stopPropagation();directPhotoZone.classList.add('drag');
-  }));
-  ['dragleave','dragend'].forEach(ev=>directPhotoZone.addEventListener(ev,e=>{
-    if(!directPhotoZone.contains(e.relatedTarget))directPhotoZone.classList.remove('drag');
-  }));
-  directPhotoZone.addEventListener('drop',e=>{
-    e.preventDefault();e.stopPropagation();
-    directPhotoZone.classList.remove('drag');
-    _applyDirectPhoto(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]);
-  });
-
-  const directStore=document.getElementById('directStore');
-  const directDate=document.getElementById('directDate');
   const directTotal=document.getElementById('directTotal');
-
-  // 날짜 기본값 = 오늘
-  directDate.value=new Date().toISOString().slice(0,10);
-
-  // 날짜 picker 즉시 열기
-  directDate.addEventListener('focus',()=>{
-    if(typeof directDate.showPicker==='function')try{directDate.showPicker();}catch(_){}
-  });
 
   // 금액 입력 → 천단위 쉼표
   directTotal.addEventListener('input',function(){
     const raw=this.value.replace(/[^0-9]/g,'');
     this.value=raw?parseInt(raw,10).toLocaleString('ko-KR'):'';
     _updateDirectSaveBtn();
+    if(_addSplitUI)_addSplitUI.render(); // 1인당 금액 안내
   });
 
-  directStore.addEventListener('input',_updateDirectSaveBtn);
-  // 경조사 필드 변경도 저장 버튼 활성화에 반영
-  document.getElementById('gjPersonInp').addEventListener('input',_updateDirectSaveBtn);
-  document.getElementById('gjRelInp').addEventListener('input',_updateDirectSaveBtn);
-
-  // 가게명 blur → 카테고리 자동 채움
-  directStore.addEventListener('blur',function(){
-    const s=this.value.trim();
-    if(!s)return;
-    const catInp=document.getElementById('catInp');
-    if(!catInp.value.trim()||_catAutoFilled){
-      const auto=autocategorize(s);
-      if(auto)_setCategoryValue(auto,{auto:true});
-    }
-  });
+  // 경조사 필드 변경도 저장 버튼 활성화·상단 카드 매장명에 반영
+  ['gjPersonInp','gjRelInp'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{_updateDirectSaveBtn();_addxSyncHeader();}));
 })();
 // ── 경조사 컨텍스트 필드 ──
 const _gjCats=['경조사'];
