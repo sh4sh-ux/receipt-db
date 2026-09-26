@@ -2324,6 +2324,23 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 @media(max-width:780px){
   .qc-pk-bd .qc-pk{max-height:min(88vh,calc(100% - 8px));}
 }
+/* v3.83 만남 차수 — 상세(보기)·편집(≡ drag). Flat List grammar 그대로, 차수 = 작은 secondary text */
+.mm-ord{flex:none;min-width:30px;font-size:12px;font-weight:650;color:var(--text-tertiary);font-variant-numeric:tabular-nums;}
+.mm-orow{padding-left:10px;}
+.mtg-drow.ord{grid-template-columns:32px minmax(0,1fr) auto;}
+.mtg-drow-ord{grid-column:1;grid-row:1;align-self:center;font-size:12px;font-weight:650;color:var(--label3);}
+.mtg-drow.ord .mtg-drow-store{grid-column:2;}
+.mtg-drow.ord .mtg-drow-amt{grid-column:3;}
+.mtg-drow.ord .mtg-drow-date{grid-column:2;}
+.mm-erow{display:flex;align-items:stretch;border-bottom:1px solid var(--divider);background:var(--card);position:relative;}
+.mm-elist.reordering .mm-erow:not(.dragging){transition:transform .12s ease;}
+.mm-erow>.org-row{flex:1 1 auto;min-width:0;border-bottom:none;}
+.mm-erow.sel{background:var(--blue-bg);}
+.mm-handle{flex:none;display:flex;align-items:center;justify-content:center;width:44px;color:var(--text-tertiary);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;}
+.mm-handle:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
+.mm-erow.dragging{background:var(--fill2);box-shadow:0 4px 14px rgba(0,0,0,.12);position:relative;z-index:2;}
+.mm-erow.dragging .mm-handle{cursor:grabbing;color:var(--text-primary);}
+.mm-elist.reordering{user-select:none;-webkit-user-select:none;}
 </style>
 <link rel="stylesheet" href="prepaid.css">
 </head>
@@ -3483,6 +3500,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.83 — 만남 차수(meetingOrder, optional 정수): 만남 상세에서 1차·2차… 표시(보기 전용), 만남 편집에서만 ≡ drag(키보드 ↑↓)로 변경.
+//   추가·이동=마지막 차수, 분리·이동 원래 만남=재번호, 전체 풀기·분리=차수 제거. 계산·Dutch Pay payload에 쓰지 않음, migration 없음.
 // v3.82 — 사람 UI 최종 정리: 결제자 = select field(참석자 후보 + 다른 사람…) · 참석자 = compact row(이름 · 분담 badge · ×) ·
 //   '(나)'·이름 앞 avatar/icon 제거 · Add/Detail 나=Blue·그 외 neutral · 관계 분석 상대=Dutch Pay Orange(--amber) ·
 //   사람 추가 시트 keyboard-safe(visualViewport) + 쉼표 여러 명 직접 입력. ⚠️ schema·계산·저장 경로 불변.
@@ -3852,7 +3871,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.82';
+const APP_VERSION='v3.83';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -7950,6 +7969,60 @@ async function _mtgApply(recs, mutate){
   dbxSyncUpload().catch(()=>{});
   return true;
 }
+// ── v3.83 만남 차수(meetingOrder) — 표시·기록 순서 전용 optional metadata ──
+//   ⚠️ 계산(total·paidBy·participants·splitExclude·treat·treatBy·Person·Meeting count·단둘이/여럿이·Relation Group·분담·통계)과
+//   Dutch Pay payload에 절대 쓰지 않는다. 같은 meetingId에 실제 receipt 2건 이상일 때만 의미가 있고, 만남 상세/편집에서만 보인다.
+//   기존 데이터 migration 없음 — 값이 없으면 기존 순서(_mtgSortByDate), 손상/중복 값이 있어도 화면은 runtime 1..N으로 정상 표시.
+//   DB 기록은 편집 시점(순서 변경·추가·이동·분리)에만.
+function _mtgHasOrder(r){const n=r&&r.meetingOrder;return Number.isInteger(n)&&n>0;}
+function _mtgOrdered(recs){
+  const base=_mtgSortByDate(recs||[]);
+  if(!base.some(_mtgHasOrder))return base;
+  const idx=new Map(base.map((r,i)=>[r.id,i]));
+  return [...base].sort((a,b)=>{const ha=_mtgHasOrder(a),hb=_mtgHasOrder(b);
+    if(ha&&hb&&a.meetingOrder!==b.meetingOrder)return a.meetingOrder-b.meetingOrder;
+    if(ha!==hb)return ha?-1:1;
+    return idx.get(a.id)-idx.get(b.id);});
+}
+// 목표 순서(ids) → 바뀌는 receipt만 [{r,order}]
+function _mtgOrderChanges(orderedRecs){
+  return orderedRecs.map((r,i)=>({r,order:i+1})).filter(x=>x.r.meetingOrder!==x.order);
+}
+// 남은 receipt 재번호(분리·이동 후). 순서가 기록된 적 있는 만남만(없으면 runtime 순서 그대로라 쓰기 불필요).
+function _mtgRenumberAfter(mid,removedIds){
+  if(!mid)return [];
+  const rest=_mtgReceiptsById(mid).filter(r=>!removedIds.has(r.id));
+  if(!rest.some(_mtgHasOrder))return [];
+  return _mtgOrderChanges(_mtgOrdered(rest));
+}
+// 추가·이동 대상 만남: 기존 순서 1..N 확정 + 새 receipt는 마지막 차수(날짜순으로 N+1…)
+function _mtgAppendPlan(targetMid,list){
+  const ids=new Set(list.map(r=>r.id));
+  const existing=_mtgOrdered(_mtgReceiptsById(targetMid).filter(r=>!ids.has(r.id)));
+  return _mtgOrderChanges([...existing,..._mtgSortByDate(list)]);
+}
+// 여러 변경을 한 번의 atomic 저장으로(_mtgApply: dbPutMany + updatedAt + 실패 시 rollback)
+async function _mtgApplyPlan(entries){
+  const fn=new Map();entries.forEach(({r,f})=>{const prev=fn.get(r.id);fn.set(r.id,prev?(x=>{prev(x);f(x);}):f);});
+  const list=[...new Map(entries.map(e=>[e.r.id,e.r])).values()];
+  return _mtgApply(list,r=>fn.get(r.id)(r));
+}
+// 편집 화면 drag 결과 저장: 해당 만남 receipt들의 meetingOrder만.
+async function _mtgSaveOrder(mid,orderedIds){
+  const rc=_mtgReceiptsById(mid);if(rc.length<2)return false;
+  const byId=new Map(rc.map(r=>[r.id,r]));
+  const ordered=orderedIds.map(id=>byId.get(id)).filter(Boolean);
+  if(ordered.length!==rc.length)return false;
+  const ch=_mtgOrderChanges(ordered);if(!ch.length)return true;
+  return _mtgApplyPlan(ch.map(({r,order})=>({r,f:x=>{x.meetingOrder=order;}})));
+}
+// 분리·전체 풀기·이동 원래 만남: meetingId와 함께 meetingOrder도 제거(stale 방지) + 남은 receipt 재번호
+function _mtgDetachEntries(list){
+  const out=list.map(r=>({r,f:x=>{delete x.meetingId;delete x.meetingOrder;}}));
+  const bySrc=new Map();list.forEach(r=>{if(r.meetingId){if(!bySrc.has(r.meetingId))bySrc.set(r.meetingId,new Set());bySrc.get(r.meetingId).add(r.id);}});
+  bySrc.forEach((ids,mid)=>_mtgRenumberAfter(mid,ids).forEach(({r,order})=>out.push({r,f:x=>{x.meetingOrder=order;}})));
+  return out;
+}
 // 기존 만남에 추가: 선택 receipt(1건+)를 targetMid로. 이미 다른 만남이면 이동 확인(§20).
 async function _mtgAddToMeeting(recs, targetMid){
   const list=(recs||[]).filter(Boolean); if(!list.length||!targetMid)return false;
@@ -7964,7 +8037,10 @@ async function _mtgAddToMeeting(recs, targetMid){
         <b style="color:var(--label);font-size:13px;">추가 후 ${bN+list.length}건 · ${fmtMoney(bSum+aSum)}원</b>
       </span>`, okLabel:'추가'});
   if(!ok)return false;
-  const done=await _mtgApply(list, r=>{r.meetingId=targetMid;});
+  // v3.83 — 새 receipt는 마지막 차수. 다른 만남에서 옮겨온 경우 원래 만남은 재번호.
+  const src=_mtgDetachEntries(list.filter(r=>r.meetingId&&r.meetingId!==targetMid)).filter(e=>!list.includes(e.r));
+  const plan=[...list.map(r=>({r,f:x=>{x.meetingId=targetMid;}})),..._mtgAppendPlan(targetMid,list).map(({r,order})=>({r,f:x=>{x.meetingOrder=order;}})),...src];
+  const done=await _mtgApplyPlan(plan);
   if(done)toast(`${list.length}건을 만남에 추가했어요.`,{type:'success'});
   return done;
 }
@@ -7973,7 +8049,7 @@ async function _mtgDetach(recs){
   const list=(recs||[]).filter(r=>r&&r.meetingId); if(!list.length)return false;
   const ok=await _mtgConfirm({title:'만남에서 분리', bodyHtml:`선택한 <b>${list.length}건</b>을 만남에서 분리할까요?<br>영수증은 삭제되지 않고 각각 독립된 만남으로 남아요.`, okLabel:'분리'});
   if(!ok)return false;
-  const done=await _mtgApply(list, r=>{delete r.meetingId;});
+  const done=await _mtgApplyPlan(_mtgDetachEntries(list)); // v3.83 — meetingOrder 제거 + 남은 receipt 재번호
   if(done)toast(`${list.length}건을 만남에서 분리했어요.`,{type:'success'});
   return done;
 }
@@ -7982,7 +8058,7 @@ async function _mtgUnlinkAll(mid){
   const list=_mtgReceiptsById(mid); if(!list.length)return false;
   const ok=await _mtgConfirm({title:'만남 전체 풀기', bodyHtml:`이 만남을 모두 풀까요?<br>영수증 <b>${list.length}건</b>은 삭제되지 않고 각각 독립된 만남으로 돌아가요.`, okLabel:'전체 분리'});
   if(!ok)return false;
-  const done=await _mtgApply(list, r=>{delete r.meetingId;});
+  const done=await _mtgApply(list, r=>{delete r.meetingId;delete r.meetingOrder;}); // v3.83 — stale 차수 제거
   if(done)toast(`만남을 풀었어요(${list.length}건).`,{type:'success'});
   return done;
 }
@@ -7992,7 +8068,10 @@ async function _mtgMove(recs, targetMid){
   const tRecs=_mtgReceiptsById(targetMid);
   const ok=await _mtgConfirm({title:'다른 만남으로 이동', bodyHtml:`선택한 <b>${list.length}건</b>을 <b>${escapeHtml(_mtgCompactTitle(tRecs))}</b>(으)로 이동할까요?`, okLabel:'이동'});
   if(!ok)return false;
-  const done=await _mtgApply(list, r=>{r.meetingId=targetMid;});
+  // v3.83 — 원래 만남 재번호 + 대상 만남 마지막 차수
+  const src=_mtgDetachEntries(list.filter(r=>r.meetingId&&r.meetingId!==targetMid)).filter(e=>!list.includes(e.r));
+  const plan=[...list.map(r=>({r,f:x=>{x.meetingId=targetMid;}})),..._mtgAppendPlan(targetMid,list).map(({r,order})=>({r,f:x=>{x.meetingOrder=order;}})),...src];
+  const done=await _mtgApplyPlan(plan);
   if(done)toast(`${list.length}건을 다른 만남으로 이동했어요.`,{type:'success'});
   return done;
 }
@@ -8031,7 +8110,9 @@ async function _mtgCreateMeeting(recs){
     okLabel:'만남으로 묶기'});
   if(!ok)return false;
   const mid=_mtgNewId(recs);
-  const done=await _mtgApply(recs, r=>{r.meetingId=mid;});
+  // v3.83 — 새 만남은 차수 미기록(runtime 날짜 순서). 옮겨온 receipt의 이전 차수는 제거, 원래 만남은 재번호.
+  const src=_mtgDetachEntries(recs.filter(r=>r.meetingId)).filter(e=>!recs.includes(e.r));
+  const done=await _mtgApplyPlan([...recs.map(r=>({r,f:x=>{x.meetingId=mid;delete x.meetingOrder;}})),...src]);
   if(done)toast(`${recs.length}개 영수증을 만남으로 묶었어요.`,{type:'success'});
   return done;
 }
@@ -8110,8 +8191,8 @@ function _mtgManageOpen(initialTab){
     if(view==='addReceipts')return renderAddV();
     if(view==='pick')return renderPickV();
   }
-  function mmRow(title,amt,sub,ppl,attr){
-    return `<button type="button" class="mm-row" ${attr}>
+  function mmRow(title,amt,sub,ppl,attr,ord){
+    return `<button type="button" class="mm-row${ord?' mm-orow':''}" ${attr}>${ord?`<span class="mm-ord">${ord}차</span>`:''}
       <span class="mm-row-main"><span class="mm-row-head"><span class="mm-row-top"><span class="mm-row-title">${esc2(title)}</span><span class="mm-row-amt">${fmtMoney(amt)}원</span></span>${sub?`<span class="mm-row-sub">${esc2(sub)}</span>`:''}</span>${ppl?`<span class="mm-row-ppl">${esc2(ppl)}</span>`:''}</span>
       <span class="mm-chev" aria-hidden="true">›</span></button>`;
   }
@@ -8207,11 +8288,11 @@ function _mtgManageOpen(initialTab){
   }
   // DETAIL(조회)
   function renderDetailV(){
-    const rc=_mtgSortByDate(_mtgReceiptsById(curMid));
+    const rc=_mtgOrdered(_mtgReceiptsById(curMid)); // v3.83 — 차수 순서(보기 전용, 변경은 편집에서만)
     if(!rc.length){view='list';tab='meetings';render();return;}
     const people=_mtgPeopleUnion(rc);
     panel.innerHTML=`<div class="org-hd">${back_}<div class="org-title">${esc2(_mtgCompactTitle(rc))}</div><div class="org-sub">${esc2(_mtgDateLabel(rc))} · 영수증 ${rc.length}건 · ${fmtMoney(_mtgSumTotal(rc))}원</div>${people.length?`<div class="mm-people">참석자 · ${people.map(esc2).join(' · ')}</div>`:''}</div>
-      <div class="org-list mm-list">${rc.map(x=>mmRow(x.store||'(매장명 없음)',x.total||0,fmtDateKor(x.date),null,`data-open="${esc2(x.id)}"`)).join('')}</div>
+      <div class="org-list mm-list">${rc.map((x,i)=>mmRow(x.store||'(매장명 없음)',x.total||0,fmtDateKor(x.date),null,`data-open="${esc2(x.id)}"`,rc.length>=2?i+1:0)).join('')}</div>
       <div class="org-actionbar mm-detail-ab"><button type="button" class="mm-btn-sec" id="mmDutch">더치페이로 보내기</button><button type="button" class="org-ab-btn" id="mmEdit">편집</button></div>`;
     document.getElementById('mmBackLbl').textContent='만남';
     panel.querySelector('#mmBack').onclick=back;
@@ -8221,26 +8302,97 @@ function _mtgManageOpen(initialTab){
   }
   // EDIT(편집)
   function renderEditV(){
-    const rc=_mtgSortByDate(_mtgReceiptsById(curMid));
+    const rc=_mtgOrdered(_mtgReceiptsById(curMid)); // v3.83 — 차수 순서
     if(!rc.length){view='list';tab='meetings';render();return;}
-    const rows=rc.map(x=>{const on=editSel.has(x.id);const ppl=[...receiptPeople(x)].join(' · ');
-      return `<button type="button" class="org-row${on?' sel':''}" data-id="${esc2(x.id)}" aria-pressed="${on}"><span class="org-check" aria-hidden="true"></span><span class="org-row-main"><span class="org-row-top"><span class="org-row-store">${esc2(x.store||'(매장명 없음)')}</span><span class="org-row-amt">${fmtMoney(x.total||0)}원</span></span><span class="org-row-ppl">${esc2(fmtDateKor(x.date))} · ${esc2(ppl)}</span></span></button>`;}).join('');
-    panel.innerHTML=`<div class="org-hd">${back_}<div class="org-title">만남 편집</div><div class="org-sub">${esc2(_mtgCompactTitle(rc))} · 영수증 ${rc.length}건</div></div>
-      <div class="org-list">${rows}</div>
+    const ord=rc.length>=2;
+    // v3.83 — row 선택(분리·이동)과 차수 이동(≡ handle drag)은 역할 분리: handle은 row 밖 형제 요소라 drag가 선택·상세 열기를 일으키지 않는다.
+    const rows=rc.map((x,i)=>{const on=editSel.has(x.id);const ppl=[...receiptPeople(x)].join(' · ');
+      return `<div class="mm-erow${on?' sel':''}" data-eid="${esc2(x.id)}"><button type="button" class="org-row${on?' sel':''}" data-id="${esc2(x.id)}" aria-pressed="${on}"><span class="org-check" aria-hidden="true"></span>${ord?`<span class="mm-ord">${i+1}차</span>`:''}<span class="org-row-main"><span class="org-row-top"><span class="org-row-store">${esc2(x.store||'(매장명 없음)')}</span><span class="org-row-amt">${fmtMoney(x.total||0)}원</span></span><span class="org-row-ppl">${esc2(fmtDateKor(x.date))} · ${esc2(ppl)}</span></span></button>`
+        +(ord?`<span class="mm-handle" role="button" tabindex="0" aria-label="${esc2(x.store||'영수증')} 순서 이동 — 드래그 또는 위·아래 화살표" title="드래그해서 순서 변경"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 8h14M5 12h14M5 16h14"/></svg></span>`:'')+`</div>`;}).join('');
+    panel.innerHTML=`<div class="org-hd">${back_}<div class="org-title">만남 편집</div><div class="org-sub">${esc2(_mtgCompactTitle(rc))} · 영수증 ${rc.length}건${ord?' · ≡ 드래그로 차수 변경':''}</div></div>
+      <div class="org-list mm-elist" id="mmEditList">${rows}</div>
       <div class="mm-edit-tools"><button type="button" class="mm-tool" id="mmAddRcp">＋ 영수증 추가</button><button type="button" class="mm-tool mm-tool-danger" id="mmUnlinkAll">만남 전체 풀기</button></div>
       <div class="org-actionbar mm-ab2"><div class="org-ab-info" id="mmEditInfo"></div><div class="mm-ab-btns"><button type="button" class="mm-btn-sec" id="mmMove" disabled>다른 만남으로 이동</button><button type="button" class="org-ab-btn mm-btn-detach" id="mmDetach" disabled>선택 분리</button></div></div>`;
     document.getElementById('mmBackLbl').textContent='만남';
     panel.querySelector('#mmBack').onclick=back;
     panel.querySelectorAll('.org-row[data-id]').forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(editSel.has(id))editSel.delete(id);else editSel.add(id);editBar();});
+    if(ord)bindReorder(panel.querySelector('#mmEditList'));
     panel.querySelector('#mmAddRcp').onclick=()=>{addSel.clear();view='addReceipts';render();};
     panel.querySelector('#mmUnlinkAll').onclick=async()=>{const ok=await _mtgUnlinkAll(curMid);if(ok){await refresh();view='list';tab='meetings';render();}};
     panel.querySelector('#mmMove').onclick=()=>{const recs=idsToRecs(editSel);if(recs.length<1)return;pendingIds=[...editSel];pickMode='move';view='pick';render();};
     panel.querySelector('#mmDetach').onclick=async()=>{const recs=idsToRecs(editSel);if(!recs.length)return;const ok=await _mtgDetach(recs);if(ok){editSel.clear();await refresh();if(_mtgReceiptsById(curMid).length){view='edit';render();}else{view='list';tab='meetings';render();}}};
     editBar();
   }
+  // v3.83 — 차수 drag & drop(≡ handle, pointer — 마우스·터치 공통) + 키보드(↑/↓). 놓는 순간 1..N 재번호 후 atomic 저장.
+  function bindReorder(list){
+    if(!list)return;
+    const relabel=()=>list.querySelectorAll('.mm-erow').forEach((row,i)=>{const o=row.querySelector('.mm-ord');if(o)o.textContent=(i+1)+'차';});
+    const idsNow=()=>[...list.querySelectorAll('.mm-erow')].map(r=>r.dataset.eid);
+    const commit=async before=>{
+      const after=idsNow();
+      if(after.join('\u0001')===before.join('\u0001'))return;
+      const ok=await _mtgSaveOrder(curMid,after);
+      if(ok){toast('차수를 저장했어요.',{type:'success'});await refresh();}
+      if(document.body.contains(bd)&&view==='edit')render(); // 실패 시 rollback된 순서로 다시 그림
+    };
+    list.querySelectorAll('.mm-handle').forEach(h=>{
+      const row=h.closest('.mm-erow');
+      h.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();});
+      h.addEventListener('keydown',e=>{
+        if(e.key!=='ArrowUp'&&e.key!=='ArrowDown')return;
+        e.preventDefault();const before=idsNow();
+        if(e.key==='ArrowUp'&&row.previousElementSibling)list.insertBefore(row,row.previousElementSibling);
+        else if(e.key==='ArrowDown'&&row.nextElementSibling)list.insertBefore(row.nextElementSibling,row);
+        relabel();h.focus();commit(before);
+      });
+      // drag 중에는 DOM 순서를 바꾸지 않는다(요소를 옮기면 pointer capture가 풀려 move/up을 잃음) —
+      // 끄는 row는 손가락을 따라 translateY, 사이 row들은 한 칸씩 비켜 서고 차수 라벨이 즉시 바뀐다. 놓는 순간 DOM 재배치 + 저장.
+      h.addEventListener('pointerdown',e=>{
+        if(e.button!=null&&e.button>0)return;
+        e.preventDefault();e.stopPropagation();
+        const before=idsNow();
+        const rowsAll=[...list.querySelectorAll('.mm-erow')];
+        const from=rowsAll.indexOf(row);
+        const tops=rowsAll.map(r=>r.offsetTop),hts=rowsAll.map(r=>r.offsetHeight);
+        const startY=e.clientY,startScroll=list.scrollTop;
+        let to=from,lastY=e.clientY,timer=0;
+        try{h.setPointerCapture(e.pointerId);}catch(_){}
+        row.classList.add('dragging');list.classList.add('reordering');
+        const paint=()=>{
+          const dy=lastY-startY+(list.scrollTop-startScroll);
+          const center=tops[from]+hts[from]/2+dy;
+          to=from;
+          for(let i=0;i<rowsAll.length;i++){if(i===from)continue;const c=tops[i]+hts[i]/2;if(i<from&&center<c){to=Math.min(to,i);}if(i>from&&center>c){to=Math.max(to,i);}}
+          rowsAll.forEach((r,i)=>{
+            if(i===from){r.style.transform=`translateY(${dy}px)`;return;}
+            let sh=0;if(from<to&&i>from&&i<=to)sh=-hts[from];else if(from>to&&i>=to&&i<from)sh=hts[from];
+            r.style.transform=sh?`translateY(${sh}px)`:'';
+          });
+          const order=rowsAll.filter((_,i)=>i!==from);order.splice(to,0,rowsAll[from]);
+          order.forEach((r,i)=>{const o=r.querySelector('.mm-ord');if(o)o.textContent=(i+1)+'차';});
+        };
+        const edge=()=>{ // 가장자리 자동 스크롤
+          const lr=list.getBoundingClientRect();let d=0;
+          if(lastY<lr.top+40)d=-10;else if(lastY>lr.bottom-40)d=10;
+          if(d){list.scrollTop+=d;paint();}
+        };
+        timer=setInterval(edge,40);
+        const move=ev=>{lastY=ev.clientY;paint();};
+        const end=()=>{
+          clearInterval(timer);
+          h.removeEventListener('pointermove',move);h.removeEventListener('pointerup',end);h.removeEventListener('pointercancel',end);
+          rowsAll.forEach(r=>{r.style.transform='';});
+          row.classList.remove('dragging');list.classList.remove('reordering');
+          if(to!==from){const ref=to>from?rowsAll[to].nextElementSibling:rowsAll[to];list.insertBefore(row,ref);}
+          relabel();commit(before);
+        };
+        h.addEventListener('pointermove',move);h.addEventListener('pointerup',end);h.addEventListener('pointercancel',end);
+      });
+    });
+  }
   function editBar(){
     // 재바인딩 없이 상태만: sel 강조는 재렌더가 필요하므로 간단히 render는 안 하고 클래스 토글
-    panel.querySelectorAll('.org-row[data-id]').forEach(b=>{const on=editSel.has(b.dataset.id);b.classList.toggle('sel',on);b.setAttribute('aria-pressed',String(on));});
+    panel.querySelectorAll('.org-row[data-id]').forEach(b=>{const on=editSel.has(b.dataset.id);b.classList.toggle('sel',on);b.setAttribute('aria-pressed',String(on));b.closest('.mm-erow')?.classList.toggle('sel',on);});
     const info=panel.querySelector('#mmEditInfo'),mv=panel.querySelector('#mmMove'),dt=panel.querySelector('#mmDetach');
     const n=editSel.size; if(info)info.textContent=n?`${n}건 선택`:'분리·이동할 영수증 선택';
     if(mv)mv.disabled=n<1; if(dt)dt.disabled=n<1;
@@ -8447,7 +8599,7 @@ function _mtgOpenMeetingDetail(r){
   const mid=r.meetingId;
   const {card,close}=_mtgSheetOpen();
   const render=()=>{
-    const rc=_mtgSortByDate(_mtgReceiptsById(mid));
+    const rc=_mtgOrdered(_mtgReceiptsById(mid)); // v3.83 — 차수 순서(보기 전용)
     if(rc.length<1){close();return;}
     const people=_mtgPeopleUnion(rc);
     const stillIn=rc.some(x=>x.id===r.id);
@@ -8456,8 +8608,8 @@ function _mtgOpenMeetingDetail(r){
       <div class="mtg-sheet-meta">${escapeHtml(_mtgDateLabel(rc))} · 영수증 ${rc.length}건 · ${fmtMoney(_mtgSumTotal(rc))}원</div>
       ${people.length?`<div class="mtg-sheet-people"><div class="mtg-sheet-plbl">참석자</div><div class="mtg-sheet-pnames">${people.map(escapeHtml).join(' · ')}</div></div>`:''}
       <div class="mtg-sheet-divider"></div>
-      <div class="mtg-drows">${rc.map(x=>`<button type="button" class="mtg-drow${x.id===r.id?' cur':''}" data-open="${escapeHtml(x.id)}">
-        <span class="mtg-drow-store">${escapeHtml(x.store||'(매장명 없음)')}</span>
+      <div class="mtg-drows">${rc.map((x,i)=>`<button type="button" class="mtg-drow${x.id===r.id?' cur':''}${rc.length>=2?' ord':''}" data-open="${escapeHtml(x.id)}">
+        ${rc.length>=2?`<span class="mtg-drow-ord">${i+1}차</span>`:''}<span class="mtg-drow-store">${escapeHtml(x.store||'(매장명 없음)')}</span>
         <span class="mtg-drow-amt">${fmtMoney(x.total||0)}원</span>
         <span class="mtg-drow-date">${escapeHtml(fmtDateKor(x.date))}</span>
       </button>`).join('')}</div>
@@ -8476,11 +8628,10 @@ async function _mtgUnlinkOne(r){
     bodyHtml:'이 영수증을 만남에서 분리할까요?<br>영수증 자체는 그대로 남고 만남 연결만 해제돼요.',
     okLabel:'분리'});
   if(!ok)return false;
-  delete r.meetingId;r.updatedAt=nowISO();
-  try{await dbPut('receipts',r);}
-  catch(e){console.error('meeting unlink(one) 실패',e);receipts=await dbAll('receipts');toast('분리에 실패했어요. 다시 시도해 주세요.',{type:'error'});return false;}
+  // v3.83 — meetingOrder도 제거 + 남은 receipt 재번호(한 번의 atomic 저장)
+  const done=await _mtgApplyPlan(_mtgDetachEntries([r]));
+  if(!done)return false; // _mtgApply가 동기화 업로드까지 처리
   renderSide();await renderDetail();
-  dbxSyncUpload().catch(()=>{});
   toast('만남에서 분리했어요.',{type:'success'});
   return true;
 }
@@ -11004,6 +11155,8 @@ function _validateReceiptRecord(raw){
     splitExclude:Array.isArray(raw.splitExclude)?raw.splitExclude.map(v=>String(v||'')).filter(Boolean):[],
     // v3.46 — 만남 묶기: optional meetingId(문자열)만 보존·정규화. 없으면 키 자체를 두지 않는다(undefined→JSON 제외).
     meetingId:(typeof raw.meetingId==='string'&&raw.meetingId.trim())?raw.meetingId.trim():undefined,
+    // v3.83 — 만남 차수: optional 양의 정수만 보존(손상 값은 키 제외 → runtime 기존 순서). 계산에 쓰지 않음.
+    meetingOrder:(Number.isInteger(raw.meetingOrder)&&raw.meetingOrder>0&&raw.meetingOrder<10000)?raw.meetingOrder:undefined,
     // v3.70 — 공동 한턱 주체: optional treatBy 객체만 보존·정규화(손상 값 차단). 없으면 undefined→JSON 제외(기존 Receipt에 기본값 안 씀).
     treatBy:_validTreatBy(raw.treatBy),
   };
