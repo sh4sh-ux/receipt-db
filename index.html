@@ -2603,7 +2603,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
             <button type="button" class="pp-back-btn" id="prepaidBack" hidden aria-label="선불권 목록으로">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
             </button>
-            <div class="pp-header-copy"><div class="main-eye-row" id="prepaidEyeRow"><div class="pp-eyebrow" id="prepaidEyebrow">Receipt DB</div><span class="app-version js-app-version" title="앱 버전"></span></div><div class="main-title" id="prepaidTitle">선불권</div><div class="main-sub" id="prepaidMeta" hidden></div></div>
+            <div class="pp-header-copy"><div class="main-eye-row" id="prepaidEyeRow"><div class="main-eye" id="prepaidEyebrow">Receipt DB</div><span class="app-version js-app-version" title="앱 버전"></span></div><div class="main-title" id="prepaidTitle">선불권</div><div class="main-sub" id="prepaidMeta" hidden></div></div>
           </div>
           <button type="button" class="pp-new-btn" id="prepaidNew" aria-label="선불권 등록">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>선불권 등록</span>
@@ -3602,6 +3602,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.92 — 선불권 오른쪽 헤더 글자를 다른 탭과 동일하게(공통 .main-eye 사용, 선불권 전용 눈썹·제목 행간 규칙 제거).
 // v3.91 — 선불권을 다른 레일과 같은 3단으로: 좌측 패널 선불권 모드(총 잔액·등록·검색·정렬·flat row) + 오른쪽 상세, 모바일 목록→상세. 계산·저장 불변.
 // v3.90 — 단둘이 결제 목록(drill) · 뒤로가기: 유령 오버레이 정리(_ovPrune)+popstate state._ov 판정+기록 즉시화, 목록에서 연 영수증 Back=그 목록 복귀 · 숫자 글꼴 스택 Dutch Pay와 동일(system-ui 우선).
 // v3.89 — 사람 요약 재구성: 결제 밸런스(전체·단둘이·여럿이 한 카드) · 한턱 · 만남(마지막 만남·12개월 흐름·자주 간 곳) · 참석 부담액 · 최근 내역. 중복 3곳 제거, 계산 불변.
@@ -3982,7 +3983,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.91';
+const APP_VERSION='v3.92';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{

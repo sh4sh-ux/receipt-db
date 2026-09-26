@@ -8,11 +8,7 @@
 .pp-bar-legend span{white-space:nowrap}
 .pp-actions>.primary-btn{flex:1.7 1 0}
 .pp-header-main{display:flex;align-items:center;min-width:0}.pp-header-copy{min-width:0;flex:1 1 auto}
-.pp-eyebrow{margin-bottom:6px;color:var(--label3);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-/* v3.52 — 상세 breadcrumb(← 선불권): 영수증 상세의 .back-to-summary와 같은 결(대문자/자간 해제) */
-.pp-eyebrow--crumb{text-transform:none;letter-spacing:0;font-weight:500}
-/* v3.52 — 제목 typography는 Foundation .main-title 토큰(--fs-page-title/--fw-strong/--ls-page-title + ellipsis)에 위임 */
-#viewPrepaid .main-title{line-height:1.15}
+/* v3.92 — 헤더 글자(눈썹·버전·제목·부제)는 다른 탭과 같은 공통 .main-eye/.main-title/.main-sub 그대로(선불권 전용 크기·굵기·행간 규칙 없음) */
 #viewPrepaid .main-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* v3.30 — 화면 내 뒤로가기 화살표 UI 제거(헤더/구분선은 유지, 목록 복귀는 선불권 탭 재선택) */
 .pp-back-btn{display:none}
@@ -116,10 +112,6 @@
  .icon-nav .nav-btn,.icon-nav .nav-btn.tab{width:auto;min-width:0;flex:1 1 0}
  /* v3.38 — 선불권 헤더를 다른 탭(.main-top)과 통일: 같은 높이·safe-area 상단여백·상단정렬·눈썹 간격 */
  #viewPrepaid>.pp-header{min-height:var(--mobile-head-h);padding:max(14px,calc(env(safe-area-inset-top,0px) + 6px)) 18px 14px;align-items:flex-start}
- /* v3.52 — 모바일 제목도 Foundation 토큰(23/-.55)에 위임, line-height만 유지 */
- #viewPrepaid .main-title{line-height:1.18}
- .pp-eyebrow{margin-bottom:11px;letter-spacing:.9px;font-weight:600}
- .pp-eyebrow--crumb{letter-spacing:0;font-weight:500}
  .pp-back-btn{width:36px;height:36px;flex-basis:36px;margin-right:14px}
  /* v3.52 — 뒤로가기 화살표 버튼은 숨김 상태라 상세 copy 들여쓰기 제거(영수증 상세와 동일하게 breadcrumb는 copy 안 eyebrow) */
  .pp-detail-view .pp-header-copy{padding-left:0}
