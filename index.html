@@ -598,6 +598,7 @@ svg{display:block;flex-shrink:0;}
 .kv{padding:10px 12px;background:var(--fill2);border-radius:var(--rm);border:1px solid var(--sep);transition:border-color .15s;}
 .kv:focus-within{border-color:var(--blue);}
 .kv-lbl{font-size:var(--fs-caption);font-weight:var(--fw-med);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}
+.kv select.kv-inp{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:18px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239AA0A6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>") right 2px center/12px no-repeat;} /* v3.86 — 결제자·결제수단 드롭다운 표시 */
 .kv-inp{width:100%;border:none;background:transparent;font-size:var(--fs-body);font-weight:var(--fw-reg);color:var(--text-primary);outline:none;font-family:inherit;padding:0;line-height:1.4;text-align:left;}
 .kv-inp::placeholder{color:var(--label3);font-weight:400;}
 .kv-inp:is(select){cursor:pointer;-webkit-appearance:none;appearance:none;}
@@ -3501,6 +3502,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.86 — 영수증 상세 결제자 = 드롭다운(참석자 후보 + 다른 사람…, v3.79 칸 위치·모양 유지) · kv select에 ▾ 표시 · 한턱 안내 조사(이/가) 수정.
 // v3.85 — 레일 아이콘 색 통일(통계·사람만 흐리던 것: .tab 규칙이 탭 버튼만 진하게 덮어쓴 탓). 기본 --label2 · hover --label · 선택 Blue.
 // v3.84 — ① 뒤로가기: 오버레이에서 연 영수증을 history에 기록(3단계 점프·앱 이탈 수정) + 만남 요약/시트에서 연 영수증은 Back = 그 만남 화면 복귀
 //   ② 영수증 상세 입력칸 v3.79로 복원 ③ 숫자 규칙(Dutch Pay와 동일): fmtMoney 하나·font-variant-numeric만(font-feature-settings 'tnum' 금지)·관계 분석 숫자 주황 = 순수 --amber
@@ -3875,7 +3877,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.85';
+const APP_VERSION='v3.86';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -7063,7 +7065,7 @@ function _makeSplitUI(o){
       const x=c.querySelector('[data-rm]');if(x)x.onclick=()=>o.onRemove(n);
     });
     const total=o.getTotal?(o.getTotal()||0):0;
-    if(treat){o.hint.textContent=`한턱 — ${payer||'결제자'}가 전액 부담${total?` (${fmtMoney(total)}원)`:''}, 나머지 ${Math.max(pp.length-1,0)}명은 0원(참석은 유지).`;}
+    if(treat){o.hint.textContent=`한턱 — ${payer?payer+_psnJosa(payer,'이','가'):'결제자가'} 전액 부담${total?` (${fmtMoney(total)}원)`:''}, 나머지 ${Math.max(pp.length-1,0)}명은 0원(참석은 유지).`;}
     else{const exl=[...excluded].filter(x=>pp.includes(x));const sn=pp.length-exl.length;
       const per=(total&&sn>0)?` · 1인당 약 ${fmtMoney(Math.round(total/sn))}원`:'';
       o.hint.textContent=exl.length?`${exl.length}명 깍두기(참석 유지·0원) · 나머지 ${sn}명 균등${per}`:`${pp.length}명 균등 분담 (1/N)${per}`;}
@@ -7098,7 +7100,7 @@ function _makeSplitUI(o){
       render();o.onChange&&o.onChange();
     });
     const total=o.getTotal?(o.getTotal()||0):0;
-    if(treat){o.hint.textContent=`한턱 — ${payer||'결제자'}가 전액 부담${total?` (${fmtMoney(total)}원)`:''}, 나머지 ${Math.max(pp.length-1,0)}명은 0원(참석은 유지).`;}
+    if(treat){o.hint.textContent=`한턱 — ${payer?payer+_psnJosa(payer,'이','가'):'결제자가'} 전액 부담${total?` (${fmtMoney(total)}원)`:''}, 나머지 ${Math.max(pp.length-1,0)}명은 0원(참석은 유지).`;}
     else{const ex=[...excluded].filter(n=>pp.includes(n));const sn=pp.length-ex.length;
       const per=(total&&sn>0)?` · 1인당 약 ${fmtMoney(Math.round(total/sn))}원`:'';
       o.hint.textContent=ex.length?`${ex.length}명 제외(참석 유지·0원) · 나머지 ${sn}명 균등${per}`:`참석자 ${pp.length}명 균등 분담 (1/N)${per}`;}
@@ -7140,6 +7142,29 @@ function _peopleBlockHtml(p,withPayer){
     <div class="pp-treatby" id="${p}TreatBy"></div>
   </div>`;
 }
+// 결제자 select(Add·Receipt Detail 공통) — 후보 = 현재 참석자 (+ 참석자 밖 현재 결제자) (+ 참석자가 없으면 나) + '다른 사람…'.
+//   결제자는 항상 1명(paidBy 하나). 선택은 c.payerId input 값만 바꾼다(저장 경로 불변). '다른 사람…' = 참석자 밖 결제자 picker(회사·가족 등).
+function _payerSelectRender(sel,c){
+  const me=(getMyName()||'').trim();
+  const parts=_qcNames(c.partsId);const n=parts.length;
+  const raw=(document.getElementById(c.payerId)?.value||'').trim();
+  const eff=raw||(c.emptyIsMe?me:'');
+  const opts=[];const push=v=>{const t=(v||'').trim();if(t&&!opts.some(x=>normalizeName(x)===normalizeName(t)))opts.push(t);};
+  parts.forEach(push);if(!n&&me)push(me);if(eff)push(eff);
+  const isMe=v=>!!me&&normalizeName(v)===normalizeName(me);
+  sel.innerHTML=(eff?'':'<option value="" selected disabled>결제자 선택</option>')
+    +opts.map(v=>`<option value="${escapeHtml(v)}"${eff&&normalizeName(v)===normalizeName(eff)?' selected':''}>${escapeHtml(v)}</option>`).join('')
+    +'<option value="__other__">+ 다른 사람…</option>';
+  sel.classList.toggle('me',!!eff&&isMe(eff));
+  sel.classList.toggle('empty',!eff);
+}
+function _payerSelectBindChange(sel,c,refresh){
+  sel.addEventListener('change',()=>{
+    const v=sel.value;
+    if(v==='__other__'){refresh();_qcOpenPicker('payer',c);return;} // 표시를 현재 값으로 되돌리고 참석자 밖 결제자 picker
+    _qcSetField(c.payerId,v);
+  });
+}
 // 공통 컨트롤러: c={p, partsId, payerId, split:()=>splitUI, emptyIsMe:bool(Add=저장 시 getMyName() 규칙), ctx:()=>사람 화면 context}
 function _bindPeopleUI(c){
   const $=s=>document.getElementById(c.p+s);
@@ -7152,19 +7177,7 @@ function _bindPeopleUI(c){
     const add=$('PeopleAdd');if(add)add.hidden=!n;
     const empty=$('PplEmpty');if(empty)empty.hidden=!!n;
     const meBtn=$('MeAdd');if(meBtn)meBtn.hidden=!me;
-    // 결제자 select — 후보 = 현재 참석자 (+ 참석자 밖 현재 결제자) (+ 참석자가 없으면 나) + '다른 사람…'. 결제자는 항상 1명(paidBy 하나).
-    if(sel){
-      const raw=(document.getElementById(c.payerId)?.value||'').trim();
-      const eff=raw||(c.emptyIsMe?me:'');
-      const opts=[];const push=v=>{const t=(v||'').trim();if(t&&!opts.some(x=>normalizeName(x)===normalizeName(t)))opts.push(t);};
-      parts.forEach(push);if(!n&&me)push(me);if(eff)push(eff);
-      const isMe=v=>!!me&&normalizeName(v)===normalizeName(me);
-      sel.innerHTML=(eff?'':'<option value="" selected disabled>결제자 선택</option>')
-        +opts.map(v=>`<option value="${escapeHtml(v)}"${eff&&normalizeName(v)===normalizeName(eff)?' selected':''}>${escapeHtml(v)}</option>`).join('')
-        +'<option value="__other__">+ 다른 사람…</option>';
-      sel.classList.toggle('me',!!eff&&isMe(eff));
-      sel.classList.toggle('empty',!eff);
-    }
+    if(sel)_payerSelectRender(sel,c);
     const st=c.split&&c.split()?c.split().getState():{treat:false};
     $('SplitBlock')?.classList.toggle('qc-solo',n<2&&!st.treat);
   };
@@ -7172,11 +7185,7 @@ function _bindPeopleUI(c){
   $('PeopleAdd')?.addEventListener('click',openPeople);
   $('PeopleAdd0')?.addEventListener('click',openPeople);
   $('MeAdd')?.addEventListener('click',()=>{const me=(getMyName()||'').trim();if(!me)return;const cur=_qcNames(c.partsId);if(!cur.some(x=>normalizeName(x)===normalizeName(me)))cur.unshift(me);_qcSetField(c.partsId,cur.join(', '));});
-  sel?.addEventListener('change',()=>{
-    const v=sel.value;
-    if(v==='__other__'){refresh();_qcOpenPicker('payer',c);return;} // 표시를 현재 값으로 되돌리고 참석자 밖 결제자 picker
-    _qcSetField(c.payerId,v);
-  });
+  if(sel)_payerSelectBindChange(sel,c,refresh);
   [c.partsId,c.payerId].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>{c.split&&c.split()&&c.split().render();refresh();}));
   refresh();
   return {refresh};
@@ -10462,7 +10471,7 @@ async function renderDetail(){
       ${kvHtml('매장명','store',r.store||'','','','full')}
       ${kvHtml('일자','date',r.date||'','date')}
       ${detailCategoryKvHtml(r.category||'')}
-      ${kvHtml('결제자','paidBy',r.paidBy||'')}
+      <div class="kv"><div class="kv-lbl">결제자</div><select id="dPayerSel" class="kv-inp" aria-label="결제자"></select><input type="hidden" class="kv-inp" id="dPayerInp" data-field="paidBy" value="${escapeHtml(r.paidBy||'')}"/></div>
       ${kvHtml('결제수단','paymentMethod',r.paymentMethod||'card','select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
       <div class="kv full">
         <div class="kv-lbl">참석자</div>
@@ -10766,6 +10775,15 @@ async function renderDetail(){
     _dSplitUI.setState(r.treat,r.splitExclude,r.treatBy);
     if(dp2) dp2.addEventListener('input',()=>_dSplitUI.render());
     if(dPayerInp) dPayerInp.addEventListener('input',()=>_dSplitUI.render());
+  }
+  // v3.86 — 결제자 = 드롭다운(후보 = 참석자 + '다른 사람…'). 참석자 칸을 고치면 후보도 즉시 갱신. 저장은 hidden paidBy input(기존 경로).
+  const dPaySel=document.getElementById('dPayerSel');
+  if(dPaySel){
+    const pc={partsId:'dParticipants',payerId:'dPayerInp',emptyIsMe:false,ctx:()=>null};
+    const refreshPay=()=>_payerSelectRender(dPaySel,pc);
+    _payerSelectBindChange(dPaySel,pc,refreshPay);
+    ['dParticipants','dPayerInp'].forEach(id=>document.getElementById(id)?.addEventListener('input',refreshPay));
+    refreshPay();
   }
   const dn=document.getElementById('dNotes');
   if(dn) dn.addEventListener('input',()=>_detailSetDirty(true));
