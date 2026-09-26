@@ -3715,6 +3715,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.99 — 더치페이로 보낼 때 분담 방식(한턱·깍두기)도 전송(members·watchers·treat). Dutch Pay v6.21이 읽어 지출의 isTreat·깍두기로 그대로 적용.
 // v3.98 — 모바일 헤더 아래 구분선을 모든 탭 같은 높이(112px)로(추가 108·통계/설정/상세 124·내역/사람/선불권 157로 달랐음).
 // v3.97 — 서비스 워커(sw.js)가 prepaid.js·prepaid.css를 cache-first로 주고 캐시 이름이 v3.06에 멈춰, 설치된 아이폰은 옛 선불권 화면·헤더를 계속 썼다 → 모든 셸 파일 network-first + 캐시 이름을 앱 버전과 같이.
 // v3.96 — 추가 화면 [AI 붙여넣기|직접 입력] 버튼에 좌우 여백·같은 폭(글자가 가장자리에 붙어 답답했던 것), 붙여넣기 전 빈 미리보기 자리 제거.
@@ -4103,7 +4104,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.98';
+const APP_VERSION='v3.99';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -4553,7 +4554,18 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
   const prepared=sourceRecords.map(r=>{
     const payer=(r.paidBy||getMyName()||'').trim();
     const people=[...(r.participants||[]),payer].map(v=>(v||'').trim()).filter((v,i,a)=>v&&a.indexOf(v)===i);
-    return {r,payer,people};
+    // v3.99 — 분담 방식도 같이 보낸다(Dutch Pay 지출의 members·watchers·isTreat와 같은 뜻). 계산은 _receiptShare와 같게:
+    //   나누는 사람 = 참석자 − 깍두기(결제자는 참석자에 있을 때만), 한턱 = 결제자가 전액(Dutch Pay 정산에서 제외).
+    //   참석자가 없으면 결제자 혼자, 깍두기로 전원이 빠지면(나눌 사람 0명) 깍두기를 적용하지 않는다(Dutch Pay는 빈 members를 '전원'으로 읽음).
+    const parts=(r.participants||[]).map(v=>(v||'').trim()).filter((v,i,a)=>v&&a.indexOf(v)===i);
+    const treat=!!r.treat&&parts.length>0;
+    let members=parts.length?parts.slice():(payer?[payer]:people.slice()),watchers=[];
+    if(parts.length&&!treat){
+      const ex=new Set((r.splitExclude||[]).map(v=>(v||'').trim()).filter(Boolean));
+      const keep=parts.filter(n=>!ex.has(n));
+      if(keep.length){members=keep;watchers=parts.filter(n=>ex.has(n));}
+    }
+    return {r,payer,people,members,watchers,treat};
   });
   const invalid=prepared.filter(x=>!x.people.length);
   if(invalid.length){
@@ -4574,14 +4586,14 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
     const win=window.open('','_blank');
     if(win){try{win.document.write('<!doctype html><meta charset="utf-8"><title>더치페이</title><body style="font:15px -apple-system,BlinkMacSystemFont,sans-serif;color:#555;padding:44px 24px;text-align:center">영수증을 더치페이로 보내는 중…</body>');}catch(_){}}
     // 각 영수증 사진을 압축해 함께 전송 → 더치페이에서 자동 첨부
-    const entries=await Promise.all(prepared.map(async ({r,payer,people})=>{
+    const entries=await Promise.all(prepared.map(async ({r,payer,people,members,watchers,treat})=>{
       let receiptImage='';
       try{
         const imgUrl=await _ensureReceiptImgUrl(r);
         if(imgUrl){const comp=await _compressToJpegDataUrl(imgUrl,1400,0.72);if(comp&&comp.length<1500000)receiptImage=comp;}
       }catch(_){}
       return {sourceId:String(r.id),store:r.store||'영수증',date:r.date||new Date().toISOString().slice(0,10),
-        total:Number(r.total)||0,payer:payer||people[0],people,
+        total:Number(r.total)||0,payer:payer||people[0],people,members,watchers,treat,
         items:(r.items||[]).map(it=>({name:it.name||'',quantity:Number(it.quantity)||1,unitPrice:Number(it.unitPrice)||0,amount:Number(it.amount)||0})),
         receiptImage};
     }));
