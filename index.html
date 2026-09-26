@@ -2236,8 +2236,6 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
       <!-- v3.78 — 사람 모드 범위 행. month-nav와 같은 박스(높이·divider)라 좌/우 헤더 구분선 정렬이 그대로 유지된다. -->
       <div class="month-nav person-scope" id="personScope" role="group" aria-label="사람 필터">
         <button class="ps-chip on" type="button" data-pfilter="all" aria-pressed="true">전체</button>
-        <button class="ps-chip" type="button" data-pfilter="frequent" aria-pressed="false">자주 만난</button>
-        <button class="ps-chip" type="button" data-pfilter="recent" aria-pressed="false">최근 만난</button>
       </div>
 
       <div class="side-search">
@@ -2277,8 +2275,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
           <span class="sr-only">사람 정렬</span>
           <select id="personSortSel" aria-label="사람 정렬 기준">
             <option value="together">함께한 순</option>
-            <option value="name">이름순</option>
             <option value="recent">최근순</option>
+            <option value="name">이름순</option>
           </select>
         </label>
       </div>
@@ -3334,8 +3332,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 // v3.78 — 사람(Person) 화면 UI/UX 재구성(UI composition만). ⚠️ Receipt·Person 계산·단둘이 한턱·여럿이·전체 결제·전체 내가 한턱·참석 부담액·
 //   개인/공동/전체 한턱·Meeting·meetingId·Relation Group·사람별 분담·기간 Filter·Review Inbox·Dutch Pay·Dropbox·schema·migration 전부 불변.
 //   ① 레일 '사람'(single-person icon, 통계와 같은 비-tab nav). '관계'는 사람 상세 안 분석 용어로만. 장소·품목은 이번 STEP 범위 밖(가짜 메뉴 안 만듦).
-//   ② 좌측 = 영수증 목록 패널 grammar 그대로(.side 재사용): 제목 '사람' · month-nav 자리에 범위 행[전체|자주 만난|최근 만난](같은 박스라 헤더 하단선 정렬 유지) ·
-//      같은 검색창(사람 모드에선 사람 목록만 거름, 초성 지원, 영수증 검색어와 분리) · list-toolbar '사람 N명'+정렬[함께한 순|이름순|최근순] · .r-card flat row · side-foot 그대로.
+//   ② 좌측 = 영수증 목록 패널 grammar 그대로(.side 재사용): 제목 '사람' · month-nav 자리에 범위 행[전체](같은 박스라 헤더 하단선 정렬 유지 — 임의 '자주/최근 만난' 기준은 정책 미확정이라 넣지 않음) ·
+//      같은 검색창(사람 모드에선 사람 목록만 거름, 초성 지원, 영수증 검색어와 분리) · list-toolbar '사람 N명'+정렬[함께한 순|최근순|이름순] · .r-card flat row · side-foot 그대로.
 //      목록 값 '함께한 영수증 N건 · 만남 N회'는 renderDetail 인물 분기와 같은 파이프라인(_personRelation·_personMeetingStats) → 상세 헤더와 동일. 자동 관계 표현 없음.
 //   ③ 우측 Person Detail = 기존 '인물 검색' 분기를 _personSel로 그대로 통과(헤더·기간·drill-down 바인딩 재사용) → 숫자 동일. renderPersonDashboardHtml은 계산 줄을
 //      건드리지 않고 me 분기 결과를 _psnLayoutHtml로 재배치: 탭[요약|상세 내역(기존 결제·참석 내역)] + 한턱 밸런스(이름·Green/Blue·%·runtime 차이 문장) · 함께한 씀씀이 ·
@@ -3837,11 +3835,8 @@ let searchQuery='';
 let _personMode=false;
 let _personSel='';              // 선택된 사람(정규화 이름)
 let _personListQ='';            // 사람 목록 검색어
-let _personListFilter='all';    // all | frequent | recent
 let _personListSort='together'; // together | name | recent
 let _psnTab='sum';              // Person Detail 탭: sum(요약) | all(상세 내역)
-const _PSN_FREQ_MIN=3;          // '자주 만난' = 기존 만남 count 3회 이상(목록 필터일 뿐 새 통계·관계 추론 아님)
-const _PSN_RECENT_DAYS=90;      // '최근 만난' = 마지막으로 함께한 영수증이 90일 이내
 let pendingPhotoBlob=null;
 let pendingPhotoUrl=null;
 let viewMonth=_currentYM();  // 'YYYY-MM' — 가계부에서 보고 있는 월
@@ -5809,12 +5804,6 @@ function _personListView(){
     if(_isChoQuery(q)){const cq=_normChoQuery(q);list=list.filter(p=>p.cho.includes(cq));}
     else{const qL=q.toLowerCase();list=list.filter(p=>p.name.toLowerCase().includes(qL));}
   }
-  if(_personListFilter==='frequent')list=list.filter(p=>p.meet>=_PSN_FREQ_MIN);
-  else if(_personListFilter==='recent'){
-    const d=new Date();d.setDate(d.getDate()-_PSN_RECENT_DAYS);
-    const cut=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    list=list.filter(p=>p.last&&p.last>=cut);
-  }
   const byName=(a,b)=>a.name.localeCompare(b.name,'ko');
   if(_personListSort==='name')list.sort(byName);
   else if(_personListSort==='recent')list.sort((a,b)=>(b.last||'').localeCompare(a.last||'')||b.together-a.together||byName(a,b));
@@ -5824,15 +5813,14 @@ function _personListView(){
 function _renderPersonSide(){
   const list=document.getElementById('sideList');
   _updatePhotoFilterUi(); // 하단 상태(확인 필요·사진 없음) 카운트는 영수증 기준 그대로
-  document.querySelectorAll('#personScope .ps-chip').forEach(b=>{const on=b.dataset.pfilter===_personListFilter;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));});
   const ps=document.getElementById('personSortSel');if(ps&&ps.value!==_personListSort)ps.value=_personListSort;
   const view=_personListView();
   const lt=document.getElementById('ltInfo');
-  const scope=_personListQ.trim()?'검색 결과':_personListFilter==='frequent'?'자주 만난':_personListFilter==='recent'?'최근 만난':'사람';
+  const scope=_personListQ.trim()?'검색 결과':'사람';
   if(lt)lt.innerHTML=`${escapeHtml(scope)} <b>${view.length}명</b>`;
   if(!view.length){
     const msg=!_personIndex().length?'아직 함께한 사람이 없어요<br/>영수증에 참석자·결제자를 적으면 여기에 모여요'
-      :_personListQ.trim()?'검색 결과가 없어요':'조건에 맞는 사람이 없어요';
+      :'검색 결과가 없어요';
     list.innerHTML=`<div class="empty-state"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/></svg><div>${msg}</div></div>`;
     return;
   }
@@ -5941,7 +5929,6 @@ document.getElementById('navPersonBtn')?.addEventListener('click',()=>{
   if(_personMode&&_isMobileLayout()&&!selectedId&&_mobileListMode==='detail'){_mobileListMode='list';renderSide();renderDetail();return;}
   _enterPersonMode();
 });
-document.querySelectorAll('#personScope .ps-chip').forEach(b=>b.addEventListener('click',()=>{_personListFilter=b.dataset.pfilter;renderSide();}));
 document.getElementById('personSortSel')?.addEventListener('change',e=>{_personListSort=e.target.value;renderSide();});
 
 // ── 월 네비게이션 ──
