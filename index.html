@@ -320,7 +320,7 @@ svg{display:block;flex-shrink:0;}
 .main-top-main{flex:1;min-width:0;}
 .main-title-row{display:flex;align-items:center;justify-content:space-between;gap:16px;}
 .main-title-row .main-title{min-width:0;}
-.main-title-row .ledger-period-slot{flex-shrink:0;}
+.main-title-row .ledger-period-slot{flex-shrink:0;margin-block:-6px;} /* v3.92 — 기간 버튼(38px)이 줄 높이를 키워 제목이 다른 탭보다 내려가던 것: 버튼은 제목 줄 가운데에 두되 줄 높이는 제목 기준 */
 .main-title{font-size:var(--fs-page-title);font-weight:var(--fw-strong);letter-spacing:var(--ls-page-title);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .main-sub{font-size:var(--fs-secondary);color:var(--text-secondary);margin-top:4px;line-height:1.5;}
 .main-actions{display:flex;gap:6px;flex-shrink:0;}
@@ -2021,7 +2021,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 
 /* 헤더 — 모바일 '‹ 사람' 복귀(데스크탑은 목록이 늘 보이므로 아이콘만) */
 .psn-crumb{display:none;}
-@media(max-width:780px){.psn-crumb{display:inline-flex;}.psn-eye-ic{display:none;}}
+@media(max-width:780px){.psn-crumb{display:inline-flex;}.psn-eye-ic{display:none;}.main-eye-row:has(.psn-crumb) .js-app-version{display:none;}} /* v3.92 — 모바일 상세 눈썹(‹ 사람)은 영수증·선불권 상세처럼 버전 없이 */
 
 /* ── Person Detail ── */
 .psn{container:psn/inline-size;
@@ -3602,7 +3602,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
-// v3.92 — 선불권 오른쪽 헤더 글자를 다른 탭과 동일하게(공통 .main-eye 사용, 선불권 전용 눈썹·제목 행간 규칙 제거).
+// v3.92 — 모든 탭 오른쪽 헤더 글자 통일: 선불권 공통 .main-eye, 통계 제목 줄 높이(기간 버튼), 사람 눈썹 'RECEIPT DB', 모바일 사람 상세 버전 숨김.
 // v3.91 — 선불권을 다른 레일과 같은 3단으로: 좌측 패널 선불권 모드(총 잔액·등록·검색·정렬·flat row) + 오른쪽 상세, 모바일 목록→상세. 계산·저장 불변.
 // v3.90 — 단둘이 결제 목록(drill) · 뒤로가기: 유령 오버레이 정리(_ovPrune)+popstate state._ov 판정+기록 즉시화, 목록에서 연 영수증 Back=그 목록 복귀 · 숫자 글꼴 스택 Dutch Pay와 동일(system-ui 우선).
 // v3.89 — 사람 요약 재구성: 결제 밸런스(전체·단둘이·여럿이 한 카드) · 한턱 · 만남(마지막 만남·12개월 흐름·자주 간 곳) · 참석 부담액 · 최근 내역. 중복 3곳 제거, 계산 불변.
@@ -10496,8 +10496,8 @@ async function renderDetail(){
         const _pIco=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4"/><path d="M16 11l2 2 4-4"/></svg>`;
         // v3.78 — 사람 모드: 모바일은 '‹ 사람'(목록 복귀). #backToSummaryBtn이라 _captureNavigation이 history.back()으로 처리. 데스크탑은 아이콘만.
         eye.innerHTML=_personMode
-          ?`<button class="back-to-summary psn-crumb" id="backToSummaryBtn" type="button"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>사람</button><span class="psn-eye-ic">${_pIco}</span>`
-          :_pIco;
+          ?`<button class="back-to-summary psn-crumb" id="backToSummaryBtn" type="button"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>사람</button><span class="psn-eye-ic">Receipt DB</span>` // v3.92 — 데스크탑 눈썹도 다른 탭과 같은 'RECEIPT DB'(아이콘 → 글자, 높이·위치 통일)
+          :'Receipt DB';
         if(_personMode)document.getElementById('backToSummaryBtn')?.addEventListener('click',()=>{_mobileListMode='list';selectedId=null;renderSide();renderDetail();});
         // v3.41 — 헤더 소제목을 의미가 분명한 표현으로: 상대 전체 결제 건수 · 함께한 영수증(나+상대 모두 포함) 건수.
         const _rel=_personRelation(personName,allPayerF,allPartF);
