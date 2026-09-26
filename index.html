@@ -236,8 +236,8 @@ svg{display:block;flex-shrink:0;}
 .lt-info{font-size:12px;color:var(--label2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .lt-info b{color:var(--label);font-weight:600;}
 .lt-sort{flex:0 0 auto;display:inline-flex;}
-#listSortSel{border:1px solid var(--sep2);border-radius:7px;padding:5px 26px 5px 10px;font:inherit;font-size:12px;font-weight:600;color:var(--label);background:var(--card) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 8px center;appearance:none;-webkit-appearance:none;cursor:pointer;}
-#listSortSel:focus{border-color:var(--blue);outline:none;}
+#listSortSel,#personSortSel{border:1px solid var(--sep2);border-radius:7px;padding:5px 26px 5px 10px;font:inherit;font-size:12px;font-weight:600;color:var(--label);background:var(--card) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 8px center;appearance:none;-webkit-appearance:none;cursor:pointer;}
+#listSortSel:focus,#personSortSel:focus{border-color:var(--blue);outline:none;}
 /* v3.22 — 날짜 그룹(작은 secondary 헤더). 큰 카드·강한 divider 없이 기존 밀도 유지 */
 .list-daygroup{padding:0;}
 .list-month-hd{padding:12px var(--pad-x) 2px;font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.2px;}
@@ -1973,6 +1973,192 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .stats-cat.rich .sc-ic{width:30px;height:30px;flex:0 0 30px;}
   .stats-redesign.mob-compact .budget-section{display:block;}
 }
+
+/* ════════════════════════════════════════════════════════════════
+   v3.78 — 사람(Person) 화면. UI composition 전용 namespace(.psn / .pl- / .person-).
+   ⚠️ 계산·데이터 불변. 좌측 패널은 영수증 목록 grammar(.r-card·month-nav·list-toolbar) 그대로 재사용.
+   색 identity: 상대 = Green(--green), 나 = Signature Blue(--blue). 상대마다 랜덤 색 금지.
+   ════════════════════════════════════════════════════════════════ */
+/* 모바일 하단 nav: '사람' 추가로 6개 — 64px 고정폭이면 390px에서 넘친다(6×64+36=420). 최대 64px 유지·부족하면 균등 축소. */
+@media(max-width:780px){
+  .icon-nav .nav-btn,.icon-nav .nav-btn.tab{flex:1 1 0;width:auto;min-width:0;max-width:64px;}
+}
+/* 좌측 패널 — 사람 모드 chrome 전환(구조·폭·높이는 영수증 목록과 동일) */
+.person-scope{display:none;}
+.side.person-mode #monthNav{display:none;}
+.side.person-mode .person-scope{display:flex;justify-content:flex-start;gap:6px;}
+.side.person-mode .photo-filter-mobile,
+.side.person-mode .batch-export-bar{display:none;}
+.lt-sort-person{display:none;}
+.side.person-mode .lt-sort-person{display:inline-flex;}
+.side.person-mode .lt-sort:not(.lt-sort-person){display:none;}
+.ps-chip{height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--sep);background:transparent;color:var(--label2);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .12s,color .12s,border-color .12s;}
+@media(hover:hover){.ps-chip:not(.on):hover{color:var(--label);border-color:var(--sep2);}}
+.ps-chip.on{background:var(--blue-bg);color:var(--blue-txt);border-color:color-mix(in srgb,var(--blue) 28%,transparent);}
+.ps-chip:focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
+/* 사람 row = .r-card 그대로(패딩·divider·hover·선택). 아바타·그룹 라벨만 추가. */
+.pl-row{align-items:center;}
+.pl-av{width:32px;height:32px;flex:0 0 32px;border-radius:10px;background:var(--fill);color:var(--label2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:650;}
+.r-card.sel .pl-av{background:color-mix(in srgb,var(--blue) 16%,transparent);color:var(--blue-txt);}
+.pl-grp{flex:0 0 auto;font-size:10.5px;font-weight:600;color:var(--label2);background:var(--fill);border-radius:6px;padding:2px 6px;line-height:1.3;}
+.pl-meta{font-size:11.5px;color:var(--label3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;}
+
+/* 헤더 — 모바일 '‹ 사람' 복귀(데스크탑은 목록이 늘 보이므로 아이콘만) */
+.psn-crumb{display:none;}
+@media(max-width:780px){.psn-crumb{display:inline-flex;}.psn-eye-ic{display:none;}}
+
+/* ── Person Detail ── */
+.psn{container:psn/inline-size;
+  --psn-t:var(--green);--psn-t-ink:color-mix(in srgb,var(--green) 72%,var(--label));--psn-t-soft:color-mix(in srgb,var(--green) 14%,transparent);
+  --psn-m:var(--blue);--psn-m-ink:var(--blue-txt);--psn-m-soft:var(--blue-bg);}
+.psn-tabs{display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--sep);margin:-6px 0 20px;}
+.psn-tab{position:relative;height:38px;padding:0 12px;border:0;background:none;color:var(--label3);font:inherit;font-size:14px;font-weight:600;cursor:pointer;}
+.psn-tab.on{color:var(--label);}
+.psn-tab.on::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:var(--label);}
+.psn-tab:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
+.psn-add{margin-left:auto;height:32px;padding:0 13px;border-radius:9px;border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);background:var(--blue-bg);color:var(--blue-txt);font:inherit;font-size:13px;font-weight:650;cursor:pointer;white-space:nowrap;}
+@media(hover:hover){.psn-add:hover{border-color:var(--blue);}}
+.psn-add:focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
+.psn-pane[hidden]{display:none;}
+
+/* 좁을 때(모바일·좁은 데스크탑): 한 열 + 순서 재배치(§17). 넓을 때: Main + Insight 2열. */
+.psn-grid{display:flex;flex-direction:column;gap:26px;}
+.psn-main,.psn-aside{display:contents;}
+.psn-hero{order:1;}.psn-rec{order:2;}.psn-spend{order:3;}.psn-key{order:4;}.psn-recent{order:5;}.psn-treat{order:6;}.psn-rel{order:7;}
+.psn-chart{display:none;}
+@container psn (min-width:700px){
+  .psn-grid{display:grid;grid-template-columns:minmax(0,1fr) 256px;gap:28px;align-items:start;}
+  .psn-main,.psn-aside{display:flex;flex-direction:column;gap:26px;min-width:0;}
+  .psn-main>*,.psn-aside>*{order:0;}
+  .psn-chart{display:block;}
+}
+
+.psn-card{background:var(--card);border:1px solid var(--sep);border-radius:var(--r);}
+.psn-sec-hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:14px;font-weight:650;color:var(--label);margin-bottom:10px;}
+.psn-sec-hd .r{font-size:12px;font-weight:500;color:var(--label3);font-variant-numeric:tabular-nums;}
+.psn .chev{color:var(--label3);font-size:15px;line-height:1;margin-left:4px;}
+.psn [role="button"]{cursor:pointer;}
+.psn [role="button"]:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
+
+/* Hero — 한턱 밸런스 */
+.psn-hero{padding:20px 20px 16px;}
+.psn-hero-hd{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px;}
+.psn-hero-title{font-size:15px;font-weight:700;color:var(--label);letter-spacing:-.01em;}
+.psn-hero-desc{font-size:12px;color:var(--label3);margin-top:2px;}
+.psn-hero-r{font-size:12px;color:var(--label3);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.psn-duo{display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);}
+.psn-duo-div{background:var(--sep);margin:4px 0;}
+.psn-side{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;padding:4px 8px;border:0;background:none;font:inherit;color:inherit;text-align:center;border-radius:12px;}
+@media(hover:hover){button.psn-side:hover{background:var(--fill);}}
+.psn-side-ic{width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;}
+.psn-side-ic svg{width:17px;height:17px;}
+.psn-side.t .psn-side-ic{background:var(--psn-t-soft);color:var(--psn-t-ink);}
+.psn-side.m .psn-side-ic{background:var(--psn-m-soft);color:var(--psn-m-ink);}
+.psn-side-name{font-size:13px;font-weight:600;color:var(--label2);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.psn-side-amt{font-size:26px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;font-variant-numeric:tabular-nums;margin-top:4px;}
+.psn-side.t .psn-side-amt{color:var(--psn-t-ink);}
+.psn-side.m .psn-side-amt{color:var(--psn-m-ink);}
+.psn-side-cnt{font-size:12px;color:var(--label3);font-variant-numeric:tabular-nums;}
+.psn-bal{display:flex;height:8px;border-radius:999px;background:var(--fill2);overflow:hidden;margin-top:16px;}
+.psn-bal i{display:block;height:100%;}
+.psn-bal i.t{background:var(--psn-t);}
+.psn-bal i.m{background:var(--psn-m);}
+.psn-bal-pct{display:flex;justify-content:space-between;margin-top:6px;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums;}
+.psn-bal-pct .t{color:var(--psn-t-ink);}.psn-bal-pct .m{color:var(--psn-m-ink);}
+.psn-diff{margin-top:12px;text-align:center;font-size:14px;color:var(--label2);}
+.psn-diff b{color:var(--label);font-weight:700;font-variant-numeric:tabular-nums;}
+.psn-diff .who-t{color:var(--psn-t-ink);font-weight:700;}
+.psn-diff .who-m{color:var(--psn-m-ink);font-weight:700;}
+.psn-sublink{display:block;margin:12px auto 0;border:0;background:none;font:inherit;font-size:12.5px;color:var(--label3);cursor:pointer;}
+@media(hover:hover){.psn-sublink:hover{color:var(--label2);}}
+
+/* 함께한 씀씀이 — flat rows + straight divider */
+.psn-list{border-top:1px solid var(--sep);}
+.psn-cmp{padding:13px 2px 14px;border-bottom:1px solid var(--sep);}
+@media(hover:hover){.psn-cmp[role="button"]:hover{background:var(--fill);}}
+.psn-cmp-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.psn-cmp-title{font-size:14px;font-weight:600;color:var(--label);}
+.psn-v{display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:baseline;gap:10px;padding:2px 0;}
+.psn-v-who{display:flex;align-items:center;gap:7px;min-width:0;font-size:13px;color:var(--label2);}
+.psn-v-who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.psn-v-who i{width:8px;height:8px;border-radius:999px;flex:0 0 8px;}
+.psn-v.t .psn-v-who i{background:var(--psn-t);}.psn-v.m .psn-v-who i{background:var(--psn-m);}
+.psn-v-amt{font-size:14.5px;font-weight:650;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;}
+.psn-v.t .psn-v-amt{color:var(--psn-t-ink);}.psn-v.m .psn-v-amt{color:var(--psn-m-ink);}
+.psn-v .psn-v-amt.zero{color:var(--label3);font-weight:500;} /* 0원은 색 identity보다 약하게(초록/파랑으로 강조하지 않음) */
+.psn-v-cnt{font-size:12px;color:var(--label3);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.psn-cmp .psn-bal{height:5px;margin-top:9px;}
+.psn-note{font-size:12px;color:var(--label3);line-height:1.5;margin-top:10px;}
+.psn-note b{color:var(--label2);font-weight:600;}
+
+/* 주요 항목 — 2×2, 셀 사이 직선 divider(카드 남발 없음) */
+.psn-kgrid{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--sep);border-bottom:1px solid var(--sep);}
+.psn-k{padding:13px 12px 13px 2px;min-width:0;}
+.psn-k:nth-child(2n){padding-left:14px;border-left:1px solid var(--sep);}
+.psn-k:nth-child(-n+2){border-bottom:1px solid var(--sep);}
+@media(hover:hover){.psn-k[role="button"]:hover{background:var(--fill);}}
+.psn-k-lbl{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12.5px;color:var(--label2);font-weight:600;}
+.psn-k-lbl span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.psn-k-val{font-size:18px;font-weight:700;margin-top:5px;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--label);}
+.psn-k-val.me{color:var(--psn-m-ink);}
+.psn-k-val.zero{color:var(--label3);font-weight:600;}
+.psn-k-cnt{font-size:12px;color:var(--label3);margin-top:1px;min-height:17px;font-variant-numeric:tabular-nums;}
+
+/* 최근 함께한 내역 — flat list */
+.psn-rlist{border-top:1px solid var(--sep);}
+.psn-rrow{display:grid;grid-template-columns:78px minmax(0,1fr) auto;grid-template-areas:"d s a" "d x x";column-gap:12px;row-gap:1px;align-items:baseline;padding:11px 2px;border-bottom:1px solid var(--sep);}
+@media(hover:hover){.psn-rrow:hover{background:var(--fill);}}
+.psn-rlist:not(.expanded) .psn-rrow.more{display:none;}
+.psn-r-date{grid-area:d;font-size:12px;color:var(--label3);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.psn-r-store{grid-area:s;font-size:13.5px;font-weight:600;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.psn-r-amt{grid-area:a;font-size:13.5px;font-weight:650;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;}
+.psn-r-sub{grid-area:x;font-size:12px;color:var(--label3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.psn-r-sub .t{color:var(--psn-t-ink);font-weight:600;}
+.psn-r-sub .m{color:var(--psn-m-ink);font-weight:600;}
+.psn-more-btn{display:block;width:100%;margin-top:4px;padding:10px 0;border:0;background:none;font:inherit;font-size:13px;font-weight:600;color:var(--blue-txt);cursor:pointer;}
+.psn-empty{padding:18px 2px;font-size:13px;color:var(--label3);}
+
+/* Insight — 함께한 기록 */
+.psn-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--sep);border-bottom:1px solid var(--sep);}
+.psn-stat{padding:12px 8px 11px 2px;min-width:0;}
+.psn-stat+.psn-stat{padding-left:12px;border-left:1px solid var(--sep);}
+@media(hover:hover){.psn-stat[role="button"]:hover{background:var(--fill);}}
+.psn-stat-v{font-size:22px;font-weight:700;color:var(--label);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.psn-stat-v small{font-size:13px;font-weight:600;color:var(--label2);margin-left:1px;}
+.psn-stat-l{display:flex;align-items:center;gap:2px;font-size:12px;color:var(--label3);margin-top:1px;}
+.psn-rec-sub{font-size:12px;color:var(--label3);margin-top:9px;font-variant-numeric:tabular-nums;}
+.psn-rec-top{display:flex;align-items:baseline;gap:8px;margin-top:10px;font-size:12.5px;color:var(--label3);min-width:0;}
+.psn-rec-top b{flex:1;min-width:0;color:var(--label);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.psn-rec-top em{font-style:normal;white-space:nowrap;font-variant-numeric:tabular-nums;}
+
+/* Insight — 지출 비교(행마다 나 vs 상대, 같은 행 안에서 비교) */
+.psn-legend{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;color:var(--label3);}
+.psn-legend i{width:8px;height:8px;border-radius:999px;display:inline-block;}
+.psn-legend i.t{background:var(--psn-t);}.psn-legend i.m{background:var(--psn-m);margin-left:6px;}
+.psn-crow{padding:10px 0;border-bottom:1px solid var(--sep);}
+.psn-crow:first-child{border-top:1px solid var(--sep);}
+.psn-crow-l{font-size:12.5px;font-weight:600;color:var(--label2);margin-bottom:6px;}
+.psn-cbar{display:grid;grid-template-columns:minmax(0,1fr) 78px;align-items:center;gap:8px;height:16px;}
+.psn-cbar+.psn-cbar{margin-top:4px;}
+.psn-cbar b{display:block;height:7px;border-radius:999px;background:var(--fill2);overflow:hidden;}
+.psn-cbar b i{display:block;height:100%;border-radius:999px;}
+.psn-cbar.t b i{background:var(--psn-t);}.psn-cbar.m b i{background:var(--psn-m);}
+.psn-cbar span{font-size:12px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--label2);}
+
+/* Insight — 한턱 내역·관계: 기존 renderer(ID·drill-down 그대로) 재사용, 머리글만 통일 */
+.psn-treat .person-rel-hd,.psn-rel .person-rel-hd{display:none;}
+.psn-treat .budget-section,.psn-rel .budget-section{margin:0;padding:0;border:0;background:none;}
+
+@media(max-width:780px){
+  .psn-hero{padding:18px 14px 14px;}
+  .psn-hero-desc,.psn-hero-r{display:none;}
+  .psn-side-amt{font-size:22px;}
+  .psn-tabs{margin-top:-4px;}
+}
+@media(max-width:400px){
+  .psn-side-amt{font-size:20px;}
+  .psn-rrow{grid-template-columns:70px minmax(0,1fr) auto;column-gap:10px;}
+}
 </style>
 <link rel="stylesheet" href="prepaid.css">
 </head>
@@ -2000,6 +2186,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
       <button class="nav-btn on tab" data-tab="list" data-nav="list" data-nav-label="내역" aria-label="내역">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1.5 1.5 0 0 1 1.5 1.5V21l-2.5-1.8-2.5 1.8-2.5-1.8L9.5 21 7 19.2 4.5 21V4.5A1.5 1.5 0 0 1 6 3Z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
         <span class="nav-mobile-label">내역</span>
+      </button>
+      <!-- v3.78 — 사람(Person). '관계'는 사람 상세 내부의 분석 개념으로만 쓴다. 통계와 같은 비-tab nav 버튼(내역 목록 패널을 사람 모드로 재사용). -->
+      <button class="nav-btn" id="navPersonBtn" data-nav="person" data-nav-label="사람" aria-label="사람">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+        <span class="nav-mobile-label">사람</span>
       </button>
       <button class="nav-btn tab" data-tab="input" data-nav="input" data-nav-label="추가" aria-label="추가">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -2042,6 +2233,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
         </div>
         <button class="month-nav-btn" id="monthNext" aria-label="다음 달">›</button>
       </div>
+      <!-- v3.78 — 사람 모드 범위 행. month-nav와 같은 박스(높이·divider)라 좌/우 헤더 구분선 정렬이 그대로 유지된다. -->
+      <div class="month-nav person-scope" id="personScope" role="group" aria-label="사람 필터">
+        <button class="ps-chip on" type="button" data-pfilter="all" aria-pressed="true">전체</button>
+      </div>
 
       <div class="side-search">
         <div class="search-wrap">
@@ -2074,6 +2269,14 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
             <option value="amount_desc">금액 높은순</option>
             <option value="amount_asc">금액 낮은순</option>
             <option value="store">매장명순</option>
+          </select>
+        </label>
+        <label class="lt-sort lt-sort-person">
+          <span class="sr-only">사람 정렬</span>
+          <select id="personSortSel" aria-label="사람 정렬 기준">
+            <option value="together">함께한 순</option>
+            <option value="recent">최근순</option>
+            <option value="name">이름순</option>
           </select>
         </label>
       </div>
@@ -3126,6 +3329,17 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.78 — 사람(Person) 화면 UI/UX 재구성(UI composition만). ⚠️ Receipt·Person 계산·단둘이 한턱·여럿이·전체 결제·전체 내가 한턱·참석 부담액·
+//   개인/공동/전체 한턱·Meeting·meetingId·Relation Group·사람별 분담·기간 Filter·Review Inbox·Dutch Pay·Dropbox·schema·migration 전부 불변.
+//   ① 레일 '사람'(single-person icon, 통계와 같은 비-tab nav). '관계'는 사람 상세 안 분석 용어로만. 장소·품목은 이번 STEP 범위 밖(가짜 메뉴 안 만듦).
+//   ② 좌측 = 영수증 목록 패널 grammar 그대로(.side 재사용): 제목 '사람' · month-nav 자리에 범위 행[전체](같은 박스라 헤더 하단선 정렬 유지 — 임의 '자주/최근 만난' 기준은 정책 미확정이라 넣지 않음) ·
+//      같은 검색창(사람 모드에선 사람 목록만 거름, 초성 지원, 영수증 검색어와 분리) · list-toolbar '사람 N명'+정렬[함께한 순|최근순|이름순] · .r-card flat row · side-foot 그대로.
+//      목록 값 '함께한 영수증 N건 · 만남 N회'는 renderDetail 인물 분기와 같은 파이프라인(_personRelation·_personMeetingStats) → 상세 헤더와 동일. 자동 관계 표현 없음.
+//   ③ 우측 Person Detail = 기존 '인물 검색' 분기를 _personSel로 그대로 통과(헤더·기간·drill-down 바인딩 재사용) → 숫자 동일. renderPersonDashboardHtml은 계산 줄을
+//      건드리지 않고 me 분기 결과를 _psnLayoutHtml로 재배치: 탭[요약|상세 내역(기존 결제·참석 내역)] + 한턱 밸런스(이름·Green/Blue·%·runtime 차이 문장) · 함께한 씀씀이 ·
+//      주요 항목 2×2 · 최근 함께한 내역(→기존 영수증 상세) / Insight(넓을 때 오른쪽): 함께한 기록 · 지출 비교 · 한턱 내역 · 관계. 좁으면 한 열 §17 순서.
+//   ④ 색 identity: 상대 = Green, 나 = Signature Blue(Hero·비교 bar·지출 비교·최근 내역 결제자). ⑤ + 영수증 추가 = 레일 '추가'와 같은 경로(참석자 자동 전달 경로가 없어 만들지 않음).
+//   ⑥ Back: 사람·선택한 사람을 route에 포함 → 영수증 상세/사람 간 Back·swipe-back 복귀. 모바일 '‹ 사람'. 하단 nav 6개가 390px에 맞도록 폭만 균등 축소(최대 64px 유지).
 // v3.77 — 데이터 정리함 UI/UX 폴리시(표시만). ⚠️ reviewIssues 판정/6조건/count·Receipt 계산·navigation·저장 전부 불변.
 //   ① 0원 정렬: row를 grid-area(icon|store|amt|chev)로 재구성, 금액·chevron 우측 X축 통일. ② §2 '0원' 의미: reviewIssues의 amount는 total이 null/''/undefined/NaN일 때만(0은 유한수라 미판정) → 화면 '0원'은 사실상 '총액 없음'(B). total 유한(0 포함)이면 실제 금액, 없음/invalid면 강조 안 하고 muted '—'(가짜 0원 금지)+아래 '총액 없음' 사유. ③ issue 문구 친화화(reviewIssues.short — 매장명 없음/날짜 없음/총액 없음/품목 합계 불일치/수량·단가 확인/사진 확인; 새 issue 없음). ④ 헤더 '확인 필요 + 전체 N건'(primary), 유형 count는 필터 chip(secondary)로 이관(장문 요약 제거). ⑤ Flat List + 작은 유형 icon(_reviewTypeIcon), 문제별 큰 Card 없음. ⑥ 색 절제: icon만 muted amber, 문제 설명 neutral(--label2), 금액·매장명 primary(Red/Orange 남발 제거). ⑦ 3줄 row(매장명·금액 / 날짜 / 문제 사유), 긴 매장명 ellipsis, 금액/chevron wrap 없음, row 클릭=기존 selectReceipt. 정렬은 최신순 유지(issue 2개+ 우선 노출은 제안만·미구현 §8). 저장 후 즉시 반영/count 감소/reload 0 불변(§9). Empty '확인할 영수증이 없습니다.'. 변경 파일 index.html.
 // v3.76 — '확인 필요 N건'을 '데이터 정리함(Data Review Inbox)'으로 발전. ⚠️ 새 검증 항목 없음 — 기존 _receiptCheckReasons 6조건 그대로(count 불변), 진실원 reviewIssues로 통일.
@@ -3464,7 +3678,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.77';
+const APP_VERSION='v3.78';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -3615,6 +3829,14 @@ function dbClear(store){return txStore(store,'readwrite').then(s=>new Promise((r
 let receipts=[];          // 메모리 캐시 (전체)
 let selectedId=null;      // 현재 상세 보고 있는 영수증 id
 let searchQuery='';
+// v3.78 — 사람(Person) 화면 상태. 레일 '사람' = 영수증 목록 패널(.side) grammar를 그대로 쓰는 모드.
+//   Person Detail은 renderDetail의 '인물 검색' 분기를 _personSel로 그대로 통과한다 → 숫자·drill-down·기간 동일(계산 불변).
+//   영수증 검색어(searchQuery)와 사람 목록 검색어(_personListQ)는 분리 — 서로 덮지 않는다.
+let _personMode=false;
+let _personSel='';              // 선택된 사람(정규화 이름)
+let _personListQ='';            // 사람 목록 검색어
+let _personListSort='together'; // together | name | recent
+let _psnTab='sum';              // Person Detail 탭: sum(요약) | all(상세 내역)
 let pendingPhotoBlob=null;
 let pendingPhotoUrl=null;
 let viewMonth=_currentYM();  // 'YYYY-MM' — 가계부에서 보고 있는 월
@@ -4191,7 +4413,7 @@ function openRelationGroupEditor(id,prefillName){
   ov.querySelector('#rgType').addEventListener('change',e=>{type=e.target.value;});
   const coBtn=ov.querySelector('#rgCoTreat'); // v3.71 — 그룹 공동 한턱 drill-down
   if(coBtn&&existing&&_relGroupCoTreat(existing.id).length)coBtn.onclick=()=>close(()=>_openGroupCoTreatDrill(existing.id)); // v3.72 모달 닫고(히스토리 소비) 드릴 열기
-  const afterSave=()=>{renderRelationSettings();if(!selectedId&&searchQuery)renderDetail();};
+  const afterSave=()=>{renderRelationSettings();if(_personMode)renderSide();if(!selectedId&&(searchQuery||_personMode))renderDetail();}; // v3.78 — 사람 화면도 갱신
   ov.querySelector('#rgSave').onclick=async()=>{
     const nm=ov.querySelector('#rgName').value.trim();
     const tp=ov.querySelector('#rgType').value;
@@ -4362,6 +4584,7 @@ function _splitSubtitle(list, nPeople){
 function _goPersonSearch(name){
   name=(name||'').trim();
   if(!name)return;
+  if(_personMode){_selectPerson(name);return;} // v3.78 — 사람 화면 안의 이름 클릭은 그 사람 상세로(영수증 검색으로 튀지 않음)
   selectedId=null;
   searchQuery=name;
   const inp=document.getElementById('searchInp');
@@ -5349,6 +5572,7 @@ function _cardHtml(r, reason){
 }
 
 function renderSide(){
+  if(_personMode){_renderPersonSide();return;} // v3.78 — 같은 패널 grammar에 사람 목록
   // 월 네비 라벨 갱신 — 영수증 선택 중이면 파란색 힌트 표시
   const monthLabelEl=document.getElementById('monthLabel');
   if(monthLabelEl){
@@ -5535,6 +5759,8 @@ function _syncMobileSurface(name=_activeTabName()){
   app.classList.remove('mobile-list-view','mobile-stats-view','mobile-content-view','mobile-detail-view','mob-person-view');
   if(!_isMobileLayout())return;
   if(name==='input'||name==='settings'||name==='prepaid')app.classList.add('mobile-content-view');
+  // v3.78 — 사람 모드: 목록 → 상세(한 번에 한 화면). v3.41 '요약을 목록 위에'(mob-person-view)는 영수증 검색 전용으로 둔다.
+  else if(_personMode)app.classList.add((selectedId||_mobileListMode==='detail')?'mobile-detail-view':'mobile-list-view');
   else if(_personViewActive&&!selectedId)app.classList.add('mob-person-view'); // v3.41 — 인물 요약을 목록 위에
   else if(selectedId||_mobileListMode==='detail')app.classList.add('mobile-detail-view');
   else if(_mobileListMode==='stats')app.classList.add('mobile-stats-view');
@@ -5542,12 +5768,123 @@ function _syncMobileSurface(name=_activeTabName()){
 }
 addEventListener('resize',()=>_syncMobileSurface());
 addEventListener('orientationchange',()=>setTimeout(()=>_syncMobileSurface(),80));
+// ════════════════════════════════════════════════════════════════
+// v3.78 — 사람(Person) 목록. 좌측 패널 grammar(month-nav 자리 범위 행·검색·list-toolbar·.r-card·side-foot) 재사용.
+// ════════════════════════════════════════════════════════════════
+let _personIdxCache={sig:null,list:[]};
+// 사람별 목록 값. ⚠️ renderDetail '인물 검색' 분기와 같은 파이프라인(부분일치 payer/part → _personRelation → together·
+//   _personMeetingStats)이라 목록의 '함께한 영수증·만남' = 상세 헤더 숫자(전체 기간). 새 계산 helper 없음, 데이터 변경 시에만 재계산.
+function _personIndex(){
+  const me=normalizeName(getMyName());
+  let maxU='';for(const r of receipts){const u=(r&&r.updatedAt)||'';if(u>maxU)maxU=u;}
+  const rgSig=(relationGroups||[]).map(g=>g.id+':'+(g.updatedAt||'')+':'+(g.active===false?0:1)).join(',');
+  const sig=receipts.length+'|'+me+'|'+maxU+'|'+rgSig;
+  if(_personIdxCache.sig===sig)return _personIdxCache.list;
+  const names=new Set();
+  for(const r of receipts)for(const n of receiptPeople(r))if(n&&n!==me)names.add(n);
+  const list=[];
+  for(const n of names){
+    const nL=n.toLowerCase();
+    const payerRecs=receipts.filter(r=>(r.paidBy||'').trim()&&(r.paidBy||'').toLowerCase().includes(nL));
+    const partRecs=receipts.filter(r=>(r.participants||[]).some(p=>String(p).toLowerCase().includes(nL))&&!(r.paidBy||'').toLowerCase().includes(nL));
+    const rel=_personRelation(n,payerRecs,partRecs);
+    const ms=_personMeetingStats(rel);
+    let last='';for(const r of rel.together){const d=r.date||'';if(d>last)last=d;}
+    const g=relationGroupsForPerson(n)[0]||null;
+    list.push({name:n,together:rel.together.length,meet:ms.count,last,cho:_toCho(n),
+      grp:g?(g.type==='other'?(g.name||relTypeLabel(g.type)):relTypeLabel(g.type)):''});
+  }
+  _personIdxCache={sig,list};
+  return list;
+}
+function _personListView(){
+  let list=_personIndex().slice();
+  const q=(_personListQ||'').trim();
+  if(q){
+    if(_isChoQuery(q)){const cq=_normChoQuery(q);list=list.filter(p=>p.cho.includes(cq));}
+    else{const qL=q.toLowerCase();list=list.filter(p=>p.name.toLowerCase().includes(qL));}
+  }
+  const byName=(a,b)=>a.name.localeCompare(b.name,'ko');
+  if(_personListSort==='name')list.sort(byName);
+  else if(_personListSort==='recent')list.sort((a,b)=>(b.last||'').localeCompare(a.last||'')||b.together-a.together||byName(a,b));
+  else list.sort((a,b)=>b.together-a.together||b.meet-a.meet||byName(a,b));
+  return list;
+}
+function _renderPersonSide(){
+  const list=document.getElementById('sideList');
+  _updatePhotoFilterUi(); // 하단 상태(확인 필요·사진 없음) 카운트는 영수증 기준 그대로
+  const ps=document.getElementById('personSortSel');if(ps&&ps.value!==_personListSort)ps.value=_personListSort;
+  const view=_personListView();
+  const lt=document.getElementById('ltInfo');
+  const scope=_personListQ.trim()?'검색 결과':'사람';
+  if(lt)lt.innerHTML=`${escapeHtml(scope)} <b>${view.length}명</b>`;
+  if(!view.length){
+    const msg=!_personIndex().length?'아직 함께한 사람이 없어요<br/>영수증에 참석자·결제자를 적으면 여기에 모여요'
+      :'검색 결과가 없어요';
+    list.innerHTML=`<div class="empty-state"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/></svg><div>${msg}</div></div>`;
+    return;
+  }
+  list.innerHTML='<div class="list-group">'+view.map(p=>{
+    const sel=p.name===_personSel;
+    return `<div class="r-card pl-row${sel?' sel':''}" data-person="${escapeHtml(p.name)}" role="button" tabindex="0"${sel?' aria-current="true"':''}>`
+      +`<span class="pl-av" aria-hidden="true">${escapeHtml(p.name.slice(0,1))}</span>`
+      +`<div class="r-card-info"><div class="r-card-store-row"><span class="r-card-store">${escapeHtml(p.name)}</span>${p.grp?`<span class="pl-grp">${escapeHtml(p.grp)}</span>`:''}</div>`
+      +`<div class="pl-meta">함께한 영수증 ${p.together}건 · 만남 ${p.meet}회</div></div></div>`;
+  }).join('')+'</div>';
+  list.querySelectorAll('.pl-row').forEach(el=>{
+    const go=()=>_selectPerson(el.dataset.person);
+    el.addEventListener('click',go);
+    el.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;e.preventDefault();go();});
+  });
+}
+function _selectPerson(name){
+  const n=normalizeName(name);if(!n)return;
+  if(n!==_personSel){_personTimeFilter={type:'all',value:''};_psnTab='sum';} // 사람이 바뀌면 기간·탭 초기화(영수증 검색과 동일 규칙)
+  _personSel=n;selectedId=null;
+  if(_isMobileLayout())_mobileListMode='detail';
+  renderSide();renderDetail();
+  const mb=document.querySelector('#viewList .main-body');if(mb)mb.scrollTop=0;
+}
+let _searchPhReceipt=null;
+function _applyPersonModeChrome(on){
+  document.querySelector('.side')?.classList.toggle('person-mode',on);
+  const t=document.querySelector('.side-title.app-title');if(t)t.textContent=on?'사람':'영수증';
+  const inp=document.getElementById('searchInp');
+  if(inp){
+    if(_searchPhReceipt===null)_searchPhReceipt=inp.placeholder;
+    inp.placeholder=on?'이름으로 찾기 · 초성도 돼요':_searchPhReceipt;
+    inp.value=on?_personListQ:searchQuery;
+  }
+  if(typeof _updateSearchClear==='function')_updateSearchClear();
+}
+function _enterPersonMode(){
+  _personMode=true;
+  if(_batchSelectMode)_setBatchSelectMode(false,{render:false});
+  _mtgExit();
+  _clearPhotoListFilter();
+  selectedId=null;_monthCatFilter=null;_mobileListMode='list';
+  // 데스크탑은 목록 첫 사람을 기본 선택(빈 상세 대신 실제 화면), 모바일은 목록부터.
+  if(!_isMobileLayout()&&(!_personSel||!_personIndex().some(p=>p.name===_personSel))){
+    const v=_personListView();_personSel=v.length?v[0].name:'';_personTimeFilter={type:'all',value:''};_psnTab='sum';
+  }
+  _applyPersonModeChrome(true);
+  switchTab('list');
+  renderSide();renderDetail();
+}
+function _exitPersonMode(){
+  if(!_personMode)return false;
+  _personMode=false;
+  _applyPersonModeChrome(false);
+  return true; // 호출부가 재렌더 필요 여부 판단(탭 클릭은 switchTab만 해서 목록이 사람으로 남는 것 방지)
+}
+
 function switchTab(name){
   if(name!=='list'&&_batchSelectMode)_setBatchSelectMode(false,{render:false});
   if(name!=='list')_mtgExit(); // v3.46 — 내역 탭을 벗어나면 만남 선택 모드 종료
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===name));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
-  document.querySelector(`.nav-btn[data-nav="${name}"]`)?.classList.add('on');
+  // v3.78 — 사람 모드는 내역 뷰를 쓰지만 레일 선택은 '사람'.
+  document.querySelector(`.nav-btn[data-nav="${(name==='list'&&_personMode)?'person':name}"]`)?.classList.add('on');
   document.getElementById('viewList').classList.toggle('on',name==='list');
   document.getElementById('viewInput').classList.toggle('on',name==='input');
   document.getElementById('viewSettings').classList.toggle('on',name==='settings');
@@ -5565,17 +5902,21 @@ document.getElementById('prepaidNew').addEventListener('click',()=>ppWalletForm(
 document.getElementById('prepaidBack').addEventListener('click',()=>ppOpen(null));
 document.querySelectorAll('.tab').forEach(t=>{
   t.addEventListener('click',()=>{
+    const _leftPerson=_exitPersonMode(); // v3.78 — 다른 레일 메뉴로 가면 사람 모드 종료(선택한 사람은 기억 → 다시 '사람'으로 오면 복원)
     if(_isMobileLayout()&&t.dataset.tab==='list'){
       _mobileListMode='list';selectedId=null;renderSide();renderDetail();
     }
     // v3.30 — 선불권 탭 선택 시 항상 목록으로(상세의 별도 뒤로가기 화살표를 제거했으므로 탭 재선택이 목록 복귀 경로)
     if(t.dataset.tab==='prepaid'&&typeof prepaidSelectedId!=='undefined')prepaidSelectedId=null;
+    if(_leftPerson)selectedId=null;
     switchTab(t.dataset.tab);
+    if(_leftPerson){renderSide();renderDetail();} // 사람 목록·상세를 영수증 목록·가계부로 되돌림
   });
 });
 // 가계부(통계) 버튼 — 내역 탭으로 이동 후 선택 해제 → 가계부 뷰
 const _navLedgerBtn=document.getElementById('navLedgerBtn');
 if(_navLedgerBtn)_navLedgerBtn.addEventListener('click',()=>{
+  _exitPersonMode();
   _mobileListMode='stats';selectedId=null;
   switchTab('list');
   _monthCatFilter=null;_ledgerTimeFilter={type:'month'};
@@ -5583,6 +5924,12 @@ if(_navLedgerBtn)_navLedgerBtn.addEventListener('click',()=>{
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
   _navLedgerBtn.classList.add('on');
 });
+// v3.78 — 사람 버튼. 모바일에서 사람 화면 중 다시 누르면 목록으로.
+document.getElementById('navPersonBtn')?.addEventListener('click',()=>{
+  if(_personMode&&_isMobileLayout()&&!selectedId&&_mobileListMode==='detail'){_mobileListMode='list';renderSide();renderDetail();return;}
+  _enterPersonMode();
+});
+document.getElementById('personSortSel')?.addEventListener('change',e=>{_personListSort=e.target.value;renderSide();});
 
 // ── 월 네비게이션 ──
 function changeMonth(offset){
@@ -5623,6 +5970,7 @@ let _searchComposing=false;
 function _updateSearchClear(){searchClear.classList.toggle('vis',!!searchInp.value);}
 function _clearSearch(){
   if(typeof _searchTimer!=='undefined')clearTimeout(_searchTimer);
+  if(_personMode){_personListQ='';searchInp.value='';_updateSearchClear();renderSide();searchInp.focus();return;} // v3.78
   searchQuery='';searchInp.value='';_monthCatFilter=null;
   _personTimeFilter={type:'all',value:''};_ledgerTimeFilter={type:'month'};
   _mtgExit(); // v3.46 — 검색 해제 시 만남 선택 모드 종료
@@ -5631,6 +5979,8 @@ function _clearSearch(){
 searchClear.addEventListener('click',_clearSearch);
 
 function _applySearchInput(){
+  // v3.78 — 사람 모드에선 같은 검색창이 사람 목록만 거른다(영수증 검색어·상세는 그대로).
+  if(_personMode){_personListQ=searchInp.value;_updateSearchClear();renderSide();return;}
   _clearPhotoListFilter();
   searchQuery=searchInp.value;
   if(searchQuery)selectedId=null;
@@ -5661,6 +6011,7 @@ searchInp.addEventListener('keydown',e=>{
 
 // 앱 제목 클릭 → 초기 화면으로 리셋
 document.querySelector('.app-title').addEventListener('click',()=>{
+  _exitPersonMode(); // v3.78 — 홈(로고)은 사람 모드를 벗어나 월 대시보드로
   _clearPhotoListFilter();
   // v3.37 — 홈(로고) → 해당 월 대시보드 통계 화면. 모바일도 stats 모드로 열어 가계부 요약이 보이게 한다.
   _mobileListMode='stats';
@@ -7900,7 +8251,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
   // v3.42 — 표 대신 위계형 카드: 단둘이 Hero(비율 Bar) → 여럿이 → 전체 → 한턱/참석 부담액.
   //   계산은 v3.41 검증 함수 그대로. 각 헤더 건수는 tgt·me 결제의 합집합(= 단둘이+여럷이 = 전체).
   const duoCnt=tgtDuo.length+myDuo.length, grpCnt=tgtGrp.length+myGrp.length, allCnt=tgtWith.length+myWith.length;
-  let heroHtml;
+  let heroHtml, psn=null; // v3.78 — psn: me 분기에서 이미 계산한 값을 새 layout에 그대로 넘긴다(계산 불변)
   if(me){
     // v3.54 실결제(보존 — §6·§15: Hero 주지표는 아니지만 helper/data 삭제 금지, 향후 상세 분석용).
     const duoTgt=sum(tgtDuo), duoMe=sum(myDuo), duoSum=duoTgt+duoMe;
@@ -7959,6 +8310,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
         <div class="rel-li${_orgTap?' rel-li-tap':''}"${_orgTap?' id="relMtgOrganize" role="button" tabindex="0"':''}><div class="rel-li-ic">${_relIco('doc')}</div><div class="rel-li-main"><div class="rel-li-title">묶이지 않은 영수증</div></div><div class="rel-li-val"><span class="v${_ms.unlinked?'':' zero'}">${_ms.unlinked}건</span></div>${_orgTap?_chev:''}</div>
       </div>`;
     heroHtml=hero+`<div class="rel-metrics">${grpRow}${allRow}${noMeNote}${treatRow}${shareRow}</div>`+mtgSummary;
+    psn={duoTreatTgt,duoTreatMe,duoNormal,duoTreatUnknown,duoAllCnt,grpAll,ms:_ms};
   }else{
     // '내 이름' 미설정 — 관계 비교 불가. 상대 전체 결제만 안내.
     heroHtml=`<div class="rel-hero"><div class="rel-hero-top"><div class="rel-hero-tt"><div class="rel-hero-title">${nm} 결제</div><div class="rel-hero-desc">설정 탭에서 ‘내 이름’을 지정하면 단둘이/여럿이 결제 관계가 표시됩니다.</div></div><div class="rel-hero-cnt">${payerRecs.length}건</div></div>
@@ -8036,7 +8388,140 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
   if(_personDetailData){_personDetailData.gSolo=_giv.solo.slice();_personDetailData.gCo=_giv.co.slice();_personDetailData.gAll=_giv.all.slice();_personDetailData.gName=tgt;}
   const treatGivingSection=_personTreatGivingSectionHtml(tgt,_giv);
   // v3.59 — 만남 묶기 진입은 만남 영역 '미분류 영수증'(Organizer)으로 이동. Dashboard에는 [선택] 툴바/액션바 없음.
+  // v3.78 — '내 이름'이 있으면 새 Person layout(값은 위에서 계산한 것 그대로), 없으면 기존 구성 유지.
+  if(psn)return _psnLayoutHtml({...psn,tgt,me,together,tgtGrp,myGrp,tgtWith,myWith,tgtNoMe,myTreat,shareTotal,partRecs,
+    relSection,treatGivingSection,payerSection,coSection,partSection});
   return heroHtml+relSection+treatGivingSection+payerSection+coSection+partSection;
+}
+
+// ── v3.78 사람(Person) Detail layout — UI composition 전용 ────────────────────────────
+//   입력은 renderPersonDashboardHtml이 계산한 컬렉션 그대로(합계·건수는 같은 배열에서 표시만). 새 계산 helper·저장 없음.
+//   drill-down 계약 보존: data-duo(tgt/me/normal/unknown) · #relDetailGrp/Pay/Treat/Share · #relMtgConfirmed/Organize ·
+//   #pgTreatSolo/Co/All(_personTreatGivingSectionHtml) · [data-rgedit]/[data-rgnew](_personRelationGroupsHtml) · .srch-row[data-id].
+//   색: 상대 = Green(t), 나 = Blue(m) — 한턱 밸런스·비교 bar·지출 비교·최근 내역 결제자 모두 같은 규칙.
+function _psnJosa(word,withBatchim,withoutBatchim){ // 표시용 조사(이/가) — 마지막 글자 받침 기준
+  const s=String(word||'');const c=s.charCodeAt(s.length-1);
+  if(!(c>=0xAC00&&c<=0xD7A3))return withBatchim;
+  return ((c-0xAC00)%28)?withBatchim:withoutBatchim;
+}
+function _psnLayoutHtml(d){
+  const sum=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
+  const nm=escapeHtml(d.tgt), meNm=escapeHtml(d.me);
+  const chev='<span class="chev" aria-hidden="true">›</span>';
+  const tapAttr=(id,label)=>id?` id="${id}" role="button" tabindex="0" aria-label="${escapeHtml(label)}"`:'';
+  const pct=(a,b)=>{const t=a+b;if(t<=0)return null;const x=Math.round(a/t*100);return [x,100-x];};
+  const bal=(a,b,cls)=>{const p=pct(a,b);return `<div class="psn-bal${cls?' '+cls:''}" aria-hidden="true">${p?`<i class="t" style="width:${p[0]}%"></i><i class="m" style="width:${p[1]}%"></i>`:''}</div>`;};
+
+  // ① 한턱 밸런스(단둘이 한턱 — v3.57 의미 그대로). 이름 우선: 신유철 / 조상현(나).
+  const tA=sum(d.duoTreatTgt), mA=sum(d.duoTreatMe), tN=d.duoTreatTgt.length, mN=d.duoTreatMe.length;
+  const side=(cls,which,label,amt,cnt)=>{
+    const inner=`<span class="psn-side-ic">${_PERSON_ICO}</span><span class="psn-side-name">${label}</span>`
+      +`<span class="psn-side-amt">${fmtMoney(amt)}원</span><span class="psn-side-cnt">${cnt}건</span>`;
+    return cnt>0
+      ?`<button type="button" class="psn-side ${cls}" data-duo="${which}" aria-label="${label} 한턱 ${fmtMoney(amt)}원 ${cnt}건 — 영수증 보기">${inner}</button>`
+      :`<div class="psn-side ${cls}">${inner}</div>`;
+  };
+  const p=pct(tA,mA), diff=tA-mA;
+  const diffTxt=!p?'아직 단둘이 한턱 기록이 없어요'
+    :diff>0?`<span class="who-t">${nm}</span>${_psnJosa(d.tgt,'이','가')} <b>${fmtMoney(diff)}원</b> 더 한턱냈어요`
+    :diff<0?`<span class="who-m">내가</span> <b>${fmtMoney(-diff)}원</b> 더 한턱냈어요`
+    :'서로 비슷하게 한턱냈어요';
+  const hero=`<section class="psn-hero psn-card" aria-label="한턱 밸런스">`
+    +`<div class="psn-hero-hd"><div><div class="psn-hero-title">한턱 밸런스</div><div class="psn-hero-desc">단둘이 만났을 때 서로에게 한턱낸 금액</div></div><div class="psn-hero-r">영수증 ${d.duoAllCnt}건</div></div>`
+    +`<div class="psn-duo">${side('t','tgt',nm,tA,tN)}<div class="psn-duo-div" aria-hidden="true"></div>${side('m','me',meNm+'(나)',mA,mN)}</div>`
+    +bal(tA,mA)
+    +(p?`<div class="psn-bal-pct"><span class="t">${p[0]}%</span><span class="m">${p[1]}%</span></div>`:'')
+    +`<div class="psn-diff">${diffTxt}</div>`
+    +(d.duoTreatUnknown.length?`<button type="button" class="psn-sublink" data-duo="unknown">한턱 결제자 미상 ${d.duoTreatUnknown.length}건 ›</button>`:'')
+    +`</section>`;
+
+  // ② 함께한 기록(만남·영수증·장소). 만남 → 기존 만남 목록(#relMtgConfirmed). 장소는 together 매장 표시 집계(저장 없음).
+  const recent=[...d.together].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id)));
+  const storeCnt=new Map();
+  for(const r of recent){const s=(r.store||'').trim();if(s)storeCnt.set(s,(storeCnt.get(s)||0)+1);}
+  let topStore='',topN=0;for(const [s,n] of storeCnt)if(n>topN){topStore=s;topN=n;} // 동률이면 최근 순서상 먼저 나온 곳
+  const ms=d.ms, mtgTap=ms.count>0;
+  const record=`<section class="psn-rec"><div class="psn-sec-hd">함께한 기록</div>`
+    +`<div class="psn-stats">`
+      +`<div class="psn-stat"${tapAttr(mtgTap?'relMtgConfirmed':null,`만남 ${ms.count}회 — 만남 목록`)}><div class="psn-stat-v">${ms.count}<small>회</small></div><div class="psn-stat-l">만남${mtgTap?chev:''}</div></div>`
+      +`<div class="psn-stat"><div class="psn-stat-v">${d.together.length}<small>건</small></div><div class="psn-stat-l">영수증</div></div>`
+      +`<div class="psn-stat"><div class="psn-stat-v">${storeCnt.size}<small>곳</small></div><div class="psn-stat-l">장소</div></div>`
+    +`</div>`
+    +`<div class="psn-rec-sub">단둘이 ${ms.duo}회 · 여럿이 ${ms.group}회</div>`
+    +(topStore?`<div class="psn-rec-top"><span>가장 많이 간 곳</span><b>${escapeHtml(topStore)}</b><em>${topN}회</em></div>`:'')
+    +`</section>`;
+
+  // ③ 함께한 씀씀이 — 여럿이 / 전체 결제(기존 값). Green=상대 · Blue=나.
+  const cmp=(title,tArr,mArr,tapId)=>{
+    const ta=sum(tArr), ma=sum(mArr);
+    const v=(cls,who,amt,cnt)=>`<div class="psn-v ${cls}"><span class="psn-v-who"><i></i><span>${who}</span></span><span class="psn-v-amt${amt?'':' zero'}">${fmtMoney(amt)}원</span><span class="psn-v-cnt">${cnt}건</span></div>`;
+    return `<div class="psn-cmp"${tapAttr(tapId,title+' — 영수증 보기')}>`
+      +`<div class="psn-cmp-top"><span class="psn-cmp-title">${title}</span>${tapId?chev:''}</div>`
+      +v('t',nm,ta,tArr.length)+v('m',meNm,ma,mArr.length)+bal(ta,ma)+`</div>`;
+  };
+  const noMe=d.tgtNoMe.length?`<div class="psn-note">‘전체 결제’는 <b>나와 함께한 자리</b>만 포함해요. 나 없이 ${nm}${_psnJosa(d.tgt,'이','가')} 결제한 <b>${d.tgtNoMe.length}건 · ${fmtMoney(sum(d.tgtNoMe))}원</b>은 ‘상세 내역’에 있어요.</div>`:'';
+  const spend=`<section class="psn-spend"><div class="psn-sec-hd">함께한 씀씀이</div><div class="psn-list">`
+    +cmp('여럿이 함께할 때',d.tgtGrp,d.myGrp,d.grpAll.length?'relDetailGrp':null)
+    +cmp('전체 결제',d.tgtWith,d.myWith,(d.tgtWith.length+d.myWith.length)?'relDetailPay':null)
+    +`</div>${noMe}</section>`;
+
+  // ④ 주요 항목 — 2×2(각 칸 기존 drill-down)
+  const kCell=(label,val,cnt,attrs,valCls)=>`<div class="psn-k"${attrs||''}><div class="psn-k-lbl"><span>${label}</span>${attrs?chev:''}</div>`
+    +`<div class="psn-k-val${valCls?' '+valCls:''}">${val}</div><div class="psn-k-cnt">${cnt}</div></div>`;
+  const myT=sum(d.myTreat);
+  const key=`<section class="psn-key"><div class="psn-sec-hd">주요 항목</div><div class="psn-kgrid">`
+    +kCell('전체 내가 한턱',`${fmtMoney(myT)}원`,`${d.myTreat.length}건`,d.myTreat.length?tapAttr('relDetailTreat','전체 내가 한턱'):'',myT?'me':'zero')
+    +kCell('참석 부담액',`${fmtMoney(d.shareTotal)}원`,`${d.partRecs.length}건`,d.partRecs.length?tapAttr('relDetailShare','참석 부담액'):'',d.shareTotal?'':'zero')
+    +kCell('묶이지 않은 영수증',`${ms.unlinked}건`,'',ms.unlinked?tapAttr('relMtgOrganize','묶이지 않은 영수증 — 만남 정리'):'',ms.unlinked?'':'zero')
+    +kCell('일반 분담',`${d.duoNormal.length}건`,'단둘이',d.duoNormal.length?` data-duo="normal" role="button" tabindex="0" aria-label="일반 분담 ${d.duoNormal.length}건 — 영수증 보기"`:'',d.duoNormal.length?'':'zero')
+    +`</div></section>`;
+
+  // ⑤ 최근 함께한 내역 — flat list, row → 기존 Receipt Detail(.srch-row[data-id] → _bindReceiptRows)
+  const SHOW=5;
+  const rrow=(r,i)=>{
+    const pb=normalizeName(r.paidBy);
+    const pbCls=pb===d.tgt?'t':pb===d.me?'m':'';
+    const pbTxt=pb?`<span class="${pbCls}">${escapeHtml(pb)} 결제</span>`:'결제자 미상';
+    return `<div class="srch-row psn-rrow${i>=SHOW?' more':''}" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">`
+      +`<span class="psn-r-date">${escapeHtml(fmtDateKor(r.date))}</span>`
+      +`<span class="psn-r-store">${escapeHtml(r.store||'(매장명 없음)')}</span>`
+      +`<span class="psn-r-amt">${fmtMoney(r.total||0)}원</span>`
+      +`<span class="psn-r-sub">${pbTxt} · ${receiptPeople(r).size}명</span></div>`;
+  };
+  const recentSec=`<section class="psn-recent"><div class="psn-sec-hd">최근 함께한 내역<span class="r">${recent.length}건</span></div>`
+    +(recent.length
+      ?`<div class="psn-rlist">${recent.map(rrow).join('')}</div>`
+        +(recent.length>SHOW?`<button type="button" class="psn-more-btn" data-psnmore data-label="전체 ${recent.length}건 보기">전체 ${recent.length}건 보기</button>`:'')
+      :`<div class="psn-empty">함께한 영수증이 아직 없어요.</div>`)
+    +`</section>`;
+
+  // ⑥ 지출 비교(Insight, 넓을 때만) — 행마다 나 vs 상대(같은 행 안에서 비교)
+  const cRows=[['단둘이 한턱',tA,mA],['여럿이 결제',sum(d.tgtGrp),sum(d.myGrp)],['전체 결제',sum(d.tgtWith),sum(d.myWith)]];
+  const chart=`<section class="psn-chart"><div class="psn-sec-hd">지출 비교<span class="psn-legend"><i class="t"></i>${nm}<i class="m"></i>${meNm}</span></div>`
+    +cRows.map(([l,a,b])=>{const mx=Math.max(a,b)||1;
+      return `<div class="psn-crow"><div class="psn-crow-l">${l}</div>`
+        +`<div class="psn-cbar t"><b><i style="width:${a/mx*100}%"></i></b><span>${fmtMoney(a)}</span></div>`
+        +`<div class="psn-cbar m"><b><i style="width:${b/mx*100}%"></i></b><span>${fmtMoney(b)}</span></div></div>`;}).join('')
+    +`</section>`;
+
+  // ⑦ 한턱 내역(v3.75 개인/공동/전체 그대로) · ⑧ 관계(관계 그룹 설정) — 기존 renderer 재사용
+  const treat=d.treatGivingSection?`<section class="psn-treat"><div class="psn-sec-hd">한턱 내역<span class="r">${nm}${_psnJosa(d.tgt,'이','가')} 낸 한턱</span></div>${d.treatGivingSection}</section>`:'';
+  const rel=d.relSection?`<section class="psn-rel"><div class="psn-sec-hd">관계</div>${d.relSection}</section>`:'';
+
+  const tab=_psnTab==='all'?'all':'sum';
+  const detailAll=(d.payerSection||'')+(d.coSection||'')+(d.partSection||'');
+  return `<div class="psn">`
+    +`<div class="psn-tabs" role="tablist" aria-label="사람 상세">`
+      +`<button type="button" class="psn-tab${tab==='sum'?' on':''}" data-psntab="sum" role="tab" aria-selected="${tab==='sum'}">요약</button>`
+      +`<button type="button" class="psn-tab${tab==='all'?' on':''}" data-psntab="all" role="tab" aria-selected="${tab==='all'}">상세 내역</button>`
+      +`<button type="button" class="psn-add" data-psnadd>+ 영수증 추가</button>`
+    +`</div>`
+    +`<div class="psn-pane" data-pane="sum"${tab==='sum'?'':' hidden'}><div class="psn-grid">`
+      +`<div class="psn-main">${hero}${spend}${key}${recentSec}</div>`
+      +`<div class="psn-aside">${record}${chart}${treat}${rel}</div>`
+    +`</div></div>`
+    +`<div class="psn-pane" data-pane="all"${tab==='all'?'':' hidden'}>${detailAll||'<div class="psn-empty">상세 내역이 없어요.</div>'}</div>`
+    +`</div>`;
 }
 
 // ── v1.34 날짜 검색 요약 패널 ───────────────────────────────────
@@ -8733,6 +9218,7 @@ function _navigationSnapshot(){
       category:_monthCatFilter,period:{..._ledgerTimeFilter},
       personPeriod:{..._personTimeFilter},photoFilter:_photoListFilter,
       reviewInbox:!!_reviewInboxState, // v3.76 — 데이터 정리함 open 여부(popstate로 overlay 동기화·복귀)
+      personMode:_personMode,personSel:_personSel, // v3.78 — 사람 화면·선택한 사람(Back=이전 사람/목록)
       stats:document.getElementById('navLedgerBtn')?.classList.contains('on')||false},
     scroll:[...document.querySelectorAll('#sideList,#detailBody,.main')].map(el=>({id:el.id,main:el.classList.contains('main'),top:el.scrollTop})),
     pageY:window.scrollY
@@ -8799,6 +9285,8 @@ addEventListener('popstate',event=>{
     _monthCatFilter=r.category;_ledgerTimeFilter={...r.period};
     _personTimeFilter={...r.personPeriod};_photoListFilter=r.photoFilter;
     searchInp.value=searchQuery;_updateSearchClear();
+    _personMode=!!r.personMode;_personSel=r.personSel||''; // v3.78
+    _applyPersonModeChrome(_personMode);
     switchTab(r.tab);renderSide();renderDetail();
     if(r.stats){
       document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
@@ -9011,6 +9499,35 @@ async function renderDetail(){
       const ed=e.target.closest('[data-rgedit]');if(ed&&body.contains(ed)){e.preventDefault();openRelationGroupEditor(ed.dataset.rgedit);return;}
       const nw=e.target.closest('[data-rgnew]');if(nw&&body.contains(nw)){e.preventDefault();openRelationGroupEditor(null,nw.dataset.rgnew);}
     });
+    // v3.78 — Person Detail: 요약/상세 내역 탭(표시 전환만·history 없음) · 최근 함께한 내역 전체 보기 · + 영수증 추가
+    body.addEventListener('click',e=>{
+      const tb=e.target.closest('.psn-tab[data-psntab]');
+      if(tb&&body.contains(tb)){
+        e.preventDefault();_psnTab=tb.dataset.psntab;
+        const root=tb.closest('.psn');
+        if(root){
+          root.querySelectorAll('.psn-tab').forEach(x=>{const on=x===tb;x.classList.toggle('on',on);x.setAttribute('aria-selected',String(on));});
+          root.querySelectorAll('.psn-pane').forEach(p=>{p.hidden=p.dataset.pane!==_psnTab;});
+        }
+        return;
+      }
+      const mo=e.target.closest('[data-psnmore]');
+      if(mo&&body.contains(mo)){
+        e.preventDefault();
+        const l=mo.parentElement.querySelector('.psn-rlist');
+        if(l){const ex=l.classList.toggle('expanded');mo.textContent=ex?'접기':mo.dataset.label;}
+        return;
+      }
+      // 영수증 추가 = 레일 '추가'와 같은 경로(사람 모드 종료 후 추가 탭). 참석자 자동 전달 경로는 기존에 없어 만들지 않음.
+      const ad=e.target.closest('[data-psnadd]');
+      if(ad&&body.contains(ad)){e.preventDefault();document.querySelector('.nav-btn.tab[data-tab="input"]')?.click();}
+    });
+    // v3.78 — div[role=button][data-duo](주요 항목 '일반 분담') 키보드 접근: Enter/Space → 기존 data-duo drill-down
+    body.addEventListener('keydown',e=>{
+      if(e.key!=='Enter'&&e.key!==' ')return;
+      const t=e.target.closest&&e.target.closest('.psn [data-duo][role="button"]');
+      if(t&&body.contains(t)){e.preventDefault();t.click();}
+    });
     // v3.74 — 사람별 분담 [개인|그룹] 보기 전환(위임). 모드만 바꿔 .psplit 섹션을 제자리에서 재렌더(collapse 상태 유지).
     body.addEventListener('click',e=>{
       const t=e.target.closest('.psplit-viewtoggle button[data-splitview]');
@@ -9045,7 +9562,7 @@ async function renderDetail(){
   document.querySelectorAll('body > #lpBackdrop, body > #lpRangePop, body > .mtg-sheet-backdrop').forEach(n=>n.remove());
   // v3.73 — 기간 시트가 _lpClosePop 이외 경로(백그라운드 재렌더 등)로 제거되면 stale _lpOvId를 정리(재열기 차단·유령 stack 방지).
   if(_lpOvId){_ovForget(_lpOvId);_lpOvId=null;}
-  body.classList.toggle('stats-redesign',!selectedId&&!searchQuery);
+  body.classList.toggle('stats-redesign',!selectedId&&!searchQuery&&!_personMode);
   body.classList.remove('mob-compact');
   // v3.17 — 기간 컨트롤은 헤더 슬롯(제목 행 우측)에 렌더. 기본은 비워두고 가계부 분기에서만 채운다.
   const periodSlot=document.getElementById('ledgerPeriodSlot');
@@ -9059,13 +9576,23 @@ async function renderDetail(){
   _setMobPersonView(false); // 기본값 해제; 인물 패널 진입 시 true로 전환
   if(!selectedId){
     actions.style.display='none';
-    if(searchQuery){
+    // v3.78 — 사람 모드: 선택한 사람을 아래 '인물 검색' 분기로 그대로 통과(숫자·drill-down·기간 동일, 영수증 검색어는 불변).
+    if(_personMode&&_personSel&&!_personIndex().some(p=>p.name===_personSel))_personSel=''; // 데이터에서 사라진 사람
+    if(_personMode&&!_personSel){
+      eye.textContent='Receipt DB';
+      title.textContent='사람';
+      sub.textContent=_personIndex().length?'목록에서 사람을 선택하세요':'함께한 사람이 아직 없어요';
+      body.innerHTML=`<div class="empty-state" style="padding:56px 12px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/></svg><div>${_personIndex().length?'목록에서 사람을 선택하면<br/>함께한 기록과 한턱 밸런스가 보여요':'영수증에 참석자·결제자를 적으면<br/>함께한 사람이 여기에 모여요'}</div></div>`;
+      return;
+    }
+    const _dqStr=_personMode?_personSel:searchQuery;
+    if(_dqStr){
       const filtered=getFiltered();
-      const q=searchQuery.trim();
+      const q=_dqStr.trim();
       const qL=q.toLowerCase();
 
       // ── 날짜 검색 (전체 / 연도 / 연월 / 교차 월) ──
-      const dq=_parseDateQ(q);
+      const dq=_personMode?null:_parseDateQ(q); // v3.78 — 사람 이름은 날짜로 해석하지 않음
       if(dq){
         if(dq.type==='all'){
           eye.textContent='Receipt DB';
@@ -9094,15 +9621,16 @@ async function renderDetail(){
       }
 
       // ── 결제자/참석자 역할 감지 ──
-      const isExplicitPayer=q.startsWith('결제자 ')&&q.length>4;
-      const isExplicitParticipant=q.startsWith('참석자 ')&&q.length>4;
+      const isExplicitPayer=!_personMode&&q.startsWith('결제자 ')&&q.length>4;
+      const isExplicitParticipant=!_personMode&&q.startsWith('참석자 ')&&q.length>4;
       const personName=isExplicitPayer?q.slice(4).trim():(isExplicitParticipant?q.slice(4).trim():q);
       const pnL=personName.toLowerCase();
 
       // 이름이 결제자·참석자로 등장하는 영수증을 별도 필터링
       // 참석 내역은 본인이 결제자인 영수증을 제외 — "남에게 갚아야 할 금액"만 집계
-      const payerRecs=qL.length>=2?receipts.filter(r=>(r.paidBy||'').trim()&&(r.paidBy||'').toLowerCase().includes(pnL)):[];
-      const partRecs=qL.length>=2?receipts.filter(r=>
+      // (사람 모드는 목록에서 고른 실제 이름이라 1글자 이름도 허용 — 필터식 자체는 동일)
+      const payerRecs=(qL.length>=2||_personMode)?receipts.filter(r=>(r.paidBy||'').trim()&&(r.paidBy||'').toLowerCase().includes(pnL)):[];
+      const partRecs=(qL.length>=2||_personMode)?receipts.filter(r=>
         (r.participants||[]).some(p=>p.toLowerCase().includes(pnL))&&
         !(r.paidBy||'').toLowerCase().includes(pnL)  // 본인이 결제자인 경우 제외
       ):[];
@@ -9137,7 +9665,12 @@ async function renderDetail(){
         const allPayerF=_applyPersonTimeFilter(payerRecs,_personTimeFilter);
         const allPartF=_applyPersonTimeFilter(partRecs,_personTimeFilter);
         const allRecs=[...new Set([...payerRecs,...partRecs])];
-        eye.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4"/><path d="M16 11l2 2 4-4"/></svg>`;
+        const _pIco=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4"/><path d="M16 11l2 2 4-4"/></svg>`;
+        // v3.78 — 사람 모드: 모바일은 '‹ 사람'(목록 복귀). #backToSummaryBtn이라 _captureNavigation이 history.back()으로 처리. 데스크탑은 아이콘만.
+        eye.innerHTML=_personMode
+          ?`<button class="back-to-summary psn-crumb" id="backToSummaryBtn" type="button"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>사람</button><span class="psn-eye-ic">${_pIco}</span>`
+          :_pIco;
+        if(_personMode)document.getElementById('backToSummaryBtn')?.addEventListener('click',()=>{_mobileListMode='list';selectedId=null;renderSide();renderDetail();});
         // v3.41 — 헤더 소제목을 의미가 분명한 표현으로: 상대 전체 결제 건수 · 함께한 영수증(나+상대 모두 포함) 건수.
         const _rel=_personRelation(personName,allPayerF,allPartF);
         title.textContent=`${_rel.tgt||personName}`;
@@ -9256,14 +9789,14 @@ async function renderDetail(){
   if(!r){selectedId=null;return renderDetail();}
   eye.innerHTML=`<button class="back-to-summary" id="backToSummaryBtn">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-    ${ymLabel(viewMonth)} 가계부
+    ${(_personMode&&_personSel)?escapeHtml(_personSel):ymLabel(viewMonth)+' 가계부'}
   </button>`;
   document.getElementById('backToSummaryBtn').addEventListener('click',()=>{
     selectedId=null;
     if(_returnToStats){
       _mobileListMode='stats';
       _returnToStats=false;
-    }else if(_isMobileLayout())_mobileListMode='list';
+    }else if(_isMobileLayout())_mobileListMode=(_personMode&&_personSel)?'detail':'list'; // v3.78 — 사람 상세에서 연 영수증은 그 사람으로 복귀
     switchTab('list');renderSide();renderDetail();
     if(_mobileListMode==='stats'){
       document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
