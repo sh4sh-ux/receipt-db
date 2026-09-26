@@ -220,7 +220,6 @@ function renderPrepaid(){
   const _ppMeta=document.getElementById('prepaidMeta');
   if(wallet){
     // breadcrumb (목록 복귀) — 영수증 상세의 .back-to-summary와 같은 결
-    _ppEb.classList.remove('pp-eyebrow--crumb'); // v3.91 — 데스크탑 눈썹은 다른 탭과 같은 대문자 'RECEIPT DB'(모바일 crumb만 .pp-eb-m에서 해제)
     // v3.91 — 데스크탑: 눈썹 'Receipt DB'(목록이 왼쪽에 있어 breadcrumb 불필요) / 모바일: '‹ 선불권' breadcrumb(목록 복귀).
     _ppEb.innerHTML='<span class="pp-eb-d">Receipt DB</span><button class="back-to-summary pp-eb-m" id="prepaidBreadcrumb" type="button"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>선불권</button>';
     const _crumb=document.getElementById('prepaidBreadcrumb');
@@ -231,7 +230,6 @@ function renderPrepaid(){
     if(_ppMeta){_ppMeta.hidden=false;_ppMeta.textContent=[getCategoryLabel(wallet.category),_exp?'유효기간 지남':wallet.expiresOn?'유효기간 '+wallet.expiresOn.replace(/-/g,'.'):'유효기간 없음'].filter(Boolean).join(' · ');}
     _ppMeta&&_ppMeta.classList.toggle('pp-meta-danger',!!_exp);
   }else{
-    _ppEb.classList.remove('pp-eyebrow--crumb');
     _ppEb.textContent='Receipt DB';
     if(_ppVer)_ppVer.hidden=false;
     document.getElementById('prepaidTitle').textContent='선불권';
