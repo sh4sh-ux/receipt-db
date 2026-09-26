@@ -3,6 +3,8 @@ let prepaidRecords=[];
 let prepaidSelectedId=null;
 let ppHistTab='use';   // v3.31 — 상세 내역 탭(use=사용 내역 / charge=충전 내역), 표시 전용
 let ppHistSort='recent'; // v3.31 — 상세 내역 정렬(recent=최신순 / old=오래된순), 표시 전용(원본·계산 불변)
+let ppListSort='balance'; // v3.91 — 좌측 목록 정렬(balance/recent/name), 표시 전용
+let ppLastSel=null;       // v3.91 — 데스크탑에서 선불권 탭으로 돌아오면 마지막으로 본 선불권을 다시 연다
 const PP_PREFIX='prepaid:';
 const PP_KINDS=['charge','use','refund','expire','opening','void'];
 const PP_LABELS={charge:'충전',use:'사용',refund:'환불',expire:'만료 차감',opening:'기초 잔액',void:'삭제'};
@@ -70,7 +72,7 @@ async function ppMerge(rows){
     }
   });
   await ppLoad();
-  if(document.getElementById('viewPrepaid')?.classList.contains('on'))renderPrepaid();
+  if(document.getElementById('viewPrepaid')?.classList.contains('on')){renderPrepaid();if(typeof renderSide==='function')renderSide();}
   return changed;
 }
 function ppBuildEvent(rows,wallet,values,receipt){
@@ -128,12 +130,61 @@ async function ppCommit(walletInput,values){
       }catch(e){failure=e;tx.abort();}
     };
   });
-  await ppLoad();await loadAll();renderDetail();renderPrepaid();
+  await ppLoad();await loadAll();renderDetail();renderPrepaid();if(typeof renderSide==='function'&&document.getElementById('viewPrepaid')?.classList.contains('on'))renderSide(); // v3.91 — 좌측 잔액도 갱신
   void dbxSyncUpload();
 }
 
 function ppWallets(){return prepaidRecords.filter(r=>r.type==='wallet');}
-function ppOpen(id){prepaidSelectedId=id;ppHistTab='use';ppHistSort='recent';renderPrepaid();}
+function ppOpen(id){
+  prepaidSelectedId=id;if(id)ppLastSel=id;ppHistTab='use';ppHistSort='recent';
+  renderPrepaid();if(typeof renderSide==='function')renderSide();
+  if(typeof _syncMobileSurface==='function')_syncMobileSurface();
+  const b=document.getElementById('prepaidBody');if(b)b.scrollTop=0;
+}
+// v3.91 — 좌측 패널(영수증·사람 목록과 같은 grammar) 선불권 목록. 값은 기존 ppTotals·ppLatestUse만 사용(계산 불변).
+function ppListView(){
+  const q=(typeof _ppListQ==='string'?_ppListQ:'').trim();
+  let list=ppWallets().map(w=>{const t=ppTotals(prepaidRecords,w.id);const charged=t.active.filter(e=>e.kind==='charge'||e.kind==='opening').reduce((s,e)=>s+e.amount,0);
+    return {w,t,charged,pct:charged>0?Math.round(t.used/charged*100):null,last:ppLatestUse(t)?.date||'',expired:!!(w.expiresOn&&w.expiresOn<_todayYMD())};});
+  if(q){
+    if(typeof _isChoQuery==='function'&&_isChoQuery(q)){const cq=_normChoQuery(q);list=list.filter(x=>_toCho(x.w.name).includes(cq));}
+    else{const qL=q.toLowerCase();list=list.filter(x=>x.w.name.toLowerCase().includes(qL));}
+  }
+  const byName=(a,b)=>a.w.name.localeCompare(b.w.name,'ko');
+  if(ppListSort==='name')list.sort(byName);
+  else if(ppListSort==='recent')list.sort((a,b)=>b.last.localeCompare(a.last)||byName(a,b));
+  else list.sort((a,b)=>b.t.balance-a.t.balance||byName(a,b));
+  return list;
+}
+function renderPrepaidSide(){
+  const listEl=document.getElementById('sideList');if(!listEl)return;
+  const esc=escapeHtml,money=n=>fmtMoney(n)+'원';
+  if(typeof _updatePhotoFilterUi==='function')_updatePhotoFilterUi();
+  const all=ppWallets();
+  const tot=document.getElementById('ppScopeTotal');if(tot)tot.textContent=money(all.reduce((s,w)=>s+ppTotals(prepaidRecords,w.id).balance,0));
+  const ss=document.getElementById('ppSortSel2');if(ss&&ss.value!==ppListSort)ss.value=ppListSort;
+  const view=ppListView();
+  const lt=document.getElementById('ltInfo');
+  if(lt)lt.innerHTML=`${(typeof _ppListQ==='string'&&_ppListQ.trim())?'검색 결과':'선불권'} <b>${view.length}개</b>`;
+  if(!view.length){
+    listEl.innerHTML=`<div class="empty-state"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg><div>${all.length?'검색 결과가 없어요':'등록된 선불권이 없어요<br/>위의 ‘선불권 등록’으로 추가하세요'}</div></div>`;
+    return;
+  }
+  listEl.innerHTML='<div class="list-group">'+view.map(x=>{
+    const sel=x.w.id===prepaidSelectedId;
+    // v3.91 — 내역 목록(.r-card)과 같은 형태: 매장명 / 메타(카테고리 · 최근 사용일 YYYY.MM.DD) … 금액. 막대 없음(행 높이 동일).
+    const meta=[getCategoryLabel(x.w.category),x.expired?'유효기간 지남':x.last?'최근 '+x.last.replace(/-/g,'.'):'사용 기록 없음'].filter(Boolean).join(' · ');
+    return `<div class="r-card ppw-row${sel?' sel':''}" data-wallet="${esc(x.w.id)}" role="button" tabindex="0"${sel?' aria-current="true"':''}>`
+      +`<div class="r-card-info"><div class="r-card-store-row"><span class="r-card-store">${esc(x.w.name)}</span></div>`
+      +`<div class="r-card-meta${x.expired?' danger':''}">${esc(meta)}</div></div>`
+      +`<div class="r-card-amt">${money(x.t.balance)}</div></div>`;
+  }).join('')+'</div>';
+  listEl.querySelectorAll('.ppw-row').forEach(el=>{
+    const go=()=>ppOpen(el.dataset.wallet);
+    el.addEventListener('click',go);
+    el.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;e.preventDefault();go();});
+  });
+}
 function ppLatestUse(totals){return totals.active.filter(e=>e.kind==='use').sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id))[0]||null;}
 function ppSuggestedUseAmount(wallet,totals){return wallet.defaultUseAmount||ppLatestUse(totals)?.amount||0;}
 function ppDisplayDate(date){return String(date||'').replace(/-/g,'. ') +(date?'\.':'');}
@@ -151,7 +202,14 @@ const PP_ICO={
 };
 function renderPrepaid(){
   const root=document.getElementById('prepaidBody');if(!root)return;
-  const wallets=ppWallets(),wallet=wallets.find(w=>w.id===prepaidSelectedId);
+  const wallets=ppWallets();
+  // v3.91 — 데스크탑은 목록이 왼쪽에 있으므로 오른쪽은 항상 선불권 하나(마지막으로 본 것 → 목록 첫 번째). 모바일은 목록부터.
+  if(!wallets.some(w=>w.id===prepaidSelectedId))prepaidSelectedId=null;
+  if(!prepaidSelectedId&&wallets.length&&!(typeof _isMobileLayout==='function'&&_isMobileLayout())){
+    prepaidSelectedId=wallets.some(w=>w.id===ppLastSel)?ppLastSel:(ppListView()[0]||{w:wallets[0]}).w.id;
+  }
+  if(prepaidSelectedId)ppLastSel=prepaidSelectedId;
+  const wallet=wallets.find(w=>w.id===prepaidSelectedId);
   const money=n=>fmtMoney(n)+'원',esc=escapeHtml;
   document.getElementById('viewPrepaid').classList.toggle('pp-detail-view',!!wallet);
   // v3.52 — 상세 헤더를 영수증 상세와 동일한 Responsive Detail Header grammar로 통일(데스크탑·모바일 공통):
@@ -162,13 +220,16 @@ function renderPrepaid(){
   const _ppMeta=document.getElementById('prepaidMeta');
   if(wallet){
     // breadcrumb (목록 복귀) — 영수증 상세의 .back-to-summary와 같은 결
-    _ppEb.classList.add('pp-eyebrow--crumb');
-    _ppEb.innerHTML='<button class="back-to-summary" id="prepaidBreadcrumb" type="button"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>선불권</button>';
+    _ppEb.classList.remove('pp-eyebrow--crumb'); // v3.91 — 데스크탑 눈썹은 다른 탭과 같은 대문자 'RECEIPT DB'(모바일 crumb만 .pp-eb-m에서 해제)
+    // v3.91 — 데스크탑: 눈썹 'Receipt DB'(목록이 왼쪽에 있어 breadcrumb 불필요) / 모바일: '‹ 선불권' breadcrumb(목록 복귀).
+    _ppEb.innerHTML='<span class="pp-eb-d">Receipt DB</span><button class="back-to-summary pp-eb-m" id="prepaidBreadcrumb" type="button"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>선불권</button>';
     const _crumb=document.getElementById('prepaidBreadcrumb');
-    if(_crumb)_crumb.addEventListener('click',()=>ppOpen(null)); // 목록 복귀(재렌더로 새 버튼이 생기므로 리스너 누적 없음)
-    if(_ppVer)_ppVer.hidden=true;
+    if(_crumb)_crumb.addEventListener('click',()=>{if(history.state?.receiptNavigation?.index>0&&history.state.receiptNavigation.route?.tab==='prepaid')history.back();else ppOpen(null);});
+    if(_ppVer)_ppVer.hidden=false;
     document.getElementById('prepaidTitle').textContent=wallet.name;
-    if(_ppMeta){_ppMeta.hidden=false;_ppMeta.textContent='남은 잔액 '+money(ppTotals(prepaidRecords,wallet.id).balance);}
+    const _exp=wallet.expiresOn&&wallet.expiresOn<_todayYMD();
+    if(_ppMeta){_ppMeta.hidden=false;_ppMeta.textContent=[getCategoryLabel(wallet.category),_exp?'유효기간 지남':wallet.expiresOn?'유효기간 '+wallet.expiresOn.replace(/-/g,'.'):'유효기간 없음'].filter(Boolean).join(' · ');}
+    _ppMeta&&_ppMeta.classList.toggle('pp-meta-danger',!!_exp);
   }else{
     _ppEb.classList.remove('pp-eyebrow--crumb');
     _ppEb.textContent='Receipt DB';
@@ -176,7 +237,7 @@ function renderPrepaid(){
     document.getElementById('prepaidTitle').textContent='선불권';
     if(_ppMeta){_ppMeta.hidden=true;_ppMeta.textContent='';}
   }
-  document.getElementById('prepaidNew').hidden=!!wallet;
+  document.getElementById('prepaidNew').hidden=true; // v3.91 — 등록은 좌측 범위 행(#ppSideNew)
   document.getElementById('prepaidBack').hidden=true; // v3.30 — 화면 내 뒤로가기 화살표 UI 제거(목록 복귀는 breadcrumb)
   // 진행바 조각: 총 충전(=충전+기초 잔액 합)이 양수일 때만. 계산은 기존 active 이벤트만 사용(저장/계산 로직 불변).
   const barHtml=(charged,used,pct)=>charged>0?`<div class="pp-bar" role="img" aria-label="사용 ${pct}%"><span style="width:${Math.max(0,Math.min(100,pct))}%"></span></div><div class="pp-bar-legend"><span>사용 ${money(used)} (${pct}%)</span><span>총 ${money(charged)}</span></div>`:'';
@@ -185,12 +246,9 @@ function renderPrepaid(){
   const idRow=(w,expired,clickable)=>`<div class="pp-id"><div class="pp-id-text"><b class="pp-id-name"><span class="pp-id-nm">${esc(w.name)}</span>${clickable?'<span class="pp-id-chev" aria-hidden="true">›</span>':''}</b><small>${esc(getCategoryLabel(w.category))}</small></div><span class="pp-id-expiry${expired?' danger':''}">${expired?'유효기간 지남':w.expiresOn?esc(w.expiresOn):'유효기간 없음'}</span></div>`;
   const statBoxes=d=>`<div class="pp-sbox"><small>사용 횟수</small><b>${d.uses}회</b>${d.remaining!==null?`<i>약 ${d.remaining}회 남음</i>`:''}</div>${d.latestUse?`<div class="pp-sbox"><small>최근 방문</small><b>${esc(ppDisplayDate(d.latestUse.date))}</b><i>${ppRelDay(d.latestUse.date)}</i></div>`:''}${d.uses>0?`<div class="pp-sbox"><small>1회 평균 사용</small><b>${money(d.avg)}</b><i>총 ${d.uses}회 기준</i></div>`:''}`;
   if(!wallet){
-    const totalBalance=wallets.reduce((s,w)=>s+ppTotals(prepaidRecords,w.id).balance,0);
-    root.innerHTML=`<div class="pp-list">
-      <div class="pp-total"><span class="pp-total-label">총 남은 잔액</span><strong class="pp-total-value">${money(totalBalance)}</strong><span class="pp-total-sub">${wallets.length}개 선불권</span></div>
-      <div class="pp-cards">${wallets.map(w=>{const d=derive(w);return `<button class="pp-card pp-card--list" type="button" data-wallet="${esc(w.id)}">${idRow(w,d.expired,true)}<div class="pp-core"><div class="pp-core-bal"><span class="pp-bc-label">남은 잔액</span><strong class="pp-bc-value">${money(d.t.balance)}</strong>${barHtml(d.charged,d.t.used,d.pct)}</div><div class="pp-core-stats">${statBoxes(d)}</div></div></button>`;}).join('')}</div>
-      ${!wallets.length?'<div class="empty-state">등록된 선불권이 없어요.</div>':''}</div>`;
-    root.querySelectorAll('[data-wallet]').forEach(b=>b.addEventListener('click',()=>ppOpen(b.dataset.wallet)));return;
+    // v3.91 — 목록은 좌측 패널. 오른쪽은 선불권이 없을 때만 안내(모바일 목록 화면에선 오른쪽이 안 보임).
+    root.innerHTML=`<div class="empty-state" style="padding:56px 12px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg><div>${wallets.length?'목록에서 선불권을 선택하세요':'등록된 선불권이 없어요'}</div>${wallets.length?'':'<button class="primary-btn" type="button" id="ppEmptyNew" style="margin-top:14px;width:auto;padding:0 18px">선불권 등록</button>'}</div>`;
+    root.querySelector('#ppEmptyNew')?.addEventListener('click',()=>ppWalletForm());return;
   }
   const d=derive(wallet),t=d.t;
   const priceInfo=wallet.regularPrice?`정가 ${money(wallet.regularPrice)}${wallet.discountRate?` · ${wallet.discountRate}% 할인`:''}`:'';
@@ -218,7 +276,6 @@ function renderPrepaid(){
   </div>`;
   root.innerHTML=`<div class="pp-detail">
     <div class="pp-card pp-card--detail">
-      ${idRow(wallet,d.expired,false)}
       <div class="pp-core"><div class="pp-core-bal"><span class="pp-bc-label">남은 잔액</span><strong class="pp-bc-value">${money(t.balance)}</strong>${priceInfo?`<span class="pp-bc-meta">${priceInfo}</span>`:''}${barHtml(d.charged,t.used,d.pct)}</div><div class="pp-core-stats">${statBoxes(d)}</div></div>
       ${t.balance<0?'<p class="alert err">동기화된 사용 기록이 잔액을 초과했어요. 최근 기록을 확인해 주세요.</p>':''}
       ${actionsHtml}
