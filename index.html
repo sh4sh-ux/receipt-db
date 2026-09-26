@@ -237,8 +237,8 @@ svg{display:block;flex-shrink:0;}
 .lt-info{font-size:12px;color:var(--label2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .lt-info b{color:var(--label);font-weight:600;}
 .lt-sort{flex:0 0 auto;display:inline-flex;}
-#listSortSel,#personSortSel{border:1px solid var(--sep2);border-radius:7px;padding:5px 26px 5px 10px;font:inherit;font-size:12px;font-weight:600;color:var(--label);background:var(--card) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 8px center;appearance:none;-webkit-appearance:none;cursor:pointer;}
-#listSortSel:focus,#personSortSel:focus{border-color:var(--blue);outline:none;}
+#listSortSel,#personSortSel,#ppSortSel2{border:1px solid var(--sep2);border-radius:7px;padding:5px 26px 5px 10px;font:inherit;font-size:12px;font-weight:600;color:var(--label);background:var(--card) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 8px center;appearance:none;-webkit-appearance:none;cursor:pointer;}
+#listSortSel:focus,#personSortSel:focus,#ppSortSel2:focus{border-color:var(--blue);outline:none;}
 /* v3.22 — 날짜 그룹(작은 secondary 헤더). 큰 카드·강한 divider 없이 기존 밀도 유지 */
 .list-daygroup{padding:0;}
 .list-month-hd{padding:12px var(--pad-x) 2px;font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.2px;}
@@ -1992,6 +1992,22 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .side.person-mode .photo-filter-mobile,
 .side.person-mode .batch-export-bar{display:none;}
 .lt-sort-person{display:none;}
+/* v3.91 — 좌측 패널 선불권 모드(사람 모드와 같은 grammar: 범위 행·검색·툴바·flat row) */
+.pp-scope{display:none;}
+.side.pp-mode #monthNav{display:none;}
+.side.pp-mode .pp-scope{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.side.pp-mode .photo-filter-mobile,.side.pp-mode .batch-export-bar{display:none;}
+.lt-sort-pp{display:none;}
+.side.pp-mode .lt-sort-pp{display:inline-flex;}
+.side.pp-mode .lt-sort:not(.lt-sort-pp){display:none;}
+.pp-scope-total{display:flex;align-items:baseline;gap:8px;min-width:0;}
+.pp-scope-total span{font-size:12px;color:var(--label3);white-space:nowrap;}
+.pp-scope-total b{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pp-scope-new{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;}
+.pp-row{align-items:center;}
+.pp-row-bar{height:4px;border-radius:3px;background:var(--fill2);overflow:hidden;margin-top:7px;max-width:180px;}
+.pp-row-bar>span{display:block;height:100%;border-radius:3px;background:var(--blue);}
+.pp-row .pl-meta.danger{color:var(--red);}
 .side.person-mode .lt-sort-person{display:inline-flex;}
 .side.person-mode .lt-sort:not(.lt-sort-person){display:none;}
 .ps-chip{height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--sep);background:transparent;color:var(--label2);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .12s,color .12s,border-color .12s;}
@@ -2494,6 +2510,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
       <div class="month-nav person-scope" id="personScope" role="group" aria-label="사람 필터">
         <button class="ps-chip on" type="button" data-pfilter="all" aria-pressed="true">전체</button>
       </div>
+      <!-- v3.91 — 선불권 모드 범위 행(총 잔액 + 등록). month-nav와 같은 박스라 좌/우 헤더 구분선 정렬 유지. -->
+      <div class="month-nav pp-scope" id="ppScope">
+        <div class="pp-scope-total"><span>총 잔액</span><b id="ppScopeTotal">0원</b></div>
+        <button class="ps-chip pp-scope-new" type="button" id="ppSideNew"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>선불권 등록</button>
+      </div>
 
       <div class="side-search">
         <div class="search-wrap">
@@ -2533,6 +2554,14 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
           <select id="personSortSel" aria-label="사람 정렬 기준">
             <option value="together">함께한 순</option>
             <option value="recent">최근순</option>
+            <option value="name">이름순</option>
+          </select>
+        </label>
+        <label class="lt-sort lt-sort-pp">
+          <span class="sr-only">선불권 정렬</span>
+          <select id="ppSortSel2" aria-label="선불권 정렬 기준">
+            <option value="balance">잔액 높은순</option>
+            <option value="recent">최근 사용순</option>
             <option value="name">이름순</option>
           </select>
         </label>
@@ -3575,6 +3604,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.91 — 선불권을 다른 레일과 같은 3단으로: 좌측 패널 선불권 모드(총 잔액·등록·검색·정렬·flat row) + 오른쪽 상세, 모바일 목록→상세. 계산·저장 불변.
 // v3.90 — 단둘이 결제 목록(drill) · 뒤로가기: 유령 오버레이 정리(_ovPrune)+popstate state._ov 판정+기록 즉시화, 목록에서 연 영수증 Back=그 목록 복귀 · 숫자 글꼴 스택 Dutch Pay와 동일(system-ui 우선).
 // v3.89 — 사람 요약 재구성: 결제 밸런스(전체·단둘이·여럿이 한 카드) · 한턱 · 만남(마지막 만남·12개월 흐름·자주 간 곳) · 참석 부담액 · 최근 내역. 중복 3곳 제거, 계산 불변.
 // v3.88 — 이름에는 색 없음(사람 화면 씀씀이·한턱 문장·최근 내역 결제자, 추가 화면 참석자·결제자·picker). 색은 숫자·막대에만.
@@ -3954,7 +3984,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.90';
+const APP_VERSION='v3.91';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5849,6 +5879,7 @@ function _cardHtml(r, reason){
 
 function renderSide(){
   if(_personMode){_renderPersonSide();return;} // v3.78 — 같은 패널 grammar에 사람 목록
+  if(_activeTabName()==='prepaid'&&typeof renderPrepaidSide==='function'){renderPrepaidSide();return;} // v3.91 — 선불권 목록
   // 월 네비 라벨 갱신 — 영수증 선택 중이면 파란색 힌트 표시
   const monthLabelEl=document.getElementById('monthLabel');
   if(monthLabelEl){
@@ -6034,7 +6065,8 @@ function _syncMobileSurface(name=_activeTabName()){
   const app=document.querySelector('.app');if(!app)return;
   app.classList.remove('mobile-list-view','mobile-stats-view','mobile-content-view','mobile-detail-view','mob-person-view');
   if(!_isMobileLayout())return;
-  if(name==='input'||name==='settings'||name==='prepaid')app.classList.add('mobile-content-view');
+  if(name==='input'||name==='settings')app.classList.add('mobile-content-view');
+  else if(name==='prepaid')app.classList.add((typeof prepaidSelectedId!=='undefined'&&prepaidSelectedId)?'mobile-detail-view':'mobile-list-view'); // v3.91 — 선불권: 목록 → 상세
   // v3.78 — 사람 모드: 목록 → 상세(한 번에 한 화면). v3.41 '요약을 목록 위에'(mob-person-view)는 영수증 검색 전용으로 둔다.
   else if(_personMode)app.classList.add((selectedId||_mobileListMode==='detail')?'mobile-detail-view':'mobile-list-view');
   else if(_personViewActive&&!selectedId)app.classList.add('mob-person-view'); // v3.41 — 인물 요약을 목록 위에
@@ -6166,8 +6198,9 @@ function switchTab(name){
   document.getElementById('viewPrepaid').classList.toggle('on',name==='prepaid');
   // 데스크탑에서는 오른쪽 제목 하단선과 같은 높이를 유지하는 기준선으로 남긴다.
   document.getElementById('monthNav').classList.toggle('context-spacer',name!=='list');
-  document.querySelector('.side').classList.toggle('non-list-context',name!=='list');
-  document.querySelector('.side-search').style.display=(name==='list')?'block':'none';
+  document.querySelector('.side').classList.toggle('non-list-context',name!=='list'&&name!=='prepaid');
+  document.querySelector('.side-search').style.display=(name==='list'||name==='prepaid')?'block':'none';
+  _applyPrepaidModeChrome(name==='prepaid');
   _syncMobileSurface(name);
   // v3.80 — 상세 화면 모바일 저장 바(body 고정)는 내역 탭에서만. 다른 탭에선 숨기고 상세 상태(DIRTY 등)는 그대로 둔다(돌아오면 다시 보임).
   document.getElementById('mobileSaveBar')?.classList.toggle('off-tab',name!=='list');
@@ -6178,9 +6211,27 @@ function switchTab(name){
     setTimeout(()=>document.getElementById('pasteTa').focus(),50);
   }
   if(name==='settings'){renderDbxSettings();}
-  if(name==='prepaid'){renderPrepaid();}
+  if(name==='prepaid'){renderPrepaid();renderSide();}
+  else if(_ppChromeWasOn){_ppChromeWasOn=false;renderSide();} // v3.91 — 선불권 목록이 남지 않게 좌측 패널 원복
+}
+// v3.91 — 선불권 모드 좌측 패널 chrome(사람 모드 _applyPersonModeChrome과 같은 방식)
+let _ppChromeWasOn=false,_ppListQ='';
+function _applyPrepaidModeChrome(on){
+  const side=document.querySelector('.side');if(!side)return;
+  side.classList.toggle('pp-mode',on);
+  if(on)_ppChromeWasOn=true;
+  const inp=document.getElementById('searchInp');
+  if(on){
+    const t=document.querySelector('.side-title.app-title');if(t)t.textContent='선불권';
+    if(inp){if(_searchPhReceipt===null)_searchPhReceipt=inp.placeholder;inp.placeholder='매장명으로 찾기 · 초성도 돼요';inp.value=_ppListQ;}
+    if(typeof _updateSearchClear==='function')_updateSearchClear();
+  }else if(side.classList.contains('person-mode')===false&&_ppChromeWasOn){
+    _applyPersonModeChrome(!!_personMode); // 제목·placeholder·검색어를 영수증/사람 상태로 되돌림
+  }
 }
 document.getElementById('prepaidNew').addEventListener('click',()=>ppWalletForm());
+document.getElementById('ppSideNew').addEventListener('click',()=>ppWalletForm()); // v3.91 — 등록 버튼은 좌측 범위 행
+document.getElementById('ppSortSel2').addEventListener('change',e=>{ppListSort=e.target.value;renderSide();});
 document.getElementById('prepaidBack').addEventListener('click',()=>ppOpen(null));
 document.querySelectorAll('.tab').forEach(t=>{
   t.addEventListener('click',()=>{
@@ -6189,6 +6240,7 @@ document.querySelectorAll('.tab').forEach(t=>{
       _mobileListMode='list';selectedId=null;renderSide();renderDetail();
     }
     // v3.30 — 선불권 탭 선택 시 항상 목록으로(상세의 별도 뒤로가기 화살표를 제거했으므로 탭 재선택이 목록 복귀 경로)
+    // v3.91 — 모바일은 목록부터, 데스크탑은 renderPrepaid가 마지막으로 본(또는 첫) 선불권을 오른쪽에 연다.
     if(t.dataset.tab==='prepaid'&&typeof prepaidSelectedId!=='undefined')prepaidSelectedId=null;
     if(_leftPerson)selectedId=null;
     switchTab(t.dataset.tab);
@@ -6253,6 +6305,7 @@ function _updateSearchClear(){searchClear.classList.toggle('vis',!!searchInp.val
 function _clearSearch(){
   if(typeof _searchTimer!=='undefined')clearTimeout(_searchTimer);
   if(_personMode){_personListQ='';searchInp.value='';_updateSearchClear();renderSide();searchInp.focus();return;} // v3.78
+  if(_activeTabName()==='prepaid'){_ppListQ='';searchInp.value='';_updateSearchClear();renderSide();searchInp.focus();return;} // v3.91
   searchQuery='';searchInp.value='';_monthCatFilter=null;
   _personTimeFilter={type:'all',value:''};_ledgerTimeFilter={type:'month'};
   _mtgExit(); // v3.46 — 검색 해제 시 만남 선택 모드 종료
@@ -6263,6 +6316,7 @@ searchClear.addEventListener('click',_clearSearch);
 function _applySearchInput(){
   // v3.78 — 사람 모드에선 같은 검색창이 사람 목록만 거른다(영수증 검색어·상세는 그대로).
   if(_personMode){_personListQ=searchInp.value;_updateSearchClear();renderSide();return;}
+  if(_activeTabName()==='prepaid'){_ppListQ=searchInp.value;_updateSearchClear();renderSide();return;} // v3.91 — 선불권 목록만 거름
   _clearPhotoListFilter();
   searchQuery=searchInp.value;
   if(searchQuery)selectedId=null;

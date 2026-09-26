@@ -1,9 +1,12 @@
-.app:has(#viewPrepaid.on){grid-template-columns:76px minmax(0,1fr)}
-.app:has(#viewPrepaid.on) .side{display:none}
-.app:has(#viewPrepaid.on) .main{display:block}
-#viewPrepaid>.pp-header{min-height:92px;padding:0 38px;align-items:center;gap:20px}
-/* v3.52 — 상세 모드는 영수증 상세와 동일하게 breadcrumb·제목·meta를 위에서부터 쌓는다(top-align). 목록 모드는 기존 center 유지. */
-#viewPrepaid.pp-detail-view>.pp-header{align-items:flex-start}
+/* v3.91 — 다른 레일과 같은 3단(레일 | 좌측 목록 | 오른쪽 상세). 전체폭·좌측 패널 숨김 규칙 제거, 헤더는 공통 .main-top 그대로. */
+#viewPrepaid>.pp-header{gap:20px}
+/* 눈썹: 데스크탑 'Receipt DB' / 모바일 '‹ 선불권' breadcrumb(목록 복귀) */
+.pp-eb-m{display:none;text-transform:none;letter-spacing:0;font-weight:500}
+/* v3.91 — 오른쪽 패널 폭(좌측 목록 360px 제외)에 맞춰: 잔액·막대는 한 줄 전체, 통계 3칸은 그 아래, 1회 사용 버튼은 넓게 */
+.pp-card--detail .pp-core{flex-direction:column;gap:18px}
+.pp-card--detail .pp-core-stats{width:100%}
+.pp-bar-legend span{white-space:nowrap}
+.pp-actions>.primary-btn{flex:1.7 1 0}
 .pp-header-main{display:flex;align-items:center;min-width:0}.pp-header-copy{min-width:0;flex:1 1 auto}
 .pp-eyebrow{margin-bottom:6px;color:var(--label3);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
 /* v3.52 — 상세 breadcrumb(← 선불권): 영수증 상세의 .back-to-summary와 같은 결(대문자/자간 해제) */
@@ -16,19 +19,10 @@
 .pp-detail-view .pp-header-copy{padding-left:0}
 .pp-new-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;width:auto;height:38px;min-height:38px;margin:0 0 0 auto;padding:0 15px;border:0;border-radius:6px;background:var(--blue);color:#fff;font:600 13px inherit;white-space:nowrap;cursor:pointer}
 .pp-new-btn svg{display:block;flex:0 0 16px;width:16px;height:16px}.pp-new-btn:hover{opacity:.88}
-#prepaidBody{max-width:1100px;width:100%;margin:0 auto}
+#prepaidBody{width:100%}
 #prepaidBack[hidden],#prepaidNew[hidden]{display:none}
-/* ── 목록 ── */
-.pp-list{padding-top:4px}
-.pp-total{padding:14px 0 18px;display:flex;flex-direction:column;gap:6px}
-.pp-total-label{color:var(--label3);font-size:13px}
-.pp-total-value{font-size:30px;font-weight:700;overflow-wrap:anywhere}
-.pp-total-sub{color:var(--label3);font-size:13px}
-.pp-cards{display:flex;flex-direction:column;gap:16px} /* 목록 카드는 전체폭 세로 스택(좁은 칸에서 잔액·통계가 깨지지 않게) */
 /* ── 공통 카드(목록·상세) ── */
 .pp-card{display:flex;flex-direction:column;gap:18px;width:100%;text-align:left;padding:20px 22px;border:1px solid var(--sep);border-radius:var(--r);background:var(--card);color:var(--label);font:inherit}
-.pp-card--list{cursor:pointer;transition:border-color .12s,box-shadow .12s}
-.pp-card--list:hover,.pp-card--list:focus-visible{border-color:var(--blue);box-shadow:0 4px 16px rgba(15,23,42,.06);outline:none}
 .pp-detail{padding-top:4px;display:flex;flex-direction:column;gap:22px}
 /* 정체성 행(아이콘 + 이름/카테고리 + 유효기간 pill) */
 .pp-id{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center}
@@ -116,7 +110,9 @@
 .pp-dialog-actions{display:grid;grid-template-columns:88px minmax(0,1fr);gap:10px}.pp-dialog-actions .ghost-btn,.pp-dialog-actions .primary-btn{width:100%;min-width:0;margin:0;white-space:nowrap}
 .pp-error{font-size:13px;color:var(--red);line-height:1.5}
 @media(max-width:780px){
- .app:has(#viewPrepaid.on){grid-template-columns:1fr}
+ .pp-eb-d{display:none}
+ .pp-eb-m{display:inline-flex}
+ #viewPrepaid .js-app-version{display:none}
  .icon-nav .nav-btn,.icon-nav .nav-btn.tab{width:auto;min-width:0;flex:1 1 0}
  /* v3.38 — 선불권 헤더를 다른 탭(.main-top)과 통일: 같은 높이·safe-area 상단여백·상단정렬·눈썹 간격 */
  #viewPrepaid>.pp-header{min-height:var(--mobile-head-h);padding:max(14px,calc(env(safe-area-inset-top,0px) + 6px)) 18px 14px;align-items:flex-start}
@@ -130,8 +126,6 @@
  .pp-new-btn{position:relative;width:38px;min-width:38px;height:38px;padding:0;gap:0}
  .pp-new-btn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
  .pp-new-btn svg{position:absolute;inset:0;margin:auto;width:17px;height:17px}
- .pp-total-value{font-size:28px}
- .pp-cards{grid-template-columns:1fr;gap:12px}
  .pp-card{gap:16px;padding:18px}
  .pp-id-name{font-size:18px}
  /* 잔액 위, 통계 3칸 아래 — 시안(폰1)처럼 라벨+값만, 보조라벨 숨김 */
@@ -163,7 +157,8 @@
  .pp-dots-more{display:none}
  .pp-dots-chev{display:block}
  .pp-tabs{gap:16px}
- .pp-detail,.pp-list{padding-bottom:84px}
+ .pp-detail{padding-bottom:84px}
  .pp-dialog{width:calc(100% - 24px);max-height:calc(100dvh - 24px);padding:20px}
  .pp-price-grid{grid-template-columns:minmax(0,1fr) 104px}
 }
+.pp-meta-danger{color:var(--red)!important}

@@ -95,6 +95,11 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.91` — **선불권 화면을 다른 레일과 같은 3단(레일 | 좌측 목록 | 오른쪽 상세)으로. ⚠️ 계산(`ppTotals`·`ppLatestUse`·`ppSuggestedUseAmount`)·저장(`ppCommit`·`ppWalletForm`·`ppEventForm`)·Dropbox 병합 불변 — 배치만.**
+  ① **좌측 = 사람 모드(v3.78)와 같은 grammar**: `.side.pp-mode`(`_applyPrepaidModeChrome`) — 제목 '선불권' · month-nav 자리에 범위 행 `#ppScope`(총 잔액 + `+ 선불권 등록` — 좌/우 헤더 구분선 정렬 유지) · 같은 `#searchInp`(선불권 모드에선 `_ppListQ`로 매장명·초성만 거름, 영수증 검색어와 분리) · 툴바 `선불권 N개` + `#ppSortSel2`[잔액 높은순|최근 사용순|이름순](`ppListSort`) · `.r-card.pp-row` flat row(이름 … 잔액 / 카테고리 · 최근 M월 D일 or 유효기간 지남(빨강) / 사용 비율 얇은 막대). `renderSide`가 선불권 탭이면 `renderPrepaidSide`로, 다른 탭으로 가면 좌측 원복(`_ppChromeWasOn`).
+  ② **오른쪽 = 고른 선불권 상세**: 헤더 = 눈썹 'RECEIPT DB'·제목 매장명·meta `카테고리 · 유효기간`(지나면 빨강) — 이름·유효기간이 헤더로 가며 카드 안 정체성 행 제거. 공통 `.main-top`을 그대로 써서 다른 탭과 헤더 높이 동일(전체폭·좌측 숨김 규칙 삭제). 좁아진 폭에 맞춰 카드 = 잔액·막대 한 줄 → 통계 3칸 → 액션(1회 사용 버튼 넓게). 데스크탑은 목록이 옆에 있으니 항상 하나를 연다(마지막으로 본 것 `ppLastSel` → 목록 첫 번째), 선불권 0개면 안내 + 등록 버튼. 기존 전체폭 카드 목록(`.pp-list`/`.pp-total`/`.pp-cards`) 제거.
+  ③ **모바일**: 사람 탭과 같이 목록(`mobile-list-view`) → 상세(`mobile-detail-view`), 상세 눈썹 = `‹ 선불권`(history.back), 레일 탭은 목록부터.
+  **검증**(실데이터 1개 + 예시 3개, 1280·390): 선불권 탭 좌측 목록·초성/일반 검색·정렬, 데스크탑 자동 선택, 모바일 목록→상세→Back=목록, 내역·사람·설정 탭으로 가면 좌측 원복(영수증/사람), v3.89·v3.90 회귀 PASS, overflow 0·콘솔 에러 0. 변경 파일 `index.html`·`prepaid.js`·`prepaid.css`·`CLAUDE.md`.
 - `v3.90` — **단둘이 결제 목록 + 뒤로가기 '엉뚱한 곳' 근본 수정 + 숫자 글꼴 Dutch Pay와 동일. ⚠️ 계산·schema·저장·Dropbox·Dutch Pay 불변.**
   ① **결제 밸런스 '단둘이' 탭 → 영수증 목록**(`_openPersonDetail('duopay')`, 제목 '단둘이 결제', 필터 전체/상대/나, 진실원 = Hero와 같은 `tgtDuo`/`myDuo` → 신유철 19건 = 9 + 10, 936,900원 = 431,900 + 505,000). `_personDetailData`에 `tgtDuo`/`myDuo` 추가.
   ② **뒤로가기 근본 원인 = '유령 오버레이'**: 백그라운드 동기화의 `renderDetail`(또는 새 시트 열기)이 열린 시트 DOM을 직접 지우면 `_ovStack` 항목만 남아, 다음 Back이 **보이는 변화 없이** 유령을 닫는 데 쓰이고 history만 한 칸 밀렸다 → 그다음 Back이 두 칸을 건너뛰어 엉뚱한 화면. (v3.89에서 재현: 시트가 사라진 뒤 영수증 → Back = 화면 그대로.) 수정: `_ovPush(closeDom, el, onPrune)`가 오버레이 DOM을 기억하고 `_ovPrune()`이 사라진 항목을 정리(리스너 teardown 포함, 만남 관리 요약 단계 엔트리는 onPrune 없음), **popstate는 도착한 state의 `_ov`로 판정**해 그보다 위의 오버레이만 닫고, 살아 있는 오버레이를 닫지 않았으면 route 복원으로 화면을 history에 맞춘다. `_recordNavAround`는 fn의 promise(사진 로딩)를 기다리지 않고 다음 틱에 기록(기다리는 사이 다른 클릭이 먼저 기록돼 순서가 뒤집히던 것), `_ovDismissById`의 비-top 경로도 이동을 기록(`_ovRunAfter`).
