@@ -2556,11 +2556,12 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .kv-date.empty>.kv-date-txt{font-size:13px;font-weight:600;color:var(--blue);}
 .kv-date>.kv-date-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px;cursor:pointer;}
 .kv-date>.kv-date-inp:disabled{cursor:default;}
-@media(max-width:380px){.kv-dt-row{gap:6px;}.kv-date-txt,.kv-time-txt{font-size:13px;}.kv-date-txt{letter-spacing:-.1px;}}
-@media(max-width:365px){.kv-date-txt,.kv-time-txt{letter-spacing:-.3px;}}
 .kv-time{position:relative;display:inline-flex;align-items:center;flex:0 0 auto;margin:-6px -8px;padding:6px 8px;cursor:pointer;}
-.kv-time-txt{font-size:var(--fs-body);line-height:1.4;color:var(--text-primary);font-variant-numeric:tabular-nums;white-space:nowrap;}
-.kv-time.empty>.kv-time-txt{font-size:13px;font-weight:600;color:var(--blue);}
+/* v4.03 — 시간은 보조 정보: 날짜보다 작고 옅게(빈 칸 '+ 시간'도 회색) */
+.kv-time-txt{font-size:13px;line-height:1.4;color:var(--text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.kv-time.empty>.kv-time-txt{font-size:12.5px;font-weight:500;color:var(--text-tertiary);}
+@media(max-width:380px){.kv-dt-row{gap:6px;}.kv-time-txt{font-size:12px;}.kv-time.empty>.kv-time-txt{font-size:12px;}}
+@media(max-width:365px){.kv-date-txt{font-size:13px;letter-spacing:-.2px;}}
 .kv-time>.kv-time-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px;cursor:pointer;}
 </style>
 <link rel="stylesheet" href="prepaid.css">
@@ -3729,6 +3730,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.03 — 시간을 보조 정보로: 날짜보다 작고(13px·좁은 폰 12px) 옅게(--text-secondary), 빈 칸 '+ 시간'도 파랑 → 회색. 날짜는 375에서도 14px 유지.
 // v4.02 — 날짜와 시간을 한 줄에(2026.09.26 · 17:07). 날짜도 직접 그린 글자 + 투명 date input이라 브라우저마다 다른 모양·달력 아이콘·잘림 없음.
 // v4.01 — 시간을 '일자' 라벨 줄 오른쪽(+ 시간 / 19:40)으로 옮겨 일자 칸 높이를 카테고리 칸과 같게(두 줄로 늘던 것). 상세 부제에도 시간 표시.
 // v4.00 — ① 선택 화면에서 누른 순서 = 더치페이로 보내는 순서(체크 대신 1·2·3 번호). ② 영수증 시간: AI 프롬프트에 '시간:' 줄, 추가·상세 일자 칸에 시간 입력, 목록 줄에 시간 표시 → 같은 날 영수증이 사용 순서대로 정렬.
@@ -4121,7 +4123,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.02';
+const APP_VERSION='v4.03';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
