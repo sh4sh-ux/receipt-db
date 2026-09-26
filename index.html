@@ -2463,8 +2463,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
    상세의 클래스(detail-expense-block · det-hd 카드 · detail-info-card · kv · pp-split-block)를 그대로 쓰고, 추가 화면에만 필요한 것만 아래에 둔다. */
 .addx{display:flex;flex-direction:column;gap:14px;}
 .addx-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
-.addx-top .input-mode-row{margin-bottom:0;flex:0 0 auto;}
-.addx-top .input-mode-btn{white-space:nowrap;}
+.addx-top .input-mode-row{margin-bottom:0;flex:0 1 280px;min-width:0;gap:3px;} /* v3.96 — 두 버튼 같은 폭 + 좌우 여백(전엔 여백 0이라 글자가 가장자리에 붙어 답답했음) */
+.addx-top .input-mode-btn{flex:1 1 0;min-width:0;white-space:nowrap;padding:0 12px;min-height:34px;}
+.addx-top .input-mode-pencil{width:14px;height:14px;flex-basis:14px;}
+.addx-top .guide-copy{flex:0 0 auto;white-space:nowrap;}
+.input-row.preview:has(#previewArea>.empty-state:only-child){display:none;} /* 붙여넣기 전 빈 미리보기 자리(빈 칸 24px)도 없앰 */
 .addx-top .guide-copy{margin-top:0;}
 #gptModeArea{display:flex;flex-direction:column;gap:14px;}
 .addx-paste .field-ta{height:132px;min-height:132px;}
@@ -3701,6 +3704,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.96 — 추가 화면 [AI 붙여넣기|직접 입력] 버튼에 좌우 여백·같은 폭(글자가 가장자리에 붙어 답답했던 것), 붙여넣기 전 빈 미리보기 자리 제거.
 // v3.95 — 추가 화면 = 영수증 상세와 같은 화면. 상단 카드 [매장 · 결제자 결제 … 총액 ▾ / 참석자](누르면 품목·합계), '정보' 상자 = 매장명 / 일자·카테고리 / 결제자·결제수단 / 참석자(쉼표 입력칸) / 분담 방식(🎉 한턱·칩) + 사진, 메모·태그.
 //   영수증 확인 카드·[+ 나][+ 사람] 버튼 제거. 직접 입력도 같은 정보 상자·사진칸(금액만 상단 카드). 파서·검증·저장 경로·schema 불변.
 // v3.94 — 추가 화면을 영수증 상세와 같은 배치로: 붙여넣기 줄(붙여넣으면 한 줄 요약+원문) → 영수증 확인 카드 → '정보' 상자(결제수단·카테고리·참석자·결제자 | 사진) → 메모·태그, 데스크탑 저장은 헤더 [초기화][저장]. id·파싱·저장 로직 불변.
@@ -4086,7 +4090,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.95';
+const APP_VERSION='v3.96';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
