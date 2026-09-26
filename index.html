@@ -2430,6 +2430,31 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .psn-share-v small{font-size:12px;color:var(--label3);}
 .psn-share-v .chev{margin-left:auto;}
 .psn-share-d{font-size:12px;color:var(--label3);margin-top:4px;}
+
+/* ══════════════════════════════════════════════════════════════════
+   v3.93 헤더 규칙(Header Contract) — 좌측 패널 헤더(.side-top)와 오른쪽 헤더(.main-top)는 같은 글자·같은 높이.
+   눈썹(RECEIPT DB)·버전·제목은 이 블록 한 곳에서만 정한다. 탭·화면별로 크기·굵기·행간·여백을 따로 주지 말 것
+   (선불권 전용 눈썹·통계 기간 버튼·사람 아이콘 때문에 1~3px씩 어긋났던 이력: v3.92). CLAUDE.md 「헤더 규칙」 참고.
+   ══════════════════════════════════════════════════════════════════ */
+.app-eye-row,.main-eye-row{display:flex;align-items:baseline;gap:7px;}
+.app-eye,.main-eye{font-size:11px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.8px;}
+.app-title,.main-title{font-size:var(--fs-page-title);font-weight:var(--fw-strong);letter-spacing:var(--ls-page-title);line-height:1.2;}
+/* 상세 화면의 '‹ 돌아가기'(영수증·사람·선불권)도 눈썹 자리에서 눈썹 글자와 같은 줄 높이 — 제목 위치가 목록형 화면과 같아진다.
+   누르는 영역은 위아래 8px 넓히고(padding) 같은 만큼 margin으로 되돌려 배치에는 영향 없음. */
+.main-eye .back-to-summary,.app-eye .back-to-summary{line-height:13px;height:13px;box-sizing:content-box;vertical-align:top;margin:-8px 0;padding:8px 0;text-transform:none;letter-spacing:0;}
+@media(min-width:781px){
+  .side-top,.main-top{padding-top:28px;}
+  .app-eye-row,.main-eye-row{margin-bottom:0;}
+  .app-eye,.main-eye{margin-bottom:7px;}
+  /* 버전을 숨기는 화면(영수증 상세)도 눈썹 줄 높이는 그대로 — 숨김은 자리를 남기는 방식(제목이 2px 올라가지 않게) */
+  .main-eye-row .js-app-version[hidden]{display:block;visibility:hidden;}
+  .main-eye:has(>.back-to-summary:not(.psn-crumb):not(.pp-eb-m)){padding-top:2px;} /* ‹ 돌아가기는 버튼이라 기준선이 1px 높다 → 글자 눈썹과 같은 위치로 */
+}
+@media(max-width:780px){
+  .app-eye-row,.main-eye-row{margin-bottom:0;}
+  .app-eye,.main-eye{letter-spacing:.9px;line-height:1.25;margin-bottom:11px;}
+  .app-title,.main-title{line-height:1.18;}
+}
 </style>
 <link rel="stylesheet" href="prepaid.css">
 </head>
@@ -3602,6 +3627,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.93 — 헤더 규칙화: 좌측·오른쪽 헤더를 <style> 끝 Header Contract 한 곳에서(눈썹·버전·제목 동일), 영수증 상세 ‹ 돌아가기 줄 높이·숨긴 버전 자리 유지.
 // v3.92 — 모든 탭 오른쪽 헤더 글자 통일: 선불권 공통 .main-eye, 통계 제목 줄 높이(기간 버튼), 사람 눈썹 'RECEIPT DB', 모바일 사람 상세 버전 숨김.
 // v3.91 — 선불권을 다른 레일과 같은 3단으로: 좌측 패널 선불권 모드(총 잔액·등록·검색·정렬·flat row) + 오른쪽 상세, 모바일 목록→상세. 계산·저장 불변.
 // v3.90 — 단둘이 결제 목록(drill) · 뒤로가기: 유령 오버레이 정리(_ovPrune)+popstate state._ov 판정+기록 즉시화, 목록에서 연 영수증 Back=그 목록 복귀 · 숫자 글꼴 스택 Dutch Pay와 동일(system-ui 우선).
@@ -3983,7 +4009,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.92';
+const APP_VERSION='v3.93';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
