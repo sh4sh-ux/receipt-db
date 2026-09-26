@@ -2550,16 +2550,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 }
 /* ══ v4.00 선택 순서 번호 · 일자 칸의 시간 ══ */
 .r-card-no{font-size:11.5px;font-weight:700;line-height:1;color:#fff;font-variant-numeric:tabular-nums;}
-.kv-dt-row{display:flex;flex-wrap:wrap;align-items:center;gap:2px 14px;min-width:0;}
-.kv-dt-row>.kv-date-inp{width:auto;flex:0 1 auto;min-width:0;}
-.kv-time{position:relative;display:inline-flex;align-items:center;flex:0 0 auto;}
-.kv-time>.kv-time-inp{width:auto;min-width:4.6em;}
-.kv-time-ph{display:none;position:absolute;left:0;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--blue);pointer-events:none;}
-.kv-time.empty>.kv-time-inp{color:transparent;}
-.kv-time.empty>.kv-time-inp::-webkit-datetime-edit{opacity:0;}
-.kv-time.empty>.kv-time-inp::-webkit-calendar-picker-indicator{opacity:0;}
-.kv-time.empty>.kv-time-ph{display:block;}
-.kv-time.empty>.kv-time-ph::before{content:'+ ';}
+.kv-lbl-dt{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.kv-time{position:relative;display:inline-flex;align-items:center;flex:0 0 auto;margin:-6px -8px;padding:6px 8px;cursor:pointer;}
+.kv-time-txt{font-size:12px;font-weight:600;line-height:1;letter-spacing:0;text-transform:none;color:var(--text-primary);font-variant-numeric:tabular-nums;}
+.kv-time.empty>.kv-time-txt{color:var(--blue);}
+.kv-time>.kv-time-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px;cursor:pointer;}
 </style>
 <link rel="stylesheet" href="prepaid.css">
 </head>
@@ -2857,7 +2852,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                 <div class="section-hd">정보</div>
                 <div class="detail-kv-grid">
                   <div class="kv full" data-addkv="store"><div class="kv-lbl">매장명</div><input id="addStore" class="kv-inp" type="text" placeholder="매장명 입력" autocomplete="off"/></div>
-                  <div class="kv kv-dt" data-addkv="date"><div class="kv-lbl">일자</div><div class="kv-dt-row"><input id="addDate" class="kv-inp kv-date-inp" type="date" aria-label="일자"/><span class="kv-time empty"><input id="addTime" class="kv-inp kv-time-inp" type="time" aria-label="시간"/><span class="kv-time-ph" aria-hidden="true">시간</span></span></div></div>
+                  <div class="kv kv-dt" data-addkv="date"><div class="kv-lbl kv-lbl-dt"><span>일자</span><label class="kv-time empty"><span class="kv-time-txt" aria-hidden="true">+ 시간</span><input id="addTime" class="kv-inp kv-time-inp" type="time" aria-label="시간"/></label></div><input id="addDate" class="kv-inp kv-date-inp" type="date" aria-label="일자"/></div>
                   <div class="kv detail-category-kv category-field">
                     <div class="kv-lbl">카테고리 <span id="catAutoHint" hidden></span></div>
                     <input id="catInp" type="hidden" value=""/>
@@ -3727,6 +3722,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.01 — 시간을 '일자' 라벨 줄 오른쪽(+ 시간 / 19:40)으로 옮겨 일자 칸 높이를 카테고리 칸과 같게(두 줄로 늘던 것). 상세 부제에도 시간 표시.
 // v4.00 — ① 선택 화면에서 누른 순서 = 더치페이로 보내는 순서(체크 대신 1·2·3 번호). ② 영수증 시간: AI 프롬프트에 '시간:' 줄, 추가·상세 일자 칸에 시간 입력, 목록 줄에 시간 표시 → 같은 날 영수증이 사용 순서대로 정렬.
 // v3.99 — 더치페이로 보낼 때 분담 방식(한턱·깍두기)도 전송(members·watchers·treat). Dutch Pay v6.21이 읽어 지출의 isTreat·깍두기로 그대로 적용.
 // v3.98 — 모바일 헤더 아래 구분선을 모든 탭 같은 높이(112px)로(추가 108·통계/설정/상세 124·내역/사람/선불권 157로 달랐음).
@@ -4117,7 +4113,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.00';
+const APP_VERSION='v4.01';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6817,7 +6813,7 @@ function renderPreviewForm(){
   const st=document.getElementById('addStore'),dt=document.getElementById('addDate');
   if(st&&document.activeElement!==st)st.value=p.store||'';
   if(dt&&document.activeElement!==dt)dt.value=p.date||'';
-  { const tm=document.getElementById('addTime'); if(tm&&document.activeElement!==tm){tm.value=p.time||'';tm.parentElement.classList.toggle('empty',!tm.value);} } // v4.00
+  { const tm=document.getElementById('addTime'); if(tm&&document.activeElement!==tm){tm.value=p.time||'';_kvTimeSync(tm);} } // v4.00
   previewArea.innerHTML=`
     <div class="detail-expense-block addx-exp">
       <div class="det-hd-card" id="addItemsHeader">
@@ -7658,7 +7654,7 @@ function clearInputs(){
   _setCategoryValue('',{auto:false});
   document.getElementById('participantsInp').value='';
   document.getElementById('addStore').value=''; // v3.95
-  { const tm=document.getElementById('addTime'); if(tm){tm.value='';tm.parentElement.classList.add('empty');} } // v4.00
+  { const tm=document.getElementById('addTime'); if(tm){tm.value='';_kvTimeSync(tm);} } // v4.00
   document.getElementById('addDate').value=_addxIsDirect()?new Date().toISOString().slice(0,10):'';
   if(_addSplitUI)_addSplitUI.reset();
   _qcItemsOpen=false;_qcCtxPerson=null;_qcMoreOpen=false; // v3.79·v3.80
@@ -10744,7 +10740,7 @@ async function renderDetail(){
     }
   });
   title.textContent=r.store||'(매장명 없음)';
-  sub.textContent=`${fmtDateKor(r.date)} · ${fmtMoney(r.total)}원`;
+  sub.textContent=`${fmtDateKor(r.date)}${r.time?' '+r.time:''} · ${fmtMoney(r.total)}원`;
   actions.style.display='flex';
   _detailOrigItems=JSON.parse(JSON.stringify(r.items||[]));
   _detailBaseline=null; // baseline은 렌더/바인딩 완료 후 확정(끝에서 _detailSnapshot). 그 전 입력은 무시.
@@ -11239,14 +11235,20 @@ function kvHtml(label,field,rawValue,type,options,extraClass=''){
 
 // v4.00 — 일자 칸 = 날짜 + 시간(사용 순서 정렬용). 시간은 data-field="time"이라 기존 저장·DIRTY 경로를 그대로 탄다.
 function _dateTimeKvHtml(date,time){
-  return `<div class="kv kv-dt"><div class="kv-lbl">일자</div><div class="kv-dt-row">`
+  return `<div class="kv kv-dt"><div class="kv-lbl kv-lbl-dt"><span>일자</span>`
+    +`<label class="kv-time${time?'':' empty'}"><span class="kv-time-txt" aria-hidden="true">${time?escapeHtml(time):'+ 시간'}</span><input class="kv-inp kv-time-inp" type="time" data-field="time" value="${escapeHtml(time)}" aria-label="시간"/></label></div>`
     +`<input class="kv-inp kv-date-inp" type="date" data-field="date" value="${escapeHtml(date)}" aria-label="일자"/>`
-    +`<span class="kv-time${time?'':' empty'}"><input class="kv-inp kv-time-inp" type="time" data-field="time" value="${escapeHtml(time)}" aria-label="시간"/><span class="kv-time-ph" aria-hidden="true">시간</span></span>`
-    +`</div></div>`;
+    +`</div>`;
 }
-// 시간 칸: 비었을 때 '시간' 안내 표시(브라우저 기본 --:-- 대신), 누르면 바로 선택기
-document.addEventListener('input',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('kv-time-inp'))t.parentElement.classList.toggle('empty',!t.value);},true);
-document.addEventListener('change',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('kv-time-inp'))t.parentElement.classList.toggle('empty',!t.value);},true);
+// v4.01 — 시간은 '일자' 라벨 줄 오른쪽(칸 높이 불변). 보이는 글자는 .kv-time-txt, 실제 입력은 그 위에 투명하게 겹친 time input.
+function _kvTimeSync(inp){
+  if(!inp||!inp.parentElement)return;
+  const box=inp.parentElement,txt=box.querySelector('.kv-time-txt');
+  box.classList.toggle('empty',!inp.value);
+  if(txt)txt.textContent=inp.value||'+ 시간';
+}
+document.addEventListener('input',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('kv-time-inp'))_kvTimeSync(t);},true);
+document.addEventListener('change',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('kv-time-inp'))_kvTimeSync(t);},true);
 document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('.kv-time-inp');if(t&&typeof t.showPicker==='function'){try{t.showPicker();}catch(_){}}},true);
 function detailCategoryKvHtml(rawValue){
   const cat=normalizeCategory(rawValue)||'기타';
