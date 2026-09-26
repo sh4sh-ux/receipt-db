@@ -2355,6 +2355,67 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .mtg-erow-store{font-size:13.5px;font-weight:600;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .mtg-erow-date{font-size:11.5px;color:var(--label3);}
 .mtg-erow-amt{flex:none;font-size:13.5px;font-weight:700;color:var(--label);}
+/* v3.89 사람 요약 재구성 — 결제 밸런스 · 한턱 · 만남 · 참석 부담액. 이름 색 없음, 숫자·막대만 색(상대 --amber · 나 Blue). */
+.psn-g89 .psn-balc{order:1;}.psn-g89 .psn-meet{order:2;}.psn-g89 .psn-treatc{order:3;}.psn-g89 .psn-share{order:4;}
+.psn-g89 .psn-recent{order:5;}.psn-g89 .psn-treat{order:6;}.psn-g89 .psn-rel{order:7;}
+.psn-balc{padding:18px 20px 16px;}
+.psn-balc-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.psn-seg{display:inline-flex;padding:3px;border-radius:10px;background:var(--fill2);border:1px solid var(--divider);}
+.psn-seg-b{height:28px;padding:0 12px;border:none;border-radius:8px;background:transparent;font:inherit;font-size:12.5px;font-weight:600;color:var(--label2);cursor:pointer;}
+.psn-seg-b.on{background:var(--card);color:var(--label);box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.psn-balp[hidden]{display:none;}
+.psn-balp[role="button"]{border-radius:10px;margin:-6px;padding:6px;}
+@media(hover:hover){.psn-balp[role="button"]:hover{background:var(--fill2);}}
+.psn-say{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 4px;font-size:17px;font-weight:500;color:var(--label);margin-bottom:12px;line-height:1.4;}
+.psn-say.sm{font-size:14.5px;margin-bottom:10px;}
+.psn-say b{font-weight:700;}
+.psn-say b.n.t{color:var(--psn-t);}.psn-say b.n.m{color:var(--psn-m-ink);}
+.psn-say .chev{margin-left:auto;}
+.psn-say-none{color:var(--label3);font-size:14px;}
+.psn-figs{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:12px;}
+.psn-figs-pct{font-size:12px;color:var(--label3);align-self:center;white-space:nowrap;}
+.psn-figs-pct em{font-style:normal;font-weight:650;}.psn-figs-pct em.t{color:var(--psn-t);}.psn-figs-pct em.m{color:var(--psn-m-ink);}
+.psn-fig{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.psn-fig.m{align-items:flex-end;text-align:right;}
+.psn-fig-name{font-size:12.5px;color:var(--label2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.psn-fig-amt{font-size:22px;font-weight:700;letter-spacing:-.3px;white-space:nowrap;}
+.psn-fig.t .psn-fig-amt{color:var(--psn-t);}.psn-fig.m .psn-fig-amt{color:var(--psn-m-ink);}
+.psn-fig .psn-fig-amt.zero{color:var(--label3);}
+.psn-fig-cnt{font-size:11.5px;color:var(--label3);}
+.psn-fig[role="button"]{border-radius:8px;padding:4px 6px;margin:-4px -6px;}
+@media(hover:hover){.psn-fig[role="button"]:hover{background:var(--fill2);}}
+.psn-treatc{padding:16px 20px 6px;}
+.psn-treatc .psn-figs{margin-top:10px;}
+.psn-treatc .psn-fig-amt{font-size:18px;}
+.psn-trows{margin-top:12px;border-top:1px solid var(--divider);}
+.psn-trow{display:flex;align-items:center;gap:8px;min-height:46px;border-bottom:1px solid var(--divider);}
+.psn-trows .psn-trow:last-child{border-bottom:none;}
+.psn-trow-l{flex:1 1 auto;min-width:0;font-size:13.5px;color:var(--label);display:flex;flex-direction:column;gap:2px;}
+.psn-trow-l small{font-size:11.5px;color:var(--label3);}
+.psn-trow-v{font-size:14.5px;font-weight:700;color:var(--label);white-space:nowrap;display:flex;align-items:baseline;gap:6px;}
+.psn-trow-v small{font-size:11.5px;font-weight:500;color:var(--label3);}
+@media(hover:hover){.psn-trow[role="button"]:hover{background:var(--fill2);}}
+.psn-meet-big{display:flex;align-items:baseline;gap:2px;flex-wrap:wrap;}
+.psn-meet-big b{font-size:30px;font-weight:700;letter-spacing:-.5px;color:var(--label);line-height:1.1;}
+.psn-meet-big small{font-size:14px;color:var(--label2);margin-right:2px;}
+.psn-meet-sub{flex-basis:100%;font-size:12.5px;color:var(--label3);margin-top:2px;}
+.psn-meet-last{font-size:13px;color:var(--label2);margin:10px 0 12px;}
+.psn-meet-last b{color:var(--label);font-weight:650;}
+.psn-spark{display:flex;align-items:flex-end;gap:3px;height:42px;padding-bottom:1px;border-bottom:1px solid var(--divider);}
+.psn-spark i{flex:1 1 0;min-height:0;background:var(--psn-m);opacity:.55;border-radius:2px 2px 0 0;}
+.psn-spark-ax{display:flex;justify-content:space-between;font-size:10.5px;color:var(--label3);margin-top:4px;}
+.psn-meet-places{margin-top:14px;}
+.psn-meet-pl{font-size:12px;color:var(--label3);margin-bottom:4px;}
+.psn-meet-pr{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--label);padding:4px 0;}
+.psn-meet-pr span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.psn-meet-pr em{font-style:normal;color:var(--label3);flex:none;}
+.psn-meet-foot{font-size:11.5px;color:var(--label3);margin-top:10px;}
+.psn-meet-org{margin-top:8px;border-top:1px solid var(--divider);}
+.psn-share-v{display:flex;align-items:baseline;gap:6px;}
+.psn-share-v b{font-size:20px;font-weight:700;letter-spacing:-.3px;color:var(--label);}
+.psn-share-v small{font-size:12px;color:var(--label3);}
+.psn-share-v .chev{margin-left:auto;}
+.psn-share-d{font-size:12px;color:var(--label3);margin-top:4px;}
 </style>
 <link rel="stylesheet" href="prepaid.css">
 </head>
@@ -3514,6 +3575,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v3.89 — 사람 요약 재구성: 결제 밸런스(전체·단둘이·여럿이 한 카드) · 한턱 · 만남(마지막 만남·12개월 흐름·자주 간 곳) · 참석 부담액 · 최근 내역. 중복 3곳 제거, 계산 불변.
 // v3.88 — 이름에는 색 없음(사람 화면 씀씀이·한턱 문장·최근 내역 결제자, 추가 화면 참석자·결제자·picker). 색은 숫자·막대에만.
 // v3.87 — 영수증 상세의 만남 시트에서도 차수 변경([순서 변경] → ≡ drag, 만남 편집과 같은 _mtgBindReorder·_mtgSaveOrder).
 // v3.86 — 영수증 상세 결제자 = 드롭다운(참석자 후보 + 다른 사람…, v3.79 칸 위치·모양 유지) · kv select에 ▾ 표시 · 한턱 안내 조사(이/가) 수정.
@@ -3891,7 +3953,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.88';
+const APP_VERSION='v3.89';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -4049,7 +4111,8 @@ let _personMode=false;
 let _personSel='';              // 선택된 사람(정규화 이름)
 let _personListQ='';            // 사람 목록 검색어
 let _personListSort='together'; // together | name | recent
-let _psnTab='sum';              // Person Detail 탭: sum(요약) | all(상세 내역)
+let _psnTab='sum';
+let _psnSeg='all';               // v3.89 — 결제 밸런스 범위: all | duo | grp (탭 세션 유지)              // Person Detail 탭: sum(요약) | all(상세 내역)
 let pendingPhotoBlob=null;
 let pendingPhotoUrl=null;
 let viewMonth=_currentYM();  // 'YYYY-MM' — 가계부에서 보고 있는 월
@@ -6040,7 +6103,7 @@ function _renderPersonSide(){
     const sel=p.name===_personSel;
     return `<div class="r-card pl-row${sel?' sel':''}" data-person="${escapeHtml(p.name)}" role="button" tabindex="0"${sel?' aria-current="true"':''}>`
       +`<div class="r-card-info"><div class="r-card-store-row"><span class="r-card-store">${escapeHtml(p.name)}</span>${p.grp?`<span class="pl-grp">${escapeHtml(p.grp)}</span>`:''}</div>`
-      +`<div class="pl-meta">함께한 영수증 ${p.together}건 · 만남 ${p.meet}회</div></div></div>`;
+      +`<div class="pl-meta">만남 ${p.meet}회${p.last?` · 최근 ${escapeHtml(_psnMD(p.last))}`:''}</div></div></div>`;
   }).join('')+'</div>';
   list.querySelectorAll('.pl-row').forEach(el=>{
     const go=()=>_selectPerson(el.dataset.person);
@@ -9029,7 +9092,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
   const treatGivingSection=_personTreatGivingSectionHtml(tgt,_giv);
   // v3.59 — 만남 묶기 진입은 만남 영역 '미분류 영수증'(Organizer)으로 이동. Dashboard에는 [선택] 툴바/액션바 없음.
   // v3.78 — '내 이름'이 있으면 새 Person layout(값은 위에서 계산한 것 그대로), 없으면 기존 구성 유지.
-  if(psn)return _psnLayoutHtml({...psn,tgt,me,together,tgtGrp,myGrp,tgtWith,myWith,tgtNoMe,myTreat,shareTotal,partRecs,
+  if(psn)return _psnLayoutHtml({...psn,tgt,me,together,tgtDuo,myDuo,tgtGrp,myGrp,tgtWith,myWith,tgtNoMe,myTreat,shareTotal,partRecs,
     relSection,treatGivingSection,payerSection,coSection,partSection});
   return heroHtml+relSection+treatGivingSection+payerSection+coSection+partSection;
 }
@@ -9045,83 +9108,87 @@ function _psnJosa(word,withBatchim,withoutBatchim){ // 표시용 조사(이/가)
   return ((c-0xAC00)%28)?withBatchim:withoutBatchim;
 }
 function _psnLayoutHtml(d){
+  // v3.89 — 사람 요약 재구성(배치만, 계산은 renderPersonDashboardHtml이 만든 컬렉션 그대로 — 새 계산 없음).
+  //   중복 제거: 한턱 밸런스·함께한 씀씀이·지출 비교(같은 숫자 3곳) → '결제 밸런스' 하나 + '한턱' 하나. 함께한 기록 칸 → '만남' 카드.
+  //   우선순위: ① 누가 더 냈나(결제 밸런스) ② 얼마나 자주·최근에(만남) ③ 한턱 ④ 참석 부담액 ⑤ 최근 내역 ⑥ 한턱 내역 ⑦ 관계.
+  //   이름에는 색 없음(v3.88) — 색은 숫자·막대만(상대 = --amber, 나 = Blue).
   const sum=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
   const nm=escapeHtml(d.tgt), meNm=escapeHtml(d.me);
   const chev='<span class="chev" aria-hidden="true">›</span>';
   const tapAttr=(id,label)=>id?` id="${id}" role="button" tabindex="0" aria-label="${escapeHtml(label)}"`:'';
   const pct=(a,b)=>{const t=a+b;if(t<=0)return null;const x=Math.round(a/t*100);return [x,100-x];};
-  const bal=(a,b,cls)=>{const p=pct(a,b);return `<div class="psn-bal${cls?' '+cls:''}" aria-hidden="true">${p?`<i class="t" style="width:${p[0]}%"></i><i class="m" style="width:${p[1]}%"></i>`:''}</div>`;};
+  const bal=(a,b)=>{const p=pct(a,b);return `<div class="psn-bal" aria-hidden="true">${p?`<i class="t" style="width:${p[0]}%"></i><i class="m" style="width:${p[1]}%"></i>`:''}</div>`;};
+  const who=(amtT,amtM,verb)=>{const df=amtT-amtM;
+    if(amtT+amtM<=0)return `<span class="psn-say-none">아직 기록이 없어요</span>`;
+    if(df===0)return `서로 비슷하게 ${verb}`;
+    return df>0?`<b>${nm}</b>${_psnJosa(d.tgt,'이','가')} <b class="n t">${fmtMoney(df)}원</b> 더 ${verb}`:`<b>내가</b> <b class="n m">${fmtMoney(-df)}원</b> 더 ${verb}`;};
+  const fig=(cls,label,amt,cnt,attrs)=>`<div class="psn-fig ${cls}"${attrs||''}><span class="psn-fig-name">${label}</span><span class="psn-fig-amt${amt?'':' zero'}">${fmtMoney(amt)}원</span><span class="psn-fig-cnt">${cnt}건</span></div>`;
 
-  // ① 한턱 밸런스(단둘이 한턱 — v3.57 의미 그대로). 이름 우선: 신유철 / 조상현(v3.82 — '(나)'·이름 앞 아이콘 없음).
+  // ① 결제 밸런스 — [전체 · 단둘이 · 여럿이] (전체 = 나와 함께한 자리의 실결제 = 기존 '전체 결제', 여럿이 = 기존 '여럿이 함께할 때')
+  const segs=[
+    {k:'all',label:'전체',t:d.tgtWith,m:d.myWith,id:(d.tgtWith.length+d.myWith.length)?'relDetailPay':null},
+    {k:'duo',label:'단둘이',t:d.tgtDuo||[],m:d.myDuo||[],id:null},
+    {k:'grp',label:'여럿이',t:d.tgtGrp,m:d.myGrp,id:d.grpAll.length?'relDetailGrp':null},
+  ];
+  const seg=segs.some(x=>x.k===_psnSeg)?_psnSeg:'all';
+  const noMe=d.tgtNoMe.length?`<div class="psn-note">나 없이 ${nm}${_psnJosa(d.tgt,'이','가')} 결제한 ${d.tgtNoMe.length}건 · ${fmtMoney(sum(d.tgtNoMe))}원은 제외 — ‘상세 내역’에 있어요.</div>`:'';
+  const balance=`<section class="psn-hero psn-card psn-balc" aria-label="결제 밸런스">`
+    +`<div class="psn-balc-hd"><div><div class="psn-hero-title">결제 밸런스</div><div class="psn-hero-desc">함께한 자리에서 누가 더 냈는지</div></div>`
+      +`<div class="psn-seg" role="tablist" aria-label="결제 밸런스 범위">${segs.map(x=>`<button type="button" class="psn-seg-b${x.k===seg?' on':''}" data-psnseg="${x.k}" role="tab" aria-selected="${x.k===seg}">${x.label}</button>`).join('')}</div></div>`
+    +segs.map(x=>{const ta=sum(x.t),ma=sum(x.m),p=pct(ta,ma);
+      return `<div class="psn-balp" data-seg="${x.k}"${x.k===seg?'':' hidden'}${tapAttr(x.id,`결제 밸런스 ${x.label} — 영수증 보기`)}>`
+        +`<div class="psn-say">${who(ta,ma,'냈어요')}${x.id?chev:''}</div>`
+        +bal(ta,ma)
+        +`<div class="psn-figs">${fig('t',nm,ta,x.t.length)}${p?`<span class="psn-figs-pct"><em class="t">${p[0]}%</em> · <em class="m">${p[1]}%</em></span>`:''}${fig('m',meNm,ma,x.m.length)}</div>`
+        +(x.k==='all'?noMe:'')
+      +`</div>`;}).join('')
+    +`</section>`;
+
+  // ② 한턱 — 단둘이 한턱(v3.57 의미 그대로, 상대/나 → 기존 drill data-duo) + 전체 내가 한턱 + 일반 분담·결제자 미상
   const tA=sum(d.duoTreatTgt), mA=sum(d.duoTreatMe), tN=d.duoTreatTgt.length, mN=d.duoTreatMe.length;
-  const side=(cls,which,label,amt,cnt)=>{
-    const inner=`<span class="psn-side-name">${label}</span>`
-      +`<span class="psn-side-amt">${fmtMoney(amt)}원</span><span class="psn-side-cnt">${cnt}건</span>`;
-    return cnt>0
-      ?`<button type="button" class="psn-side ${cls}" data-duo="${which}" aria-label="${label} 한턱 ${fmtMoney(amt)}원 ${cnt}건 — 영수증 보기">${inner}</button>`
-      :`<div class="psn-side ${cls}">${inner}</div>`;
-  };
-  const p=pct(tA,mA), diff=tA-mA;
-  const diffTxt=!p?'아직 단둘이 한턱 기록이 없어요'
-    :diff>0?`<span class="who-t">${nm}</span>${_psnJosa(d.tgt,'이','가')} <b>${fmtMoney(diff)}원</b> 더 한턱냈어요`
-    :diff<0?`<span class="who-m">내가</span> <b>${fmtMoney(-diff)}원</b> 더 한턱냈어요`
-    :'서로 비슷하게 한턱냈어요';
-  const hero=`<section class="psn-hero psn-card" aria-label="한턱 밸런스">`
-    +`<div class="psn-hero-hd"><div><div class="psn-hero-title">한턱 밸런스</div><div class="psn-hero-desc">단둘이 만났을 때 서로에게 한턱낸 금액</div></div><div class="psn-hero-r">영수증 ${d.duoAllCnt}건</div></div>`
-    +`<div class="psn-duo">${side('t','tgt',nm,tA,tN)}<div class="psn-duo-div" aria-hidden="true"></div>${side('m','me',meNm,mA,mN)}</div>`
-    +bal(tA,mA)
-    +(p?`<div class="psn-bal-pct"><span class="t">${p[0]}%</span><span class="m">${p[1]}%</span></div>`:'')
-    +`<div class="psn-diff">${diffTxt}</div>`
-    +(d.duoTreatUnknown.length?`<button type="button" class="psn-sublink" data-duo="unknown">한턱 결제자 미상 ${d.duoTreatUnknown.length}건 ›</button>`:'')
-    +`</section>`;
-
-  // ② 함께한 기록(만남·영수증·장소). 만남 → 기존 만남 목록(#relMtgConfirmed). 장소는 together 매장 표시 집계(저장 없음).
-  const recent=[...d.together].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id)));
-  const storeCnt=new Map();
-  for(const r of recent){const s=(r.store||'').trim();if(s)storeCnt.set(s,(storeCnt.get(s)||0)+1);}
-  let topStore='',topN=0;for(const [s,n] of storeCnt)if(n>topN){topStore=s;topN=n;} // 동률이면 최근 순서상 먼저 나온 곳
-  const ms=d.ms, mtgTap=ms.count>0;
-  const record=`<section class="psn-rec"><div class="psn-sec-hd">함께한 기록</div>`
-    +`<div class="psn-stats">`
-      +`<div class="psn-stat"${tapAttr(mtgTap?'relMtgConfirmed':null,`만남 ${ms.count}회 — 만남 목록`)}><div class="psn-stat-v">${ms.count}<small>회</small></div><div class="psn-stat-l">만남${mtgTap?chev:''}</div></div>`
-      +`<div class="psn-stat"><div class="psn-stat-v">${d.together.length}<small>건</small></div><div class="psn-stat-l">영수증</div></div>`
-      +`<div class="psn-stat"><div class="psn-stat-v">${storeCnt.size}<small>곳</small></div><div class="psn-stat-l">장소</div></div>`
-    +`</div>`
-    +`<div class="psn-rec-sub">단둘이 ${ms.duo}회 · 여럿이 ${ms.group}회</div>`
-    +(topStore?`<div class="psn-rec-top"><span>가장 많이 간 곳</span><b>${escapeHtml(topStore)}</b><em>${topN}회</em></div>`:'')
-    +`</section>`;
-
-  // ③ 함께한 씀씀이 — 여럿이 / 전체 결제(기존 값). Green=상대 · Blue=나.
-  const cmp=(title,tArr,mArr,tapId)=>{
-    const ta=sum(tArr), ma=sum(mArr);
-    const v=(cls,who,amt,cnt)=>`<div class="psn-v ${cls}"><span class="psn-v-who"><span>${who}</span></span><span class="psn-v-amt${amt?'':' zero'}">${fmtMoney(amt)}원</span><span class="psn-v-cnt">${cnt}건</span></div>`;
-    return `<div class="psn-cmp"${tapAttr(tapId,title+' — 영수증 보기')}>`
-      +`<div class="psn-cmp-top"><span class="psn-cmp-title">${title}</span>${tapId?chev:''}</div>`
-      +v('t',nm,ta,tArr.length)+v('m',meNm,ma,mArr.length)+bal(ta,ma)+`</div>`;
-  };
-  const noMe=d.tgtNoMe.length?`<div class="psn-note">‘전체 결제’는 <b>나와 함께한 자리</b>만 포함해요. 나 없이 ${nm}${_psnJosa(d.tgt,'이','가')} 결제한 <b>${d.tgtNoMe.length}건 · ${fmtMoney(sum(d.tgtNoMe))}원</b>은 ‘상세 내역’에 있어요.</div>`:'';
-  const spend=`<section class="psn-spend"><div class="psn-sec-hd">함께한 씀씀이</div><div class="psn-list">`
-    +cmp('여럿이 함께할 때',d.tgtGrp,d.myGrp,d.grpAll.length?'relDetailGrp':null)
-    +cmp('전체 결제',d.tgtWith,d.myWith,(d.tgtWith.length+d.myWith.length)?'relDetailPay':null)
-    +`</div>${noMe}</section>`;
-
-  // ④ 주요 항목 — 2×2(각 칸 기존 drill-down)
-  const kCell=(label,val,cnt,attrs,valCls)=>`<div class="psn-k"${attrs||''}><div class="psn-k-lbl"><span>${label}</span>${attrs?chev:''}</div>`
-    +`<div class="psn-k-val${valCls?' '+valCls:''}">${val}</div><div class="psn-k-cnt">${cnt}</div></div>`;
+  const side=(cls,which,label,amt,cnt)=>fig(cls,label,amt,cnt,cnt?` data-duo="${which}" role="button" tabindex="0" aria-label="${label} 단둘이 한턱 ${fmtMoney(amt)}원 ${cnt}건 — 영수증 보기"`:'');
   const myT=sum(d.myTreat);
-  const key=`<section class="psn-key"><div class="psn-sec-hd">주요 항목</div><div class="psn-kgrid">`
-    +kCell('전체 내가 한턱',`${fmtMoney(myT)}원`,`${d.myTreat.length}건`,d.myTreat.length?tapAttr('relDetailTreat','전체 내가 한턱'):'',myT?'me':'zero')
-    +kCell('참석 부담액',`${fmtMoney(d.shareTotal)}원`,`${d.partRecs.length}건`,d.partRecs.length?tapAttr('relDetailShare','참석 부담액'):'',d.shareTotal?'':'zero')
-    +kCell('묶이지 않은 영수증',`${ms.unlinked}건`,'',ms.unlinked?tapAttr('relMtgOrganize','묶이지 않은 영수증 — 만남 정리'):'',ms.unlinked?'':'zero')
-    +kCell('일반 분담',`${d.duoNormal.length}건`,'단둘이',d.duoNormal.length?` data-duo="normal" role="button" tabindex="0" aria-label="일반 분담 ${d.duoNormal.length}건 — 영수증 보기"`:'',d.duoNormal.length?'':'zero')
+  const tRow=(label,val,sub,attrs)=>`<div class="psn-trow"${attrs||''}><span class="psn-trow-l">${label}</span><span class="psn-trow-v">${val}${sub?`<small>${sub}</small>`:''}</span>${attrs?chev:''}</div>`;
+  const treatCard=`<section class="psn-card psn-treatc" aria-label="한턱">`
+    +`<div class="psn-sec-hd">한턱<span class="r">단둘이 만났을 때</span></div>`
+    +((tN+mN)?`<div class="psn-say sm">${who(tA,mA,'한턱냈어요')}</div>${bal(tA,mA)}<div class="psn-figs">${side('t','tgt',nm,tA,tN)}${side('m','me',meNm,mA,mN)}</div>`
+      :`<div class="psn-say sm"><span class="psn-say-none">아직 단둘이 한턱 기록이 없어요</span></div>`)
+    +`<div class="psn-trows">`
+      +tRow('전체 내가 한턱',`${fmtMoney(myT)}원`,`${d.myTreat.length}건`,d.myTreat.length?tapAttr('relDetailTreat','전체 내가 한턱'):'')
+      +(d.duoNormal.length?tRow('단둘이 일반 분담',`${d.duoNormal.length}건`,'',` data-duo="normal" role="button" tabindex="0" aria-label="단둘이 일반 분담 ${d.duoNormal.length}건 — 영수증 보기"`):'')
+      +(d.duoTreatUnknown.length?tRow('한턱 결제자 미상',`${d.duoTreatUnknown.length}건`,'',` data-duo="unknown" role="button" tabindex="0" aria-label="한턱 결제자 미상 — 영수증 보기"`):'')
     +`</div></section>`;
 
-  // ⑤ 최근 함께한 내역 — flat list, row → 기존 Receipt Detail(.srch-row[data-id] → _bindReceiptRows)
+  // ③ 만남 — 횟수(→ 만남 목록) · 단둘이/여럿이 · 마지막 만남 · 최근 12개월 흐름(함께한 영수증 월별, runtime) · 자주 간 곳 · 묶이지 않은 영수증
+  const recent=[...d.together].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id)));
+  const ms=d.ms;
+  const last=recent.find(r=>r.date)?.date||'';
+  const storeCnt=new Map();for(const r of recent){const s=(r.store||'').trim();if(s)storeCnt.set(s,(storeCnt.get(s)||0)+1);}
+  const topStores=[...storeCnt.entries()].sort((a,b)=>b[1]-a[1]).slice(0,3).filter(x=>x[1]>=2);
+  const now=new Date();const months=[];for(let i=11;i>=0;i--){const dt=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0'));}
+  const mCnt=months.map(ym=>d.together.filter(r=>(r.date||'').startsWith(ym)).length);const mMax=Math.max(1,...mCnt);
+  const spark=`<div class="psn-spark" aria-label="최근 12개월 함께한 영수증">${mCnt.map((c,i)=>`<i style="height:${c?Math.max(12,c/mMax*100):0}%" title="${months[i].slice(5).replace(/^0/,'')}월 ${c}건"></i>`).join('')}</div>`
+    +`<div class="psn-spark-ax"><span>${months[0].slice(2).replace('-','.')}</span><span>최근 12개월</span><span>${months[11].slice(2).replace('-','.')}</span></div>`;
+  const meet=`<section class="psn-meet" aria-label="만남">`
+    +`<div class="psn-sec-hd">만남</div>`
+    +`<div class="psn-meet-big"${tapAttr(ms.count?'relMtgConfirmed':null,`만남 ${ms.count}회 — 만남 목록`)}><b>${ms.count}</b><small>회</small>${ms.count?chev:''}<span class="psn-meet-sub">단둘이 ${ms.duo} · 여럿이 ${ms.group}</span></div>`
+    +(last?`<div class="psn-meet-last">마지막 만남 <b>${escapeHtml(_psnMD(last))}</b> · ${_psnAgo(last)}</div>`:'')
+    +spark
+    +(topStores.length?`<div class="psn-meet-places"><div class="psn-meet-pl">자주 간 곳</div>${topStores.map(([s,n])=>`<div class="psn-meet-pr"><span>${escapeHtml(s)}</span><em>${n}회</em></div>`).join('')}</div>`:'')
+    +`<div class="psn-meet-foot">함께한 영수증 ${d.together.length}건 · 장소 ${storeCnt.size}곳</div>`
+    +(ms.unlinked?`<div class="psn-trow psn-meet-org"${tapAttr('relMtgOrganize','묶이지 않은 영수증 — 만남 정리')}><span class="psn-trow-l">묶이지 않은 영수증</span><span class="psn-trow-v">${ms.unlinked}건</span>${chev}</div>`:'')
+    +`</section>`;
+
+  // ④ 참석 부담액(기존 값·drill 그대로) — 다른 사람이 결제한 자리에서 이 사람의 몫
+  const share=`<section class="psn-share" aria-label="참석 부담액"><div class="psn-sec-hd">참석 부담액</div>`
+    +`<div class="psn-share-v"${d.partRecs.length?tapAttr('relDetailShare','참석 부담액'):''}><b>${fmtMoney(d.shareTotal)}원</b><small>${d.partRecs.length}건</small>${d.partRecs.length?chev:''}</div>`
+    +`<div class="psn-share-d">다른 사람이 결제한 자리에서 ${nm}의 몫</div></section>`;
+
+  // ⑤ 최근 함께한 내역 — 그대로(결제자 이름 색 없음 v3.88)
   const SHOW=5;
   const rrow=(r,i)=>{
     const pb=normalizeName(r.paidBy);
-    const pbCls=pb===d.tgt?'t':pb===d.me?'m':'';
-    const pbTxt=pb?`<span class="${pbCls}">${escapeHtml(pb)} 결제</span>`:'결제자 미상';
+    const pbTxt=pb?`<span>${escapeHtml(pb)} 결제</span>`:'결제자 미상';
     return `<div class="srch-row psn-rrow${i>=SHOW?' more':''}" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">`
       +`<span class="psn-r-date">${escapeHtml(fmtDateKor(r.date))}</span>`
       +`<span class="psn-r-store">${escapeHtml(r.store||'(매장명 없음)')}</span>`
@@ -9135,17 +9202,8 @@ function _psnLayoutHtml(d){
       :`<div class="psn-empty">함께한 영수증이 아직 없어요.</div>`)
     +`</section>`;
 
-  // ⑥ 지출 비교(Insight, 넓을 때만) — 행마다 나 vs 상대(같은 행 안에서 비교)
-  const cRows=[['단둘이 한턱',tA,mA],['여럿이 결제',sum(d.tgtGrp),sum(d.myGrp)],['전체 결제',sum(d.tgtWith),sum(d.myWith)]];
-  const chart=`<section class="psn-chart"><div class="psn-sec-hd">지출 비교<span class="psn-legend"><i class="t"></i>${nm}<i class="m"></i>${meNm}</span></div>`
-    +cRows.map(([l,a,b])=>{const mx=Math.max(a,b)||1;
-      return `<div class="psn-crow"><div class="psn-crow-l">${l}</div>`
-        +`<div class="psn-cbar t"><b><i style="width:${a/mx*100}%"></i></b><span>${fmtMoney(a)}</span></div>`
-        +`<div class="psn-cbar m"><b><i style="width:${b/mx*100}%"></i></b><span>${fmtMoney(b)}</span></div></div>`;}).join('')
-    +`</section>`;
-
-  // ⑦ 한턱 내역(v3.75 개인/공동/전체 그대로) · ⑧ 관계(관계 그룹 설정) — 기존 renderer 재사용
-  const treat=d.treatGivingSection?`<section class="psn-treat"><div class="psn-sec-hd">한턱 내역<span class="r">${nm}${_psnJosa(d.tgt,'이','가')} 낸 한턱</span></div>${d.treatGivingSection}</section>`:'';
+  // ⑥ 한턱 내역(v3.75 renderer 그대로) · ⑦ 관계
+  const treatHist=d.treatGivingSection?`<section class="psn-treat"><div class="psn-sec-hd">한턱 내역<span class="r">${nm}${_psnJosa(d.tgt,'이','가')} 낸 한턱</span></div>${d.treatGivingSection}</section>`:'';
   const rel=d.relSection?`<section class="psn-rel"><div class="psn-sec-hd">관계</div>${d.relSection}</section>`:'';
 
   const tab=_psnTab==='all'?'all':'sum';
@@ -9156,12 +9214,18 @@ function _psnLayoutHtml(d){
       +`<button type="button" class="psn-tab${tab==='all'?' on':''}" data-psntab="all" role="tab" aria-selected="${tab==='all'}">상세 내역</button>`
       +`<button type="button" class="psn-add" data-psnadd>+ 영수증 추가</button>`
     +`</div>`
-    +`<div class="psn-pane" data-pane="sum"${tab==='sum'?'':' hidden'}><div class="psn-grid">`
-      +`<div class="psn-main">${hero}${spend}${key}${recentSec}</div>`
-      +`<div class="psn-aside">${record}${chart}${treat}${rel}</div>`
+    +`<div class="psn-pane" data-pane="sum"${tab==='sum'?'':' hidden'}><div class="psn-grid psn-g89">`
+      +`<div class="psn-main">${balance}${treatCard}${recentSec}</div>`
+      +`<div class="psn-aside">${meet}${share}${treatHist}${rel}</div>`
     +`</div></div>`
     +`<div class="psn-pane" data-pane="all"${tab==='all'?'':' hidden'}>${detailAll||'<div class="psn-empty">상세 내역이 없어요.</div>'}</div>`
     +`</div>`;
+}
+// 마지막 만남 상대 표기: 오늘 · 어제 · N일 전 · N개월 전
+function _psnMD(iso){if(!iso)return '';const[,m,d]=iso.split('-');return `${+m}월 ${+d}일`;}
+function _psnAgo(iso){
+  const t=new Date();t.setHours(0,0,0,0);const d=new Date(iso+'T00:00:00');const n=Math.round((t-d)/86400000);
+  if(isNaN(n))return '';if(n<=0)return '오늘';if(n===1)return '어제';if(n<45)return `${n}일 전`;return `${Math.round(n/30)}개월 전`;
 }
 
 // ── v1.34 날짜 검색 요약 패널 ───────────────────────────────────
@@ -10182,6 +10246,14 @@ async function renderDetail(){
         }
         return;
       }
+      const sg=e.target.closest('[data-psnseg]'); // v3.89 결제 밸런스 [전체·단둘이·여럿이] — 표시 전환만
+      if(sg&&body.contains(sg)){
+        e.preventDefault();e.stopPropagation();_psnSeg=sg.dataset.psnseg;
+        const card=sg.closest('.psn-balc');
+        if(card){card.querySelectorAll('.psn-seg-b').forEach(x=>{const on=x===sg;x.classList.toggle('on',on);x.setAttribute('aria-selected',String(on));});
+          card.querySelectorAll('.psn-balp').forEach(p=>{p.hidden=p.dataset.seg!==_psnSeg;});}
+        return;
+      }
       const mo=e.target.closest('[data-psnmore]');
       if(mo&&body.contains(mo)){
         e.preventDefault();
@@ -10347,7 +10419,7 @@ async function renderDetail(){
         title.textContent=`${_rel.tgt||personName}`;
         // v3.61 — 헤더에 '만남 N회'(receipt 1건도 독립 Meeting 1회, count 기준). '함께한 영수증'(receipt 수)과 혼합하지 않고 병기(§46).
         const _relMs=_personMeetingStats(_rel);
-        sub.textContent=_rel.me?`함께한 영수증 ${_rel.together.length}건 · 만남 ${_relMs.count}회`:`${_rel.tgt} 결제 ${_rel.tgtPaidAll.length}건 · 참석 ${allPartF.length}건`;
+        sub.textContent=_rel.me?(()=>{let l='';for(const r of _rel.together)if((r.date||'')>l)l=r.date;return `만남 ${_relMs.count}회`+(l?` · 마지막 만남 ${_psnMD(l)} (${_psnAgo(l)})`:'');})():`${_rel.tgt} 결제 ${_rel.tgtPaidAll.length}건 · 참석 ${allPartF.length}건`;
         if(periodSlot)periodSlot.innerHTML=_personPeriodBarHtml(allRecs,_personTimeFilter); // v3.43 — 기간 컨트롤을 헤더 우측 슬롯으로
         body.innerHTML=renderPersonDashboardHtml(personName,allPayerF,allPartF);
         _bindSectionToggles(body);
