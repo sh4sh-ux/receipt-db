@@ -95,6 +95,11 @@
   (inbox.json 단일 쓰기 원칙 — 순차 실행은 안전).
 
 ### Changelog
+- `v3.84` — **뒤로가기 3단계 점프 수정 + 영수증 상세 입력칸 v3.79 복원 + 숫자 규칙(Dutch Pay와 동일). ⚠️ 계산·schema·저장 경로·Dropbox·Dutch Pay 불변.**
+  ① **뒤로가기**: 오버레이(만남 요약·만남 시트·사람 drill-down 등)에서 영수증을 열면 '오버레이 닫기(history.back) → 영수증 열기' 순서인데, 닫는 순간 popstate가 대기 중이던 route 기록을 취소해 **영수증이 history 없이 열렸다** → 다음 Back이 밑의 화면(사람 상세)까지 건너뛰고, 한 번 더 누르면 앱을 벗어났다(재현: 사람→만남→요약→영수증→Back = 사람 탭 이전, Back 2 = 앱 이탈). 수정: popstate 오버레이 분기에서 after(이동)를 `_recordNavAround`로 감싸 **화면 이동(selectedId·tab·person)만** 기록(기간·필터 적용은 기록 안 함 — v3.73 불변). **돌아갈 곳 = 연 곳**: 만남 요약/시트에서 연 영수증은 이전 엔트리 route에 `mtg`(데이터 정리함 v3.76과 같은 route 방식)를 남겨 Back 시 그 만남 화면을 다시 연다(복원 뒤 route의 mtg는 지워 중복 열림 방지). 만남 관리 안의 **요약 단계도 history 엔트리 1개**(`dEntry`) — Back = 요약→목록→사람 상세 한 칸씩, 오버레이 전체 닫기는 `history.go(-2)`로 두 엔트리를 함께 소비. 영수증 상세 breadcrumb = `‹ 9월 29일의 만남`(route.crumb).
+  ② **영수증 상세 입력칸 = v3.79 그대로**(사용자 요청): 결제자(텍스트)·결제수단 / 참석자(쉼표 텍스트) / 분담 방식(🎉 한턱 설명 bar + 분담 chip + 안내). v3.82의 상세 결제자 select·참석자 compact row는 상세에서만 되돌림(**추가 화면은 v3.82 compact 유지**).
+  ③ **숫자 규칙**(위 「숫자 규칙」 섹션): 전역 `font-feature-settings:'tnum'` 제거(쉼표가 넓어지던 원인) · `fmtMoney` = `toLocaleString('ko-KR')`(Dutch Pay `fmt`와 동일, 출력 동일) · 관계 분석 상대 숫자 = 순수 `--amber`(어두운 주황 color-mix 제거).
+  변경 파일 `index.html`·`CLAUDE.md`.
 - `v3.83` — **만남 차수(Order) — 같은 만남에 묶인 영수증의 순서를 1차·2차…로 기록, '만남 편집'에서만 drag로 변경. 정산 기능 아님(그날의 흐름 기록용). ⚠️ 계산(total·paidBy·participants·splitExclude·treat·treatBy·Person·Meeting count·단둘이/여럿이·Relation Group·사람별 분담·통계)·Dutch Pay payload·Meeting List(Blue Bar·'N건 묶음 · 대표매장')·Add/Receipt Detail/Quick Confirm/Person/Review Inbox 전부 불변, migration 없음.**
   **필드**: optional `receipt.meetingOrder`(양의 정수). `_validateReceiptRecord`가 정수만 보존(손상 값은 키 제외) → Dropbox merge(`{...raw}`·updatedAt 최신 우선)·백업 export/import roundtrip 그대로. **runtime 순서 `_mtgOrdered`**: 값이 없으면 기존 순서(`_mtgSortByDate`), 있으면 오름차순(중복·null·손상도 화면은 1..N으로 정상, DB 자동 수정 없음). 같은 meetingId에 실제 2건 이상일 때만 차수 표시(1건 만남·독립 receipt는 표시 0).
   **표시**: 만남 상세(관리 화면 detail + 영수증 상세의 만남 시트)는 `1차 | 매장 … 금액` 보기 전용. **편집**: 만남 편집 row = `[선택] 1차 | 매장 … 금액 | ≡`. ≡ handle(44px, `touch-action:none`)만 drag — row 탭(선택)과 역할 분리라 drag 중 상세 열림·선택 토글 0. drag 중 DOM 재배치 없이 `translateY`로 미리보기(끄는 row 그림자·나머지 한 칸씩 비킴·차수 라벨 즉시 갱신, 가장자리 자동 스크롤) → 놓는 순간 재배치 + `_mtgSaveOrder`(바뀐 receipt의 meetingOrder만 `_mtgApply` atomic·rollback). 키보드 ↑/↓도 지원. ⚠️ drag 중 요소를 DOM에서 옮기면 pointer capture가 풀려 move/up을 잃는다(첫 구현 실패 원인).
@@ -1357,6 +1362,15 @@ P오플레 클래식 플레인 1+1 680.0g | 1 | 3,980 | 3,980
   - **radius 허용**: Card·Modal·Sheet 외곽 / Input·Select·Button / filter chip·badge·toggle·selection circle.
   - ⚠️ **함정**: 클릭 가능 flat row에 `border-radius`를 주면 그 행의 `border-bottom`(divider) 양끝이 곡선으로 보인다.
     hover 피드백은 radius 없는 full-width 사각 tint(`background:var(--fill)`)로 준다. `overflow:hidden` 부모 radius가 내부 divider 끝을 자르지 않는지도 확인.
+
+## ⚠️ 숫자 규칙 (v3.84~ · Dutch Pay와 동일 — 매번 다시 묻지 않도록 고정)
+- **표기는 `fmtMoney(n)` 하나로**: `Math.round(n).toLocaleString('ko-KR')`(Dutch Pay `fmt`와 동일 — 천 단위 쉼표, 음수는 `-1,000`). 금액 뒤 `원`은 숫자와 붙여 쓴다(`12,000원`).
+  새 코드에서 쉼표를 직접 만들거나(`replace(/\B(?=…)/)`) 다른 구분자·약식 표기(`1.2만`)를 쓰지 말 것.
+- **글꼴 속성은 `font-variant-numeric:tabular-nums`만**(전역 `html,body`에 이미 있음). ⚠️ **`font-feature-settings:'tnum'` 금지** —
+  iOS 시스템 글꼴에서 OpenType tnum을 직접 켜면 쉼표·마침표까지 숫자 폭으로 넓어져 Dutch Pay와 쉼표 간격이 달라진다(v3.37~v3.83 원인).
+- **자간**: 숫자는 0이 기본. 20px 이상 큰 숫자만 Dutch Pay 범위(-.2 ~ -.5px). 그보다 더 좁히지 말 것.
+- **색**: 나 = Signature Blue(`--blue` 계열), 상대(관계 분석) = **순수 주황 `--amber`**(라이트 #FF9500 · 다크 #FF9F0A, Dutch Pay `--txn-amber`).
+  ⚠️ **어두운 주황(주황+검정 color-mix, #EA580C·#B45309 등) 숫자에 금지.** 음수(할인·환불) = `--red`. 그 외 숫자 = 기본 글자색.
 
 ## 테마 전환 (다크/라이트/시스템)
 - 설정 탭에 3단 토글: `system` · `light` · `dark` (`[data-theme-choice]` 버튼)
