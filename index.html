@@ -2548,6 +2548,18 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .side-top .side-title-row,.side-top .side-title-row>.app-title{margin-bottom:0;}
   .month-nav{height:auto;min-height:46px;padding-top:7px;padding-bottom:7px;}
 }
+/* ══ v4.00 선택 순서 번호 · 일자 칸의 시간 ══ */
+.r-card-no{font-size:11.5px;font-weight:700;line-height:1;color:#fff;font-variant-numeric:tabular-nums;}
+.kv-dt-row{display:flex;flex-wrap:wrap;align-items:center;gap:2px 14px;min-width:0;}
+.kv-dt-row>.kv-date-inp{width:auto;flex:0 1 auto;min-width:0;}
+.kv-time{position:relative;display:inline-flex;align-items:center;flex:0 0 auto;}
+.kv-time>.kv-time-inp{width:auto;min-width:4.6em;}
+.kv-time-ph{display:none;position:absolute;left:0;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--blue);pointer-events:none;}
+.kv-time.empty>.kv-time-inp{color:transparent;}
+.kv-time.empty>.kv-time-inp::-webkit-datetime-edit{opacity:0;}
+.kv-time.empty>.kv-time-inp::-webkit-calendar-picker-indicator{opacity:0;}
+.kv-time.empty>.kv-time-ph{display:block;}
+.kv-time.empty>.kv-time-ph::before{content:'+ ';}
 </style>
 <link rel="stylesheet" href="prepaid.css">
 </head>
@@ -2845,7 +2857,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                 <div class="section-hd">정보</div>
                 <div class="detail-kv-grid">
                   <div class="kv full" data-addkv="store"><div class="kv-lbl">매장명</div><input id="addStore" class="kv-inp" type="text" placeholder="매장명 입력" autocomplete="off"/></div>
-                  <div class="kv" data-addkv="date"><div class="kv-lbl">일자</div><input id="addDate" class="kv-inp" type="date"/></div>
+                  <div class="kv kv-dt" data-addkv="date"><div class="kv-lbl">일자</div><div class="kv-dt-row"><input id="addDate" class="kv-inp kv-date-inp" type="date" aria-label="일자"/><span class="kv-time empty"><input id="addTime" class="kv-inp kv-time-inp" type="time" aria-label="시간"/><span class="kv-time-ph" aria-hidden="true">시간</span></span></div></div>
                   <div class="kv detail-category-kv category-field">
                     <div class="kv-lbl">카테고리 <span id="catAutoHint" hidden></span></div>
                     <input id="catInp" type="hidden" value=""/>
@@ -3715,6 +3727,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.00 — ① 선택 화면에서 누른 순서 = 더치페이로 보내는 순서(체크 대신 1·2·3 번호). ② 영수증 시간: AI 프롬프트에 '시간:' 줄, 추가·상세 일자 칸에 시간 입력, 목록 줄에 시간 표시 → 같은 날 영수증이 사용 순서대로 정렬.
 // v3.99 — 더치페이로 보낼 때 분담 방식(한턱·깍두기)도 전송(members·watchers·treat). Dutch Pay v6.21이 읽어 지출의 isTreat·깍두기로 그대로 적용.
 // v3.98 — 모바일 헤더 아래 구분선을 모든 탭 같은 높이(112px)로(추가 108·통계/설정/상세 124·내역/사람/선불권 157로 달랐음).
 // v3.97 — 서비스 워커(sw.js)가 prepaid.js·prepaid.css를 cache-first로 주고 캐시 이름이 v3.06에 멈춰, 설치된 아이폰은 옛 선불권 화면·헤더를 계속 썼다 → 모든 셸 파일 network-first + 캐시 이름을 앱 버전과 같이.
@@ -4104,7 +4117,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v3.99';
+const APP_VERSION='v4.00';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5228,6 +5241,7 @@ const GPT_PROMPT=`이 영수증을 정확히 아래 형식으로만 정리해줘
 
 매장명: [브랜드명 + 정확한 지점명]
 일자: YYYY.MM.DD
+시간: HH:MM
 총액: ##,###원
 결제수단: 카드 또는 현금 또는 계좌이체
 
@@ -5238,6 +5252,7 @@ const GPT_PROMPT=`이 영수증을 정확히 아래 형식으로만 정리해줘
 쿠폰 할인 | 1 | -500 | -500
 
 규칙:
+- 시간은 영수증에 찍힌 결제(거래) 시각을 24시간제로 적고, 영수증에 시간이 없으면 시간 줄을 빼줘.
 - 총액은 상품 합계가 아니라 할인·쿠폰·포인트 등을 반영한 실제 최종 결제금액으로 적어줘.
 - 품목명, 옵션(사이즈 포함), 단가가 모두 같은 상품이 여러 줄이면 반드시 한 줄로 합쳐줘.
 - 같은 상품을 합칠 때 수량은 합산하고 금액은 단가 × 수량으로 계산해줘.
@@ -5752,18 +5767,20 @@ let _photoFilterPrevAllMonths=false;
 // v3.22 — 목록 정렬(표시 단계에서만 적용, 원본 receipts 순서/데이터는 건드리지 않음)
 let _listSort='recent'; // recent(최신순) | oldest(오래된순) | amount_desc(금액 높은순) | amount_asc(금액 낮은순) | store(매장명순)
 
+// v4.00 — 누른 순서 = 더치페이로 보내는 순서(Set은 넣은 순서를 기억한다 — 빼고 다시 누르면 맨 뒤)
+function _batchSelectedInOrder(){return [..._batchSelectedIds].map(id=>receipts.find(r=>r.id===id)).filter(Boolean);}
 function _updateBatchExportUi(){
   const side=document.querySelector('.side');
   const toggle=document.getElementById('batchSelectToggle');
   const bar=document.getElementById('batchExportBar');
-  const selected=receipts.filter(r=>_batchSelectedIds.has(r.id));
+  const selected=_batchSelectedInOrder();
   const total=selected.reduce((sum,r)=>sum+(r.total||0),0);
   side?.classList.toggle('batch-select-mode',_batchSelectMode);
   toggle?.classList.toggle('on',_batchSelectMode);
   if(toggle){toggle.textContent=_batchSelectMode?'완료':'선택';toggle.setAttribute('aria-pressed',String(_batchSelectMode));toggle.disabled=!receipts.length;}
   bar?.classList.toggle('on',_batchSelectMode);
   const count=document.getElementById('batchExportCount');if(count)count.textContent=`${selected.length}건 선택`;
-  const totalEl=document.getElementById('batchExportTotal');if(totalEl)totalEl.textContent=`합계 ${fmtMoney(total)}원`;
+  const totalEl=document.getElementById('batchExportTotal');if(totalEl)totalEl.textContent=selected.length>1?`합계 ${fmtMoney(total)}원 · 누른 순서대로 보내요`:`합계 ${fmtMoney(total)}원`;
   const send=document.getElementById('batchExportSend');if(send)send.disabled=!selected.length;
 }
 function _setBatchSelectMode(active,{render=true}={}){
@@ -5989,16 +6006,15 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&_reviewInboxIsOpen(
 function _cardHtml(r, reason){
   const sel=(r.id===selectedId)?' sel':'';
   const batchSel=_batchSelectedIds.has(r.id)?' batch-selected':'';
+  const batchNo=_batchSelectedIds.has(r.id)?[..._batchSelectedIds].indexOf(r.id)+1:0; // v4.00 — 누른 순서 번호
   const batchA11y=_batchSelectMode?`role="checkbox" aria-checked="${String(_batchSelectedIds.has(r.id))}"`:'role="button"';
-  const meta=[fmtDateKor(r.date)];
+  const meta=[fmtDateKor(r.date)+(r.time?` ${escapeHtml(r.time)}`:'')]; // v4.00 — 시간이 있으면 같이
   if(r.paidBy)meta.push(escapeHtml(r.paidBy));
   if((r.participants||[]).length>0)meta.push(`${r.participants.length}명`);
   const photoStatusIcon=_receiptStatusIconHtml(r);
   const reasonHtml=reason?`<div class="r-card-reason">${escapeHtml(reason)}</div>`:'';
   return `<div class="r-card${sel}${batchSel}" data-id="${escapeHtml(r.id)}" ${batchA11y} tabindex="0">
-    <button class="r-card-check" type="button" tabindex="-1" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>
-    </button>
+    <button class="r-card-check" type="button" tabindex="-1" aria-hidden="true">${batchNo?`<span class="r-card-no">${batchNo}</span>`:''}</button>
     <div class="r-card-info">
       <div class="r-card-store-row">${photoStatusIcon}<div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div></div>
       <div class="r-card-meta">${meta.join(' · ')}</div>
@@ -6168,7 +6184,7 @@ document.addEventListener('keydown',e=>{
 document.getElementById('batchSelectToggle').addEventListener('click',()=>_setBatchSelectMode(!_batchSelectMode));
 document.getElementById('batchExportCancel').addEventListener('click',()=>_setBatchSelectMode(false));
 document.getElementById('batchExportSend').addEventListener('click',()=>{
-  const selected=receipts.filter(r=>_batchSelectedIds.has(r.id));
+  const selected=_batchSelectedInOrder(); // v4.00 — 누른 순서대로
   sendReceiptsToDutchPay(selected).then(ok=>{if(ok)_setBatchSelectMode(false);});
 });
 
@@ -6685,6 +6701,7 @@ function updatePreview(){
     // v3.95 — 매장명·일자는 '정보' 상자 칸에서 고친다. 원문에 없으면 그 칸에 이미 적어 둔 값을 살린다.
     if(!(p.store||'').trim())p.store=(document.getElementById('addStore')?.value||'').trim();
     if(!p.date)p.date=document.getElementById('addDate')?.value||'';
+    if(!p.time)p.time=document.getElementById('addTime')?.value||''; // v4.00
   }
   _currentParsed=p;
   // 가게명 인식되면 카테고리 자동 채움 (입력란이 비어있거나 이전에 자동 채웠을 때만)
@@ -6800,6 +6817,7 @@ function renderPreviewForm(){
   const st=document.getElementById('addStore'),dt=document.getElementById('addDate');
   if(st&&document.activeElement!==st)st.value=p.store||'';
   if(dt&&document.activeElement!==dt)dt.value=p.date||'';
+  { const tm=document.getElementById('addTime'); if(tm&&document.activeElement!==tm){tm.value=p.time||'';tm.parentElement.classList.toggle('empty',!tm.value);} } // v4.00
   previewArea.innerHTML=`
     <div class="detail-expense-block addx-exp">
       <div class="det-hd-card" id="addItemsHeader">
@@ -7167,7 +7185,7 @@ saveBtn.addEventListener('click',async()=>{
   if(_inputMode==='direct'){await _saveDirectEntry();return;}
   if(!_currentParsed)return;
   const p=_currentParsed;
-  { const st=document.getElementById('addStore'),dt=document.getElementById('addDate'); if(st)p.store=st.value.trim(); if(dt&&dt.value)p.date=dt.value; } // v3.95
+  { const st=document.getElementById('addStore'),dt=document.getElementById('addDate'),tm=document.getElementById('addTime'); if(st)p.store=st.value.trim(); if(dt&&dt.value)p.date=dt.value; if(tm)p.time=tm.value||''; } // v3.95·v4.00
   const v2=validateParsed(p);
   if(v2.errors.length){toast('필수 항목이 비어있어요',{type:'error'});return;}
   const {audit:amountAudit}=_amountAuditMessages(p);
@@ -7503,6 +7521,9 @@ let _addSplitUI=null, _dSplitUI=null, _addPeople=null;
     if(_currentParsed&&!_addxIsDirect()){_currentParsed.date=dtEl.value;_refreshPreviewSummary();}
     else{_addxSyncHeader();_updateDirectSaveBtn();}
   });
+  const tmEl=document.getElementById('addTime'); // v4.00 — 시간(선택)
+  const pushTime=()=>{if(_currentParsed&&!_addxIsDirect())_currentParsed.time=tmEl.value||'';};
+  tmEl.addEventListener('input',pushTime);tmEl.addEventListener('change',pushTime);
 })();
 
 // ── v3.80 compact 입력 — '항상 펼쳐놓기' → '필요할 때 선택' ──────────────────────────────────────
@@ -7637,6 +7658,7 @@ function clearInputs(){
   _setCategoryValue('',{auto:false});
   document.getElementById('participantsInp').value='';
   document.getElementById('addStore').value=''; // v3.95
+  { const tm=document.getElementById('addTime'); if(tm){tm.value='';tm.parentElement.classList.add('empty');} } // v4.00
   document.getElementById('addDate').value=_addxIsDirect()?new Date().toISOString().slice(0,10):'';
   if(_addSplitUI)_addSplitUI.reset();
   _qcItemsOpen=false;_qcCtxPerson=null;_qcMoreOpen=false; // v3.79·v3.80
@@ -7725,7 +7747,7 @@ async function _saveDirectEntry(){
   const rec={
     id,
     date:dateVal,
-    time:'',
+    time:(document.getElementById('addTime')?.value||''), // v4.00
     store:finalStore,
     category:finalCat,
     paymentMethod:document.getElementById('payMethod').value,
@@ -10745,7 +10767,7 @@ async function renderDetail(){
   const infoKvHtml=`
     <div class="detail-kv-grid">
       ${kvHtml('매장명','store',r.store||'','','','full')}
-      ${kvHtml('일자','date',r.date||'','date')}
+      ${_dateTimeKvHtml(r.date||'',r.time||'')}
       ${detailCategoryKvHtml(r.category||'')}
       <div class="kv"><div class="kv-lbl">결제자</div><select id="dPayerSel" class="kv-inp" aria-label="결제자"></select><input type="hidden" class="kv-inp" id="dPayerInp" data-field="paidBy" value="${escapeHtml(r.paidBy||'')}"/></div>
       ${kvHtml('결제수단','paymentMethod',r.paymentMethod||'card','select',[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']])}
@@ -10872,7 +10894,7 @@ async function renderDetail(){
   // 바꾸면 잔액과 지출이 달라지므로 읽기 전용으로 두고 메모·사진만 편집한다.
   const prepaidLink=prepaidRecords.find(e=>e.type==='event'&&e.receiptId===r.id);
   if(prepaidLink){
-    body.querySelectorAll('[data-field="store"],[data-field="date"],[data-field="category"],[data-field="paymentMethod"],#dTotalAmt,#addItemBtn,.item-del,.item-name-inp,.item-num-inp').forEach(el=>el.disabled=true);
+    body.querySelectorAll('[data-field="store"],[data-field="date"],[data-field="time"],[data-field="category"],[data-field="paymentMethod"],#dTotalAmt,#addItemBtn,.item-del,.item-name-inp,.item-num-inp').forEach(el=>el.disabled=true);
     body.querySelector('.detail-cat-trigger')?.setAttribute('disabled','');
     body.querySelector('.detail-expense-block')?.insertAdjacentHTML('beforebegin','<div class="alert">선불권 결제 기록입니다. 금액·날짜는 선불권에서 관리해 주세요.</div>');
   }
@@ -11215,6 +11237,17 @@ function kvHtml(label,field,rawValue,type,options,extraClass=''){
   }
 }
 
+// v4.00 — 일자 칸 = 날짜 + 시간(사용 순서 정렬용). 시간은 data-field="time"이라 기존 저장·DIRTY 경로를 그대로 탄다.
+function _dateTimeKvHtml(date,time){
+  return `<div class="kv kv-dt"><div class="kv-lbl">일자</div><div class="kv-dt-row">`
+    +`<input class="kv-inp kv-date-inp" type="date" data-field="date" value="${escapeHtml(date)}" aria-label="일자"/>`
+    +`<span class="kv-time${time?'':' empty'}"><input class="kv-inp kv-time-inp" type="time" data-field="time" value="${escapeHtml(time)}" aria-label="시간"/><span class="kv-time-ph" aria-hidden="true">시간</span></span>`
+    +`</div></div>`;
+}
+// 시간 칸: 비었을 때 '시간' 안내 표시(브라우저 기본 --:-- 대신), 누르면 바로 선택기
+document.addEventListener('input',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('kv-time-inp'))t.parentElement.classList.toggle('empty',!t.value);},true);
+document.addEventListener('change',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('kv-time-inp'))t.parentElement.classList.toggle('empty',!t.value);},true);
+document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('.kv-time-inp');if(t&&typeof t.showPicker==='function'){try{t.showPicker();}catch(_){}}},true);
 function detailCategoryKvHtml(rawValue){
   const cat=normalizeCategory(rawValue)||'기타';
   const options=BASE_CATEGORIES.map(name=>`<button class="cat-picker-option detail-cat-option" type="button" role="option" data-category="${escapeHtml(name)}" aria-selected="${name===cat?'true':'false'}">${getCatSvg(name)}<span>${escapeHtml(getCategoryLabel(name))}</span></button>`).join('');
