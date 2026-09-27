@@ -1918,6 +1918,16 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .stats-cat:nth-child(3n+3) .cat-bar-fill{background:#dd8a44;}
 .stats-cat.cat-active,.stats-cat:hover,.stats-receipt:hover{background:var(--fill2);}
 .stats-cat.cat-active{box-shadow:inset 3px 0 var(--blue);}
+/* v4.12 — 대시보드 '내 부담': 총액 옆 파란 숫자(총액보다 3px 작게), 막대 안 진한 부분. 나=Signature Blue(숫자 규칙). */
+.stats-cat .cat-bar-top.has-mine{grid-template-columns:minmax(0,1fr) auto auto 12px;}
+.cat-bar-tot-lbl{font-weight:500;color:var(--label2);}
+.stats-cat .cat-bar-top.has-mine .cat-bar-amt{white-space:nowrap;}
+.cat-bar-mine{font-size:9.5px;font-weight:600;color:var(--blue);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;}
+.cat-bar-mine.amt-neg{color:var(--red);}
+.cat-bar-mine-fill{display:block;height:100%;border-radius:inherit;}
+.sum-mine{margin-top:6px;font-size:11.5px;color:var(--label2);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.sum-mine-pct{color:var(--label3);}
+.sum-mine b{color:var(--blue);font-weight:650;}
 .stats-cat:focus-visible,.stats-receipt:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 @media(min-width:781px){
@@ -1953,7 +1963,17 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .stats-redesign .stats-cat .cat-bar-name{font-size:14px;font-weight:600;}
   .stats-redesign .stats-cat .cat-pct{font-size:13px;font-weight:500;}
   .stats-redesign .stats-cat .cat-bar-amt{font-size:14px;font-weight:650;}
+  .stats-redesign .stats-cat .cat-bar-mine{font-size:11px;}
 }
+/* v4.12 — 카테고리 영역이 좁으면(630px 미만 — 옆 목록이 함께 보이는 좁은 PC·태블릿, 백만 원대 금액) 2열 칸에
+   '총 금액 + 내 부담'이 안 들어가 이름이 사라졌다 → 영역 폭 기준(container query)으로 한 줄에 하나. 화면 폭 기준은 금액 자릿수에 따라 경계가 달라 못 쓴다. */
+.stats-cat-wrap{container-type:inline-size;}
+@container (max-width:629px){
+  .stats-redesign .stats-cat-grid{grid-template-columns:1fr;}
+  .stats-redesign .stats-cat-grid .stats-cat:nth-last-child(2):nth-child(odd){border-bottom:1px solid var(--sep);}
+}
+.stats-redesign .stats-cat-grid.one-col{grid-template-columns:1fr;}
+.stats-redesign .stats-cat-grid.one-col .stats-cat:nth-last-child(2):nth-child(odd){border-bottom:1px solid var(--sep);}
 @media(max-width:1100px){.stats-split{grid-template-columns:1fr;}.stats-category-panel{border-left:0;border-bottom:1px solid var(--sep);padding:0 0 24px;grid-row:1;}}
 @media(max-width:780px){
   .stats-redesign .summary-grid{grid-template-columns:1fr;gap:0;}
@@ -1971,6 +1991,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .stats-redesign .donut-legend{height:154px;grid-auto-rows:calc(154px / 7);}
   .stats-cat{min-height:58px;padding:12px 4px;}
   .stats-cat .cat-bar-top{grid-template-columns:minmax(0,1fr) 42px auto 10px;gap:6px;font-size:12px;}
+  .stats-cat .cat-bar-top.has-mine{grid-template-columns:minmax(0,1fr) auto auto 10px;}
+  .stats-cat .cat-bar-mine{font-size:10px;}  /* 폰 10px(사용자 지정 — 9px는 작았다) */
+  .stats-redesign .sum-card .sum-mine{flex-basis:100%;margin-top:3px;}
   .stats-cat.rich{grid-template-columns:30px minmax(0,1fr);gap:9px;padding:12px 4px;}
   .stats-cat.rich .sc-ic{width:30px;height:30px;flex:0 0 30px;}
   .stats-redesign.mob-compact .budget-section{display:block;}
@@ -3730,6 +3753,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.12 — 대시보드 '내 부담': 카테고리별 '총 377,000원' 옆에 내 부담(파란색·PC 11px·폰 10px), 막대 옅은 부분=총액·진한 부분=내 부담, 총 지출 카드에 '내 부담 N원 · N%'. 계산 = 사람별 분담(_receiptShare) + 참석자 없는 영수증은 결제자가 나/비었으면 전액(_myShareOf). 카테고리 영역이 좁으면 1열(container query + 이름이 눌리면 1열).
 // v4.11 — '중복 정리'가 같은 사진인데 이름·바이트만 다른 사본도 찾음: 어떤 영수증도 연결하지 않은 파일이 이름의 날짜·금액이 같은 연결된 파일과 사진이 같으면(256px 흑백 16×16 칸 비교) 정리 보관함으로. 연결된 파일은 옮기지 않음.
 // v4.10 — 앱은 Dropbox 파일을 지우지 않는다: '지우기'(중복 정리·옛 폴더 정리)는 전부 정리 보관함/날짜/원래 경로로 옮기기(_dbxTrash). 실제 삭제는 매일 자동 백업 30개 초과분(_dbxDeleteAutoSnapshot)만. check_app.py가 삭제 API·완료 폴더 autorename·덮어쓰기를 막는다. 설정 Dropbox 카드에 안내.
 // v4.09 — v4.04 '중복 정리'가 완료 JPG·PDF를 한 목록으로 보고 'JPG + 같은 이름 PDF' 짝의 JPG를 앱 사본으로 오판해 지우고 연결을 PDF로 바꾼 것 되돌리기: 동기화 때 한 번, 같은 이름 PDF가 있고 JPG가 없는 삭제된 JPG만 Dropbox 휴지통에서 복원 + 사진 영수증의 PDF 연결을 JPG로.
@@ -4131,7 +4155,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.11';
+const APP_VERSION='v4.12';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -5006,6 +5030,14 @@ function _receiptShare(r,name){
   const splitters=_ppSplitters(r);
   if(!splitters.length||!splitters.includes(name))return 0;
   return Math.round((r.total||0)/splitters.length);
+}
+// v4.12 — 대시보드 '내 부담'(내가 순수하게 쓴 금액). 참석자가 있으면 사람별 분담과 같은 계산(_receiptShare),
+//   참석자가 없는 영수증(혼자 산 것)은 결제자가 나이거나 비어 있으면 전액 내 부담, 다른 사람이면 0.
+function _myShareOf(r,me){
+  me=(me||'').trim();if(!me)return 0;
+  const ps=(r.participants||[]).map(s=>(s||'').trim()).filter(Boolean);
+  if(!ps.length){const p=(r.paidBy||'').trim();return (!p||p===me)?(r.total||0):0;}
+  return _receiptShare(r,me);
 }
 // 한 영수증의 '사람별 분담' 방식 라벨(부제용).
 function _splitModeLabel(r){
@@ -9718,11 +9750,17 @@ function renderLedgerPanel(recs){
   let topStore=null,topStoreN=0;
   for(const [s,n] of storeMap){if(n>topStoreN){topStoreN=n;topStore=s;}}
 
+  // v4.12 — 내 부담(내 이름이 있을 때만). 카테고리별로도 나눠 둔다(그룹 행은 하위 카테고리 합).
+  const me=getMyName();
+  const mineBy=new Map();let myTotal=0;
+  if(me)for(const r of recs){const c=(r.category&&r.category.trim())||'(미분류)';const v=_myShareOf(r,me);mineBy.set(c,(mineBy.get(c)||0)+v);myTotal+=v;}
+  const mineOf=row=>row.isGroup?row.subRows.reduce((a,x)=>a+(mineBy.get(x.cat)||0),0):(mineBy.get(row.cat)||0);
   const summaryHtml=`<div class="budget-section"><div class="summary-grid summary-grid--4">
     <div class="sum-card">
       <div class="sum-lbl">총 지출</div>
       <div class="sum-val${total<0?' amt-neg':''}">${fmtMoney(total)}<span class="sum-unit">원</span></div>
       <div class="sum-sub">${count}건 · ${escapeHtml(periodLabel)}</div>
+      ${me?`<div class="sum-mine">내 부담 <b>${fmtMoney(myTotal)}원</b>${total>0?`<span class="sum-mine-pct"> · ${Math.round(myTotal/total*100)}%</span>`:''}</div>`:''}
     </div>
     <div class="sum-card">
       <div class="sum-lbl">영수증</div>
@@ -9794,11 +9832,19 @@ function renderLedgerPanel(recs){
   const catRow=(r,sub=false)=>{
     const color=getCatColor(r.cat);
     const active=_monthCatFilter===r.cat;
+    // v4.12 — 내 이름이 있으면 '총 377,000원' 옆에 내 부담(파란색·PC 11px·폰 10px), 막대는 옅은 부분=총액·진한 부분=내 부담
+    const m=me?mineOf(r):0;
+    const nums=me
+      ?`<span class="cat-bar-amt"><span class="cat-bar-tot-lbl">총 </span>${fmtMoney(r.amt)}원</span><span class="cat-bar-mine${m<0?' amt-neg':''}" title="내 부담" aria-label="내 부담 ${fmtMoney(m)}원">${fmtMoney(m)}원</span>`
+      :`<span class="cat-pct">${r.pct<0.1?'0.1% 미만':r.pct.toFixed(1)+'%'}</span><span class="cat-bar-amt">${fmtMoney(r.amt)}원</span>`;
+    const fill=me
+      ?`<span class="cat-bar-fill" style="width:${r.amt/max*100}%;background:${color}47"><span class="cat-bar-mine-fill" style="width:${r.amt>0?Math.max(0,Math.min(100,m/r.amt*100)):0}%;background:${color}"></span></span>`
+      :`<span class="cat-bar-fill" style="width:${r.amt/max*100}%;background:${color}"></span>`;
     return `<button type="button" class="cat-bar-row stats-cat rich${sub?' cat-bar-sub':''}${active?' cat-active':''}" data-cat="${escapeHtml(r.cat)}" aria-pressed="${active}">
       <span class="sc-ic" style="background:${color}1f;color:${color}">${getCatSvg(r.cat)}</span>
       <span class="sc-body">
-        <span class="cat-bar-top"><span class="cat-bar-name">${escapeHtml(getCategoryLabel(r.cat))}</span><span class="cat-pct">${r.pct<0.1?'0.1% 미만':r.pct.toFixed(1)+'%'}</span><span class="cat-bar-amt">${fmtMoney(r.amt)}원</span><span aria-hidden="true">›</span></span>
-        <span class="cat-bar-track"><span class="cat-bar-fill" style="width:${r.amt/max*100}%;background:${color}"></span></span>
+        <span class="cat-bar-top${me?' has-mine':''}"><span class="cat-bar-name">${escapeHtml(getCategoryLabel(r.cat))}</span>${nums}<span aria-hidden="true">›</span></span>
+        <span class="cat-bar-track">${fill}</span>
       </span></button>`;
   };
   const sortSel=`<select class="cat-sort-sel" id="ledgerCatSort" aria-label="정렬">
@@ -9808,7 +9854,7 @@ function renderLedgerPanel(recs){
   </select>`;
   const catHtml=`<div class="budget-section">
     <div class="budget-section-hd">카테고리별 지출 <span class="hd-cat-tools"><span class="hd-sub">${cats.length}개</span>${sortSel}</span></div>
-    <div class="cat-bars stats-cat-grid">${rows.map(r=>catRow(r)+(r.isGroup?r.subRows.map(s=>catRow(s,true)).join(''):'')).join('')}</div>
+    <div class="stats-cat-wrap"><div class="cat-bars stats-cat-grid">${rows.map(r=>catRow(r)+(r.isGroup?r.subRows.map(s=>catRow(s,true)).join(''):'')).join('')}</div></div>
   </div>`;
 
   // 사람별 분담 — v3.69 Clean Modern. 계산(_participantSplit/_attendedOnly)은 선택 기간 recs 그대로.
@@ -10758,6 +10804,8 @@ async function renderDetail(){
       // 카테고리 정렬 드롭다운
       const _sortSel=body.querySelector('#ledgerCatSort');
       if(_sortSel)_sortSel.addEventListener('change',()=>{_ledgerCatSort=_sortSel.value;renderDetail();});
+      // v4.12 — 2열에서 금액이 길어 카테고리 이름이 눌리면(천만 원대 등) 이 화면만 1열로
+      requestAnimationFrame(()=>{const g=body.querySelector('.stats-cat-grid');if(g&&[...g.querySelectorAll('.cat-bar-name')].some(n=>n.getBoundingClientRect().width<30))g.classList.add('one-col');});
       // 카테고리 막대 클릭 → 사이드바 필터
       body.querySelectorAll('.cat-bar-row[data-cat]').forEach(row=>{
         row.addEventListener('click',()=>{
