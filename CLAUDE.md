@@ -18,7 +18,7 @@
 - `README.md` — GitHub repo 첫 페이지용 한글 설명(첫 줄에 버전)
 - `CLAUDE.md` — 이 파일(규칙·함정·현재 상태). **변경 이력은 `CHANGELOG.md`**
 - `icons/` — PWA 아이콘(`icon-192/512.png`, `apple-touch-icon.png`) + 카테고리 `icons/categories/*.svg` 16종
-- `scripts/check_app.py` — 릴리스 검사(버전·README·`CACHE_NAME` 일치, 오프라인 파일·아이콘). **push 전에 실행**
+- `scripts/check_app.py` — 릴리스 검사(버전·README·`CACHE_NAME` 일치, 오프라인 파일·아이콘, **Dropbox 삭제·덮어쓰기 금지 규칙**). **push 전에 실행**
 - `scripts/check_prepaid.cjs` — 선불권 계산 검사
 - `scripts/receipt_png_to_receipt_db.py` — PNG/JPG 영수증 스크린샷 자동 등록 (맥에서 실행)
 - `scripts/extract_category_svgs.py` — 이전 Illustrator SVG 정리 도구. 확인 적용된 숙박 자산은 덮어쓰지 않도록 제외
@@ -66,6 +66,14 @@
 - ⚠️ **화면 전체 높이를 계산하는 곳(`.shell`·`.app`)은 `--cw-h`를 빼야 한다.**
   미연결 경고 띠가 뜨면 그만큼 아래가 잘린다 (v2.56에서 `.app` 누락분 수정).
 
+## 🚫 Dropbox 파일은 절대 지우지 않는다 (v4.10 · 최우선 규칙)
+- v4.04 '중복 정리'가 판정을 잘못해 완료 JPG 수십 개를 지웠다(v4.09에서 휴지통 복원). 그 뒤로 **앱의 '지우기'는 전부 `_dbxTrash`** —
+  `영수증(RECEIPT-DB)/정리 보관함/YYYY-MM-DD/<원래 경로>`로 옮긴다. 사용자가 비우기 전까지 남고, 원래 폴더로 옮기면 되살아난다.
+- 실제 삭제(`files/delete_v2`)는 `_dbxDeleteAutoSnapshot` 한 곳 — 매일 자동 백업 30개 초과분만. `delete_batch`·`permanently_delete` 금지.
+- 완료 폴더에 `autorename:true` 금지(`(1)` 사본), `mode:'overwrite'`는 images/ 사진 백업만. 이름 바꾸기·옮기기는 같은 이름이 있으면 하지 않는다.
+- **`python3 scripts/check_app.py`가 위 규칙을 어기면 실패한다** — 규칙을 풀지 말고 코드를 고칠 것.
+- 파일을 옮기거나 연결을 바꾸는 새 기능은 가짜 Dropbox(`page.route`)로 **실행 전후 파일 목록을 비교**해 검증한다(이름·내용·개수, 휴지통·보관함 포함).
+
 ## ⚠️ Dropbox 데이터 경로 (v2.33~ · /07_Apps 통합)
 모든 앱 데이터를 Dropbox `/07_Apps/` 아래로 모으면서 이 앱도 이동했다.
 
@@ -76,6 +84,7 @@
   완료 PDF/YYYY-MM/    — 등록된 PDF가 같은 규칙으로 옮겨짐
   images/              — 앱이 관리하는 영수증 사진 원본
   backups/             — 수동 전체 백업 JSON + 매일 자동 백업 receipt-db_auto_YYYY-MM-DD.json(최근 30개, v4.04)
+  정리 보관함/YYYY-MM-DD/ — 앱이 '지운' 파일(중복 정리·옛 폴더 정리). 실제로는 지우지 않고 여기로 옮긴다(v4.10)
   receipt-db_sync.json · receipt-db_inbox.json
 ```
 
@@ -111,7 +120,7 @@
 - ⚠️ **한글 파일 이름은 NFC/NFD가 섞여 있다**(맥에서 만든 이름은 자모 분리 NFD). 이름·경로 비교는 반드시 `_nfc`·`_pkey`(NFC+소문자)·`_baseKey`(확장자 제외)로(v4.06).
 - 이름 정리는 **같은 이름(확장자·정규화 무시)의 다른 파일이 있으면 옮기지 않는다** — 사용자가 편집한 원본이 그 이름을 쓰면 앱 사진은 `(N)` 이름 그대로 둔다(v4.06).
 - ⚠️ **완료 JPG와 완료 PDF를 한 목록으로 이름 비교하지 말 것**(v4.09). 맥 PDF 스크립트는 같은 이름의 JPG와 PDF를 만든다 — v4.04 '중복 정리'가 이 짝의 PDF를 원본, JPG를 앱 사본으로 오판해 JPG 수십 개를 지우고 연결을 PDF로 바꿨다(`_dbxRepairV404`가 휴지통에서 복원·재연결). 사진 영수증은 완료 JPG에만 연결한다.
-- ⚠️ **'중복 정리'는 content_hash가 같은 파일만 지운다.** `(N)` 파일이 사용자가 따로 편집한 다른 사진일 수 있다(실사례: 카드 전표만 vs 전표+메뉴판 합본 — v4.06). 내용이 다른 파일은 절대 자동 삭제하지 말고 목록으로 알리기만 한다.
+- ⚠️ **'중복 정리'는 content_hash가 같은 파일만 정리 보관함으로 옮긴다.** `(N)` 파일이 사용자가 따로 편집한 다른 사진일 수 있다(실사례: 카드 전표만 vs 전표+메뉴판 합본 — v4.06). 내용이 다른 파일은 절대 자동 삭제하지 말고 목록으로 알리기만 한다.
 
 ### 매일 자동 백업 (v4.04)
 - `_dbxDailySnapshot` — 그날 첫 동기화에서 **이 기기가 올리기 전** 서버 `receipt-db_sync.json`을 `copy_v2`로 `backups/receipt-db_auto_YYYY-MM-DD.json`에 복사(사진 제외 — 사진은 `images/`), 최근 30개만 유지. 'Dropbox에서 복원' 목록에 그대로 나온다. 마지막 날짜는 localStorage `dbx_auto_snap_day`.
@@ -408,7 +417,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 검색 적용(`_applySearchInput`)은 **검색어가 그대로면 아무것도 하지 않는다**(v4.07). 한글 조합 중 결과 카드를 누르면 blur로 `compositionend`·`input`이 늦게 와 같은 검색어가 다시 적용되며 `selectedId`를 지워 상세가 검색 결과로 튕겼다. `selectReceipt`는 대기 중인 검색 타이머를 끈다. Playwright `keyboard.type`은 조합이 없어 재현되지 않으니 composition 이벤트를 직접 보내 검증.
 
 ## 현재 상태 (2026-09-27 기준)
-- **버전 `v4.09`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
+- **버전 `v4.10`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
 - 데이터: 실데이터 백업 기준 영수증 151건(2025-03 ~ 2026-09), 사진 142장, 선불권 사용. 3,000건 가상 데이터에서도 목록 0.01초·검색 0.1초·사람 화면 0.4초(데스크탑).
 
 ### 작업 흐름 (Claude Code 웹 세션)

@@ -68,6 +68,27 @@ def main() -> int:
     if re.search(r'data-id="\$\{(?:r\.id|it\.receiptId)\}"', index):
         errors.append("이스케이프하지 않은 영수증 ID 속성이 남아 있습니다")
 
+    # v4.10 — Dropbox 파일 안전 규칙. 앱은 Dropbox 파일을 지우지 않는다('지우기' = 정리 보관함으로 옮기기, _dbxTrash).
+    #   v4.04 '중복 정리'가 완료 JPG 수십 개를 잘못 지운 사고(v4.09 복구) 뒤 세운 규칙이라, 새 코드가 어기면 릴리스를 막는다.
+    app_js = index + "\n" + (ROOT / "prepaid.js").read_text(encoding="utf-8") + "\n" + worker
+    for banned in ("files/delete_batch", "files/permanently_delete", "files/delete\"", "files/delete'"):
+        if banned in app_js:
+            errors.append(f"Dropbox 삭제 API를 쓰면 안 됩니다(정리 보관함 _dbxTrash 사용): {banned}")
+    delete_calls = [m.start() for m in re.finditer(r"'https://api\.dropboxapi\.com/2/files/delete_v2'", app_js)]
+    snap = re.search(r"async function _dbxDeleteAutoSnapshot\(token,path\)\{.*?\n\}", index, re.S)
+    if len(delete_calls) != 1 or not snap or "files/delete_v2" not in snap.group(0):
+        errors.append(f"files/delete_v2는 _dbxDeleteAutoSnapshot 한 곳에서만 쓸 수 있습니다(현재 {len(delete_calls)}곳) — 파일은 _dbxTrash로 정리 보관함에 옮길 것")
+    elif "receipt-db_auto_" not in snap.group(0) or "_dbxBackupDir()" not in snap.group(0):
+        errors.append("_dbxDeleteAutoSnapshot이 자동 백업 경로만 지우도록 제한되어 있지 않습니다")
+    lines = index.splitlines()
+    for no, line in enumerate(lines, 1):
+        if "mode:'overwrite'" in line and "_dbxImagesDir()" not in line:
+            errors.append(f"index.html:{no} 덮어쓰기(mode:'overwrite')는 images/ 사진 백업에만 허용됩니다")
+        if "autorename:true" in line and not line.lstrip().startswith("//"):
+            window = "\n".join(lines[max(0, no - 5):no])
+            if not any(k in window for k in ("_dbxBackupDir()", "_dbxTrashDir()", "_dbxScanDir()")):
+                errors.append(f"index.html:{no} autorename:true는 백업·정리 보관함·스캔함에만 허용됩니다(완료 폴더에 '(1)' 사본이 생김)")
+
     if errors:
         for error in errors:
             print(f"FAIL: {error}", file=sys.stderr)
