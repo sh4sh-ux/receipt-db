@@ -3730,6 +3730,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.06 — 완료 폴더 이름 비교를 유니코드 정규화(NFC)·확장자 무시로(맥 NFD 이름을 못 알아보던 것), '중복 정리'는 바이트 동일 파일만 삭제(사용자 편집본 보호), 같은 이름이 있으면 이름 정리 안 함, 끊긴 연결 복구.
 // v4.05 — '중복 정리'가 앱 사본을 이 기기 사진이 아니라 Dropbox images/ 백업과 비교(원본 이름 파일은 절대 삭제 안 함, 이미 연결된 사본 우선 보존, 남긴 파일 안내) + 진행 토스트가 안 닫히던 것 수정.
 // v4.04 — 완료 JPG 중복 사본('이름 (1)(2)…') 원인 수정(올리기 전 원본 연결·autorename 금지·머지가 연결 유지·중복 정리가 원본에 재연결) + 매일 자동 백업(backups/receipt-db_auto_날짜.json, 30개) + 저장공간 영구 보존 요청. 변경 이력은 CHANGELOG.md.
 // v4.03 — 시간을 보조 정보로: 날짜보다 작고(13px·좁은 폰 12px) 옅게(--text-secondary), 빈 칸 '+ 시간'도 파랑 → 회색. 날짜는 375에서도 14px 유지.
@@ -4125,7 +4126,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.05';
+const APP_VERSION='v4.06';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -12654,12 +12655,18 @@ async function _dbxFileMeta(path){
 async function _dbxPathExists(path){const m=await _dbxFileMeta(path);return m?(m.path_display||path):false;}
 // v4.04 — 완료 폴더 중복 사본 방지 헬퍼.
 //   확장자는 '.영문숫자 2~5자'일 때만 확장자로 본다(확장자 없는 파일에서 마지막 글자를 떼던 버그).
+// v4.06 — 한글 파일 이름은 만든 곳에 따라 유니코드 정규화가 다르다(맥 Finder·스크립트는 자모 분리 NFD, 앱은 NFC).
+//   화면엔 똑같이 보여도 문자열 비교가 틀려, 맥 원본을 이 영수증 파일로 못 알아봤다. 이름·경로 비교는 전부 이걸 거친다.
+function _nfc(v){return String(v||'').normalize('NFC');}
+function _pkey(p){return _nfc(p).toLowerCase();}
+// 확장자를 뺀 이름 키 — '두레국수'(확장자 없음·NFD)와 '두레국수.jpg'(NFC)를 같은 이름으로 본다(겉보기에 같은 이름을 두 개 만들지 않게)
+function _baseKey(p){const k=_pkey(p);const e=_fileExt(k);return e?k.slice(0,-e.length):k;}
 function _fileExt(name){const m=String(name||'').match(/\.[A-Za-z0-9]{2,5}$/);return m?m[0]:'';}
 function _dupSuffixToken(rec){return String(rec&&rec.id||'receipt').replace(/[^a-zA-Z0-9_-]/g,'').slice(-14)||'receipt';}
 // 이 영수증의 이름을 가진 파일인가 — 정식 이름 그대로, Dropbox 자동 사본 '이름 (N)', 앱 충돌 회피 '이름-<ID>(-N)'
 function _isOwnNameFor(rec,name){
-  const canon=_scanFileName(rec);if(!canon)return false;
-  let b=String(name||'');const ext=_fileExt(b);if(ext)b=b.slice(0,-ext.length);
+  const canon=_nfc(_scanFileName(rec));if(!canon)return false;
+  let b=_nfc(name);const ext=_fileExt(b);if(ext)b=b.slice(0,-ext.length);
   if(b===canon)return true;
   if(!b.startsWith(canon))return false;
   const tail=b.slice(canon.length);
@@ -12672,7 +12679,7 @@ async function _dbxDoneFiles(token,isImg){
 }
 // 다른 영수증이 이미 쓰고 있는 완료본 경로(소문자 — Dropbox 경로는 대소문자 무시)
 function _linkedDonePaths(exceptId){
-  const s=new Set();for(const r of receipts)if(r.scanPath&&r.id!==exceptId)s.add(r.scanPath.toLowerCase());return s;
+  const s=new Set();for(const r of receipts)if(r.scanPath&&r.id!==exceptId)s.add(_pkey(r.scanPath));return s;
 }
 async function _dropboxContentHash(data){
   let bytes;
@@ -12700,9 +12707,23 @@ async function _dbxRenameScanFile(rec){
   const dir=cur.slice(0,cur.lastIndexOf('/'));
   const ext=_fileExt(cur);   // v4.04 — 확장자 없는 파일에서 마지막 글자를 떼지 않게
   const want=dir+'/'+_scanFileName(rec)+ext;
-  if(want===cur)return false;
+  if(_pkey(want)===_pkey(cur))return false;
   try{
     const token=await _dbxToken();
+    // v4.06 — 같은 이름(확장자·정규화 무시)의 다른 파일이 이미 있으면 옮기지 않는다(사용자 편집본이 그 이름을 쓰는 경우)
+    try{
+      const all=await _dbxListAll(token,dir);
+      const fl=(all||[]).filter(e=>e['.tag']==='file');
+      // 연결된 파일이 이미 없으면(정리·다른 기기가 지움) 이 영수증 이름의 파일로 다시 연결 — 같은 사진 → 정식 이름 순
+      if(all&&!fl.some(e=>_pkey(e.path_display)===_pkey(cur))){
+        const linked=_linkedDonePaths(rec.id);
+        const own=fl.filter(e=>!linked.has(_pkey(e.path_display))&&_isOwnNameFor(rec,e.name||e.path_display.split('/').pop()));
+        const lh=await _receiptDropboxHash(rec);
+        const pick=own.find(e=>lh&&e.content_hash===lh)||own.find(e=>_baseKey(e.path_display)===_baseKey(want))||own[0];
+        if(pick){ rec.scanPath=pick.path_display; return true; }
+      }
+      if(all&&fl.some(e=>_baseKey(e.path_display)===_baseKey(want)&&_pkey(e.path_display)!==_pkey(cur)))return false;
+    }catch(e){}
     for(let n=1;n<=5;n++){
       const to=n===1?want:dir+'/'+_scanFileName(rec)+`-${n}`+ext;
       const r=await fetch('https://api.dropboxapi.com/2/files/move_v2',{method:'POST',
@@ -13194,17 +13215,20 @@ async function _buildScanRenamePlan(token){
   const plan=[];
   receipts=await dbAll('receipts');
   const byPath=new Map();
-  for(const r of receipts)if(r.scanPath)byPath.set(r.scanPath.toLowerCase(),r);
+  for(const r of receipts)if(r.scanPath)byPath.set(_pkey(r.scanPath),r);
   const claimed=new Set();       // 이번 계획에서 이미 파일을 받은 영수증
   const targets=new Set();       // 이번 계획의 목적지(두 파일을 같은 이름으로 옮기지 않게)
   for(const isImg of [true,false]){
     const all=await _dbxListAll(token,_dbxScanDoneDir(isImg));
+    // v4.06 — 이미 있는 이름(확장자·유니코드 정규화 무시). 같은 이름이 있으면 옮기지 않는다 — 사용자가 편집해 둔 원본이
+    //   그 이름을 쓰고 있으면 앱 사진은 '(N)' 이름 그대로 둔다(겉보기에 같은 이름 두 개가 생기지 않게).
+    const taken=new Set((all||[]).filter(e=>e['.tag']==='file').map(e=>_baseKey(e.path_display)));
     for(const f of (all||[]).filter(e=>e['.tag']==='file')){
       const cur=f.path_display;
       const nm=cur.slice(cur.lastIndexOf('/')+1);
       const ext=_fileExt(nm);
       // ① 경로로 짝을 찾고, 없으면 ② 파일명의 날짜로 찾는다
-      let rec=byPath.get(cur.toLowerCase()), link=false;
+      let rec=byPath.get(_pkey(cur)), link=false;
       if(!rec){
         // v4.04 — 날짜로 짝지을 때는 아직 파일이 없는(scanPath 없는) 영수증만 후보로 삼는다.
         //   전엔 이미 자기 파일이 있는 영수증에도 남의 파일(중복 사본)을 짝지어, 그 파일을 정식 이름으로 옮기다
@@ -13218,9 +13242,10 @@ async function _buildScanRenamePlan(token){
       if(!rec.store&&!rec.total)continue;  // 아직 채울 내용이 없다
       const dir=cur.slice(0,cur.lastIndexOf('/'));
       const want=dir+'/'+_scanFileName(rec)+ext;
-      if(want.toLowerCase()===cur.toLowerCase()){ if(link){claimed.add(rec.id);plan.push({from:cur,to:cur,rec});} continue; }
-      if(targets.has(want.toLowerCase()))continue;
-      targets.add(want.toLowerCase());
+      if(_pkey(want)===_pkey(cur)){ if(link){claimed.add(rec.id);plan.push({from:cur,to:cur,rec});} continue; }
+      if(targets.has(_baseKey(want)))continue;
+      if(taken.has(_baseKey(want))&&_baseKey(want)!==_baseKey(cur)){ if(link){claimed.add(rec.id);plan.push({from:cur,to:cur,rec});} continue; }
+      targets.add(_baseKey(want));
       if(link)claimed.add(rec.id);
       plan.push({from:cur,to:want,rec,link});
     }
@@ -13299,28 +13324,30 @@ async function cleanupDuplicateCompleted(){
   await _dbxResolveRoot();
   const token=await _dbxToken();
   const t=toast('완료 폴더에서 중복(내용 동일)을 찾는 중…',{duration:120000});
-  const groups=[],appCopies=[],unsure=[];   // unsure — 사본으로 보이지만 백업과 달라(또는 백업이 없어) 남긴 파일
+  const groups=[],unsure=[];
+  let _doneAll=[];   // v4.06 — 안내(남긴 꼬리 파일)용으로 try 밖에서도 쓴다   // unsure — 사본으로 보이지만 백업과 달라(또는 백업이 없어) 남긴 파일
   try{
     receipts=await dbAll('receipts');
     // 현재 영수증들이 원하는 정식 파일명(확장자 제외) — 남길 파일 우선순위 판단용
     const canonical=new Set();
-    for(const r of receipts){ if(r.store||r.total){ try{canonical.add(_scanFileName(r));}catch(e){} } }
+    for(const r of receipts){ if(r.store||r.total){ try{canonical.add(_nfc(_scanFileName(r)));}catch(e){} } }
     const files=[];
     for(const isImg of [true,false]){
       const all=await _dbxListAll(token,_dbxScanDoneDir(isImg));
       for(const f of (all||[]).filter(e=>e['.tag']==='file'&&e.content_hash)) files.push(f);
     }
-    const _linkedAll=new Set(receipts.filter(r=>r.scanPath).map(r=>r.scanPath.toLowerCase()));
+    _doneAll=files;
+    const _linkedAll=new Set(receipts.filter(r=>r.scanPath).map(r=>_pkey(r.scanPath)));
     const byHash=new Map();
     for(const f of files){ if(!byHash.has(f.content_hash))byHash.set(f.content_hash,[]); byHash.get(f.content_hash).push(f); }
-    const nameNoExt=p=>{const b=p.slice(p.lastIndexOf('/')+1);const i=b.lastIndexOf('.');return i>0?b.slice(0,i):b;};
+    const nameNoExt=p=>{const b=_nfc(p.slice(p.lastIndexOf('/')+1));const e=_fileExt(b);return e?b.slice(0,-e.length):b;};
     for(const [,arr] of byHash){
       if(arr.length<2)continue; // 유니크 → 건드리지 않음
       arr.sort((a,b)=>{
         const ca=canonical.has(nameNoExt(a.path_display))?1:0;
         const cb=canonical.has(nameNoExt(b.path_display))?1:0;
         if(ca!==cb)return cb-ca;                                   // 정식 이름 우선
-        const la=_linkedAll.has(a.path_lower)?1:0, lb=_linkedAll.has(b.path_lower)?1:0;
+        const la=_linkedAll.has(_pkey(a.path_lower))?1:0, lb=_linkedAll.has(_pkey(b.path_lower))?1:0;
         if(la!==lb)return lb-la;                                   // v4.05 — 그다음 영수증이 이미 연결한 파일(연결을 바꾸지 않게)
         return (b.client_modified||'').localeCompare(a.client_modified||''); // 그다음 최신
       });
@@ -13330,46 +13357,32 @@ async function cleanupDuplicateCompleted(){
     //   이름 정리가 그걸 '(1)(2)…'로 옮기던 버그(v4.03 이전)의 흔적이다. 영수증을 원본에 다시 연결하고,
     //   이 기기 사진과 바이트까지 같은 사본(= 앱이 올린 것)만 지운다. 사진 원본은 images/ 백업이 있을 때만.
     const fname=f=>f.name||f.path_display.slice(f.path_display.lastIndexOf('/')+1);
-    // v4.05 — 기준을 '이 기기 사진'에서 'Dropbox images/ 백업'으로. 기기마다 사진 바이트가 달라(완료본에서 복구한 기기 등)
-    //   사본을 못 알아보거나, 거꾸로 원본을 사본으로 볼 수 있었다. 이제 ① 정식 이름 파일(원본)은 절대 지우지 않고
-    //   ② 꼬리 붙은 파일('(N)'·'-<ID>') 중 images/ 백업과 바이트까지 같은 것만 지운다 — 같은 사진이 images/에 그대로 남는다.
-    for(const rec of receipts){
-      if(!rec.imageId||!(rec.store||rec.total))continue;
-      const linkedOther=_linkedDonePaths(rec.id);
-      const own=files.filter(f=>!linkedOther.has(f.path_lower)&&_isOwnNameFor(rec,fname(f)));
-      if(own.length<2)continue;
-      const canon=_scanFileName(rec);
-      const baseOf=f=>{const n=fname(f);const e=_fileExt(n);return e?n.slice(0,-e.length):n;};
-      const originals=own.filter(f=>baseOf(f)===canon);
-      if(originals.length!==1)continue;                         // 원본이 없거나 둘이면 판단하지 않는다
-      const bak=await _dbxFileMeta(_dbxImagesDir()+'/'+rec.imageId+'.jpg');
-      const suffixed=own.filter(f=>baseOf(f)!==canon);
-      const copies=bak&&bak.content_hash?suffixed.filter(f=>f.content_hash===bak.content_hash):[];   // 사진 백업이 없으면 지우지 않는다
-      for(const f of suffixed)if(!copies.includes(f))unsure.push(f);
-      if(!copies.length)continue;
-      appCopies.push({rec,keep:originals[0],remove:copies});
-    }
+    // v4.06 — '원본이 있으면 앱 사본을 지우는' 단계(v4.04~05)는 없앴다. 꼬리 붙은 파일이 사용자가 따로 편집한 다른 사진인
+    //   경우가 실제로 있었다(카드 전표만 vs 전표+메뉴판 합본). 이 도구는 **바이트까지 같은 파일만** 지운다.
+    //   이름에 '(N)'이 붙었지만 내용이 다른 파일은 그대로 두고 아래 안내에만 적는다.
   }catch(e){ t?.remove?.(); toast('살펴보기 실패: '+(e.message||e),{type:'error'}); return; }
   t?.remove?.();
 
   const _seenDel=new Set();
-  const removeAll=[...groups.flatMap(g=>g.remove),...appCopies.flatMap(a=>a.remove)].filter(f=>!_seenDel.has(f.path_lower)&&_seenDel.add(f.path_lower));
+  const removeAll=groups.flatMap(g=>g.remove).filter(f=>!_seenDel.has(f.path_lower)&&_seenDel.add(f.path_lower));
   // 같은 내용 사본 그룹에서 지워지는 파일은 '확인 못 한 사본' 목록에서 뺀다
+  // v4.06 — '(N)' 꼬리가 붙었는데 이번에 손대지 않은 파일도 알려 준다(조용히 건너뛰면 왜 남았는지 알 수 없다).
+  const _unsureKeys=new Set(unsure.map(f=>f.path_lower));
+  for(const f of _doneAll){ const n=_nfc(f.name||f.path_display.split('/').pop()); if(/ \(\d+\)(\.[A-Za-z0-9]{2,5})?$/.test(n)&&!_seenDel.has(f.path_lower)&&!_unsureKeys.has(f.path_lower)){unsure.push(f);_unsureKeys.add(f.path_lower);} }
   const _unsureLeft=unsure.filter(f=>!_seenDel.has(f.path_lower));
-  const _unsureNote=_unsureLeft.length?`\n\n※ 사본처럼 보이지만 사진 백업(images/)과 내용이 달라 남겨 두는 파일 ${_unsureLeft.length}개:\n`
+  const _unsureNote=_unsureLeft.length?`\n\n※ 이름에 (숫자)가 붙었지만 내용이 달라 그대로 두는 파일 ${_unsureLeft.length}개:\n`
     +_unsureLeft.slice(0,5).map(f=>'  · '+(f.name||f.path_display.split('/').pop())).join('\n')+(_unsureLeft.length>5?`\n  … 외 ${_unsureLeft.length-5}개`:''):'';
   if(!removeAll.length){ alert('정리할 중복 파일이 없습니다.\n(서로 다른 사진은 중복으로 판정하지 않습니다.)'+_unsureNote); return; }
   const base=p=>p.slice(p.lastIndexOf('/')+1);
-  const shown=[...appCopies.map(a=>({keep:a.keep,remove:a.remove})),...groups.filter(g=>!appCopies.some(a=>a.remove.some(r=>r.path_lower===g.keep.path_lower)))];
+  const shown=groups;
   const sample=shown.slice(0,6).map(g=>
     '  ✓ 남김: '+base(g.keep.path_display)+'\n'+g.remove.map(r=>'  ✕ 삭제: '+base(r.path_display)).join('\n')).join('\n');
-  if(!confirm(`중복 사본 ${removeAll.length}개를 삭제합니다.\n· 내용이 완전히 같은 파일은 1개만 남깁니다.\n· 원본이 있는 영수증은 원본만 남기고 앱이 따로 올린 사본(사진은 images/ 백업에 그대로 있음)을 지웁니다.\n\n${sample}`
+  if(!confirm(`중복 사본 ${removeAll.length}개를 삭제합니다.\n· 내용이 완전히 같은 파일은 1개만 남깁니다.\n\n${sample}`
     +(shown.length>6?`\n  … 외 ${shown.length-6}건`:'')+_unsureNote+'\n\n계속할까요?'))return;
 
   const lt=toast('중복 삭제 중…',{duration:300000});
   const plannedKeeperFor=new Map();
   for(const g of groups)for(const r of g.remove)plannedKeeperFor.set(r.path_display,g.keep.path_display);
-  for(const a of appCopies)for(const r of a.remove)plannedKeeperFor.set(r.path_display,a.keep.path_display);
   for(const [k,v] of plannedKeeperFor){ let hop=v,guard=0; while(plannedKeeperFor.has(hop)&&guard++<10)hop=plannedKeeperFor.get(hop); plannedKeeperFor.set(k,hop); }
   const keeperFor=new Map();  // 실제 삭제에 성공한 경로 → 남긴 경로
   let done=0;
@@ -13378,16 +13391,14 @@ async function cleanupDuplicateCompleted(){
       const r=await fetch('https://api.dropboxapi.com/2/files/delete_v2',{method:'POST',
         headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
         body:JSON.stringify({path:f.path_display})});
-      if(r.ok){done++;keeperFor.set(f.path_display,plannedKeeperFor.get(f.path_display));}
+      if(r.ok){done++;keeperFor.set(_pkey(f.path_display),plannedKeeperFor.get(f.path_display));}
       else console.warn('dedup delete:',f.path_display,await r.text());
     }catch(e){console.warn('dedup delete:',f.path_display,e.message||e);}
   }
   // 삭제된 파일을 참조하던 영수증은 남긴 파일로 다시 연결(끊긴 참조 방지)
   let fixed=0;
   for(const rec of receipts){
-    const a=appCopies.find(x=>x.rec.id===rec.id);
-    if(a&&a.remove.every(r=>keeperFor.has(r.path_display))&&rec.scanPath!==a.keep.path_display){ rec.scanPath=a.keep.path_display; await dbPut('receipts',rec); fixed++; continue; }
-    if(rec.scanPath&&keeperFor.has(rec.scanPath)){ rec.scanPath=keeperFor.get(rec.scanPath); await dbPut('receipts',rec); fixed++; }
+    if(rec.scanPath&&keeperFor.has(_pkey(rec.scanPath))){ rec.scanPath=keeperFor.get(_pkey(rec.scanPath)); await dbPut('receipts',rec); fixed++; }
   }
   lt?.remove?.();
   receipts=await dbAll('receipts');
@@ -14147,12 +14158,12 @@ async function _dbxArchiveReceiptPhoto(rec,doneFiles){
     //   원본 이름으로 옮기다 Dropbox 자동 이름 '(1)(2)(3)…' 사본이 쌓였다.
     const files=doneFiles||await _dbxDoneFiles(token,!isPdf);
     const linked=_linkedDonePaths(rec.id);
-    const free=files.filter(f=>!linked.has(String(f.path_lower||f.path_display||'').toLowerCase()));
+    const free=files.filter(f=>!linked.has(_pkey(f.path_lower||f.path_display)));
     const own=free.filter(f=>_isOwnNameFor(rec,f.name||f.path_display.slice(f.path_display.lastIndexOf('/')+1)));
     //   내용이 다른 파일은 같은 이름(날짜·금액·매장)을 쓰는 다른 영수증이 없을 때만 채택(우연히 같은 두 영수증의 파일이 뒤바뀌지 않게).
     const nameUnique=!receipts.some(r=>r.id!==rec.id&&_scanFileName(r)===base);
     const adopt=free.find(f=>f.content_hash&&f.content_hash===localContentHash)
-      ||(nameUnique&&(own.find(f=>f.content_hash!==localContentHash&&(f.name||'').replace(/\.[A-Za-z0-9]{2,5}$/,'')===base)   // 정식 이름의 원본
+      ||(nameUnique&&(own.find(f=>f.content_hash!==localContentHash&&_nfc(f.name).replace(/\.[A-Za-z0-9]{2,5}$/,'')===_nfc(base))   // 정식 이름의 원본
       ||own[0]));
     if(adopt){ rec.scanPath=adopt.path_display; await dbPut('receipts',rec); return true; }
     let existing=await _dbxFileMeta(path);
@@ -14178,7 +14189,7 @@ async function _dbxArchiveReceiptPhoto(rec,doneFiles){
     const meta=await resp.json();
     rec.scanPath=meta?.path_display||path;
     await dbPut('receipts',rec);
-    if(doneFiles)doneFiles.push({...meta,name:meta?.name||path.slice(path.lastIndexOf('/')+1),path_display:rec.scanPath,path_lower:rec.scanPath.toLowerCase()});
+    if(doneFiles)doneFiles.push({...meta,name:meta?.name||path.slice(path.lastIndexOf('/')+1),path_display:rec.scanPath,path_lower:_pkey(rec.scanPath)});
     return true;
   }catch(e){ console.warn('archive photo:',e.message||e); return false; }
 }
