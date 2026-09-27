@@ -105,6 +105,8 @@
 - 동기화 순서: 이름 정리·맥 원본 연결(`_autoRenameCompleted`) **먼저**, 그다음 사본 업로드(`_dbxArchivePending`).
 - 날짜로 파일을 짝지을 때는 **아직 `scanPath`가 없는 영수증만** 후보. 이미 파일이 있는 영수증의 연결을 바꾸지 않는다.
 - `_dbxMerge`는 이긴 쪽(최신본)에 `scanPath`가 없으면 이 기기 값을 지킨다(연결이 지워지면 사진을 또 올린다).
+- ⚠️ **완료본 연결은 `_putScanPath`로 최신 레코드에 scanPath만 적는다**(v4.08). 네트워크를 기다린 뒤 들고 있던 레코드를 통째로 dbPut하면 그 사이의 수정(매장명 등)을 덮는다. 상세 저장 뒤 이름 정리는 `_detailBgQueue`로 한 줄로 — 연달아 저장하면 겹쳐 파일이 중간 이름으로 남고 연결이 끊겼다. 상세 저장 때 scanPath는 DB 값을 쓴다.
+- 끊긴 연결(scanPath 파일이 폴더에 없음)은 동기화 때 `_dbxHealDoneLinks`가 다시 잇는다(30분에 한 번, 같은 사진 → 이 영수증 이름 → 없으면 재업로드, 삭제 없음). 사용자가 완료 폴더에서 지운 파일도 다시 올라온다.
 - 확장자는 `_fileExt`(`.영문숫자 2~5자`)로만 판정 — `lastIndexOf('.')`는 확장자 없는 파일에서 마지막 글자를 뗀다.
 - ⚠️ **한글 파일 이름은 NFC/NFD가 섞여 있다**(맥에서 만든 이름은 자모 분리 NFD). 이름·경로 비교는 반드시 `_nfc`·`_pkey`(NFC+소문자)·`_baseKey`(확장자 제외)로(v4.06).
 - 이름 정리는 **같은 이름(확장자·정규화 무시)의 다른 파일이 있으면 옮기지 않는다** — 사용자가 편집한 원본이 그 이름을 쓰면 앱 사진은 `(N)` 이름 그대로 둔다(v4.06).
@@ -134,7 +136,7 @@ Receipt {
   treat: true,                 // 선택 — 한턱(결제자 전액)
   treatBy: {type:'relationGroup',groupId,members:[...]}, // 선택 — 공동 한턱 주체 snapshot (v3.70)
   meetingId: "mtg_xxx",        // 선택 — 같은 만남 연결 (v3.46)
-  meetingOrder: 2,             // 선택 — 만남 안 차수(표시 전용, v3.83)
+  meetingOrder: 2,             // 선택 — 만남 안 차수(표시 전용, v3.83). 만남의 모든 영수증에 시간이 있으면 무시하고 날짜+시간 순(v4.08)
   imageId: "img_xxx",          // images store 키
   imageHash, photoClaim,       // 사진 무결성 확인용
   scanPath: "/07_Apps/…/완료 JPG/260519_영수증(27,020)_하나로마트 청담점.jpg", // 연결된 완료본 (위 「완료 폴더 규칙」)
@@ -405,7 +407,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 검색 적용(`_applySearchInput`)은 **검색어가 그대로면 아무것도 하지 않는다**(v4.07). 한글 조합 중 결과 카드를 누르면 blur로 `compositionend`·`input`이 늦게 와 같은 검색어가 다시 적용되며 `selectedId`를 지워 상세가 검색 결과로 튕겼다. `selectReceipt`는 대기 중인 검색 타이머를 끈다. Playwright `keyboard.type`은 조합이 없어 재현되지 않으니 composition 이벤트를 직접 보내 검증.
 
 ## 현재 상태 (2026-09-27 기준)
-- **버전 `v4.07`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
+- **버전 `v4.08`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
 - 데이터: 실데이터 백업 기준 영수증 151건(2025-03 ~ 2026-09), 사진 142장, 선불권 사용. 3,000건 가상 데이터에서도 목록 0.01초·검색 0.1초·사람 화면 0.4초(데스크탑).
 
 ### 작업 흐름 (Claude Code 웹 세션)

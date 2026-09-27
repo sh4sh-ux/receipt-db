@@ -3730,6 +3730,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.08 — ① 만남 차수: 모든 영수증에 시간이 있으면 날짜+시간 순으로 자동(순서 변경 버튼 대신 '시간순' 안내), 행에 시간 표시. ② 매장명을 연달아 고치면 완료본 이름 정리가 겹쳐 두 번째 수정이 옛 값으로 덮이고 파일이 중간 이름으로 남던 것 — 이름 정리를 한 줄로 세우고 최신 레코드에 scanPath만 기록. ③ 연결된 완료본이 폴더에 없으면 동기화 때 다시 찾아 연결(없으면 이 기기 사진으로 다시 올림, 30분에 한 번).
 // v4.07 — 검색 후 결과 카드를 누르면 영수증이 열렸다가 검색 결과로 튕겨 돌아가던 것(한글 입력 종료가 늦게 와 같은 검색어를 다시 적용하며 선택을 지움) — 검색어가 그대로면 무시, 카드 선택 시 대기 중인 검색 적용 취소.
 // v4.06 — 완료 폴더 이름 비교를 유니코드 정규화(NFC)·확장자 무시로(맥 NFD 이름을 못 알아보던 것), '중복 정리'는 바이트 동일 파일만 삭제(사용자 편집본 보호), 같은 이름이 있으면 이름 정리 안 함, 끊긴 연결 복구.
 // v4.05 — '중복 정리'가 앱 사본을 이 기기 사진이 아니라 Dropbox images/ 백업과 비교(원본 이름 파일은 절대 삭제 안 함, 이미 연결된 사본 우선 보존, 남긴 파일 안내) + 진행 토스트가 안 닫히던 것 수정.
@@ -4127,7 +4128,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.07';
+const APP_VERSION='v4.08';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -8242,6 +8243,28 @@ async function _mtgApply(recs, mutate){
   dbxSyncUpload().catch(()=>{});
   return true;
 }
+// v4.08 — 상세 저장 뒤 완료본 이름 정리(백그라운드). 매장명을 연달아 두 번 고치면 첫 번째 이름 정리가 끝나기 전에
+//   두 번째가 시작돼 ① 첫 번째가 들고 있던 옛 레코드로 두 번째 수정을 덮고 ② 두 번째는 옮기기 전 경로로 판단해 파일이
+//   중간 이름으로 남고 연결이 끊겼다. → 한 번에 하나씩(앞의 것이 끝난 뒤), 매번 DB의 최신 레코드로, scanPath만 기록.
+let _detailBgChain=Promise.resolve();
+function _detailBgQueue(id){
+  _detailBgChain=_detailBgChain.then(()=>_detailBgRun(id)).catch(e=>console.warn('detail background sync:',e));
+  return _detailBgChain;
+}
+async function _detailBgRun(id){
+  try{
+    let renamed=(await _autoRenameCompleted())>0;
+    const rec=await dbGet('receipts',id);
+    if(rec){
+      const before=rec.scanPath||'';
+      if(rec.scanPath){ if(await _dbxRenameScanFile(rec))renamed=true; }
+      else if(rec.imageId){ if(await _dbxArchiveReceiptPhoto(rec))renamed=true; }
+      if((rec.scanPath||'')!==before)await _putScanPath(rec);
+    }
+    if(renamed)toast('완료본 파일 이름도 정리했어요',{type:'success'});
+  }catch(e){ console.warn('detail background sync:',e); }
+  dbxSyncNow(true);
+}
 // ── v3.83 만남 차수(meetingOrder) — 표시·기록 순서 전용 optional metadata ──
 //   ⚠️ 계산(total·paidBy·participants·splitExclude·treat·treatBy·Person·Meeting count·단둘이/여럿이·Relation Group·분담·통계)과
 //   Dutch Pay payload에 절대 쓰지 않는다. 같은 meetingId에 실제 receipt 2건 이상일 때만 의미가 있고, 만남 상세/편집에서만 보인다.
@@ -8250,6 +8273,8 @@ async function _mtgApply(recs, mutate){
 function _mtgHasOrder(r){const n=r&&r.meetingOrder;return Number.isInteger(n)&&n>0;}
 function _mtgOrdered(recs){
   const base=_mtgSortByDate(recs||[]);
+  if(_mtgByTime(base))return [...base].sort((a,b)=>(a.date||'').localeCompare(b.date||'')||_mtgTime(a).localeCompare(_mtgTime(b))
+    ||((_mtgHasOrder(a)&&_mtgHasOrder(b))?a.meetingOrder-b.meetingOrder:0)||String(a.id).localeCompare(String(b.id))); // v4.08 — 시간순(같은 시각만 직접 정한 차수)
   if(!base.some(_mtgHasOrder))return base;
   const idx=new Map(base.map((r,i)=>[r.id,i]));
   return [...base].sort((a,b)=>{const ha=_mtgHasOrder(a),hb=_mtgHasOrder(b);
@@ -8580,7 +8605,7 @@ function _mtgManageOpen(initialTab,init){
     if(!rc.length){view='list';tab='meetings';render();return;}
     const people=_mtgPeopleUnion(rc);
     panel.innerHTML=`<div class="org-hd">${back_}<div class="org-title">${esc2(_mtgCompactTitle(rc))}</div><div class="org-sub">${esc2(_mtgDateLabel(rc))} · 영수증 ${rc.length}건 · ${fmtMoney(_mtgSumTotal(rc))}원</div>${people.length?`<div class="mm-people">참석자 · ${people.map(esc2).join(' · ')}</div>`:''}</div>
-      <div class="org-list mm-list">${rc.map((x,i)=>mmRow(x.store||'(매장명 없음)',x.total||0,fmtDateKor(x.date),null,`data-open="${esc2(x.id)}"`,rc.length>=2?i+1:0)).join('')}</div>
+      <div class="org-list mm-list">${rc.map((x,i)=>mmRow(x.store||'(매장명 없음)',x.total||0,_mtgDateTimeLbl(x),null,`data-open="${esc2(x.id)}"`,rc.length>=2?i+1:0)).join('')}</div>
       <div class="org-actionbar mm-detail-ab"><button type="button" class="mm-btn-sec" id="mmDutch">더치페이로 보내기</button><button type="button" class="org-ab-btn" id="mmEdit">편집</button></div>`;
     document.getElementById('mmBackLbl').textContent='만남';
     panel.querySelector('#mmBack').onclick=back;
@@ -8593,18 +8618,19 @@ function _mtgManageOpen(initialTab,init){
     const rc=_mtgOrdered(_mtgReceiptsById(curMid)); // v3.83 — 차수 순서
     if(!rc.length){view='list';tab='meetings';render();return;}
     const ord=rc.length>=2;
+    const drag=ord&&!_mtgByTime(rc); // v4.08 — 모두 시간이 있으면 시간순 자동(drag 없음)
     // v3.83 — row 선택(분리·이동)과 차수 이동(≡ handle drag)은 역할 분리: handle은 row 밖 형제 요소라 drag가 선택·상세 열기를 일으키지 않는다.
     const rows=rc.map((x,i)=>{const on=editSel.has(x.id);const ppl=[...receiptPeople(x)].join(' · ');
-      return `<div class="mm-erow${on?' sel':''}" data-eid="${esc2(x.id)}"><button type="button" class="org-row${on?' sel':''}" data-id="${esc2(x.id)}" aria-pressed="${on}"><span class="org-check" aria-hidden="true"></span>${ord?`<span class="mm-ord">${i+1}차</span>`:''}<span class="org-row-main"><span class="org-row-top"><span class="org-row-store">${esc2(x.store||'(매장명 없음)')}</span><span class="org-row-amt">${fmtMoney(x.total||0)}원</span></span><span class="org-row-ppl">${esc2(fmtDateKor(x.date))} · ${esc2(ppl)}</span></span></button>`
-        +(ord?`<span class="mm-handle" role="button" tabindex="0" aria-label="${esc2(x.store||'영수증')} 순서 이동 — 드래그 또는 위·아래 화살표" title="드래그해서 순서 변경"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 8h14M5 12h14M5 16h14"/></svg></span>`:'')+`</div>`;}).join('');
-    panel.innerHTML=`<div class="org-hd">${back_}<div class="org-title">만남 편집</div><div class="org-sub">${esc2(_mtgCompactTitle(rc))} · 영수증 ${rc.length}건${ord?' · ≡ 드래그로 차수 변경':''}</div></div>
+      return `<div class="mm-erow${on?' sel':''}" data-eid="${esc2(x.id)}"><button type="button" class="org-row${on?' sel':''}" data-id="${esc2(x.id)}" aria-pressed="${on}"><span class="org-check" aria-hidden="true"></span>${ord?`<span class="mm-ord">${i+1}차</span>`:''}<span class="org-row-main"><span class="org-row-top"><span class="org-row-store">${esc2(x.store||'(매장명 없음)')}</span><span class="org-row-amt">${fmtMoney(x.total||0)}원</span></span><span class="org-row-ppl">${esc2(_mtgDateTimeLbl(x))} · ${esc2(ppl)}</span></span></button>`
+        +(drag?`<span class="mm-handle" role="button" tabindex="0" aria-label="${esc2(x.store||'영수증')} 순서 이동 — 드래그 또는 위·아래 화살표" title="드래그해서 순서 변경"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 8h14M5 12h14M5 16h14"/></svg></span>`:'')+`</div>`;}).join('');
+    panel.innerHTML=`<div class="org-hd">${back_}<div class="org-title">만남 편집</div><div class="org-sub">${esc2(_mtgCompactTitle(rc))} · 영수증 ${rc.length}건${drag?' · ≡ 드래그로 차수 변경':ord?' · 시간순 차수':''}</div></div>
       <div class="org-list mm-elist" id="mmEditList">${rows}</div>
       <div class="mm-edit-tools"><button type="button" class="mm-tool" id="mmAddRcp">＋ 영수증 추가</button><button type="button" class="mm-tool mm-tool-danger" id="mmUnlinkAll">만남 전체 풀기</button></div>
       <div class="org-actionbar mm-ab2"><div class="org-ab-info" id="mmEditInfo"></div><div class="mm-ab-btns"><button type="button" class="mm-btn-sec" id="mmMove" disabled>다른 만남으로 이동</button><button type="button" class="org-ab-btn mm-btn-detach" id="mmDetach" disabled>선택 분리</button></div></div>`;
     document.getElementById('mmBackLbl').textContent='만남';
     panel.querySelector('#mmBack').onclick=back;
     panel.querySelectorAll('.org-row[data-id]').forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(editSel.has(id))editSel.delete(id);else editSel.add(id);editBar();});
-    if(ord)bindReorder(panel.querySelector('#mmEditList'));
+    if(drag)bindReorder(panel.querySelector('#mmEditList'));
     panel.querySelector('#mmAddRcp').onclick=()=>{addSel.clear();view='addReceipts';render();};
     panel.querySelector('#mmUnlinkAll').onclick=async()=>{const ok=await _mtgUnlinkAll(curMid);if(ok){await refresh();view='list';tab='meetings';render();}};
     panel.querySelector('#mmMove').onclick=()=>{const recs=idsToRecs(editSel);if(recs.length<1)return;pendingIds=[...editSel];pickMode='move';view='pick';render();};
@@ -8790,7 +8816,11 @@ function _openPersonDetail(type,initFilter){
 //   표시/전송 흐름만 추가하고 계산·저장구조·Dutch Pay payload는 불변.
 const _MTG_LINK_ICON='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a3 3 0 0 0 3 3h3a3 3 0 0 0 0-6h-1"/><path d="M15 12a3 3 0 0 0-3-3H9a3 3 0 0 0 0 6h1"/></svg>';
 function _mtgReceiptsById(mid){return mid?receipts.filter(r=>r&&r.meetingId===mid):[];}
-function _mtgSortByDate(list){return [...list].sort((a,b)=>(a.date||'').localeCompare(b.date||'')||String(a.id).localeCompare(String(b.id)));}
+function _mtgSortByDate(list){return [...list].sort((a,b)=>(a.date||'').localeCompare(b.date||'')||_mtgTime(a).localeCompare(_mtgTime(b))||String(a.id).localeCompare(String(b.id)));} // v4.08 — 같은 날이면 시간순
+function _mtgTime(r){const t=String(r&&r.time||'');return /^\d{2}:\d{2}$/.test(t)?t:'';}
+// v4.08 — 만남의 모든 영수증에 시간이 있으면 차수 = 날짜+시간 순(자동). 하나라도 없으면 예전처럼 직접 정한 차수(meetingOrder) → 날짜순.
+function _mtgByTime(recs){return (recs||[]).length>=2&&recs.every(r=>_mtgTime(r));}
+function _mtgDateTimeLbl(r){const t=_mtgTime(r);return fmtDateKor(r.date)+(t?' '+t:'');}
 function _mtgSumTotal(recs){return recs.reduce((s,r)=>s+(r.total||0),0);}
 // 만남으로 볼 조건: meetingId가 있고 같은 meetingId 영수증이 2건 이상.
 function _mtgHasMeeting(r){return !!(r&&r.meetingId)&&_mtgReceiptsById(r.meetingId).length>=2;}
@@ -8913,17 +8943,21 @@ function _mtgOpenMeetingDetail(r){
     if(rc.length<1){close();return;}
     const people=_mtgPeopleUnion(rc);
     const stillIn=rc.some(x=>x.id===r.id);
+    const byTime=_mtgByTime(rc); // v4.08 — 모두 시간이 있으면 차수는 시간순(순서 변경 없음)
+    if(byTime)reorder=false;
+    const someTime=rc.some(x=>_mtgTime(x));
     card.innerHTML=`
       <div class="mtg-sheet-hd"><div class="mtg-sheet-title">${escapeHtml(_mtgCompactTitle(rc))}</div><button class="mtg-sheet-x" id="mtgShX" type="button" aria-label="닫기">×</button></div>
       <div class="mtg-sheet-meta">${escapeHtml(_mtgDateLabel(rc))} · 영수증 ${rc.length}건 · ${fmtMoney(_mtgSumTotal(rc))}원</div>
       ${people.length?`<div class="mtg-sheet-people"><div class="mtg-sheet-plbl">참석자</div><div class="mtg-sheet-pnames">${people.map(escapeHtml).join(' · ')}</div></div>`:''}
       <div class="mtg-sheet-divider"></div>
-      ${rc.length>=2?`<div class="mtg-ord-bar"><span class="mtg-ord-hint">${reorder?'≡를 끌어서 차수를 바꿔요':''}</span><button type="button" class="mtg-ord-btn${reorder?' on':''}" id="mtgShOrd">${reorder?'완료':'순서 변경'}</button></div>`:''}
-      ${reorder?`<div class="mm-elist mtg-elist" id="mtgShList">${rc.map((x,i)=>`<div class="mm-erow mtg-erow${x.id===r.id?' cur':''}" data-eid="${escapeHtml(x.id)}"><span class="mm-ord">${i+1}차</span><span class="mtg-erow-main"><span class="mtg-erow-store">${escapeHtml(x.store||'(매장명 없음)')}</span><span class="mtg-erow-date">${escapeHtml(fmtDateKor(x.date))}</span></span><span class="mtg-erow-amt">${fmtMoney(x.total||0)}원</span>${HANDLE}</div>`).join('')}</div>`:
+      ${rc.length>=2?(byTime?`<div class="mtg-ord-bar"><span class="mtg-ord-hint">시간순으로 차수를 정해요</span></div>`
+        :`<div class="mtg-ord-bar"><span class="mtg-ord-hint">${reorder?'≡를 끌어서 차수를 바꿔요':someTime?'시간을 모두 넣으면 시간순으로 정해져요':''}</span><button type="button" class="mtg-ord-btn${reorder?' on':''}" id="mtgShOrd">${reorder?'완료':'순서 변경'}</button></div>`):''}
+      ${reorder?`<div class="mm-elist mtg-elist" id="mtgShList">${rc.map((x,i)=>`<div class="mm-erow mtg-erow${x.id===r.id?' cur':''}" data-eid="${escapeHtml(x.id)}"><span class="mm-ord">${i+1}차</span><span class="mtg-erow-main"><span class="mtg-erow-store">${escapeHtml(x.store||'(매장명 없음)')}</span><span class="mtg-erow-date">${escapeHtml(_mtgDateTimeLbl(x))}</span></span><span class="mtg-erow-amt">${fmtMoney(x.total||0)}원</span>${HANDLE}</div>`).join('')}</div>`:
       `<div class="mtg-drows">${rc.map((x,i)=>`<button type="button" class="mtg-drow${x.id===r.id?' cur':''}${rc.length>=2?' ord':''}" data-open="${escapeHtml(x.id)}">
         ${rc.length>=2?`<span class="mtg-drow-ord">${i+1}차</span>`:''}<span class="mtg-drow-store">${escapeHtml(x.store||'(매장명 없음)')}</span>
         <span class="mtg-drow-amt">${fmtMoney(x.total||0)}원</span>
-        <span class="mtg-drow-date">${escapeHtml(fmtDateKor(x.date))}</span>
+        <span class="mtg-drow-date">${escapeHtml(_mtgDateTimeLbl(x))}</span>
       </button>`).join('')}</div>`}
       ${stillIn&&!reorder?`<div class="mtg-sheet-foot"><button type="button" class="mtg-sheet-unlink" id="mtgShUnlink">이 영수증을 만남에서 분리</button></div>`:''}`;
     card.querySelector('#mtgShX').onclick=close;
@@ -11112,16 +11146,7 @@ async function renderDetail(){
   const _confirmBtn=document.getElementById('detailConfirmBtn');
   _confirmBtn.onmousedown=null;
   let _confirmRunning=false;
-  const _detailBackgroundSync=async(rec)=>{
-    try{
-      let renamed=(await _autoRenameCompleted())>0;
-      const _cur=receipts.find(x=>x.id===rec.id); if(_cur&&_cur.scanPath)rec.scanPath=_cur.scanPath;
-      if(rec.scanPath){ if(await _dbxRenameScanFile(rec))renamed=true; }
-      else if(rec.imageId){ if(await _dbxArchiveReceiptPhoto(rec))renamed=true; }
-      if(renamed){ await dbPut('receipts',rec); toast('완료본 파일 이름도 정리했어요',{type:'success'}); }
-    }catch(e){ console.warn('detail background sync:',e); }
-    dbxSyncNow(true);
-  };
+  const _detailBackgroundSync=rec=>_detailBgQueue(rec.id);
   const _doConfirm=async()=>{
     if(_confirmRunning)return;
     _confirmRunning=true;
@@ -11171,6 +11196,9 @@ async function renderDetail(){
     }
     r.updatedAt=nowISO();
     if(r.store&&r.category) await learnCategory(r.store,r.category);
+    // v4.08 — scanPath는 화면에서 고치는 값이 아니다. 화면을 연 뒤 백그라운드 이름 정리가 바꿨을 수 있으니 DB 값을 쓴다
+    //   (옛 경로로 덮으면 다음 이름 정리가 없는 파일을 찾다 멈춰 완료본이 중간 이름으로 남았다).
+    try{ const _dbNow=await dbGet('receipts',r.id); if(_dbNow)r.scanPath=_dbNow.scanPath||''; }catch(_){}
     try{
       await dbPut('receipts',r);   // ★ 로컬 저장 — 이 시점에 데이터는 안전하게 보존됨(SAVED 기준)
     }catch(e){
@@ -13266,16 +13294,16 @@ async function _execScanRenamePlan(plan,token){
   let done=0;
   for(const x of plan){
     try{
-      if(x.from===x.to){ x.rec.scanPath=x.from; await dbPut('receipts',x.rec); done++; continue; }
+      if(x.from===x.to){ x.rec.scanPath=x.from; await _putScanPath(x.rec); done++; continue; }
       const r=await fetch('https://api.dropboxapi.com/2/files/move_v2',{method:'POST',
         headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
         body:JSON.stringify({from_path:x.from,to_path:x.to,autorename:false})});
       if(r.ok){
         x.rec.scanPath=(await r.json())?.metadata?.path_display||x.to;
-        await dbPut('receipts',x.rec);
+        await _putScanPath(x.rec);
         done++;
       }else if(x.link){
-        x.rec.scanPath=x.from; await dbPut('receipts',x.rec); done++;
+        x.rec.scanPath=x.from; await _putScanPath(x.rec); done++;
       }
     }catch(e){}
   }
@@ -14137,6 +14165,14 @@ async function _dbxEnsureImagesFolder(){
 // images/ 에 올라가는 것은 앱이 쓰는 사본이라 이름이 img_xxx 다. 그건 그대로 두고,
 // 보관용 사본을 따로 둔다. rec.scanPath 에 경로를 남겨 두면 나중에 매장명·금액이
 // 바뀔 때 _dbxRenameScanFile 이 이름을 따라 고쳐 준다.
+// v4.08 — 완료본 연결(scanPath)만 DB의 최신 레코드에 적는다. 네트워크(이동·업로드)를 기다리는 동안 사용자가 영수증을
+//   다시 저장했을 수 있어, 들고 있던 옛 레코드를 통째로 dbPut하면 그 수정(매장명 등)이 옛 값으로 덮였다.
+async function _putScanPath(rec){
+  const latest=await dbGet('receipts',rec.id);
+  if(latest){ latest.scanPath=rec.scanPath||''; await dbPut('receipts',latest); }
+  else await dbPut('receipts',rec);
+  const m=receipts.find(x=>x.id===rec.id); if(m&&m!==rec)m.scanPath=rec.scanPath||'';
+}
 async function _dbxArchiveReceiptPhoto(rec,doneFiles){
   if(!dbxIsConnected()||!rec||!rec.imageId||rec.scanPath)return false;
   try{
@@ -14172,15 +14208,15 @@ async function _dbxArchiveReceiptPhoto(rec,doneFiles){
     const adopt=free.find(f=>f.content_hash&&f.content_hash===localContentHash)
       ||(nameUnique&&(own.find(f=>f.content_hash!==localContentHash&&_nfc(f.name).replace(/\.[A-Za-z0-9]{2,5}$/,'')===_nfc(base))   // 정식 이름의 원본
       ||own[0]));
-    if(adopt){ rec.scanPath=adopt.path_display; await dbPut('receipts',rec); return true; }
+    if(adopt){ rec.scanPath=adopt.path_display; await _putScanPath(rec); return true; }
     let existing=await _dbxFileMeta(path);
-    if(existing&&existing.content_hash===localContentHash){ rec.scanPath=existing.path_display||path; await dbPut('receipts',rec); return true; }
+    if(existing&&existing.content_hash===localContentHash){ rec.scanPath=existing.path_display||path; await _putScanPath(rec); return true; }
     if(existing){
       const tokenPart=_dupSuffixToken(rec);
       for(let n=1;n<=100;n++){
         const candidate=dir+'/'+base+'-'+tokenPart+(n===1?'':'-'+n)+ext;
         existing=await _dbxFileMeta(candidate);
-        if(existing&&existing.content_hash===localContentHash){rec.scanPath=existing.path_display||candidate;await dbPut('receipts',rec);return true;}
+        if(existing&&existing.content_hash===localContentHash){rec.scanPath=existing.path_display||candidate;await _putScanPath(rec);return true;}
         if(!existing){path=candidate;break;}
       }
     }
@@ -14195,7 +14231,7 @@ async function _dbxArchiveReceiptPhoto(rec,doneFiles){
     if(!resp.ok){console.warn('archive photo:',await resp.text());return false;}
     const meta=await resp.json();
     rec.scanPath=meta?.path_display||path;
-    await dbPut('receipts',rec);
+    await _putScanPath(rec);
     if(doneFiles)doneFiles.push({...meta,name:meta?.name||path.slice(path.lastIndexOf('/')+1),path_display:rec.scanPath,path_lower:_pkey(rec.scanPath)});
     return true;
   }catch(e){ console.warn('archive photo:',e.message||e); return false; }
@@ -14217,8 +14253,44 @@ function _warnNotConnectedOnce(){
 // v2.52 이전에 저장했거나, 저장 당시 Dropbox가 연결되지 않았던 것들이다.
 // 동기화 때마다 조금씩 처리해 결국 전부 완료 JPG/완료 PDF로 정리된다.
 const _ARCHIVE_CATCHUP_MAX=20;   // 한 번에 이만큼만 — 동기화가 길어지지 않게
+// v4.08 — 연결된 완료본이 폴더에 없으면(이름 정리가 도중에 끊겨 중간 이름으로 남았거나, 다른 곳으로 옮겨진 경우) 다시 잇는다.
+//   ① 이 기기 사진과 내용이 같은 파일 · 이 영수증 이름의 파일을 찾아 연결하고(_dbxArchiveReceiptPhoto의 채택 규칙 그대로)
+//      이름이 다르면 지금 이름으로 정리 ② 없으면 이 기기 사진으로 다시 올린다. 지우는 일은 하지 않는다.
+//   목록을 못 읽으면(null) 아무것도 하지 않는다 — 빈 목록을 '파일 없음'으로 오판하지 않게. 30분에 한 번만.
+let _healDoneAt=0;
+async function _dbxHealDoneLinks(force){
+  if(!dbxIsConnected())return 0;
+  if(!force&&Date.now()-_healDoneAt<30*60*1000)return 0;
+  _healDoneAt=Date.now();
+  const token=await _dbxToken();
+  let n=0;
+  for(const isImg of [true,false]){
+    const root=_pkey(_dbxScanDoneDir(isImg))+'/';
+    const recs=receipts.filter(r=>r.imageId&&r.scanPath&&_pkey(r.scanPath).startsWith(root));
+    if(!recs.length)continue;
+    const all=await _dbxListAll(token,_dbxScanDoneDir(isImg));
+    if(!all)continue;
+    const files=all.filter(e=>e['.tag']==='file');
+    const have=new Set(files.map(f=>_pkey(f.path_display)));
+    for(const r of recs){
+      if(have.has(_pkey(r.scanPath)))continue;
+      const fresh=await dbGet('receipts',r.id);
+      if(!fresh||!fresh.scanPath||have.has(_pkey(fresh.scanPath)))continue;
+      const was=fresh.scanPath;
+      const tmp={...fresh,scanPath:''};
+      if(!(await _dbxArchiveReceiptPhoto(tmp,files)))continue;   // 채택 또는 다시 올림 → scanPath만 기록됨
+      if(await _dbxRenameScanFile(tmp))await _putScanPath(tmp);   // 중간 이름으로 남은 파일이면 지금 이름으로
+      have.add(_pkey(tmp.scanPath));
+      console.info('완료본 다시 연결:',was.split('/').pop(),'→',tmp.scanPath.split('/').pop());
+      n++;
+    }
+  }
+  if(n)receipts=await dbAll('receipts');
+  return n;
+}
 async function _dbxArchivePending(){
   if(!dbxIsConnected())return 0;
+  await _dbxHealDoneLinks().catch(e=>console.warn('heal done links:',e.message||e));
   const pending=receipts.filter(r=>r.imageId&&!r.scanPath);
   if(!pending.length)return 0;
   let n=0;
