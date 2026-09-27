@@ -927,7 +927,8 @@ th.mtg-chk{background:var(--fill2);}
 .person-period{position:relative;}
 .person-period>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--sep2);background:var(--card);color:var(--label);border-radius:var(--rs);padding:6px 11px;font-size:12.5px;font-weight:600;white-space:nowrap;}
 .person-period>summary::-webkit-details-marker{display:none;}
-.person-period>summary::after{content:'▾';color:var(--label3);font-size:10px;}
+.person-period>summary::after{content:'';width:6px;height:6px;margin:-4px 1px 0 2px;border:solid var(--label2);border-width:0 1.6px 1.6px 0;transform:rotate(45deg);flex:none;} /* v4.18 — ▾ 글자(10px)가 너무 작아 선으로 그린 꺾쇠 */
+.person-period[open]>summary::after{transform:rotate(-135deg);margin-top:4px;}
 .person-period[open]>summary{border-color:var(--blue);}
 .person-period-static{display:inline-flex;align-items:center;border:1px solid var(--sep2);background:var(--card);color:var(--label2);border-radius:var(--rs);padding:6px 11px;font-size:12.5px;font-weight:600;white-space:nowrap;}
 .person-period-pop{position:absolute;right:0;top:calc(100% + 6px);z-index:80;background:var(--card);border:1px solid var(--sep);border-radius:var(--rm);box-shadow:0 8px 30px rgba(0,0,0,.16);padding:10px 12px;min-width:210px;}
@@ -2423,6 +2424,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 @media(hover:hover){.psn-v415 .psn-say[role="button"]:hover{color:var(--label);background:var(--fill2);}}
 .psn-v415 .psn-say .chev{color:var(--label3);}
 .psn-v415 .psn-figs{margin-top:14px;}
+/* v4.18 — 결제 밸런스 부제 제거 → 제목 줄 오른쪽에 [전체·단둘이·여럿이](폰도 한 줄) · 문장 15px/400(숫자 600) */
+.psn-balc.psn-v415 .psn-balc-hd{flex-wrap:nowrap;align-items:center;}
+.psn-v415 .psn-say{font-size:15px;font-weight:400;}
+.psn-v415 .psn-say b{font-weight:600;}
 .psn-treatc.psn-v415{padding:18px 20px 16px;}
 .psn-treatc.psn-v415 .psn-balc-hd{margin-bottom:10px;}
 .psn-total{margin-top:14px;border-top:1px solid var(--divider);border-bottom:none;cursor:pointer;}
@@ -2450,15 +2455,14 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .psn-foot .psn-trow{padding:0 2px;}
 .psn-hbtns{display:flex;align-items:center;gap:8px;}
 .psn-hbtns>.person-period,.psn-hbtns>.person-period-static,.psn-hbtns>.psn-hadd{width:112px;}
-.psn-hbtns>.person-period>summary{width:100%;justify-content:center;box-sizing:border-box;}
-.psn-hbtns>.person-period-static{justify-content:center;box-sizing:border-box;}
-.psn-hadd{height:30px;border-radius:var(--rs);border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);background:var(--blue-bg);color:var(--blue-txt);font:inherit;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer;padding:0 8px;}
+.psn-hbtns>.person-period>summary{width:100%;height:32px;justify-content:center;box-sizing:border-box;}
+.psn-hbtns>.person-period-static{height:32px;justify-content:center;box-sizing:border-box;}
+.psn-hadd{height:32px;box-sizing:border-box;border-radius:var(--rs);border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);background:var(--blue-bg);color:var(--blue-txt);font:inherit;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer;padding:0 8px;}
 @media(max-width:780px){
   .psn-hbtns>.person-period,.psn-hbtns>.person-period-static,.psn-hbtns>.psn-hadd{width:96px;}
   .psn-v415 .psn-fig-amt{font-size:19px;}
   .psn-v415 .psn-figs-pct{display:none;}
   .psn-mtiles{gap:8px;}.psn-mtile{padding:10px 12px;}.psn-mtile b{font-size:19px;}
-  .psn-balc.psn-v415 .psn-balc-hd .psn-seg{order:2;}
 }
 @media(max-width:780px){.psn-v415 .psn-hero-desc,.psn-mtgc .psn-hero-desc{display:block;}.psn-v415 .psn-hero-r{display:inline;}} /* v4.15 — 옛 모바일 규칙(부제 숨김) 되돌림 */
 .psn-v415 .psn-trow.psn-total{border-bottom:none;}
@@ -3815,6 +3819,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.18 — 사람 화면 다듬기: 헤더 [전체 기간][+ 영수증 추가] 높이 32px로 같게 · 기간 버튼 꺾쇠를 선으로 크게 · 결제 밸런스 부제(정산 후 실제로 낸 돈…) 제거하고 [전체·단둘이·여럿이]를 제목 줄 오른쪽에(폰도 한 줄) · '조상현이 ○원 더 냈어요'·'더 한턱냈어요' 문장 17→15px, 굵기 500→400(숫자 700→600).
 // v4.17 — 한턱·결제 밸런스 등 목록 팝업이 잠시 뒤 저절로 닫히던 버그: 동기화 뒤 재렌더(renderDetail)가 잔재 정리하며 .mtg-sheet-backdrop까지 지웠다 → 목록 팝업은 지우지 않음. 사람 화면 목록(최근 함께한 자리·결제 밸런스·한턱·자주 간 곳)의 결제자 표시를 세로 막대 → 점으로(결제자가 두 사람이 아니면 빈 자리로 정렬 유지).
 // v4.16 — 사람 요약 목록(결제 밸런스·한턱·자주 간 곳)에 왼쪽 색 막대 = 결제한 사람(최근 함께한 자리와 같은 규칙), 결제 밸런스 목록의 각자 몫을 주황·파랑으로. 팝업(시트) PC 최대 너비 400 → 560px.
 // v4.15 — 사람 요약 재설계: 결제 밸런스 = 정산 후 실제로 낸 돈(1/N·한턱은 낸 사람) · 한턱 카드 · [전체/단둘이/여럿이]가 두 카드를 함께 전환 · 만남 카드(만남 관리·전체/단둘이/여럿이 타일·만남 간격·자주 간 곳) · 최근 함께한 자리(결제자 색 막대) · 묶이지 않은 영수증 · 관계 그룹. 범례는 탭 줄 오른쪽 한 곳, 문장은 이름(나/내가 없음). 헤더 [기간][+ 영수증 추가] 같은 너비. 1/N 나머지(1~2원)를 결제자에게(_splitShareMap).
@@ -4222,7 +4227,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.17';
+const APP_VERSION='v4.18';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -9508,7 +9513,7 @@ function _psnLayoutHtml(d){
 
   // ① 결제 밸런스 — 정산 후 각자 실제로 낸 돈(1/N·한턱 반영)
   const balance=`<section class="psn-card psn-balc psn-v415" aria-label="결제 밸런스">`
-    +`<div class="psn-balc-hd"><div><div class="psn-hero-title">결제 밸런스</div><div class="psn-hero-desc">정산 후 실제로 낸 돈 · 1/N, 한턱은 낸 사람</div></div>${segBtns}</div>`
+    +`<div class="psn-balc-hd"><div class="psn-hero-title">결제 밸런스</div>${segBtns}</div>`
     +scopes.map(x=>{
       const T=sum(x.recs);let st=0,sm=0,stN=0,smN=0;
       for(const r of x.recs){const m=_splitShareMap(r),a=m.get(tgt)||0,b=m.get(me)||0;st+=a;sm+=b;if(a)stN++;if(b)smN++;}
