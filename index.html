@@ -3813,6 +3813,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.17 — 한턱·결제 밸런스 등 목록 팝업이 잠시 뒤 저절로 닫히던 버그: 동기화 뒤 재렌더(renderDetail)가 잔재 정리하며 .mtg-sheet-backdrop까지 지웠다 → 목록 팝업은 지우지 않음.
 // v4.16 — 사람 요약 목록(결제 밸런스·한턱·자주 간 곳)에 왼쪽 색 막대 = 결제한 사람(최근 함께한 자리와 같은 규칙), 결제 밸런스 목록의 각자 몫을 주황·파랑으로. 팝업(시트) PC 최대 너비 400 → 560px.
 // v4.15 — 사람 요약 재설계: 결제 밸런스 = 정산 후 실제로 낸 돈(1/N·한턱은 낸 사람) · 한턱 카드 · [전체/단둘이/여럿이]가 두 카드를 함께 전환 · 만남 카드(만남 관리·전체/단둘이/여럿이 타일·만남 간격·자주 간 곳) · 최근 함께한 자리(결제자 색 막대) · 묶이지 않은 영수증 · 관계 그룹. 범례는 탭 줄 오른쪽 한 곳, 문장은 이름(나/내가 없음). 헤더 [기간][+ 영수증 추가] 같은 너비. 1/N 나머지(1~2원)를 결제자에게(_splitShareMap).
 // v4.14 — 카테고리별 지출의 내 부담을 금액과 같은 12.5/600(파랑, PC·폰)으로, 앞에 회색 '/'('총 377,000원 / 220,000원'). 이름이 안 들어가면 '…'(겹침 방지), PC 2열에서 이름이 잘리면 1열.
@@ -4219,7 +4220,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.16';
+const APP_VERSION='v4.17';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -10711,7 +10712,9 @@ async function renderDetail(){
   }
   // v3.33 — 기간 바텀시트가 body로 포탈된 채 남으면(다른 렌더로 전환 시) 반투명 백드롭이 화면을 덮는다.
   // 어떤 분기로 렌더되든 진입 시 항상 잔재를 제거한다(가계부 분기 전용이던 정리를 전역으로 승격).
-  document.querySelectorAll('body > #lpBackdrop, body > #lpRangePop, body > .mtg-sheet-backdrop').forEach(n=>n.remove());
+  // v4.17 — 목록 팝업(.mtg-sheet-backdrop)은 지우지 않는다. 동기화 등 백그라운드 재렌더마다 사용자가 열어 둔 한턱·결제 밸런스
+  //   목록이 저절로 닫혔고(history 엔트리는 남아 뒤로 가기가 한 번 헛돎), 시트는 스스로 close/teardown으로 정리된다.
+  document.querySelectorAll('body > #lpBackdrop, body > #lpRangePop').forEach(n=>n.remove());
   // v3.73 — 기간 시트가 _lpClosePop 이외 경로(백그라운드 재렌더 등)로 제거되면 stale _lpOvId를 정리(재열기 차단·유령 stack 방지).
   if(_lpOvId){_ovForget(_lpOvId);_lpOvId=null;}
   body.classList.toggle('stats-redesign',!selectedId&&!searchQuery&&!_personMode);
