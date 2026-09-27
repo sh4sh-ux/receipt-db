@@ -3730,6 +3730,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.07 — 검색 후 결과 카드를 누르면 영수증이 열렸다가 검색 결과로 튕겨 돌아가던 것(한글 입력 종료가 늦게 와 같은 검색어를 다시 적용하며 선택을 지움) — 검색어가 그대로면 무시, 카드 선택 시 대기 중인 검색 적용 취소.
 // v4.06 — 완료 폴더 이름 비교를 유니코드 정규화(NFC)·확장자 무시로(맥 NFD 이름을 못 알아보던 것), '중복 정리'는 바이트 동일 파일만 삭제(사용자 편집본 보호), 같은 이름이 있으면 이름 정리 안 함, 끊긴 연결 복구.
 // v4.05 — '중복 정리'가 앱 사본을 이 기기 사진이 아니라 Dropbox images/ 백업과 비교(원본 이름 파일은 절대 삭제 안 함, 이미 연결된 사본 우선 보존, 남긴 파일 안내) + 진행 토스트가 안 닫히던 것 수정.
 // v4.04 — 완료 JPG 중복 사본('이름 (1)(2)…') 원인 수정(올리기 전 원본 연결·autorename 금지·머지가 연결 유지·중복 정리가 원본에 재연결) + 매일 자동 백업(backups/receipt-db_auto_날짜.json, 30개) + 저장공간 영구 보존 요청. 변경 이력은 CHANGELOG.md.
@@ -4126,7 +4127,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.06';
+const APP_VERSION='v4.07';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6469,10 +6470,13 @@ function _clearSearch(){
 }
 searchClear.addEventListener('click',_clearSearch);
 
-function _applySearchInput(){
-  // v3.78 — 사람 모드에선 같은 검색창이 사람 목록만 거른다(영수증 검색어·상세는 그대로).
-  if(_personMode){_personListQ=searchInp.value;_updateSearchClear();renderSide();return;}
-  if(_activeTabName()==='prepaid'){_ppListQ=searchInp.value;_updateSearchClear();renderSide();return;} // v3.91 — 선불권 목록만 거름
+function _applySearchInput(force){
+  // v4.07 — 검색어가 그대로면 아무것도 하지 않는다. 한글 입력 중 결과 카드를 누르면
+  //   입력창이 blur되며 compositionend·input이 늦게 와 180ms 뒤 여기로 들어오는데,
+  //   예전엔 값이 같아도 selectedId를 지워 방금 연 영수증이 검색 결과로 튕겨 돌아갔다.
+  if(_personMode){if(!force&&_personListQ===searchInp.value)return;_personListQ=searchInp.value;_updateSearchClear();renderSide();return;}
+  if(_activeTabName()==='prepaid'){if(!force&&_ppListQ===searchInp.value)return;_ppListQ=searchInp.value;_updateSearchClear();renderSide();return;} // v3.91 — 선불권 목록만 거름
+  if(!force&&searchQuery===searchInp.value){_updateSearchClear();return;}
   _clearPhotoListFilter();
   searchQuery=searchInp.value;
   if(searchQuery)selectedId=null;
@@ -6498,7 +6502,7 @@ searchInp.addEventListener('compositionstart',()=>{_searchComposing=true;});
 searchInp.addEventListener('compositionend',()=>{_searchComposing=false;_scheduleSearch();});
 searchInp.addEventListener('input',()=>{_scheduleSearch();});
 searchInp.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&!e.isComposing){clearTimeout(_searchTimer);_searchComposing=false;_applySearchInput();}
+  if(e.key==='Enter'&&!e.isComposing){clearTimeout(_searchTimer);_searchComposing=false;_applySearchInput(true);}
 });
 
 // 앱 제목 클릭 → 초기 화면으로 리셋
@@ -7858,6 +7862,9 @@ document.getElementById('clearBtn').addEventListener('click',()=>{
 // ════════════════════════════════════════════════════════════════
 async function selectReceipt(id){
   _detailCrumb=_detailCrumbNext||'';_detailCrumbNext=null; // v3.84 — 만남에서 연 영수증이면 '‹ 9월 29일의 만남'
+  // v4.07 — 대기 중인 검색 적용이 방금 누른 영수증을 덮지 않게: 타이머를 끄고 검색어만 반영(선택은 유지).
+  clearTimeout(_searchTimer);
+  if(!_personMode&&searchInp.value!==searchQuery&&_activeTabName()!=='prepaid'){searchQuery=searchInp.value;_updateSearchClear();}
   selectedId=id;
   _mobileListMode='detail';
   // 다른 탭에서 카드 클릭했을 수 있으니 '내역' 탭으로 전환.
