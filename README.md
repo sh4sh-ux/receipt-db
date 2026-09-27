@@ -1,4 +1,4 @@
-# 영수증 보관함 (Receipt DB) · v4.03
+# 영수증 보관함 (Receipt DB) · v4.04
 
 GPT로 정리한 영수증 텍스트를 영구 보관하고, 가계부처럼 들여다볼 수 있는
 **단일 HTML 앱**. 외부 CDN이나 빌드 의존성 없이 GitHub Pages에서 실행됩니다.
@@ -35,6 +35,7 @@ GPT로 정리한 영수증 텍스트를 영구 보관하고, 가계부처럼 들
 
 Dropbox 연결 시 자동 동기화 파일은 `/07_Apps/영수증(RECEIPT-DB)/receipt-db_sync.json`,
 수동 백업 파일은 `/07_Apps/영수증(RECEIPT-DB)/backups/` 아래에 저장됩니다.
+같은 폴더에 **매일 자동 백업**(`receipt-db_auto_날짜.json`, 최근 30일·사진 제외)이 쌓이고, 설정 > **Dropbox에서 복원**에서 고를 수 있습니다.
 Dropbox 앱은 `Full Dropbox` 접근 유형으로 만들어야 이 경로에 쓸 수 있습니다.
 
 ## 기술
@@ -47,3 +48,7 @@ Dropbox 앱은 `Full Dropbox` 접근 유형으로 만들어야 이 경로에 쓸
 ## 자매 앱
 
 [더치페이](https://sh4sh-ux.github.io/dutch-pay/) — 같은 디자인 톤의 모임 정산 앱
+
+## 변경 이력
+
+버전별 변경 내용은 [`CHANGELOG.md`](CHANGELOG.md)에 있습니다.
