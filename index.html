@@ -3730,6 +3730,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.11 — '중복 정리'가 같은 사진인데 이름·바이트만 다른 사본도 찾음: 어떤 영수증도 연결하지 않은 파일이 이름의 날짜·금액이 같은 연결된 파일과 사진이 같으면(256px 흑백 16×16 칸 비교) 정리 보관함으로. 연결된 파일은 옮기지 않음.
 // v4.10 — 앱은 Dropbox 파일을 지우지 않는다: '지우기'(중복 정리·옛 폴더 정리)는 전부 정리 보관함/날짜/원래 경로로 옮기기(_dbxTrash). 실제 삭제는 매일 자동 백업 30개 초과분(_dbxDeleteAutoSnapshot)만. check_app.py가 삭제 API·완료 폴더 autorename·덮어쓰기를 막는다. 설정 Dropbox 카드에 안내.
 // v4.09 — v4.04 '중복 정리'가 완료 JPG·PDF를 한 목록으로 보고 'JPG + 같은 이름 PDF' 짝의 JPG를 앱 사본으로 오판해 지우고 연결을 PDF로 바꾼 것 되돌리기: 동기화 때 한 번, 같은 이름 PDF가 있고 JPG가 없는 삭제된 JPG만 Dropbox 휴지통에서 복원 + 사진 영수증의 PDF 연결을 JPG로.
 // v4.08 — ① 만남 차수: 모든 영수증에 시간이 있으면 날짜+시간 순으로 자동(순서 변경 버튼 대신 '시간순' 안내), 행에 시간 표시. ② 매장명을 연달아 고치면 완료본 이름 정리가 겹쳐 두 번째 수정이 옛 값으로 덮이고 파일이 중간 이름으로 남던 것 — 이름 정리를 한 줄로 세우고 최신 레코드에 scanPath만 기록. ③ 연결된 완료본이 폴더에 없으면 동기화 때 다시 찾아 연결(없으면 이 기기 사진으로 다시 올림, 30분에 한 번).
@@ -4130,7 +4131,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.10';
+const APP_VERSION='v4.11';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -4230,7 +4231,7 @@ function toast(msg,opts){
   c.appendChild(t);
   requestAnimationFrame(()=>t.classList.add('show'));
   timer=setTimeout(dismiss,opts.duration||(opts.action?5000:2400));
-  return{dismiss,remove:dismiss};   // v4.05 — 호출하는 곳 다수가 t.remove()로 닫는다(전엔 없어 '찾는 중…'이 끝까지 남았다)
+  return{dismiss,remove:dismiss,update:m=>{s.textContent=m;}};   // v4.11 — update: 진행 문구 바꾸기 · v4.05 — 호출하는 곳 다수가 t.remove()로 닫는다(전엔 없어 '찾는 중…'이 끝까지 남았다)
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -13385,11 +13386,42 @@ async function renameScanFilesAll(){
 // 완료 JPG·완료 PDF 폴더의 '내용이 완전히 동일한(바이트 일치)' 중복 파일만 하나만 남기고 삭제.
 // 안전 원칙: Dropbox가 주는 content_hash가 같은 것만 중복으로 판정 → 서로 다른 사진은 절대 안 지운다.
 // 미리보기(확인) 후에만 삭제하고, 삭제된 경로를 scanPath로 갖던 영수증은 남긴 파일로 다시 연결한다.
+// v4.11 — '같은 사진인데 이름·바이트만 다른' 사본 찾기(맥 원본 '나인블럭'(확장자 없음·오타) + 앱이 정식 이름으로 올린 '나인블럭 가평점.jpg').
+//   사진을 폭 256px 흑백으로 줄여 16×16 칸마다 밝기 차이를 재고, **모든 칸이 거의 같을 때만** 같은 사진으로 본다
+//   (다른 영수증은 시간·승인번호 글자가 있는 칸에서 차이가 난다). 판정이 틀려도 옮긴 파일은 정리 보관함에 남는다.
+async function _dbxDownloadBlob(token,path){
+  const r=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',
+    headers:{'Authorization':'Bearer '+token,'Dropbox-API-Arg':_dbxApiArg({path})}});
+  if(!r.ok)return null;
+  const buf=await r.arrayBuffer();
+  return new Blob([buf],{type:/\.png$/i.test(path)?'image/png':'image/jpeg'});
+}
+async function _imgSig(blob){
+  try{
+    const bmp=await createImageBitmap(blob);
+    const W=256,H=Math.max(16,Math.round(bmp.height*W/bmp.width));
+    const cv=typeof OffscreenCanvas!=='undefined'?new OffscreenCanvas(W,H):Object.assign(document.createElement('canvas'),{width:W,height:H});
+    const cx=cv.getContext('2d');cx.drawImage(bmp,0,0,W,H);
+    const d=cx.getImageData(0,0,W,H).data;const g=new Uint8Array(W*H);
+    for(let i=0;i<W*H;i++)g[i]=(d[i*4]*299+d[i*4+1]*587+d[i*4+2]*114)/1000;
+    const sig={ratio:bmp.width/bmp.height,W,H,g};bmp.close&&bmp.close();return sig;
+  }catch(e){return null;}
+}
+function _imgLooksSame(a,b){
+  if(!a||!b||Math.abs(a.ratio-b.ratio)/a.ratio>0.02)return false;
+  const W=a.W,H=Math.min(a.H,b.H),N=16,bw=W/N,bh=H/N;let total=0,maxBlock=0;
+  for(let by=0;by<N;by++)for(let bx=0;bx<N;bx++){
+    let sum=0,cnt=0;
+    for(let y=Math.floor(by*bh);y<Math.floor((by+1)*bh);y++)for(let x=Math.floor(bx*bw);x<Math.floor((bx+1)*bw);x++){sum+=Math.abs(a.g[y*W+x]-b.g[y*W+x]);cnt++;}
+    const m=cnt?sum/cnt:0;total+=m;if(m>maxBlock)maxBlock=m;
+  }
+  return maxBlock<=6&&total/(N*N)<=2.5;
+}
 async function cleanupDuplicateCompleted(){
   if(!dbxIsConnected()){toast('먼저 Dropbox를 연결해 주세요',{type:'error'});return;}
   await _dbxResolveRoot();
   const token=await _dbxToken();
-  const t=toast('완료 폴더에서 중복(내용 동일)을 찾는 중…',{duration:120000});
+  const t=toast('완료 폴더에서 중복을 찾는 중…',{duration:300000});
   const groups=[],unsure=[];
   let _doneAll=[];   // v4.06 — 안내(남긴 꼬리 파일)용으로 try 밖에서도 쓴다   // unsure — 사본으로 보이지만 백업과 달라(또는 백업이 없어) 남긴 파일
   try{
@@ -13423,6 +13455,30 @@ async function cleanupDuplicateCompleted(){
     //   이름 정리가 그걸 '(1)(2)…'로 옮기던 버그(v4.03 이전)의 흔적이다. 영수증을 원본에 다시 연결하고,
     //   이 기기 사진과 바이트까지 같은 사본(= 앱이 올린 것)만 지운다. 사진 원본은 images/ 백업이 있을 때만.
     const fname=f=>f.name||f.path_display.slice(f.path_display.lastIndexOf('/')+1);
+    // v4.11 — ② 같은 사진인데 이름·바이트만 다른 사본. 옮길 후보는 **어떤 영수증도 연결하지 않은 파일**뿐이고,
+    //   파일 이름의 날짜·금액이 같은 **연결된 파일**과 사진이 같을 때만. 연결된 파일은 절대 옮기지 않는다.
+    //   완료 JPG만 본다(PDF와 사진은 비교하지 않는다 — v4.04 사고).
+    const inA=new Set(groups.flatMap(g=>g.remove).map(f=>_pkey(f.path_display)));
+    const jpgRoot=_pkey(_dbxScanDoneDir(true))+'/';
+    const keyOf=f=>{const m=_nfc(fname(f)).match(/^(\d{6})_영수증\(([\d,]+)\)/);return m?m[1]+'|'+m[2]:'';};
+    const byKey=new Map();
+    for(const f of files){ if(!_pkey(f.path_display).startsWith(jpgRoot)||inA.has(_pkey(f.path_display)))continue; const k=keyOf(f); if(!k)continue; if(!byKey.has(k))byKey.set(k,[]); byKey.get(k).push(f); }
+    const pairs=[];
+    for(const [,arr] of byKey){
+      if(arr.length<2)continue;
+      const keep=arr.filter(f=>_linkedAll.has(_pkey(f.path_display))), cand=arr.filter(f=>!_linkedAll.has(_pkey(f.path_display)));
+      if(keep.length&&cand.length)pairs.push({keep,cand});
+    }
+    const sigs=new Map();
+    const sigOf=async f=>{const k=_pkey(f.path_display);if(!sigs.has(k))sigs.set(k,await _imgSig(await _dbxDownloadBlob(token,f.path_display)||new Blob()));return sigs.get(k);};
+    let cmp=0;const cmpTotal=pairs.reduce((a,p)=>a+p.cand.length,0);
+    for(const {keep,cand} of pairs){
+      for(const c of cand){
+        t?.update?.(`같은 사진인지 비교하는 중… ${++cmp}/${cmpTotal}`);
+        const cs=await sigOf(c);if(!cs)continue;
+        for(const k of keep){ if(_imgLooksSame(cs,await sigOf(k))){ groups.push({keep:k,remove:[c],similar:true}); break; } }
+      }
+    }
     // v4.06 — '원본이 있으면 앱 사본을 지우는' 단계(v4.04~05)는 없앴다. 꼬리 붙은 파일이 사용자가 따로 편집한 다른 사진인
     //   경우가 실제로 있었다(카드 전표만 vs 전표+메뉴판 합본). 이 도구는 **바이트까지 같은 파일만** 지운다.
     //   이름에 '(N)'이 붙었지만 내용이 다른 파일은 그대로 두고 아래 안내에만 적는다.
@@ -13440,10 +13496,10 @@ async function cleanupDuplicateCompleted(){
     +_unsureLeft.slice(0,5).map(f=>'  · '+(f.name||f.path_display.split('/').pop())).join('\n')+(_unsureLeft.length>5?`\n  … 외 ${_unsureLeft.length-5}개`:''):'';
   if(!removeAll.length){ alert('정리할 중복 파일이 없습니다.\n(서로 다른 사진은 중복으로 판정하지 않습니다.)'+_unsureNote); return; }
   const base=p=>p.slice(p.lastIndexOf('/')+1);
-  const shown=groups;
+  const shown=[...groups].sort((a,b)=>(a.similar?1:0)-(b.similar?1:0));
   const sample=shown.slice(0,6).map(g=>
-    '  ✓ 남김: '+base(g.keep.path_display)+'\n'+g.remove.map(r=>'  → 보관함: '+base(r.path_display)).join('\n')).join('\n');
-  if(!confirm(`중복 사본 ${removeAll.length}개를 정리 보관함으로 옮깁니다(지우지 않음).\n· 내용이 완전히 같은 파일은 1개만 완료 폴더에 남깁니다.\n· 되돌리려면 Dropbox의 '영수증(RECEIPT-DB)/정리 보관함'에서 원래 폴더로 옮기면 됩니다.\n\n${sample}`
+    '  ✓ 남김: '+base(g.keep.path_display)+'\n'+g.remove.map(r=>'  → 보관함: '+base(r.path_display)+(g.similar?' (같은 사진·이름만 다름)':'')).join('\n')).join('\n');
+  if(!confirm(`중복 사본 ${removeAll.length}개를 정리 보관함으로 옮깁니다(지우지 않음).\n· 내용이 완전히 같은 파일은 1개만 완료 폴더에 남깁니다.\n· 영수증에 연결되지 않은 파일 중 연결된 파일과 날짜·금액·사진이 같은 것도 옮깁니다.\n· 되돌리려면 Dropbox의 '영수증(RECEIPT-DB)/정리 보관함'에서 원래 폴더로 옮기면 됩니다.\n\n${sample}`
     +(shown.length>6?`\n  … 외 ${shown.length-6}건`:'')+_unsureNote+'\n\n계속할까요?'))return;
 
   const lt=toast('정리 보관함으로 옮기는 중…',{duration:300000});
