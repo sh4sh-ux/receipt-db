@@ -1992,7 +1992,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .stats-cat{min-height:58px;padding:12px 4px;}
   .stats-cat .cat-bar-top{grid-template-columns:minmax(0,1fr) 42px auto 10px;gap:6px;font-size:12px;}
   .stats-cat .cat-bar-top.has-mine{grid-template-columns:minmax(0,1fr) auto auto 10px;}
-  .stats-cat .cat-bar-mine{font-size:9px;}  /* 총액 12px − 3px */
+  .stats-cat .cat-bar-mine{font-size:10px;}  /* 폰 10px(사용자 지정 — 9px는 작았다) */
   .stats-redesign .sum-card .sum-mine{flex-basis:100%;margin-top:3px;}
   .stats-cat.rich{grid-template-columns:30px minmax(0,1fr);gap:9px;padding:12px 4px;}
   .stats-cat.rich .sc-ic{width:30px;height:30px;flex:0 0 30px;}
@@ -3753,7 +3753,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
-// v4.12 — 대시보드 '내 부담': 카테고리별 '총 377,000원' 옆에 내 부담(파란색·3px 작게), 막대 옅은 부분=총액·진한 부분=내 부담, 총 지출 카드에 '내 부담 N원 · N%'. 계산 = 사람별 분담(_receiptShare) + 참석자 없는 영수증은 결제자가 나/비었으면 전액(_myShareOf). 카테고리 영역이 좁으면 1열(container query + 이름이 눌리면 1열).
+// v4.12 — 대시보드 '내 부담': 카테고리별 '총 377,000원' 옆에 내 부담(파란색·PC 11px·폰 10px), 막대 옅은 부분=총액·진한 부분=내 부담, 총 지출 카드에 '내 부담 N원 · N%'. 계산 = 사람별 분담(_receiptShare) + 참석자 없는 영수증은 결제자가 나/비었으면 전액(_myShareOf). 카테고리 영역이 좁으면 1열(container query + 이름이 눌리면 1열).
 // v4.11 — '중복 정리'가 같은 사진인데 이름·바이트만 다른 사본도 찾음: 어떤 영수증도 연결하지 않은 파일이 이름의 날짜·금액이 같은 연결된 파일과 사진이 같으면(256px 흑백 16×16 칸 비교) 정리 보관함으로. 연결된 파일은 옮기지 않음.
 // v4.10 — 앱은 Dropbox 파일을 지우지 않는다: '지우기'(중복 정리·옛 폴더 정리)는 전부 정리 보관함/날짜/원래 경로로 옮기기(_dbxTrash). 실제 삭제는 매일 자동 백업 30개 초과분(_dbxDeleteAutoSnapshot)만. check_app.py가 삭제 API·완료 폴더 autorename·덮어쓰기를 막는다. 설정 Dropbox 카드에 안내.
 // v4.09 — v4.04 '중복 정리'가 완료 JPG·PDF를 한 목록으로 보고 'JPG + 같은 이름 PDF' 짝의 JPG를 앱 사본으로 오판해 지우고 연결을 PDF로 바꾼 것 되돌리기: 동기화 때 한 번, 같은 이름 PDF가 있고 JPG가 없는 삭제된 JPG만 Dropbox 휴지통에서 복원 + 사진 영수증의 PDF 연결을 JPG로.
@@ -9832,7 +9832,7 @@ function renderLedgerPanel(recs){
   const catRow=(r,sub=false)=>{
     const color=getCatColor(r.cat);
     const active=_monthCatFilter===r.cat;
-    // v4.12 — 내 이름이 있으면 '총 377,000원' 옆에 내 부담(파란색·3px 작게), 막대는 옅은 부분=총액·진한 부분=내 부담
+    // v4.12 — 내 이름이 있으면 '총 377,000원' 옆에 내 부담(파란색·PC 11px·폰 10px), 막대는 옅은 부분=총액·진한 부분=내 부담
     const m=me?mineOf(r):0;
     const nums=me
       ?`<span class="cat-bar-amt"><span class="cat-bar-tot-lbl">총 </span>${fmtMoney(r.amt)}원</span><span class="cat-bar-mine${m<0?' amt-neg':''}" title="내 부담" aria-label="내 부담 ${fmtMoney(m)}원">${fmtMoney(m)}원</span>`
