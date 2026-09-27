@@ -665,11 +665,11 @@ svg{display:block;flex-shrink:0;}
 .psplit-row:focus-visible{outline:none;background:var(--fill);}
 .psplit-rank{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--label3);background:var(--fill2);font-variant-numeric:tabular-nums;}
 .psplit-row.top1 .psplit-rank{background:var(--blue);color:#fff;}
-.psplit-name{font-size:13.5px;font-weight:500;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.psplit-name{font-size:12.5px;font-weight:500;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .psplit-row.top1 .psplit-name{font-weight:600;}
 .psplit-bar{display:block;height:7px;background:var(--fill);border-radius:999px;overflow:hidden;}
 .psplit-bar-fill{display:block;height:100%;background:var(--blue);border-radius:999px;}
-.psplit-amt{text-align:right;font-size:13.5px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.psplit-amt{text-align:right;font-size:12.5px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums;white-space:nowrap;}
 .psplit-pct{text-align:right;font-size:12px;color:var(--label3);font-variant-numeric:tabular-nums;white-space:nowrap;}
 .psplit-row.top1 .psplit-pct{color:var(--blue);font-weight:600;}
 .psplit-list:not(.expanded) .psplit-extra{display:none;}
@@ -1960,10 +1960,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .stats-redesign .budget-section-hd .hd-sub{font-size:12px;font-weight:500;}
   .stats-redesign .spark-axis{font-size:12px;}
   .stats-redesign .stats-cat{padding:11px 10px;}
-  .stats-redesign .stats-cat .cat-bar-name{font-size:14px;font-weight:600;}
+  .stats-redesign .stats-cat .cat-bar-name{font-size:12.5px;font-weight:500;}  /* v4.13 — 사람별 분담과 같은 글자(이름 12.5/500·금액 12.5/600) */
   .stats-redesign .stats-cat .cat-pct{font-size:13px;font-weight:500;}
-  .stats-redesign .stats-cat .cat-bar-amt{font-size:14px;font-weight:650;}
-  .stats-redesign .stats-cat .cat-bar-mine{font-size:11px;}
+  .stats-redesign .stats-cat .cat-bar-amt{font-size:12.5px;font-weight:600;}
+  .stats-redesign .stats-cat .cat-bar-mine{font-size:12px;font-weight:400;}
+  .stats-redesign .budget-section-hd.hd-sm{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--label2);}  /* v4.13 — '카테고리별 지출' 제목 = '사람별 분담' 제목 */
 }
 /* v4.12 — 카테고리 영역이 좁으면(630px 미만 — 옆 목록이 함께 보이는 좁은 PC·태블릿, 백만 원대 금액) 2열 칸에
    '총 금액 + 내 부담'이 안 들어가 이름이 사라졌다 → 영역 폭 기준(container query)으로 한 줄에 하나. 화면 폭 기준은 금액 자릿수에 따라 경계가 달라 못 쓴다. */
@@ -1992,7 +1993,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .stats-cat{min-height:58px;padding:12px 4px;}
   .stats-cat .cat-bar-top{grid-template-columns:minmax(0,1fr) 42px auto 10px;gap:6px;font-size:12px;}
   .stats-cat .cat-bar-top.has-mine{grid-template-columns:minmax(0,1fr) auto auto 10px;}
-  .stats-cat .cat-bar-mine{font-size:10px;}  /* 폰 10px(사용자 지정 — 9px는 작았다) */
+  .stats-cat .cat-bar-mine{font-size:10px;}
+  .stats-cat .cat-bar-name,.stats-cat .cat-bar-top .cat-bar-amt{font-size:12.5px;}  /* v4.13 — 사람별 분담과 같게 */  /* 폰 10px(사용자 지정 — 9px는 작았다) */
   .stats-redesign .sum-card .sum-mine{flex-basis:100%;margin-top:3px;}
   .stats-cat.rich{grid-template-columns:30px minmax(0,1fr);gap:9px;padding:12px 4px;}
   .stats-cat.rich .sc-ic{width:30px;height:30px;flex:0 0 30px;}
@@ -3753,6 +3755,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.13 — 대시보드 '카테고리별 지출'·'사람별 분담' 글자 통일: 섹션 제목 11/600 회색(PC 카테고리 제목도), 이름 12.5/500(사람별 1위 600), 금액 12.5/600, 내 부담 PC 12/400·폰 10/600(파랑), 비율 12/400(1위 파랑 600).
 // v4.12 — 대시보드 '내 부담': 카테고리별 '총 377,000원' 옆에 내 부담(파란색·PC 11px·폰 10px), 막대 옅은 부분=총액·진한 부분=내 부담, 총 지출 카드에 '내 부담 N원 · N%'. 계산 = 사람별 분담(_receiptShare) + 참석자 없는 영수증은 결제자가 나/비었으면 전액(_myShareOf). 카테고리 영역이 좁으면 1열(container query + 이름이 눌리면 1열).
 // v4.11 — '중복 정리'가 같은 사진인데 이름·바이트만 다른 사본도 찾음: 어떤 영수증도 연결하지 않은 파일이 이름의 날짜·금액이 같은 연결된 파일과 사진이 같으면(256px 흑백 16×16 칸 비교) 정리 보관함으로. 연결된 파일은 옮기지 않음.
 // v4.10 — 앱은 Dropbox 파일을 지우지 않는다: '지우기'(중복 정리·옛 폴더 정리)는 전부 정리 보관함/날짜/원래 경로로 옮기기(_dbxTrash). 실제 삭제는 매일 자동 백업 30개 초과분(_dbxDeleteAutoSnapshot)만. check_app.py가 삭제 API·완료 폴더 autorename·덮어쓰기를 막는다. 설정 Dropbox 카드에 안내.
@@ -4155,7 +4158,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.12';
+const APP_VERSION='v4.13';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -9853,7 +9856,7 @@ function renderLedgerPanel(recs){
     <option value="name"${_ledgerCatSort==='name'?' selected':''}>이름순</option>
   </select>`;
   const catHtml=`<div class="budget-section">
-    <div class="budget-section-hd">카테고리별 지출 <span class="hd-cat-tools"><span class="hd-sub">${cats.length}개</span>${sortSel}</span></div>
+    <div class="budget-section-hd hd-sm">카테고리별 지출 <span class="hd-cat-tools"><span class="hd-sub">${cats.length}개</span>${sortSel}</span></div>
     <div class="stats-cat-wrap"><div class="cat-bars stats-cat-grid">${rows.map(r=>catRow(r)+(r.isGroup?r.subRows.map(s=>catRow(s,true)).join(''):'')).join('')}</div></div>
   </div>`;
 
