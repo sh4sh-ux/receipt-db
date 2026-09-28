@@ -3876,6 +3876,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.30 — 멤버십 빈 화면: '구독 등록' 버튼이 찌그러져 왼쪽에 붙고 PC에선 좌·우 두 번 나오던 것 → 안내(아이콘·설명·3단계) + 버튼 하나(PC 오른쪽 · 폰 목록), PC 왼쪽은 짧은 글만. 선불권 빈 화면 버튼도 같은 모양. 구독이 없을 때 빈 목록 머리 줄 숨김.
 // v4.29 — 멤버십 탭(선불권 → 멤버십, 사용자 시안 A): [구독 | 선불권] 전환. 구독(매달·매년)은 settings 'sub:' 기록, 결제일이 지나면 '결제됐나요? [건너뛰기][영수증 등록]'로 확인해 영수증(subId·subPeriod, id=rec_sub_<구독>_<기간>)으로 남긴다 — 기본 카테고리 문화. 동기화·백업에 subRecords. 구독 영수증은 '사진 없음'에서 뺀다.
 // v4.28 — 짚어 보기 다듬기(사용자 시안 B 선택): 날짜·건수·금액을 그래프 안 카드 대신 '지출 추이' 제목 줄 오른쪽('최근 12개월'·'일별' 자리)에 — 그래프와 손가락에 안 가림, 손 떼면 원래 글로. 세로선은 더 연하게(opacity .4)·고해상도는 0.5px. 쓰지 않게 된 .lp-float·.lp-tip CSS 삭제.
 // v4.27 — 지출 추이 짚어 보기: 그래프(축 글자 포함) 아무 데나 대고 옆으로 밀면 가장 가까운 칸에 얇은 세로선 + 금액·영수증 건수(선 옆 카드, 그래프 안에서만). 칸 폭이 아니라 x 위치로 골라 가는 막대도 고를 수 있다. 손 떼도 남고 다른 곳 누르면 닫힘, 위아래로 밀면 스크롤. PC는 마우스 올리면. 막대마다 있던 숨은 툴팁(.lp-tip)·탭 고정(pin)·v4.26 끝 정렬은 삭제.
@@ -4295,7 +4296,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.29';
+const APP_VERSION='v4.30';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6562,6 +6563,7 @@ let _ppChromeWasOn=false,_ppListQ='';
 function _applyPrepaidModeChrome(on){
   const side=document.querySelector('.side');if(!side)return;
   side.classList.toggle('pp-mode',on);
+  if(!on)side.classList.remove('sb-mode','sb-empty'); // v4.30 — 멤버십을 떠나면 구독 표시(툴바 숨김 등)를 풀어 내역 목록 머리가 사라지지 않게
   if(on)_ppChromeWasOn=true;
   const inp=document.getElementById('searchInp');
   if(on){

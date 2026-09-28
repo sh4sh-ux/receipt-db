@@ -178,6 +178,7 @@ function renderPrepaidSide(){
   const sn=document.getElementById('sbSegN');if(sn)sn.textContent=sbSubs().filter(x=>!(x.endedOn&&x.endedOn<=_todayYMD())).length;
   const pn=document.getElementById('ppSegN');if(pn)pn.textContent=all.length;
   document.querySelector('.side')?.classList.toggle('sb-mode',seg==='sub');
+  if(seg!=='sub')document.querySelector('.side')?.classList.remove('sb-empty');
   if(seg==='sub'){sbRenderSide();return;}
   const totalBal=all.reduce((s,w)=>s+ppTotals(prepaidRecords,w.id).balance,0);
   const ss=document.getElementById('ppSortSel2');if(ss&&ss.value!==ppListSort)ss.value=ppListSort;
@@ -260,12 +261,12 @@ function renderPrepaid(){
   const derive=w=>{const t=ppTotals(prepaidRecords,w.id);const uses=t.active.filter(e=>e.kind==='use').length;const charged=t.active.filter(e=>e.kind==='charge'||e.kind==='opening').reduce((s,e)=>s+e.amount,0);const suggested=ppSuggestedUseAmount(w,t);return {t,uses,charged,pct:charged>0?Math.round(t.used/charged*100):null,avg:uses>0?Math.round(t.used/uses):0,latestUse:ppLatestUse(t),suggested,remaining:suggested?Math.floor(t.balance/suggested):null,expired:w.expiresOn&&w.expiresOn<_todayYMD()};};
   if(sub){sbRenderDetail(root,sub);return;}
   if(!wallet&&seg==='sub'){
-    root.innerHTML=`<div class="empty-state" style="padding:56px 12px;"><div>${subs.length?'목록에서 구독을 선택하세요':'등록된 구독이 없어요'}</div>${subs.length?'':'<button class="primary-btn" type="button" id="sbEmptyNew2" style="margin-top:14px;width:auto;padding:0 18px">구독 등록</button>'}</div>`;
+    root.innerHTML=subs.length?'<div class="empty-state" style="padding:56px 12px;"><div>목록에서 구독을 선택하세요</div></div>':sbGuideHtml('sbEmptyNew2');
     root.querySelector('#sbEmptyNew2')?.addEventListener('click',()=>sbForm());return;
   }
   if(!wallet){
     // v3.91 — 목록은 좌측 패널. 오른쪽은 선불권이 없을 때만 안내(모바일 목록 화면에선 오른쪽이 안 보임).
-    root.innerHTML=`<div class="empty-state" style="padding:56px 12px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg><div>${wallets.length?'목록에서 선불권을 선택하세요':'등록된 선불권이 없어요'}</div>${wallets.length?'':'<button class="primary-btn" type="button" id="ppEmptyNew" style="margin-top:14px;width:auto;padding:0 18px">선불권 등록</button>'}</div>`;
+    root.innerHTML=`<div class="empty-state" style="padding:56px 12px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg><div>${wallets.length?'목록에서 선불권을 선택하세요':'등록된 선불권이 없어요'}</div>${wallets.length?'':'<button class="sbx-cta" type="button" id="ppEmptyNew">'+PP_ICO.charge+'선불권 등록</button>'}</div>`;
     root.querySelector('#ppEmptyNew')?.addEventListener('click',()=>ppWalletForm());return;
   }
   const d=derive(wallet),t=d.t;
@@ -609,8 +610,9 @@ function sbRenderSide(){
   const live=all.filter(x=>!x.st.ended),month=live.filter(x=>x.s.cycle==='month').reduce((a,x)=>a+x.s.amount,0),year=live.reduce((a,x)=>a+sbYearly(x.s),0);
   const lt=document.getElementById('ltInfo');
   if(lt)lt.innerHTML=q?`검색 결과 <b>${view.length}개</b>`:live.length?`${month?`매달 <b>${fmtMoney(month)}원</b> · `:''}1년 <b>${fmtMoney(year)}원</b>`:'';
+  document.querySelector('.side')?.classList.toggle('sb-empty',!all.length);
   if(!all.length){
-    listEl.innerHTML=`<div class="empty-state sbx-empty"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 14h3"/></svg><div>등록된 구독이 없어요<br/>넷플릭스·유튜브처럼 매달·매년 나가는 돈을 등록하면<br/>결제일에 영수증으로 남길 수 있어요</div><button class="primary-btn" type="button" id="sbEmptyNew" style="margin-top:14px;width:auto;padding:0 18px">구독 등록</button></div>`;
+    listEl.innerHTML=`<div class="empty-state sbx-deskonly">등록된 구독이 없어요<br/>위의 ‘등록’ 또는 오른쪽 안내에서 추가하세요</div>${sbGuideHtml('sbEmptyNew','sbx-mobonly')}`;
     listEl.querySelector('#sbEmptyNew')?.addEventListener('click',()=>sbForm());return;
   }
   if(!view.length){listEl.innerHTML='<div class="empty-state"><div>검색 결과가 없어요</div></div>';return;}
@@ -630,6 +632,13 @@ function sbRenderSide(){
     ask.querySelector('.sbx-ask-reg').addEventListener('click',e=>run(e.currentTarget,()=>sbRegister(s,period),'영수증으로 등록했어요.'));
     ask.querySelector('.sbx-ask-skip').addEventListener('click',e=>run(e.currentTarget,()=>sbSkip(s,period),'이번 결제는 건너뛰었어요.'));
   }
+}
+// v4.30 — 구독이 없을 때 안내(PC 오른쪽 · 폰 목록). 버튼은 하나만(PC 왼쪽은 짧은 글만).
+function sbGuideHtml(btnId,cls=''){
+  return `<div class="sbx-guide ${cls}"><div class="sbx-guide-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 14h3"/></svg></div>`
+    +`<h3>구독을 등록해 보세요</h3><p>넷플릭스·유튜브처럼 매달·매년 나가는 돈을 한 번 등록하면 <br/>결제일마다 ‘결제됐나요?’로 물어보고, 누르면 영수증으로 남겨요.</p>`
+    +`<div class="sbx-steps"><span>① 이름·금액·결제일</span><span>② 결제일에 확인</span><span>③ 통계에 반영</span></div>`
+    +`<button class="sbx-cta" type="button" id="${btnId}">${PP_ICO.charge}구독 등록</button></div>`;
 }
 // ── 오른쪽 상세(구독)
 const SB_ICO={
