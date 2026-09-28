@@ -408,6 +408,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 스캔함은 "레코드 저장 → 파일 이동" 순서를 지킨다(아래 스캔함 섹션).
 - Dutch Pay 전송 항목(`sendReceiptsToDutchPay`)은 `members`·`watchers`·`treat`까지 보낸다(v3.99). 필드를 바꾸면 dutch-pay `_consumeReceiptDbTransfer`도 같이 본다.
 **레이아웃·CSS**
+- `.main-body`는 `overflow-x:hidden`(v4.26) — 세로 스크롤러는 `overflow-x`가 자동으로 auto가 돼, 1px만 삐져나와도 iOS에서 화면이 옆으로 밀린다(지출 추이 끝 막대 툴팁). 끝에 붙는 툴팁은 가운데 정렬 대신 끝 정렬.
 - 문서가 아니라 `.main-body`/`.side-list`가 스크롤한다 — `window.scrollY`는 늘 0(v2.67). `html,body{overflow:hidden}`은 프로그램·iOS 시스템 스크롤은 못 막는다(v2.66).
 - 모바일 저장 바는 sticky도 fixed도 아니라 **스크롤 컨테이너 밖 flex 형제**(v2.64). fixed는 iOS 키보드에 밀린다(v2.30).
 - `backdrop-filter`가 있는 조상 안의 `position:fixed`는 그 조상 기준이 된다 → 시트는 `document.body`로 포탈(v3.29). 포탈한 요소는 `document.getElementById`로 찾는다(v3.73).
@@ -434,7 +435,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 검색 적용(`_applySearchInput`)은 **검색어가 그대로면 아무것도 하지 않는다**(v4.07). 한글 조합 중 결과 카드를 누르면 blur로 `compositionend`·`input`이 늦게 와 같은 검색어가 다시 적용되며 `selectedId`를 지워 상세가 검색 결과로 튕겼다. `selectReceipt`는 대기 중인 검색 타이머를 끈다. Playwright `keyboard.type`은 조합이 없어 재현되지 않으니 composition 이벤트를 직접 보내 검증.
 
 ## 현재 상태 (2026-09-27 기준)
-- **버전 `v4.25`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
+- **버전 `v4.26`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
 - 데이터: 실데이터 백업 기준 영수증 151건(2025-03 ~ 2026-09), 사진 142장, 선불권 사용. 3,000건 가상 데이터에서도 목록 0.01초·검색 0.1초·사람 화면 0.4초(데스크탑).
 
 ### 작업 흐름 (Claude Code 웹 세션)
