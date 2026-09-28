@@ -1073,6 +1073,14 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .org-fchip.on{background:var(--blue-bg);border-color:transparent;color:var(--blue-txt);}
 .org-list{flex:1;overflow-y:auto;padding:6px 12px 8px;-webkit-overflow-scrolling:touch;}
 .org-dgroup{margin-top:8px;}
+/* v4.22 — 만남 편집 '영수증 추가': 검색창(머리와 함께 고정) · 구역 제목('이 만남 전후'·'나머지 전체') */
+.mm-addsearch{flex-wrap:nowrap;}
+.mm-addq{flex:1;min-width:0;height:36px;padding:0 12px;border:1px solid var(--sep2);border-radius:var(--rs);background:var(--fill2);color:var(--label);font:inherit;font-size:16px;}
+.mm-addq::placeholder{color:var(--label3);font-size:13px;}
+.mm-addq:focus{outline:none;border-color:var(--blue);background:var(--card);}
+@media(min-width:781px){.mm-addq{font-size:13.5px;}}
+.mm-addsec{padding:14px 6px 2px;font-size:11px;font-weight:600;color:var(--label3);letter-spacing:.2px;}
+.mm-addnone{padding:10px 6px 6px;font-size:12.5px;color:var(--label3);}
 .org-dhd{display:flex;flex-direction:column;gap:3px;padding:8px 6px 6px;border-bottom:1px solid var(--sep);position:sticky;top:0;background:var(--card);z-index:1;}
 .org-dhd-top{display:flex;align-items:center;gap:10px;}
 .org-dhd-date{font-size:12.5px;font-weight:600;color:var(--label2);}
@@ -4281,7 +4289,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.21';
+const APP_VERSION='v4.22';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -8815,22 +8823,59 @@ function _mtgManageOpen(initialTab,init){
     if(mv)mv.disabled=n<1; if(dt)dt.disabled=n<1;
   }
   // ADD RECEIPTS(현재 만남에 묶이지 않은 receipt 추가)
+  // v4.22 — 맨 위 '이 만남 전후'(만남 날짜 하루 전~하루 뒤) · 검색(가게·사람·날짜·금액, 초성) · 그 아래 나머지 전체.
+  //   검색창은 다시 그리지 않고 목록만 바꾼다(한글 조합·포커스 유지). 선택(addSel)은 검색해도 유지.
+  let addQ='';
   function renderAddV(){
-    const cand=receipts.filter(r=>!r.meetingId); // 전역 묶이지 않은 receipt(§24·§25 — 과도 제한 안 함)
-    const groupByDate=recs=>{const map=new Map();for(const r of recs){const k=r.date||'';if(!map.has(k))map.set(k,[]);map.get(k).push(r);}return [...map.entries()].sort((a,b)=>b[0].localeCompare(a[0]));};
-    const groups=groupByDate(cand);
-    const body=groups.length?groups.map(([date,recs])=>{
-      const rows=recs.map(r=>{const on=addSel.has(r.id);const ppl=[...receiptPeople(r)].join(' · ');
-        return `<button type="button" class="org-row${on?' sel':''}" data-id="${esc2(r.id)}" aria-pressed="${on}"><span class="org-check" aria-hidden="true"></span><span class="org-row-main"><span class="org-row-top"><span class="org-row-store">${esc2(r.store||'(매장명 없음)')}</span><span class="org-row-amt">${fmtMoney(r.total||0)}원</span></span><span class="org-row-ppl">${esc2(ppl)}</span></span></button>`;}).join('');
-      return `<div class="org-dgroup"><div class="org-dhd"><div class="org-dhd-top"><span class="org-dhd-date">${date?esc2(fmtDateKor(date)+' '+_orgWeekday(date)):'날짜 없음'}</span><span class="org-dhd-cnt">${recs.length}건</span></div></div>${rows}</div>`;
-    }).join(''):'<div class="org-empty">추가할 묶이지 않은 영수증이 없어요.</div>';
+    addQ='';
     panel.innerHTML=`<div class="org-hd">${back_}<div class="org-title">영수증 추가</div><div class="org-sub">이 만남에 넣을 영수증을 선택하세요</div></div>
-      <div class="org-list">${body}</div>
+      <div class="org-filter mm-addsearch"><input type="search" id="mmAddQ" class="mm-addq" placeholder="가게·사람·날짜(8.7)·금액으로 찾기 · 초성도 돼요" autocomplete="off" enterkeyhint="search" aria-label="영수증 찾기"></div>
+      <div class="org-list" id="mmAddList"></div>
       <div class="org-actionbar"><div class="org-ab-info" id="mmAddInfo"></div><button type="button" class="org-ab-btn" id="mmAddDo" disabled>이 만남에 추가</button></div>`;
     document.getElementById('mmBackLbl').textContent='편집';
     panel.querySelector('#mmBack').onclick=back;
-    panel.querySelectorAll('.org-row[data-id]').forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(addSel.has(id))addSel.delete(id);else addSel.add(id);addBar();});
+    const qi=panel.querySelector('#mmAddQ');
+    qi.addEventListener('input',()=>{addQ=qi.value;paintAdd();});
     panel.querySelector('#mmAddDo').onclick=async()=>{const recs=idsToRecs(addSel);if(!recs.length)return;const ok=await _mtgAddToMeeting(recs,curMid);if(ok){addSel.clear();await refresh();view='edit';render();}};
+    paintAdd();
+  }
+  function _addHay(r){
+    const d=r.date||'', [y,m,dd]=d.split('-'), mi=+m||0, di=+dd||0;
+    const ppl=[...receiptPeople(r)].join(' ');
+    const dates=d?[d,`${y}${m}${dd}`,`${m}${dd}`,`${mi}.${di}`,`${mi}/${di}`,`${mi}월 ${di}일`,`${mi}월${di}일`,`${y}.${m}.${dd}`].join(' '):'';
+    const amt=r.total?`${r.total} ${fmtMoney(r.total)}`:'';
+    return `${r.store||''} ${ppl} ${dates} ${amt}`;
+  }
+  function _addMatch(r,q){
+    if(_isChoQuery(q))return _toCho(`${r.store||''} ${[...receiptPeople(r)].join(' ')}`).replace(/\s+/g,'').includes(_normChoQuery(q));
+    const hay=_addHay(r).toLowerCase(), qq=q.toLowerCase();
+    return hay.includes(qq)||hay.replace(/\s+/g,'').includes(qq.replace(/\s+/g,''));
+  }
+  function paintAdd(){
+    const listEl=panel.querySelector('#mmAddList'); if(!listEl)return;
+    const cand=receipts.filter(r=>!r.meetingId); // 전역 묶이지 않은 receipt(§24·§25 — 과도 제한 안 함)
+    const groupByDate=recs=>{const map=new Map();for(const r of recs){const k=r.date||'';if(!map.has(k))map.set(k,[]);map.get(k).push(r);}return [...map.entries()].sort((a,b)=>b[0].localeCompare(a[0]));};
+    const rowsHtml=recs=>recs.map(r=>{const on=addSel.has(r.id);const ppl=[...receiptPeople(r)].join(' · ');
+      return `<button type="button" class="org-row${on?' sel':''}" data-id="${esc2(r.id)}" aria-pressed="${on}"><span class="org-check" aria-hidden="true"></span><span class="org-row-main"><span class="org-row-top"><span class="org-row-store">${esc2(r.store||'(매장명 없음)')}</span><span class="org-row-amt">${fmtMoney(r.total||0)}원</span></span><span class="org-row-ppl">${esc2(ppl)}</span></span></button>`;}).join('');
+    const groupsHtml=recs=>groupByDate(recs).map(([date,rs])=>`<div class="org-dgroup"><div class="org-dhd"><div class="org-dhd-top"><span class="org-dhd-date">${date?esc2(fmtDateKor(date)+' '+_orgWeekday(date)):'날짜 없음'}</span><span class="org-dhd-cnt">${rs.length}건</span></div></div>${rowsHtml(rs)}</div>`).join('');
+    const q=addQ.trim();
+    let body;
+    if(q){
+      const hit=cand.filter(r=>_addMatch(r,q));
+      body=hit.length?`<div class="mm-addsec">찾은 영수증 ${hit.length}건</div>${groupsHtml(hit)}`:`<div class="org-empty">‘${esc2(q)}’에 맞는 묶이지 않은 영수증이 없어요.</div>`;
+    }else{
+      // 이 만남 날짜 하루 전~하루 뒤(자정 넘긴 2·3차, 나중에 등록한 택시비 등)
+      const ds=_mtgReceiptsById(curMid).map(r=>r.date).filter(Boolean).sort();
+      const shift=(iso,n)=>{const x=new Date(iso+'T00:00:00');x.setDate(x.getDate()+n);return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;};
+      const lo=ds.length?shift(ds[0],-1):'', hi=ds.length?shift(ds[ds.length-1],1):'';
+      const near=ds.length?cand.filter(r=>r.date&&r.date>=lo&&r.date<=hi):[];
+      const nearIds=new Set(near.map(r=>r.id)), rest=cand.filter(r=>!nearIds.has(r.id));
+      body=(near.length?`<div class="mm-addsec">이 만남 전후</div>${groupsHtml(near)}`:(ds.length?'<div class="mm-addsec">이 만남 전후</div><div class="mm-addnone">이 만남 날짜 전후에는 묶이지 않은 영수증이 없어요.</div>':''))
+        +(rest.length?`<div class="mm-addsec">나머지 전체 ${rest.length}건</div>${groupsHtml(rest)}`:'')
+        ||'<div class="org-empty">추가할 묶이지 않은 영수증이 없어요.</div>';
+    }
+    listEl.innerHTML=body;
+    listEl.querySelectorAll('.org-row[data-id]').forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(addSel.has(id))addSel.delete(id);else addSel.add(id);addBar();});
     addBar();
   }
   function addBar(){
