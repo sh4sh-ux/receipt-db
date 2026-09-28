@@ -3878,6 +3878,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.24 — 카테고리 '스파' → 화면 이름 '뷰티' + 연꽃 아이콘(beauty-line.svg). 저장값은 그대로 '스파'(기존 데이터·더치페이 호환), '뷰티'·'미용' 입력은 스파로. 자동 분류에 헤어·미용실·네일·왁싱·에스테틱·뷰티·바버 추가.
 // v4.23 — 버그: 검색 결과 '구매 이력' 표가 중간에서 잘려 더 내려가지 않았다('소주' 88줄 중 7월 초 이후 안 보임). 접이식 칸(.section-body) 펼침 높이가 2000px 고정이던 탓 → 펼치면 높이 제한 없음, 누를 때만 실제 높이로 움직임.
 // v4.22 — 만남 편집 '영수증 추가': 맨 위 '이 만남 전후'(만남 날짜 하루 전~하루 뒤 묶이지 않은 영수증) · 고정 검색창(가게·사람·날짜 8.7/0807/7월 21일·금액 156000/156,000·초성) · 그 아래 '나머지 전체'. 검색해도 선택 유지.
 // v4.21 — 모든 목록 창(.mtg-sheet: 만남·결제 밸런스·한턱·자주 간 곳·더치페이 보내기 등) 머리 고정: 제목 줄과 필터 줄은 스크롤해도 위에 남고, 만남 창의 월 제목은 그 아래에 붙었다가 다음 달로 바뀐다. 스크롤을 시작하면 고정 줄 아래에 구분선.
@@ -4291,7 +4292,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.23';
+const APP_VERSION='v4.24';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -4619,7 +4620,7 @@ const CAT_RULES=[
   {cat:'영화', kws:['영화','CGV','메가박스']},
   {cat:'숙박', kws:['숙박','호텔','풀빌라','펜션','숙소']},
   {cat:'골프', kws:['골프','라운드','그린피']},
-  {cat:'스파', kws:['스파','찜질방','사우나','마사지']},
+  {cat:'스파', kws:['스파','찜질방','사우나','마사지','헤어','미용실','네일','왁싱','에스테틱','뷰티','바버']}, // v4.24 — 화면 이름 '뷰티'
   {cat:'운동', kws:['운동','헬스','볼링','수영','스포츠']},
   {cat:'여행', kws:['여행','비행기','항공']},
   {cat:'기타', kws:['기타','분류없음']},
@@ -4640,7 +4641,7 @@ const CAT_ASSETS={
   '여행':'icons/categories/travel.svg',
   '숙박':'icons/categories/lodging.svg',
   '골프':'icons/categories/golf-line.svg',
-  '스파':'icons/categories/spa-line.svg',
+  '스파':'icons/categories/beauty-line.svg', // v4.24 — 화면 이름 '뷰티', 연꽃(저장값은 그대로 '스파')
   '운동':'icons/categories/fitness.svg',
   '경조사':'icons/categories/occasion.svg',
   '병원·약국':'icons/categories/medical.svg',
@@ -4661,7 +4662,7 @@ const CAT_SVGS={
   '영화':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>`,
   '숙박':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M2 18h20"/></svg>`,
   '골프':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V3l10 4-10 4"/><ellipse cx="13" cy="21" rx="7" ry="2"/></svg>`,
-  '스파':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 13c-1-1.15-1-2.3 0-3.45s1-2.3 0-3.45"/><path d="M12 13c-1-1.15-1-2.3 0-3.45s1-2.3 0-3.45"/><path d="M16.5 13c-1-1.15-1-2.3 0-3.45s1-2.3 0-3.45"/><path d="M4.5 15.5c2.1 1.25 4.6 1.9 7.5 1.9s5.4-.65 7.5-1.9"/><path d="M5 18c1.8 2 4.15 3 7 3s5.2-1 7-3"/></svg>`,
+  '스파':`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.8c-3.1 2.6-4 6.5-3.5 9.6.5 3.1 2.1 5 3.5 5.9 1.4-.9 3-2.8 3.5-5.9.5-3.1-.4-7-3.5-9.6Z"/><path d="M12 19.3c-5 .1-9.2-2.7-10.2-8.1 2.5-.4 4.9.1 6.8 1.3"/><path d="M12 19.3c5 .1 9.2-2.7 10.2-8.1-2.5-.4-4.9.1-6.8 1.3"/><path d="M4.6 11l.3-3c1.5.1 2.9.7 4.1 1.6"/><path d="M19.4 11l-.3-3c-1.5.1-2.9.7-4.1 1.6"/></svg>`,
   '운동':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h3v2h12V9h3v6h-3v-2H6v2H3V9Z"/><path d="M6 7h3v10H6zM15 7h3v10h-3z"/></svg>`,
   '여행':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c.9 0 1.4 1 1.4 2.1v4.2l6.6 4v2l-6.6-2v4.1l2.6 2V20L12 18.8 8 20v-1.1l2.6-2v-4.1l-6.6 2v-2l6.6-4V4.6c0-1.1.5-2.1 1.4-2.1Z"/></svg>`,
   '기타':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M8 17h5"/></svg>`,
@@ -4671,10 +4672,10 @@ const CAT_SVGS={
   '축의금':`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 0 1 2 2v16H5V5a2 2 0 0 1 2-2Z"/><path d="M5 7h14M12 7v14"/><path d="M5 18c1.2-1 2.6-1.5 4.2-1.5h5.6c1.6 0 3 .5 4.2 1.5"/></svg>`,
 };
 function normalizeCategory(cat){
-  const aliases={'부의금':'경조사','축의금':'경조사','마트':'쇼핑','문화':'영화','배달':'외식','병원':'병원·약국','약국':'병원·약국'};
+  const aliases={'부의금':'경조사','축의금':'경조사','마트':'쇼핑','문화':'영화','배달':'외식','병원':'병원·약국','약국':'병원·약국','뷰티':'스파','미용':'스파'};
   return aliases[cat]||cat||'';
 }
-const CATEGORY_LABELS={'케이크':'기념','영화':'문화','병원·약국':'의료','경조사':'경조'};
+const CATEGORY_LABELS={'케이크':'기념','영화':'문화','병원·약국':'의료','경조사':'경조','스파':'뷰티'}; // v4.24 — 스파 → 뷰티(헤어·네일·마사지·스파)
 function getCategoryLabel(cat){
   const normalized=normalizeCategory(cat);
   return CATEGORY_LABELS[normalized]||normalized||'';
