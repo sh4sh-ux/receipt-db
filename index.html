@@ -1475,25 +1475,21 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-bar.has{background:#60A5FA;opacity:.92;}
 .lp-col:hover .lp-bar.has{opacity:1;}
 .lp-xaxis{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--label2);font-variant-numeric:tabular-nums;}
-/* v3.22 — 밝은 툴팁(흰 카드). 금액만 Bold+진하게, 날짜/건수는 얇고 차분하게. 자식 요소라 부분 스타일 가능.
-   흰 배경+흰 글자 금지 규칙 준수(배경 흰색, 글자는 #111827/#6B7280 고정 — 두 테마 모두 가독). */
-.lp-float{position:absolute;top:0;left:0;pointer-events:none;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:9px;box-shadow:0 4px 14px rgba(17,24,39,.10);padding:8px 11px;white-space:nowrap;text-align:left;z-index:7;}
-/* v4.27 — 짚은 칸 세로선(그리기 전용). 칸을 고르는 동안 다른 막대는 흐리게 */
-.lp-cursor{position:absolute;top:0;bottom:0;left:0;width:1px;margin-left:-.5px;background:var(--label2);opacity:.6;pointer-events:none;z-index:6;}
+/* v4.28 — 짚은 칸의 날짜·건수·금액은 그래프 안 카드가 아니라 '지출 추이' 제목 줄 오른쪽에(그래프·손가락에 안 가림, 사용자 선택 B) */
+.lp-hdv{white-space:nowrap;line-height:1;font-size:11.5px;font-weight:500;color:var(--label2);}
+.lp-hdv b{font-size:13.5px;font-weight:700;color:var(--label);margin-left:6px;line-height:1;}
+/* v4.27 — 짚은 칸 세로선(그리기 전용, v4.28 더 얇고 연하게). 칸을 고르는 동안 다른 막대는 흐리게 */
+.lp-cursor{position:absolute;top:0;bottom:0;left:0;width:1px;margin-left:-.5px;background:var(--label2);opacity:.4;pointer-events:none;z-index:6;}
+@media (min-resolution:2dppx){.lp-cursor{transform:scaleX(.5);}} /* v4.28 — 고해상도 화면은 0.5px 실선 */
 .lp-canvas-col{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:crosshair;}
 .lp-bars.scrub .lp-bar.has{opacity:.4;}
 .lp-bars.scrub .lp-col.on .lp-bar.has{opacity:1;}
-.lp-tip .d{display:block;font-size:12px;font-weight:500;color:#6B7280;line-height:1.3;}
-.lp-tip .a{display:block;font-size:14px;font-weight:700;color:#111827;line-height:1.35;margin-top:1px;}
-.lp-tip .c{display:block;font-size:12px;font-weight:400;color:#6B7280;line-height:1.3;margin-top:1px;}
 /* v3.17 — 모바일 툴팁도 읽히게(고해상도) 11px */
 @media(max-width:780px){
   .spark-bar[data-day]:hover::after,.spark-bar[data-lbl]:hover::after{font-size:11px;padding:6px 9px;}
   .lp-yaxis,.lp-canvas{height:146px;}
   .lp-yaxis{font-size:10px;}
   .lp-xaxis{font-size:10.5px;}
-  .lp-tip{padding:7px 9px;}
-  .lp-tip .a{font-size:13px;}
   /* v3.19 — 기간 컨트롤을 모바일에서도 헤더 우측에. 좁은 폭에 맞게 pill 축소 */
   #ledgerPeriodSlot{align-self:center;}
   #ledgerPeriodSlot .ledger-period{gap:6px;}
@@ -3881,6 +3877,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.28 — 짚어 보기 다듬기(사용자 시안 B 선택): 날짜·건수·금액을 그래프 안 카드 대신 '지출 추이' 제목 줄 오른쪽('최근 12개월'·'일별' 자리)에 — 그래프와 손가락에 안 가림, 손 떼면 원래 글로. 세로선은 더 연하게(opacity .4)·고해상도는 0.5px. 쓰지 않게 된 .lp-float·.lp-tip CSS 삭제.
 // v4.27 — 지출 추이 짚어 보기: 그래프(축 글자 포함) 아무 데나 대고 옆으로 밀면 가장 가까운 칸에 얇은 세로선 + 금액·영수증 건수(선 옆 카드, 그래프 안에서만). 칸 폭이 아니라 x 위치로 골라 가는 막대도 고를 수 있다. 손 떼도 남고 다른 곳 누르면 닫힘, 위아래로 밀면 스크롤. PC는 마우스 올리면. 막대마다 있던 숨은 툴팁(.lp-tip)·탭 고정(pin)·v4.26 끝 정렬은 삭제.
 // v4.26 — 버그: 폰 통계에서 '전체 기간'을 고르면 화면이 옆으로 밀림. 지출 추이 마지막 막대의 숨은 툴팁(가운데 정렬)이 화면 밖으로 삐져나와 스크롤 영역이 옆으로 움직였다 → 양 끝 막대 툴팁은 막대 쪽 끝에 맞추고(.tip-l/.tip-r), .main-body는 overflow-x:hidden.
 // v4.25 — 선불권 상세 새 디자인(사용자 확정 시안): 월렛 카드(남은 잔액·약 N회·남은 비율·1회 금액) · 아이콘 버튼 · 월별 내역(잔액·화살표 없음) · 줄을 누르면 기록 창(보기 → [수정] 같은 창에서 입력칸+[취소][저장] / [삭제] 잔액 변화 확인+[삭제하기]). 수정 = 원래 기록 취소 + 고친 기록 추가를 한 트랜잭션으로(prepaid.js ppCommitEdit), 결제 영수증이 연결된 기록은 수정 불가.
@@ -4298,7 +4295,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.27';
+const APP_VERSION='v4.28';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -10118,7 +10115,7 @@ function renderLedgerPanel(recs){
   const tr=_ledgerTrend(recs);
   const yMax=tr.yMax||1;
   const trendHtml=`<div class="budget-section">
-    <div class="budget-section-hd">지출 추이 <span class="hd-sub">${tr.note}</span></div>
+    <div class="budget-section-hd">지출 추이 <span class="hd-sub lp-hd" data-note="${escapeHtml(tr.note)}">${tr.note}</span></div>
     <div class="lp-trend">
       <div class="lp-plot">
         <ul class="lp-yaxis">${tr.yTicks.map(v=>`<li>${_fmtAxisAmt(v)}</li>`).join('')}</ul>
@@ -10128,7 +10125,7 @@ function renderLedgerPanel(recs){
             <div class="lp-bars">
               ${tr.bars.map(b=>{const h=yMax>0?(b.amt>0?Math.max(2,Math.round(b.amt/yMax*100)):0):0;return `<div class="lp-col${b.amt>0?' has':''}" data-l="${escapeHtml(b.lbl)}" data-a="${b.amt}" data-c="${b.cnt}"><div class="lp-bar${b.amt>0?' has':''}" style="height:${h}%;"></div></div>`;}).join('')}
             </div>
-            <div class="lp-cursor" hidden></div><div class="lp-tip lp-float" hidden></div>
+            <div class="lp-cursor" hidden></div>
           </div>
           <div class="lp-xaxis">${tr.axis.map(a=>`<span>${escapeHtml(a)}</span>`).join('')}</div>
         </div>
@@ -10927,7 +10924,7 @@ async function renderDetail(){
       _openRelationGroupSplitDetail(g.dataset.rgid,_splitSectionList);
     });
     body.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')){const g=e.target.closest&&e.target.closest('.psplit-row[data-rgid]');if(g&&body.contains(g)){e.preventDefault();_openRelationGroupSplitDetail(g.dataset.rgid,_splitSectionList);}}});
-    // v4.27 — 지출 추이: 그래프(축 글자 포함) 아무 데나 손가락을 대고 옆으로 밀면 가장 가까운 칸에 세로선 + 금액·건수.
+    // v4.27 — 지출 추이: 그래프(축 글자 포함) 아무 데나 손가락을 대고 옆으로 밀면 가장 가까운 칸에 세로선 + 금액·건수(v4.28 제목 줄 오른쪽).
     //   막대가 가늘어도(일별 30칸) 고를 수 있게 칸 폭이 아니라 x 위치로 고른다. 손을 떼도 남고, 다른 곳을 누르면 닫힘.
     //   위아래로 밀면 브라우저 스크롤(touch-action:pan-y → pointercancel)로 넘겨 닫는다. 마우스는 올리면 보이고 벗어나면 닫힘.
     const lpAt=(wrap,clientX)=>{
@@ -10935,19 +10932,16 @@ async function renderDetail(){
       const cols=bars?[...bars.children]:[];if(!cols.length||!canvas)return;
       const br=bars.getBoundingClientRect();
       const i=Math.max(0,Math.min(cols.length-1,Math.floor((clientX-br.left)/br.width*cols.length)));
-      const col=cols[i],cur=canvas.querySelector('.lp-cursor'),tip=canvas.querySelector('.lp-float');
+      const col=cols[i],cur=canvas.querySelector('.lp-cursor'),hd=wrap.closest('.budget-section')?.querySelector('.lp-hd');
       cols.forEach(c=>c.classList.toggle('on',c===col));bars.classList.add('scrub');
-      const cr=canvas.getBoundingClientRect(),kr=col.getBoundingClientRect(),x=kr.left+kr.width/2-cr.left;
-      cur.style.left=x+'px';cur.hidden=false;
-      const cnt=+col.dataset.c||0;
-      tip.innerHTML=`<span class="d">${escapeHtml(col.dataset.l||'')}</span><span class="a">${fmtMoney(+col.dataset.a||0)}원</span><span class="c">영수증 ${cnt}건</span>`;
-      tip.hidden=false;
-      const w=tip.offsetWidth;
-      tip.style.left=Math.max(0,Math.min(cr.width-w,x<cr.width/2?x+8:x-8-w))+'px';
+      const cr=canvas.getBoundingClientRect(),kr=col.getBoundingClientRect();
+      cur.style.left=(kr.left+kr.width/2-cr.left)+'px';cur.hidden=false;
+      if(hd)hd.innerHTML=`<span class="lp-hdv">${escapeHtml(col.dataset.l||'')} · ${+col.dataset.c||0}건<b>${fmtMoney(+col.dataset.a||0)}원</b></span>`;
     };
     const lpOff=()=>{
       body.querySelectorAll('.lp-bars.scrub').forEach(b=>{b.classList.remove('scrub');b.querySelectorAll('.lp-col.on').forEach(c=>c.classList.remove('on'));});
-      body.querySelectorAll('.lp-cursor,.lp-float').forEach(n=>{n.hidden=true;});
+      body.querySelectorAll('.lp-cursor').forEach(n=>{n.hidden=true;});
+      body.querySelectorAll('.lp-hd').forEach(h=>{if(h.firstElementChild)h.textContent=h.dataset.note||'';});
     };
     let lpDrag=null;
     body.addEventListener('pointerdown',e=>{
