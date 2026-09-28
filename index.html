@@ -860,6 +860,16 @@ th.mtg-chk{background:var(--fill2);}
 .mtg-sheet-cancel{padding:9px 15px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-secondary);font-size:var(--fs-secondary);cursor:pointer;font-family:inherit;}
 .mtg-sheet-ok{padding:9px 16px;border:none;border-radius:8px;background:var(--color-primary);color:#fff;font-size:var(--fs-secondary);font-weight:600;cursor:pointer;font-family:inherit;}
 .mtg-sheet-ok:disabled{background:var(--border);color:var(--text-tertiary);cursor:not-allowed;}
+/* v4.21 — 목록 창 머리 고정(모든 .mtg-sheet). 제목 줄·필터 줄을 창 끝까지 넓혀(--shp = 창 안쪽 여백만큼) 배경으로 뒤 내용을 가린다.
+   스크롤이 시작되면 마지막 고정 줄 아래에만 구분선. 부제(메타)는 위로 사라진다. */
+.mtg-sheet{--shp:22px;}
+.mtg-sheet>.mtg-sheet-hd{position:sticky;top:calc(-1 * var(--shp));z-index:4;background:var(--card);margin:calc(-1 * var(--shp)) calc(-1 * var(--shp)) 0;padding:var(--shp) var(--shp) 9px;}
+.mtg-sheet>.pd-filter,.mtg-sheet>.mtl-bar{position:sticky;top:calc(var(--sh-hd,56px) - var(--shp));z-index:4;background:var(--card);margin-left:calc(-1 * var(--shp));margin-right:calc(-1 * var(--shp));padding-left:var(--shp);padding-right:var(--shp);}
+.mtg-sheet>.pd-filter{margin-top:0;margin-bottom:0;padding-top:2px;padding-bottom:10px;}
+.mtg-sheet>.mtl-bar{margin-top:0;margin-bottom:0;padding-top:12px;padding-bottom:8px;}
+.mtg-sheet [data-shlast]{transition:box-shadow .15s;}
+.mtg-sheet.is-scrolled [data-shlast]{box-shadow:0 1px 0 var(--divider);}
+.mtg-sheet .mtl-mh{position:sticky;top:calc(var(--sh-top,100px) - var(--shp));z-index:3;background:var(--card);}
 @media(max-width:780px){
   .mtg-sheet-backdrop{align-items:flex-end;padding:0;}
   .mtg-sheet{max-width:none;border-radius:var(--r) var(--r) 0 0;max-height:86vh;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));}
@@ -3860,6 +3870,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.21 — 모든 목록 창(.mtg-sheet: 만남·결제 밸런스·한턱·자주 간 곳·더치페이 보내기 등) 머리 고정: 제목 줄과 필터 줄은 스크롤해도 위에 남고, 만남 창의 월 제목은 그 아래에 붙었다가 다음 달로 바뀐다. 스크롤을 시작하면 고정 줄 아래에 구분선.
 // v4.20 — 만남 창 다듬기: PC에서 글자를 구분선 끝에서 12px 안쪽으로(구분선은 끝까지) · 화살표 없이 줄을 누르면 펼침(PC도 폰처럼) · [더치페이로 보내기][편집] 왼쪽 끝을 결제자 점에 맞춤.
 // v4.19 — 만남 창 새 디자인(시안 ②): 만남 관리 버튼과 만남 전체·단둘이·여럿이 타일이 같은 창. 한 줄 = 만남 1회(날짜 줄 '19일 토요일' · 첫 가게 외 N곳 · 단둘이/○○ 외 N명·한턱 · 총액 / 내 부담), 누르면 그 자리에서 차수(시간)·결제자 점·[더치페이로 보내기][편집]. 만남 횟수 = meetingId 만남 + 묶이지 않은 영수증은 같은 날끼리 1회(새벽 6시 전 영수증은 전날).
 // v4.18 — 사람 화면 다듬기: 헤더 [전체 기간][+ 영수증 추가] 높이 32px로 같게 · 기간 버튼 꺾쇠를 선으로 크게 · 결제 밸런스 부제(정산 후 실제로 낸 돈…) 제거하고 [전체·단둘이·여럿이]를 제목 줄 오른쪽에(폰도 한 줄) · '조상현이 ○원 더 냈어요'·'더 한턱냈어요' 문장 17→15px, 굵기 500→400(숫자 700→600).
@@ -4270,7 +4281,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.20';
+const APP_VERSION='v4.21';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -9039,6 +9050,17 @@ function _mtgSheetOpen(){
   const close=(after)=>{const cb=(typeof after==='function')?after:null;if(_torn){if(cb)cb();return;} _ovDismissById(ovid,cb,teardown);};
   document.addEventListener('keydown',onKey);
   bd.addEventListener('click',e=>{if(e.target===bd)close();});
+  // v4.21 — 모든 목록 창 머리 고정: 제목 줄(+ 필터 줄)은 스크롤해도 위에 남고, 월 제목은 그 아래에 붙는다. 창 내용이 바뀔 때마다 높이를 다시 잰다.
+  const syncStick=()=>{
+    const hd=card.querySelector(':scope>.mtg-sheet-hd'), fl=card.querySelector(':scope>.pd-filter, :scope>.mtl-bar');
+    const hh=hd?hd.offsetHeight:0;
+    card.style.setProperty('--sh-hd',hh+'px');
+    card.style.setProperty('--sh-top',(hh+(fl?fl.offsetHeight:0))+'px');
+    card.querySelectorAll('[data-shlast]').forEach(n=>n.removeAttribute('data-shlast'));
+    const last=fl||hd; if(last)last.setAttribute('data-shlast','');
+  };
+  new MutationObserver(syncStick).observe(card,{childList:true});
+  card.addEventListener('scroll',()=>card.classList.toggle('is-scrolled',card.scrollTop>2),{passive:true});
   return {bd,card,close};
 }
 // 특정 오버레이 id를 UI로 닫기: 스택 top이면 history.back으로 소비, 아니면 직접 teardown(중첩/데스크탑 안전).
