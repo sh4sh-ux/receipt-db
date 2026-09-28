@@ -422,6 +422,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 같은 이름의 함수를 두 번 선언하면 뒤의 것이 조용히 덮는다(v3.79 — `_setSaveState` 충돌로 추가 화면 저장이 안 켜졌다).
 - `renderDetail`은 동기화 뒤에도 불린다 — 열린 목록 팝업(`.mtg-sheet-backdrop`)을 지우지 말 것(v4.17, 창이 저절로 닫힘).
 - 오버레이(시트·모달·drill-down)는 반드시 `_ovPush`/`_ovDismiss`로 history에 올린다 — 안 하면 iOS 뒤로 스와이프가 밑 화면을 건드리거나 새로고침된다(v3.72~73, 유령 오버레이 v3.90).
+- 목록 창(`.mtg-sheet`)은 머리 고정(v4.21): 창의 **직계 자식** `.mtg-sheet-hd`·`.pd-filter`/`.mtl-bar`만 sticky(높이는 `_mtgSheetOpen`의 MutationObserver가 `--sh-hd`·`--sh-top`으로). 새 창의 필터 줄도 이 클래스를 창 바로 아래에 두면 자동으로 고정된다. 창 안쪽 여백을 바꾸면 `--shp`도 같이.
 - `_openPersonDetailShell`은 title·subtitle을 한 번만 escape한다 — 호출하는 쪽에서 미리 escape하지 말 것(v3.75 `&amp;` 노출).
 - drag 중 요소를 DOM에서 옮기면 pointer capture가 풀린다 — translateY로 미리보기(v3.83).
 - `JSON.stringify` 결과를 HTML 속성에 그대로 넣지 말 것 → escape 헬퍼. 사용자 입력은 `escapeHtml`(2026-09-27 점검: 매장명·참석자·메모·품목에 HTML을 넣어도 실행 안 됨).
@@ -432,7 +433,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 검색 적용(`_applySearchInput`)은 **검색어가 그대로면 아무것도 하지 않는다**(v4.07). 한글 조합 중 결과 카드를 누르면 blur로 `compositionend`·`input`이 늦게 와 같은 검색어가 다시 적용되며 `selectedId`를 지워 상세가 검색 결과로 튕겼다. `selectReceipt`는 대기 중인 검색 타이머를 끈다. Playwright `keyboard.type`은 조합이 없어 재현되지 않으니 composition 이벤트를 직접 보내 검증.
 
 ## 현재 상태 (2026-09-27 기준)
-- **버전 `v4.20`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
+- **버전 `v4.21`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
 - 데이터: 실데이터 백업 기준 영수증 151건(2025-03 ~ 2026-09), 사진 142장, 선불권 사용. 3,000건 가상 데이터에서도 목록 0.01초·검색 0.1초·사람 화면 0.4초(데스크탑).
 
 ### 작업 흐름 (Claude Code 웹 세션)
