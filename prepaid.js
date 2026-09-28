@@ -55,7 +55,7 @@ function ppTotals(records,walletId){
   return {balance,paid,used,events,active,voided};
 }
 async function ppExport(){return (await dbAll('settings')).filter(r=>r.key.startsWith(PP_PREFIX));}
-async function ppLoad(){prepaidRecords=ppValidateRecords(await ppExport());}
+async function ppLoad(){prepaidRecords=ppValidateRecords(await ppExport());if(typeof sbLoad==='function')await sbLoad();} // v4.29 — 구독도 함께
 async function ppMerge(rows){
   const incoming=ppValidateRecords(rows);
   if(!incoming.length)return 0;
@@ -136,10 +136,22 @@ async function ppCommit(walletInput,values){
 
 function ppWallets(){return prepaidRecords.filter(r=>r.type==='wallet');}
 function ppOpen(id){
-  prepaidSelectedId=id;if(id)ppLastSel=id;ppHistTab='use';ppHistSort='recent';
+  prepaidSelectedId=id;ppHistTab='use';ppHistSort='recent';
+  if(id){if(String(id).startsWith('sub_')){sbLastSel=id;sbSetSeg('sub');}else{ppLastSel=id;sbSetSeg('pp');}} // v4.29 — 구독·선불권 한 선택값, 연 쪽으로 [구독|선불권] 전환
   renderPrepaid();if(typeof renderSide==='function')renderSide();
   if(typeof _syncMobileSurface==='function')_syncMobileSurface();
   const b=document.getElementById('prepaidBody');if(b)b.scrollTop=0;
+}
+// v4.29 — 등록 창 저장 뒤 여는 것은 비동기라 클릭 기록(_captureNavigation)이 못 잡는다 → 같은 방식으로 이동을 직접 기록(‹ 멤버십 = 목록으로).
+function ppOpenRecorded(id){
+  if(typeof _navigationSnapshot!=='function'){ppOpen(id);return;}
+  const before=_navigationSnapshot();ppOpen(id);
+  setTimeout(()=>{
+    const after=_navigationSnapshot();if(JSON.stringify(before.route)===JSON.stringify(after.route))return;
+    const index=history.state?.receiptNavigation?.index||0;
+    history.replaceState({...history.state,receiptNavigation:{index,...before}},'');
+    history.pushState({receiptNavigation:{index:index+1,...after}},'');
+  },0);
 }
 // v3.91 — 좌측 패널(영수증·사람 목록과 같은 grammar) 선불권 목록. 값은 기존 ppTotals·ppLatestUse만 사용(계산 불변).
 function ppListView(){
@@ -160,14 +172,20 @@ function renderPrepaidSide(){
   const listEl=document.getElementById('sideList');if(!listEl)return;
   const esc=escapeHtml,money=n=>fmtMoney(n)+'원';
   if(typeof _updatePhotoFilterUi==='function')_updatePhotoFilterUi();
-  const all=ppWallets();
-  const tot=document.getElementById('ppScopeTotal');if(tot)tot.textContent=money(all.reduce((s,w)=>s+ppTotals(prepaidRecords,w.id).balance,0));
+  const all=ppWallets(),seg=sbCurSeg();
+  // v4.29 — [구독 | 선불권] 전환(범위 행). 선불권 총 잔액은 목록 머리(ltInfo)로 옮겼다.
+  document.querySelectorAll('#ppSeg [data-seg]').forEach(b=>{const on=b.dataset.seg===seg;b.classList.toggle('on',on);b.setAttribute('aria-selected',String(on));});
+  const sn=document.getElementById('sbSegN');if(sn)sn.textContent=sbSubs().filter(x=>!(x.endedOn&&x.endedOn<=_todayYMD())).length;
+  const pn=document.getElementById('ppSegN');if(pn)pn.textContent=all.length;
+  document.querySelector('.side')?.classList.toggle('sb-mode',seg==='sub');
+  if(seg==='sub'){sbRenderSide();return;}
+  const totalBal=all.reduce((s,w)=>s+ppTotals(prepaidRecords,w.id).balance,0);
   const ss=document.getElementById('ppSortSel2');if(ss&&ss.value!==ppListSort)ss.value=ppListSort;
   const view=ppListView();
   const lt=document.getElementById('ltInfo');
-  if(lt)lt.innerHTML=`${(typeof _ppListQ==='string'&&_ppListQ.trim())?'검색 결과':'선불권'} <b>${view.length}개</b>`;
+  if(lt)lt.innerHTML=(typeof _ppListQ==='string'&&_ppListQ.trim())?`검색 결과 <b>${view.length}개</b>`:all.length?`남은 잔액 <b>${money(totalBal)}</b>`:'';
   if(!view.length){
-    listEl.innerHTML=`<div class="empty-state"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg><div>${all.length?'검색 결과가 없어요':'등록된 선불권이 없어요<br/>위의 ‘선불권 등록’으로 추가하세요'}</div></div>`;
+    listEl.innerHTML=`<div class="empty-state"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg><div>${all.length?'검색 결과가 없어요':'등록된 선불권이 없어요<br/>위의 ‘등록’으로 추가하세요'}</div></div>`;
     return;
   }
   listEl.innerHTML='<div class="list-group">'+view.map(x=>{
@@ -200,43 +218,51 @@ const PP_ICO={
 };
 function renderPrepaid(){
   const root=document.getElementById('prepaidBody');if(!root)return;
-  const wallets=ppWallets();
-  // v3.91 — 데스크탑은 목록이 왼쪽에 있으므로 오른쪽은 항상 선불권 하나(마지막으로 본 것 → 목록 첫 번째). 모바일은 목록부터.
-  if(!wallets.some(w=>w.id===prepaidSelectedId))prepaidSelectedId=null;
-  if(!prepaidSelectedId&&wallets.length&&!(typeof _isMobileLayout==='function'&&_isMobileLayout())){
-    prepaidSelectedId=wallets.some(w=>w.id===ppLastSel)?ppLastSel:(ppListView()[0]||{w:wallets[0]}).w.id;
+  const wallets=ppWallets(),subs=sbSubs(),seg=sbCurSeg();
+  // v3.91 — 데스크탑은 목록이 왼쪽에 있으므로 오른쪽은 항상 하나(마지막으로 본 것 → 목록 첫 번째). 모바일은 목록부터.
+  // v4.29 — 선택값 하나로 구독(sub_…)·선불권을 함께 다룬다. 데스크탑 자동 선택은 지금 보고 있는 쪽([구독|선불권])에서.
+  if(!wallets.some(w=>w.id===prepaidSelectedId)&&!subs.some(x=>x.id===prepaidSelectedId))prepaidSelectedId=null;
+  if(!prepaidSelectedId&&!(typeof _isMobileLayout==='function'&&_isMobileLayout())){
+    if(seg==='sub'){if(subs.length)prepaidSelectedId=subs.some(x=>x.id===sbLastSel)?sbLastSel:sbOrdered()[0].s.id;}
+    else if(wallets.length)prepaidSelectedId=wallets.some(w=>w.id===ppLastSel)?ppLastSel:(ppListView()[0]||{w:wallets[0]}).w.id;
   }
-  if(prepaidSelectedId)ppLastSel=prepaidSelectedId;
+  const sub=subs.find(x=>x.id===prepaidSelectedId);
+  if(sub)sbLastSel=sub.id;else if(prepaidSelectedId)ppLastSel=prepaidSelectedId;
   const wallet=wallets.find(w=>w.id===prepaidSelectedId);
   const money=n=>fmtMoney(n)+'원',esc=escapeHtml;
-  document.getElementById('viewPrepaid').classList.toggle('pp-detail-view',!!wallet);
+  document.getElementById('viewPrepaid').classList.toggle('pp-detail-view',!!(wallet||sub));
   // v3.52 — 상세 헤더를 영수증 상세와 동일한 Responsive Detail Header grammar로 통일(데스크탑·모바일 공통):
   //   breadcrumb(← 선불권) + 제목(매장명, 한 줄 ellipsis) + meta(남은 잔액). 정보구조·계산·본문 액션은 불변.
   const _ppEb=document.getElementById('prepaidEyebrow');
   const _ppEyeRow=document.getElementById('prepaidEyeRow');
   const _ppVer=_ppEyeRow?_ppEyeRow.querySelector('.js-app-version'):null;
   const _ppMeta=document.getElementById('prepaidMeta');
-  if(wallet){
+  if(wallet||sub){
     // breadcrumb (목록 복귀) — 영수증 상세의 .back-to-summary와 같은 결
     // v3.91 — 데스크탑: 눈썹 'Receipt DB'(목록이 왼쪽에 있어 breadcrumb 불필요) / 모바일: '‹ 선불권' breadcrumb(목록 복귀).
-    _ppEb.innerHTML='<span class="pp-eb-d">Receipt DB</span><button class="back-to-summary pp-eb-m" id="prepaidBreadcrumb" type="button"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>선불권</button>';
+    _ppEb.innerHTML='<span class="pp-eb-d">Receipt DB</span><button class="back-to-summary pp-eb-m" id="prepaidBreadcrumb" type="button"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>멤버십</button>';
     const _crumb=document.getElementById('prepaidBreadcrumb');
     if(_crumb)_crumb.addEventListener('click',()=>{if(history.state?.receiptNavigation?.index>0&&history.state.receiptNavigation.route?.tab==='prepaid')history.back();else ppOpen(null);});
     if(_ppVer)_ppVer.hidden=false;
-    document.getElementById('prepaidTitle').textContent=wallet.name;
-    const _exp=wallet.expiresOn&&wallet.expiresOn<_todayYMD();
-    if(_ppMeta){_ppMeta.hidden=false;_ppMeta.textContent=[getCategoryLabel(wallet.category),_exp?'유효기간 지남':wallet.expiresOn?'유효기간 '+wallet.expiresOn.replace(/-/g,'.'):'유효기간 없음'].filter(Boolean).join(' · ');}
-    _ppMeta&&_ppMeta.classList.toggle('pp-meta-danger',!!_exp);
+    document.getElementById('prepaidTitle').textContent=(wallet||sub).name;
+    const _exp=!!(wallet&&wallet.expiresOn&&wallet.expiresOn<_todayYMD());
+    if(_ppMeta){_ppMeta.hidden=false;_ppMeta.textContent=sub?['구독',getCategoryLabel(sub.category),sub.endedOn&&sub.endedOn<=_todayYMD()?'해지함':''].filter(Boolean).join(' · '):[getCategoryLabel(wallet.category),_exp?'유효기간 지남':wallet.expiresOn?'유효기간 '+wallet.expiresOn.replace(/-/g,'.'):'유효기간 없음'].filter(Boolean).join(' · ');}
+    _ppMeta&&_ppMeta.classList.toggle('pp-meta-danger',_exp);
   }else{
     _ppEb.textContent='Receipt DB';
     if(_ppVer)_ppVer.hidden=false;
-    document.getElementById('prepaidTitle').textContent='선불권';
+    document.getElementById('prepaidTitle').textContent='멤버십';
     if(_ppMeta){_ppMeta.hidden=true;_ppMeta.textContent='';}
   }
   document.getElementById('prepaidNew').hidden=true; // v3.91 — 등록은 좌측 범위 행(#ppSideNew)
   document.getElementById('prepaidBack').hidden=true; // v3.30 — 화면 내 뒤로가기 화살표 UI 제거(목록 복귀는 breadcrumb)
   // 파생값(전부 기존 계산 함수만 사용)
   const derive=w=>{const t=ppTotals(prepaidRecords,w.id);const uses=t.active.filter(e=>e.kind==='use').length;const charged=t.active.filter(e=>e.kind==='charge'||e.kind==='opening').reduce((s,e)=>s+e.amount,0);const suggested=ppSuggestedUseAmount(w,t);return {t,uses,charged,pct:charged>0?Math.round(t.used/charged*100):null,avg:uses>0?Math.round(t.used/uses):0,latestUse:ppLatestUse(t),suggested,remaining:suggested?Math.floor(t.balance/suggested):null,expired:w.expiresOn&&w.expiresOn<_todayYMD()};};
+  if(sub){sbRenderDetail(root,sub);return;}
+  if(!wallet&&seg==='sub'){
+    root.innerHTML=`<div class="empty-state" style="padding:56px 12px;"><div>${subs.length?'목록에서 구독을 선택하세요':'등록된 구독이 없어요'}</div>${subs.length?'':'<button class="primary-btn" type="button" id="sbEmptyNew2" style="margin-top:14px;width:auto;padding:0 18px">구독 등록</button>'}</div>`;
+    root.querySelector('#sbEmptyNew2')?.addEventListener('click',()=>sbForm());return;
+  }
   if(!wallet){
     // v3.91 — 목록은 좌측 패널. 오른쪽은 선불권이 없을 때만 안내(모바일 목록 화면에선 오른쪽이 안 보임).
     root.innerHTML=`<div class="empty-state" style="padding:56px 12px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg><div>${wallets.length?'목록에서 선불권을 선택하세요':'등록된 선불권이 없어요'}</div>${wallets.length?'':'<button class="primary-btn" type="button" id="ppEmptyNew" style="margin-top:14px;width:auto;padding:0 18px">선불권 등록</button>'}</div>`;
@@ -261,9 +287,9 @@ function renderPrepaid(){
   const emptyHist='<div class="empty-state">충전 또는 사용 기록이 없어요.</div>';
   const remainPct=d.charged>0?Math.max(0,Math.min(100,Math.round(t.balance/d.charged*100))):null;
   const expTxt=d.expired?'유효기간 지남':wallet.expiresOn?'유효기간 '+wallet.expiresOn.replace(/-/g,'.'):'유효기간 없음';
-  const sub=d.remaining!==null&&d.remaining>=0&&t.balance>0?`약 ${d.remaining}회 더 이용할 수 있어요`:priceInfo;
+  const subTxt=d.remaining!==null&&d.remaining>=0&&t.balance>0?`약 ${d.remaining}회 더 이용할 수 있어요`:priceInfo;
   const cardHtml=`<div class="ppx-wal${d.expired?' expired':''}"><div class="ppx-wal-top"><span>남은 잔액</span><span>${esc(expTxt)}</span></div>`
-    +`<div class="ppx-wal-bal">${fmtMoney(t.balance)}<small>원</small></div>${sub?`<div class="ppx-wal-sub">${esc(sub)}</div>`:''}`
+    +`<div class="ppx-wal-bal">${fmtMoney(t.balance)}<small>원</small></div>${subTxt?`<div class="ppx-wal-sub">${esc(subTxt)}</div>`:''}`
     +(remainPct!==null?`<div class="ppx-wal-bar" role="img" aria-label="${remainPct}% 남음"><i style="width:${remainPct}%"></i></div><div class="ppx-wal-foot"><span>총 ${money(d.charged)} 중 ${remainPct}% 남음</span>${d.suggested?`<span>1회 ${money(d.suggested)}</span>`:''}</div>`:'')
     +`</div>`;
   const tile=(attrs,ico,label,cls)=>`<button type="button" class="ppx-tile${cls||''}" ${attrs}><i>${ico}</i><span>${label}</span></button>`;
@@ -411,7 +437,7 @@ function ppWalletForm(wallet=null){
     const row={key:PP_PREFIX+id,id,type:'wallet',name:String(form.get('name')).trim(),category:form.get('category'),expiresOn:form.get('expiresOn'),regularPrice:ppMoney(form.get('regularPrice')||0),discountRate:ppDiscountRate(form.get('discountRate')),defaultUseAmount:ppMoney(form.get('defaultUseAmount')||0),createdAt:wallet?.createdAt||now,updatedAt:now};
     const amount=wallet?0:ppMoney(form.get('opening'));
     await ppCommit(row,amount?{id:'event_'+crypto.randomUUID(),kind:'opening',date:_todayYMD(),amount,paid:0,createdAt:now,description:'등록 시 잔액'}:null);
-    ppOpen(id);
+    ppOpenRecorded(id); // v4.29 — 등록 뒤 ‹ 멤버십이 이전 탭으로 가지 않게
   });
   const regular=dialog.querySelector('[name=regularPrice]'),rate=dialog.querySelector('[name=discountRate]'),amount=dialog.querySelector('[name=defaultUseAmount]'),calc=dialog.querySelector('.pp-calc');
   const updatePrice=()=>{
@@ -438,4 +464,271 @@ function ppEventForm(kind){
     dialog.querySelector('[name=paid]').value=fmtMoney(rec.total);
     dialog.querySelector('[name=date]').value=rec.date;
   });
+}
+
+/* ═══ v4.29 — 멤버십: 구독(매달·매년 결제) ═══
+   선불권과 같은 탭([구독 | 선불권]). 구독 정보는 settings store의 'sub:' 기록(type sub = 구독, skip = 건너뛴 결제),
+   실제 지출은 결제일이 지나면 사용자가 확인해 등록하는 영수증이다(subId·subPeriod). 영수증 ID는 구독·기간으로 정해져
+   (rec_sub_<구독>_<기간>) 두 기기가 같은 결제를 등록해도 동기화 때 한 건으로 합쳐진다. 저절로 등록하지 않는다
+   (요금이 바뀌거나 해지·쉬는 달에 틀린 영수증이 생기므로). */
+const SB_PREFIX='sub:';
+const SB_PAY=[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']];
+const SB_DEFAULT_CAT='영화'; // 화면 이름 '문화'(사용자 지정)
+const SB_COLORS=['#E5484D','#F76B15','#E2A000','#30A46C','#12A594','#0090FF','#3E63DD','#8E4EC6','#D6409F','#6E7681'];
+let subRecords=[];
+let sbLastSel=null;
+let ppSeg=(()=>{try{return localStorage.getItem('ppSeg')||'';}catch(_){return '';}})();
+function sbSetSeg(s){ppSeg=s;try{localStorage.setItem('ppSeg',s);}catch(_){}}
+function sbSubs(){return subRecords.filter(r=>r.type==='sub'&&!r.deleted);}
+function sbCurSeg(){if(ppSeg==='sub'||ppSeg==='pp')return ppSeg;return (sbSubs().length||!ppWallets().length)?'sub':'pp';}
+function sbValidOne(r){
+  if(!r||typeof r.id!=='string'||!/^[a-zA-Z0-9_-]{1,200}$/.test(r.id)||r.key!==SB_PREFIX+r.id)return null;
+  try{
+    if(r.type==='sub'){
+      const name=String(r.name||'').trim().slice(0,200);if(!name)return null;
+      return {key:r.key,id:r.id,type:'sub',name,amount:ppMoney(r.amount),cycle:r.cycle==='year'?'year':'month',startOn:ppDate(r.startOn),endedOn:ppDate(r.endedOn||'',true),
+        category:String(r.category||SB_DEFAULT_CAT).slice(0,100),payMethod:SB_PAY.some(p=>p[0]===r.payMethod)?r.payMethod:'card',payDetail:String(r.payDetail||'').slice(0,100),
+        deleted:r.deleted===true,createdAt:String(r.createdAt||''),updatedAt:String(r.updatedAt||'')};
+    }
+    if(r.type==='skip'&&typeof r.subId==='string'&&/^\d{4}(-\d{2})?$/.test(String(r.period||'')))return {key:r.key,id:r.id,type:'skip',subId:r.subId,period:r.period,createdAt:String(r.createdAt||'')};
+  }catch(_){}
+  return null;
+}
+// 한 줄이 잘못돼도 나머지는 살린다(동기화·복원이 통째로 멈추지 않게).
+function sbValidate(rows){return Array.isArray(rows)?rows.slice(0,20000).map(sbValidOne).filter(Boolean):[];}
+async function sbExport(){return (await dbAll('settings')).filter(r=>typeof r.key==='string'&&r.key.startsWith(SB_PREFIX));}
+async function sbLoad(){subRecords=sbValidate(await sbExport());}
+async function sbMerge(rows){
+  const incoming=sbValidate(rows);if(!incoming.length)return 0;
+  const db=await openDB();
+  const changed=await new Promise((resolve,reject)=>{
+    const tx=db.transaction('settings','readwrite'),store=tx.objectStore('settings');let count=0;
+    tx.oncomplete=()=>resolve(count);tx.onabort=()=>reject(tx.error||new Error('구독 병합 실패'));
+    for(const row of incoming){
+      const req=store.get(row.key);
+      req.onsuccess=()=>{const local=req.result;if(!local||(row.type==='sub'&&row.updatedAt>String(local.updatedAt||''))){store.put(row);count++;}};
+    }
+  });
+  await sbLoad();
+  if(changed&&document.getElementById('viewPrepaid')?.classList.contains('on')){renderPrepaid();if(typeof renderSide==='function')renderSide();}
+  return changed;
+}
+async function sbPut(rows){
+  const db=await openDB();
+  await new Promise((resolve,reject)=>{const tx=db.transaction('settings','readwrite');tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error||new Error('저장하지 못했어요.'));rows.forEach(r=>tx.objectStore('settings').put(r));});
+  await sbLoad();
+}
+async function sbAfterChange(){
+  await loadAll();renderDetail();renderPrepaid();
+  if(typeof renderSide==='function'&&document.getElementById('viewPrepaid')?.classList.contains('on'))renderSide();
+  void dbxSyncUpload();
+}
+// ── 결제일 계산(표시·집계 규칙, 저장하지 않음). 결제일은 첫 결제일(startOn)의 '일'(매년이면 월·일). 31일은 짧은 달의 말일.
+function sbDim(y,m){return new Date(y,m,0).getDate();}
+function sbYmd(y,m,d){return y+'-'+String(m).padStart(2,'0')+'-'+String(Math.min(d,sbDim(y,m))).padStart(2,'0');}
+function sbPeriodOf(s,iso){return s.cycle==='year'?iso.slice(0,4):iso.slice(0,7);}
+function sbBillDate(s,p){const d=+s.startOn.slice(8,10);if(s.cycle==='year')return sbYmd(+p,+s.startOn.slice(5,7),d);const [y,m]=p.split('-').map(Number);return sbYmd(y,m,d);}
+function sbNextPeriod(s,p){if(s.cycle==='year')return String(+p+1);let [y,m]=p.split('-').map(Number);if(++m>12){m=1;y++;}return y+'-'+String(m).padStart(2,'0');}
+function sbCycleLabel(s){const d=+s.startOn.slice(8,10);return s.cycle==='year'?`매년 ${+s.startOn.slice(5,7)}월 ${d}일`:`매달 ${d}일`;}
+function sbPayLabel(s){return s.payDetail||(SB_PAY.find(p=>p[0]===s.payMethod)||['',''])[1];}
+function sbPeriodKey(p){return p.replace('-','');}
+function sbBaseRid(s,p){return 'rec_sub_'+s.id.replace(/^sub_/,'')+'_'+sbPeriodKey(p);}
+function sbDeletedIds(){try{return new Set(JSON.parse(_ls(_K.DELETED_IDS)||'[]'));}catch(_){return new Set();}}
+function sbCtx(){
+  const rec=new Map();for(const r of receipts)if(r.subId&&r.subPeriod)rec.set(r.subId+'|'+r.subPeriod,r);
+  const skips=new Set(subRecords.filter(r=>r.type==='skip').map(r=>r.subId+'|'+r.period));
+  return {rec,skips,del:sbDeletedIds(),today:_todayYMD()};
+}
+// '9월 15일'(올해) / '2025년 11월 2일'(다른 해)
+function sbDayShort(iso){const [y,m,d]=iso.split('-').map(Number);return (y===new Date().getFullYear()?'':y+'년 ')+m+'월 '+d+'일';}
+function sbDaysTo(iso,today){return Math.round((Date.parse(iso)-Date.parse(today))/86400000);}
+// 구독 한 개의 상태: 기간별 결제(paid 등록됨 · skip 건너뜀 · deleted 영수증 지움 · due 확인 대기) + 다음 결제일
+function sbState(s,ctx){
+  const ended=!!(s.endedOn&&s.endedOn<=ctx.today);
+  const upto=s.endedOn&&s.endedOn<ctx.today?s.endedOn:ctx.today;
+  const list=[];let p=sbPeriodOf(s,s.startOn);
+  for(let i=0;i<600;i++){
+    const date=sbBillDate(s,p);if(date>upto)break;
+    const k=s.id+'|'+p,r=ctx.rec.get(k)||null;
+    list.push({period:p,date,r,st:r?'paid':ctx.skips.has(k)?'skip':ctx.del.has(sbBaseRid(s,p))?'deleted':'due'});
+    p=sbNextPeriod(s,p);
+  }
+  const next=ended?null:{period:p,date:sbBillDate(s,p)};
+  if(next&&ctx.rec.has(s.id+'|'+next.period))next.r=ctx.rec.get(s.id+'|'+next.period);
+  const pending=list.filter(x=>x.st==='due');
+  const year=ctx.today.slice(0,4),paidAll=list.filter(x=>x.r).concat(next&&next.r?[next]:[]);
+  const paidYear=paidAll.filter(x=>x.r.date.slice(0,4)===year);
+  return {list,next,pending,ended,paidYear:paidYear.reduce((a,x)=>a+(Number(x.r.total)||0),0),paidYearN:paidYear.length,paidN:paidAll.length,
+    dday:next?sbDaysTo(next.date,ctx.today):null};
+}
+function sbYearly(s){return s.cycle==='year'?s.amount:s.amount*12;}
+function sbOrdered(ctx=sbCtx()){
+  return sbSubs().map(s=>({s,st:sbState(s,ctx)})).sort((a,b)=>(a.st.ended-b.st.ended)||((a.st.next?.date||'9')<(b.st.next?.date||'9')?-1:(a.st.next?.date||'9')>(b.st.next?.date||'9')?1:0)||a.s.name.localeCompare(b.s.name,'ko'));
+}
+function sbIcon(s){let h=0;for(const ch of s.name)h=(h*31+ch.codePointAt(0))>>>0;const c=SB_COLORS[h%SB_COLORS.length];const l=[...s.name.replace(/^[\s(（]*(주식회사|㈜|\(주\))\s*/,'')][0]||'?';return `<span class="sbx-ic" style="background:${c}" aria-hidden="true">${escapeHtml(l.toUpperCase())}</span>`;}
+// ── 등록·건너뛰기
+async function sbRegister(s,period,amount){
+  if(receipts.some(r=>r.subId===s.id&&r.subPeriod===period))throw new Error('이미 영수증으로 등록한 결제예요.');
+  const amt=ppMoney(amount??s.amount);if(amt<=0)throw new Error('금액을 입력해 주세요.');
+  const base=sbBaseRid(s,period);
+  const id=(sbDeletedIds().has(base)||receipts.some(r=>r.id===base))?base+'_'+Math.random().toString(36).slice(2,6):base;
+  const now=nowISO(),label=s.cycle==='year'?'연간 구독':'월 구독';
+  await dbPut('receipts',{id,date:sbBillDate(s,period),time:'',store:s.name,category:s.category,total:amt,items:[{name:`${s.name} ${label}`,quantity:1,unitPrice:amt,amount:amt}],imageId:'',paymentMethod:s.payMethod,paymentDetail:s.payDetail,paidBy:getMyName(),participants:[],tags:['구독'],notes:'',subId:s.id,subPeriod:period,createdAt:now,updatedAt:now});
+  await sbAfterChange();
+}
+async function sbSkip(s,period){
+  const id='skip_'+s.id.replace(/^sub_/,'')+'_'+sbPeriodKey(period);
+  await sbPut([{key:SB_PREFIX+id,id,type:'skip',subId:s.id,period,createdAt:nowISO()}]);
+  await sbAfterChange();
+}
+async function sbSaveSub(s,patch){
+  const row={...s,...patch,updatedAt:nowISO()};delete row.st;
+  if(!sbValidOne(row))throw new Error('구독 정보를 확인해 주세요.');
+  await sbPut([row]);await sbAfterChange();
+}
+// ── 좌측 목록(구독)
+function sbAskHtml(x,more){
+  const s=x.s,p=x.p;
+  return `<div class="sbx-ask" data-sub="${escapeHtml(s.id)}" data-period="${escapeHtml(p.period)}"><div class="sbx-ask-q"><b>${escapeHtml(s.name)} ${fmtMoney(s.amount)}원</b>이 ${sbDayShort(p.date)}에 결제됐나요?</div>`
+    +`<div class="sbx-ask-s">등록하면 영수증으로 저장돼 통계에 들어가요${more?` · 확인할 결제 ${more+1}건`:''}</div>`
+    +`<div class="sbx-ask-b"><button type="button" class="sbx-ask-skip">건너뛰기</button><button type="button" class="sbx-ask-reg">영수증 등록</button></div></div>`;
+}
+function sbRowHtml(x,sel){
+  const s=x.s,st=x.st,esc=escapeHtml;
+  const right=st.ended?`<div class="sbx-row-dd">해지함</div>`:st.pending.length?`<div class="sbx-row-dd due">확인 대기</div>`:st.next?`<div class="sbx-row-dd${st.dday<=7?' soon':''}">${sbDayShort(st.next.date)} · ${st.dday===0?'오늘':'D-'+st.dday}</div>`:'';
+  return `<div class="r-card ppw-row sbx-row${sel?' sel':''}${st.ended?' ended':''}" data-sub="${esc(s.id)}" role="button" tabindex="0"${sel?' aria-current="true"':''}>${sbIcon(s)}`
+    +`<div class="r-card-info"><div class="r-card-store-row"><span class="r-card-store">${esc(s.name)}</span>${s.cycle==='year'?'<span class="sbx-tag">연간</span>':''}</div><div class="r-card-meta">${esc(sbCycleLabel(s))} · ${esc(sbPayLabel(s))}</div></div>`
+    +`<div class="sbx-row-r"><div class="r-card-amt">${fmtMoney(s.amount)}원</div>${right}</div></div>`;
+}
+function sbRenderSide(){
+  const listEl=document.getElementById('sideList');if(!listEl)return;
+  const ctx=sbCtx(),all=sbOrdered(ctx);
+  const q=(typeof _ppListQ==='string'?_ppListQ:'').trim();
+  let view=all;
+  if(q){if(typeof _isChoQuery==='function'&&_isChoQuery(q)){const cq=_normChoQuery(q);view=all.filter(x=>_toCho(x.s.name).includes(cq));}else{const qL=q.toLowerCase();view=all.filter(x=>x.s.name.toLowerCase().includes(qL));}}
+  const live=all.filter(x=>!x.st.ended),month=live.filter(x=>x.s.cycle==='month').reduce((a,x)=>a+x.s.amount,0),year=live.reduce((a,x)=>a+sbYearly(x.s),0);
+  const lt=document.getElementById('ltInfo');
+  if(lt)lt.innerHTML=q?`검색 결과 <b>${view.length}개</b>`:live.length?`${month?`매달 <b>${fmtMoney(month)}원</b> · `:''}1년 <b>${fmtMoney(year)}원</b>`:'';
+  if(!all.length){
+    listEl.innerHTML=`<div class="empty-state sbx-empty"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 14h3"/></svg><div>등록된 구독이 없어요<br/>넷플릭스·유튜브처럼 매달·매년 나가는 돈을 등록하면<br/>결제일에 영수증으로 남길 수 있어요</div><button class="primary-btn" type="button" id="sbEmptyNew" style="margin-top:14px;width:auto;padding:0 18px">구독 등록</button></div>`;
+    listEl.querySelector('#sbEmptyNew')?.addEventListener('click',()=>sbForm());return;
+  }
+  if(!view.length){listEl.innerHTML='<div class="empty-state"><div>검색 결과가 없어요</div></div>';return;}
+  const pend=q?[]:all.flatMap(x=>x.st.pending.map(p=>({s:x.s,p}))).sort((a,b)=>a.p.date.localeCompare(b.p.date));
+  let html=pend.length?sbAskHtml(pend[0],pend.length-1):'';
+  html+='<div class="list-group">';let endedHd=false;
+  for(const x of view){
+    if(x.st.ended&&!endedHd){html+='</div><div class="sbx-lh">해지한 구독</div><div class="list-group">';endedHd=true;}
+    html+=sbRowHtml(x,x.s.id===prepaidSelectedId);
+  }
+  listEl.innerHTML=html+'</div>';
+  listEl.querySelectorAll('.sbx-row').forEach(el=>{const go=()=>ppOpen(el.dataset.sub);el.addEventListener('click',go);el.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;e.preventDefault();go();});});
+  const ask=listEl.querySelector('.sbx-ask');
+  if(ask){
+    const s=sbSubs().find(v=>v.id===ask.dataset.sub),period=ask.dataset.period;
+    const run=async(btn,fn,msg)=>{if(btn.disabled)return;ask.querySelectorAll('button').forEach(b=>b.disabled=true);try{await fn();toast(msg,{type:'success'});}catch(e){toast(e.message,{type:'error'});ask.querySelectorAll('button').forEach(b=>b.disabled=false);}};
+    ask.querySelector('.sbx-ask-reg').addEventListener('click',e=>run(e.currentTarget,()=>sbRegister(s,period),'영수증으로 등록했어요.'));
+    ask.querySelector('.sbx-ask-skip').addEventListener('click',e=>run(e.currentTarget,()=>sbSkip(s,period),'이번 결제는 건너뛰었어요.'));
+  }
+}
+// ── 오른쪽 상세(구독)
+const SB_ICO={
+  reg:'<svg class="pp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2zM9 9h6M12 6v6"/></svg>',
+  stop:'<svg class="pp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/></svg>',
+  play:'<svg class="pp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg>'
+};
+function sbRenderDetail(root,s){
+  const esc=escapeHtml,money=n=>fmtMoney(n)+'원',ctx=sbCtx(),st=sbState(s,ctx);
+  const [sy,sm]=s.startOn.split('-');
+  const nextTxt=st.ended?`해지함 · ${ppDayFull(s.endedOn).replace(/요일$/,'')}`:st.pending.length?`<b class="due">확인할 결제 ${st.pending.length}건</b>`:st.next?`다음 결제 <b>${sbDayShort(st.next.date)} · ${st.dday===0?'오늘':'D-'+st.dday}</b>`:'';
+  const card=`<div class="sbx-card${st.ended?' ended':''}"><div class="sbx-card-top"><span>${esc(sbCycleLabel(s))} · ${esc(sbPayLabel(s))}</span><span>${sy}년 ${+sm}월부터</span></div>`
+    +`<div class="sbx-card-amt">${fmtMoney(s.amount)}<small>원</small></div><div class="sbx-card-next">${nextTxt}</div>`
+    +`<div class="sbx-card-foot"><span>올해 낸 돈 ${money(st.paidYear)} · ${st.paidYearN}번</span><span>${s.cycle==='year'?'한 달에 약 '+money(Math.round(s.amount/12)):'1년이면 '+money(s.amount*12)}</span></div></div>`;
+  const tile=(attrs,ico,label,cls)=>`<button type="button" class="ppx-tile${cls||''}" ${attrs}><i>${ico}</i><span>${label}</span></button>`;
+  const tiles=`<div class="ppx-tiles">${tile('data-sbact="reg"',SB_ICO.reg,'결제 등록',st.ended&&!st.pending.length?'':' primary')}${tile('data-sbact="edit"',PP_ICO.edit,'정보 수정')}`
+    +`${st.ended||s.endedOn?tile('data-sbact="resume"',SB_ICO.play,'다시 구독'):tile('data-sbact="end"',SB_ICO.stop,'해지')}${tile('data-sbact="del"',PP_ICO.trash,'삭제')}</div>`;
+  const rows=st.list.slice().reverse();
+  if(st.next&&!st.ended)rows.unshift({...st.next,st:st.next.r?'paid':'next'});
+  let hist='',lastY='';
+  const stTxt={paid:'영수증 등록됨',skip:'건너뜀',deleted:'영수증 지움',due:'확인 대기',next:'결제 예정'};
+  for(const x of rows){
+    const y=x.date.slice(0,4);if(y!==lastY){hist+=`<div class="ppx-mh">${y}년</div>`;lastY=y;}
+    const amt=x.r?money(Number(x.r.total)||0):x.st==='skip'||x.st==='deleted'?'—':money(s.amount);
+    hist+=`<button type="button" class="ppx-row sbx-hrow st-${x.st}" data-sbp="${esc(x.period)}"><span class="ppx-row-l"><span class="ppx-row-n">${ppDayLabel(x.date)}</span><span class="ppx-row-d sbx-st">${stTxt[x.st]}</span></span><span class="ppx-row-a">${amt}</span></button>`;
+  }
+  root.innerHTML=`<div class="pp-detail ppx sbx">${card}${tiles}<div class="ppx-hist"><div class="sbx-hh">결제 기록<span>${st.paidN}번 등록</span></div>${hist||'<div class="empty-state">아직 결제일이 오지 않았어요.</div>'}</div></div>`;
+  root.querySelectorAll('[data-sbact]').forEach(b=>b.addEventListener('click',async()=>{
+    const a=b.dataset.sbact;
+    if(a==='edit')return sbForm(s);
+    if(a==='reg'){const p=st.pending[0]||(st.next&&!st.next.r?st.next:null);if(!p){toast('등록할 결제가 없어요.');return;}return sbAskSheet(s,p.period);}
+    if(a==='end'){if(await sbConfirm(`${s.name} 해지`,`오늘(${ppDayLabel(_todayYMD())})부터 결제 확인을 멈춰요.<br>지금까지 등록한 영수증은 그대로 남아요.`,'해지하기')){await sbSaveSub(s,{endedOn:_todayYMD()});toast('해지했어요.');}return;}
+    if(a==='resume'){await sbSaveSub(s,{endedOn:''});toast('다시 구독으로 바꿨어요.');return;}
+    if(a==='del'){if(await sbConfirm(`${s.name} 삭제`,'구독 정보를 지워요.<br>이미 등록한 영수증은 내역에 그대로 남아요.','삭제하기',true)){await sbSaveSub(s,{deleted:true});prepaidSelectedId=null;sbLastSel=null;renderPrepaid();if(typeof renderSide==='function')renderSide();if(typeof _syncMobileSurface==='function')_syncMobileSurface();toast('구독을 삭제했어요.');}}
+  }));
+  root.querySelectorAll('.sbx-hrow').forEach(b=>b.addEventListener('click',()=>{
+    const p=b.dataset.sbp,r=receipts.find(x=>x.subId===s.id&&x.subPeriod===p);
+    if(r)selectReceipt(r.id);else sbAskSheet(s,p);
+  }));
+}
+// 결제 확인 창(.mtg-sheet 틀): 금액은 이번 결제만 바꿀 수 있다(요금이 오른 달 등).
+function sbAskSheet(s,period){
+  if(typeof _mtgSheetOpen!=='function')return;
+  const {card,close}=_mtgSheetOpen();card.classList.add('ppx-rs');
+  const date=sbBillDate(s,period),today=_todayYMD(),ctx=sbCtx(),k=s.id+'|'+period;
+  const skipped=ctx.skips.has(k)||ctx.del.has(sbBaseRid(s,period));
+  card.innerHTML=`<div class="mtg-sheet-hd"><div class="mtg-sheet-title">${escapeHtml(s.name)}</div><button class="mtg-sheet-x" type="button" aria-label="닫기">×</button></div>`
+    +`<div class="ppx-rs-sub">${ppDayFull(date)} 결제${date>today?' 예정':''}</div>`
+    +`<form class="ppx-rs-form" novalidate><label><span>금액</span><input name="amount" type="text" inputmode="numeric" value="${fmtMoney(s.amount)}"></label>`
+    +`<p class="ppx-rs-note">${date>today?'아직 결제일 전이에요. 미리 등록할 수 있어요.':skipped?'건너뛴 결제예요. 등록하면 영수증으로 저장돼요.':'등록하면 영수증으로 저장돼 통계에 들어가요.'} 금액은 이번 결제에만 적용돼요.</p>`
+    +`<p class="pp-error" role="alert"></p><div class="ppx-rs-btns"><button type="button" class="ppx-btn sbx-skip">${skipped||date>today?'닫기':'건너뛰기'}</button><button type="submit" class="ppx-btn primary">영수증 등록</button></div></form>`;
+  const f=card.querySelector('form'),amt=f.querySelector('[name=amount]'),err=f.querySelector('.pp-error');
+  amt.addEventListener('input',()=>{const raw=amt.value.replace(/[^0-9]/g,'');amt.value=raw?Number(raw).toLocaleString('ko-KR'):'';});
+  card.querySelector('.mtg-sheet-x').onclick=close;
+  f.querySelector('.sbx-skip').onclick=async e=>{
+    if(skipped||date>today){close();return;}
+    e.currentTarget.disabled=true;try{await sbSkip(s,period);close(()=>toast('이번 결제는 건너뛰었어요.'));}catch(x){err.textContent=x.message;e.currentTarget.disabled=false;}
+  };
+  f.addEventListener('submit',async ev=>{
+    ev.preventDefault();const btn=f.querySelector('[type=submit]');if(btn.disabled)return;btn.disabled=true;err.textContent='';
+    try{await sbRegister(s,period,amt.value||'0');close(()=>toast('영수증으로 등록했어요.',{type:'success'}));}catch(x){err.textContent=x.message;btn.disabled=false;}
+  });
+}
+function sbConfirm(title,msg,ok,danger){
+  return new Promise(res=>{
+    if(typeof _mtgSheetOpen!=='function'){res(false);return;}
+    let done=false;const fin=v=>{if(done)return;done=true;res(v);};
+    const {bd,card,close}=_mtgSheetOpen();card.classList.add('ppx-rs');
+    card.innerHTML=`<div class="mtg-sheet-hd"><div class="mtg-sheet-title">${escapeHtml(title)}</div><button class="mtg-sheet-x" type="button" aria-label="닫기">×</button></div><div class="ppx-rs-warn${danger?'':' sbx-info'}">${msg}</div><div class="ppx-rs-btns"><button type="button" class="ppx-btn sbx-no">취소</button><button type="button" class="ppx-btn ${danger?'danger-solid':'primary'} sbx-yes">${escapeHtml(ok)}</button></div>`;
+    card.querySelector('.mtg-sheet-x').onclick=()=>{fin(false);close();};
+    card.querySelector('.sbx-no').onclick=()=>{fin(false);close();};
+    card.querySelector('.sbx-yes').onclick=()=>{fin(true);close();};
+    new MutationObserver(()=>{if(!bd.isConnected)fin(false);}).observe(document.body,{childList:true});
+  });
+}
+// 구독 등록·수정 창. 결제일 하나로 주기의 날짜(매달 N일 / 매년 M월 N일)와 기록 시작을 함께 정한다.
+function sbForm(sub=null){
+  const esc=escapeHtml,today=_todayYMD();
+  const dialog=ppDialog(sub?'구독 정보 수정':'구독 등록',
+    `<label>이름<input name="name" required maxlength="200" value="${esc(sub?.name||'')}" placeholder="예: 넷플릭스"></label>`
+    +`<div class="pp-price-grid"><label>금액<input name="amount" type="text" inputmode="numeric" data-money required value="${sub?.amount||''}" placeholder="예: 17,000"></label><label>주기<select name="cycle"><option value="month"${sub?.cycle!=='year'?' selected':''}>매달</option><option value="year"${sub?.cycle==='year'?' selected':''}>매년</option></select></label></div>`
+    +`<label>결제일 (가장 최근 결제일 또는 첫 결제일)<input name="startOn" type="date" required value="${esc(sub?.startOn||today)}"></label><p class="pp-calc sbx-calc" aria-live="polite"></p>`
+    +`<label>카테고리<select name="category">${BASE_CATEGORIES.map(c=>`<option value="${esc(c)}"${c===(sub?.category||SB_DEFAULT_CAT)?' selected':''}>${esc(getCategoryLabel(c))}</option>`).join('')}</select></label>`
+    +`<div class="pp-price-grid sbx-pay"><label>결제수단<select name="payMethod">${SB_PAY.map(([v,l])=>`<option value="${v}"${v===(sub?.payMethod||'card')?' selected':''}>${l}</option>`).join('')}</select></label><label>카드·계좌 이름 (선택)<input name="payDetail" maxlength="100" value="${esc(sub?.payDetail||'')}" placeholder="예: 현대카드"></label></div>`,
+    async form=>{
+      const now=nowISO(),id=sub?.id||'sub_'+crypto.randomUUID();
+      const row={key:SB_PREFIX+id,id,type:'sub',name:String(form.get('name')||'').trim(),amount:ppMoney(form.get('amount')||0),cycle:form.get('cycle')==='year'?'year':'month',startOn:ppDate(form.get('startOn')),
+        endedOn:sub?.endedOn||'',category:String(form.get('category')||SB_DEFAULT_CAT),payMethod:String(form.get('payMethod')||'card'),payDetail:String(form.get('payDetail')||'').trim(),deleted:false,createdAt:sub?.createdAt||now,updatedAt:now};
+      if(!row.name)throw new Error('이름을 입력해 주세요.');
+      if(row.amount<=0)throw new Error('금액을 입력해 주세요.');
+      if(!sbValidOne(row))throw new Error('구독 정보를 확인해 주세요.');
+      await sbPut([row]);sbSetSeg('sub');await sbAfterChange();
+      ppOpenRecorded(id);
+    });
+  const cyc=dialog.querySelector('[name=cycle]'),so=dialog.querySelector('[name=startOn]'),calc=dialog.querySelector('.sbx-calc');
+  const upd=()=>{
+    const v=so.value;if(!/^\d{4}-\d{2}-\d{2}$/.test(v)){calc.textContent='';return;}
+    const tmp={startOn:v,cycle:cyc.value};
+    calc.textContent=`${sbCycleLabel(tmp)} 결제 · ${v<=today?`${sbDayShort(v)} 결제부터 영수증 등록을 물어봐요`:`${sbDayShort(v)}에 첫 결제`}`;
+  };
+  cyc.addEventListener('change',upd);so.addEventListener('input',upd);so.addEventListener('change',upd);upd();
 }
