@@ -308,6 +308,7 @@ P오플레 클래식 플레인 1+1 680.0g | 1 | 3,980 | 3,980
 - **구독 저장**: settings store `sub:` 기록 — `type:'sub'`(name·amount·cycle month|year·**startOn = 결제일**(매달 N일/매년 M월 N일과 기록 시작을 함께 정함)·endedOn(해지)·category(기본 `영화`=문화)·payMethod·payDetail·deleted·updatedAt), `type:'skip'`(subId·period). 합치기는 `sbMerge`(구독은 updatedAt 최신, skip은 더하기). 삭제는 `deleted:true`(지우면 동기화로 되살아난다). 동기화·백업 필드 `subRecords` — 옛 버전은 모른 채 올리지만 합치기가 더하기라 새 버전 동기화 때 되살아난다.
 - **결제 = 영수증**: 결제일이 지나면(오늘 포함) '결제됐나요? [건너뛰기][영수증 등록]'. **저절로 등록하지 말 것**(요금 변경·해지·쉬는 달에 틀린 영수증). 영수증 id `rec_sub_<구독>_<기간>`(두 기기가 같이 눌러도 한 건), `subId`·`subPeriod`·태그 '구독', 참석자 없음(내 부담 = 전액). 사용자가 그 영수증을 지우면 '영수증 지움'(다시 묻지 않음), 다시 등록하면 id 뒤에 꼬리. 확인 창의 금액은 그 결제에만.
 - 구독 영수증은 종이 영수증이 없어 '사진 없음'에서 뺀다(`_photoErrorReason`). 31일 결제는 짧은 달 말일.
+- 빈 화면(v4.30): 구독이 없으면 안내(`sbGuideHtml`)와 버튼 **하나** — PC 오른쪽 / 폰 목록, PC 왼쪽은 짧은 글. 빈 화면 버튼은 `.sbx-cta`(`.primary-btn`은 추가 화면 전용 모양이라 빈 화면에 쓰면 찌그러진다).
 
 ## ⚠️ 숫자 규칙 (v3.84~ · Dutch Pay와 동일 — 매번 다시 묻지 않도록 고정)
 - **표기는 `fmtMoney(n)` 하나로**: `Math.round(n).toLocaleString('ko-KR')`(Dutch Pay `fmt`와 동일 — 천 단위 쉼표, 음수는 `-1,000`). 금액 뒤 `원`은 숫자와 붙여 쓴다(`12,000원`).
@@ -443,7 +444,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 검색 적용(`_applySearchInput`)은 **검색어가 그대로면 아무것도 하지 않는다**(v4.07). 한글 조합 중 결과 카드를 누르면 blur로 `compositionend`·`input`이 늦게 와 같은 검색어가 다시 적용되며 `selectedId`를 지워 상세가 검색 결과로 튕겼다. `selectReceipt`는 대기 중인 검색 타이머를 끈다. Playwright `keyboard.type`은 조합이 없어 재현되지 않으니 composition 이벤트를 직접 보내 검증.
 
 ## 현재 상태 (2026-09-27 기준)
-- **버전 `v4.29`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
+- **버전 `v4.30`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
 - 데이터: 실데이터 백업 기준 영수증 151건(2025-03 ~ 2026-09), 사진 142장, 선불권 사용. 3,000건 가상 데이터에서도 목록 0.01초·검색 0.1초·사람 화면 0.4초(데스크탑).
 
 ### 작업 흐름 (Claude Code 웹 세션)
