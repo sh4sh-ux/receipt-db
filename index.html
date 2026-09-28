@@ -2050,9 +2050,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .lt-sort-pp{display:none;}
 .side.pp-mode .lt-sort-pp{display:inline-flex;}
 .side.pp-mode .lt-sort:not(.lt-sort-pp){display:none;}
-.pp-scope-total{display:flex;align-items:baseline;gap:8px;min-width:0;}
-.pp-scope-total span{font-size:12px;color:var(--label3);white-space:nowrap;}
-.pp-scope-total b{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.side.pp-mode.sb-mode .lt-sort-pp{display:none;} /* v4.29 — 구독 목록은 다음 결제일 순 고정 */
 .pp-scope-new{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;}
 .ppw-row{align-items:center;} /* ⚠️ .pp-row는 사람별 분담 행(radius 있음)이 이미 쓰는 이름 — 겹치면 선택 행이 둥글어진다 */
 .ppw-row .r-card-meta.danger{color:var(--red);}
@@ -2747,9 +2745,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         <span class="nav-mobile-label">추가</span>
       </button>
-      <button class="nav-btn tab" data-tab="prepaid" data-nav="prepaid" data-nav-label="선불권" aria-label="선불권">
+      <button class="nav-btn tab" data-tab="prepaid" data-nav="prepaid" data-nav-label="멤버십" aria-label="멤버십">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h3"/></svg>
-        <span class="nav-mobile-label">선불권</span>
+        <span class="nav-mobile-label">멤버십</span>
       </button>
       <div class="nav-spacer"></div>
       <button class="nav-btn tab" data-tab="settings" data-nav="settings" data-nav-label="설정" aria-label="설정">
@@ -2788,10 +2786,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
       <div class="month-nav person-scope" id="personScope" role="group" aria-label="사람 필터">
         <button class="ps-chip on" type="button" data-pfilter="all" aria-pressed="true">전체</button>
       </div>
-      <!-- v3.91 — 선불권 모드 범위 행(총 잔액 + 등록). month-nav와 같은 박스라 좌/우 헤더 구분선 정렬 유지. -->
+      <!-- v3.91 — 선불권 모드 범위 행. month-nav와 같은 박스라 좌/우 헤더 구분선 정렬 유지.
+           v4.29 — 멤버십 탭: [구독 | 선불권] 전환 + 등록(보고 있는 쪽). 선불권 총 잔액은 목록 머리로. -->
       <div class="month-nav pp-scope" id="ppScope">
-        <div class="pp-scope-total"><span>총 잔액</span><b id="ppScopeTotal">0원</b></div>
-        <button class="ps-chip pp-scope-new" type="button" id="ppSideNew"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>선불권 등록</button>
+        <div class="sbx-seg" id="ppSeg" role="tablist" aria-label="구독 · 선불권"><button type="button" role="tab" data-seg="sub">구독<i id="sbSegN">0</i></button><button type="button" role="tab" data-seg="pp">선불권<i id="ppSegN">0</i></button></div>
+        <button class="ps-chip pp-scope-new" type="button" id="ppSideNew"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>등록</button>
       </div>
 
       <div class="side-search">
@@ -3877,6 +3876,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.29 — 멤버십 탭(선불권 → 멤버십, 사용자 시안 A): [구독 | 선불권] 전환. 구독(매달·매년)은 settings 'sub:' 기록, 결제일이 지나면 '결제됐나요? [건너뛰기][영수증 등록]'로 확인해 영수증(subId·subPeriod, id=rec_sub_<구독>_<기간>)으로 남긴다 — 기본 카테고리 문화. 동기화·백업에 subRecords. 구독 영수증은 '사진 없음'에서 뺀다.
 // v4.28 — 짚어 보기 다듬기(사용자 시안 B 선택): 날짜·건수·금액을 그래프 안 카드 대신 '지출 추이' 제목 줄 오른쪽('최근 12개월'·'일별' 자리)에 — 그래프와 손가락에 안 가림, 손 떼면 원래 글로. 세로선은 더 연하게(opacity .4)·고해상도는 0.5px. 쓰지 않게 된 .lp-float·.lp-tip CSS 삭제.
 // v4.27 — 지출 추이 짚어 보기: 그래프(축 글자 포함) 아무 데나 대고 옆으로 밀면 가장 가까운 칸에 얇은 세로선 + 금액·영수증 건수(선 옆 카드, 그래프 안에서만). 칸 폭이 아니라 x 위치로 골라 가는 막대도 고를 수 있다. 손 떼도 남고 다른 곳 누르면 닫힘, 위아래로 밀면 스크롤. PC는 마우스 올리면. 막대마다 있던 숨은 툴팁(.lp-tip)·탭 고정(pin)·v4.26 끝 정렬은 삭제.
 // v4.26 — 버그: 폰 통계에서 '전체 기간'을 고르면 화면이 옆으로 밀림. 지출 추이 마지막 막대의 숨은 툴팁(가운데 정렬)이 화면 밖으로 삐져나와 스크롤 영역이 옆으로 움직였다 → 양 끝 막대 툴팁은 막대 쪽 끝에 맞추고(.tip-l/.tip-r), .main-body는 overflow-x:hidden.
@@ -4295,7 +4295,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.28';
+const APP_VERSION='v4.29';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6565,15 +6565,20 @@ function _applyPrepaidModeChrome(on){
   if(on)_ppChromeWasOn=true;
   const inp=document.getElementById('searchInp');
   if(on){
-    const t=document.querySelector('.side-title.app-title');if(t)t.textContent='선불권';
-    if(inp){if(_searchPhReceipt===null)_searchPhReceipt=inp.placeholder;inp.placeholder='매장명으로 찾기 · 초성도 돼요';inp.value=_ppListQ;}
+    const t=document.querySelector('.side-title.app-title');if(t)t.textContent='멤버십'; // v4.29 — 구독 + 선불권
+    if(inp){if(_searchPhReceipt===null)_searchPhReceipt=inp.placeholder;inp.placeholder='이름으로 찾기 · 초성도 돼요';inp.value=_ppListQ;}
     if(typeof _updateSearchClear==='function')_updateSearchClear();
   }else if(side.classList.contains('person-mode')===false&&_ppChromeWasOn){
     _applyPersonModeChrome(!!_personMode); // 제목·placeholder·검색어를 영수증/사람 상태로 되돌림
   }
 }
 document.getElementById('prepaidNew').addEventListener('click',()=>ppWalletForm());
-document.getElementById('ppSideNew').addEventListener('click',()=>ppWalletForm()); // v3.91 — 등록 버튼은 좌측 범위 행
+document.getElementById('ppSideNew').addEventListener('click',()=>sbCurSeg()==='sub'?sbForm():ppWalletForm()); // v3.91 — 등록 버튼은 좌측 범위 행(v4.29 보고 있는 쪽)
+document.getElementById('ppSeg').addEventListener('click',e=>{ // v4.29 — [구독 | 선불권] 전환: 데스크탑은 그쪽 첫 항목(또는 마지막으로 본 것)을 연다
+  const b=e.target.closest('[data-seg]');if(!b||b.dataset.seg===sbCurSeg())return;
+  sbSetSeg(b.dataset.seg);prepaidSelectedId=null;renderPrepaid();renderSide();
+  if(typeof _syncMobileSurface==='function')_syncMobileSurface();
+});
 document.getElementById('ppSortSel2').addEventListener('change',e=>{ppListSort=e.target.value;renderSide();});
 document.getElementById('prepaidBack').addEventListener('click',()=>ppOpen(null));
 document.querySelectorAll('.tab').forEach(t=>{
@@ -12066,7 +12071,7 @@ function _validateDataEnvelope(raw){
   const cleanRelGroups=Array.isArray(raw.relationGroups)
     ?raw.relationGroups.map(_sanitizeRelationGroup).filter(Boolean).slice(0,500)
     :undefined;
-  const outData={...raw,receipts,images,deletedIds,storeCatMap:cleanCatMap,prepaidRecords:ppValidateRecords(raw.prepaidRecords)};
+  const outData={...raw,receipts,images,deletedIds,storeCatMap:cleanCatMap,prepaidRecords:ppValidateRecords(raw.prepaidRecords),subRecords:sbValidate(raw.subRecords)};
   if(cleanRelGroups)outData.relationGroups=cleanRelGroups;else delete outData.relationGroups;
   return {
     data:outData,
@@ -12357,6 +12362,7 @@ document.getElementById('exportBtn').addEventListener('click',async()=>{
       storeCatMap,          // 카테고리 학습 사전
       relationGroups,       // v3.70 관계 그룹
       prepaidRecords:await ppExport(),
+      subRecords:await sbExport(), // v4.29 구독
     };
     const json=JSON.stringify(payload,null,2);
     const blob=new Blob([json],{type:'application/json'});
@@ -12403,7 +12409,7 @@ document.getElementById('importInp').addEventListener('change',async e=>{
       await saveStoreCatMap();
     }
     await _mergeRelationGroups(data.relationGroups); // v3.70
-    await ppMerge(data.prepaidRecords);
+    await ppMerge(data.prepaidRecords);await sbMerge(data.subRecords);
     toast(`복원 완료 — ${added}건, 사진 ${imgN}장${skipped?' · '+skipped:''}`,{type:'success',duration:skipped?5200:3000});
     await loadAll();renderDetail();
   }catch(err){
@@ -12645,7 +12651,7 @@ async function dbxBackup(){
     const payload={
       app:'receipt-db',appVersion:APP_VERSION,version:2,
       exportedAt:nowISO(),receipts:recs,images:imgsOut,storeCatMap,
-      prepaidRecords:await ppExport(),
+      prepaidRecords:await ppExport(),subRecords:await sbExport(),
     };
     const json=JSON.stringify(payload,null,2);
     const filename=`receipt-db_${new Date().toISOString().slice(0,10)}_${recs.length}items.json`;
@@ -12726,7 +12732,7 @@ async function _dbxRestore(path,name){
     }
     await _mergeRelationGroups(data.relationGroups); // v3.70
     _dbxCloseModal();
-    await ppMerge(data.prepaidRecords);
+    await ppMerge(data.prepaidRecords);await sbMerge(data.subRecords);
     toast(`복원 완료 — ${added}건, 사진 ${imgN}장${skipped?' · '+skipped:''}`,{type:'success',duration:skipped?5200:3000});
     await loadAll();renderDetail();
   }catch(e){
@@ -12931,6 +12937,7 @@ function _rebuildPhotoHashCounts(){
 }
 
 function _photoErrorReason(r){
+  if(r.subId&&!r.imageId)return ''; // v4.29 — 구독 결제 영수증은 종이 영수증이 없다(사진 없음으로 세지 않음)
   if(!r.imageId){
     const recoveryId=_receiptRecoveryImageId(r);
     if(dbxIsConnected()&&recoveryId&&!_photoRecoveryChecked.has(recoveryId))return '';
@@ -13450,6 +13457,7 @@ async function _dbxBuildSyncPayload(){
     app:'receipt-db',
     syncVersion:3,
     prepaidRecords:await ppExport(),
+    subRecords:await sbExport(), // v4.29 — 옛 버전은 이 필드 없이 올리지만, 합치기는 더하기만 해서 다음 새 버전 동기화 때 되살아난다
     exportedAt:nowISO(),
     receipts:recs,
     images:[],
@@ -14426,6 +14434,7 @@ async function _dbxMerge(remoteData){
   }
 
   changed+=await ppMerge(remoteData.prepaidRecords);
+  changed+=await sbMerge(remoteData.subRecords); // v4.29 구독
   // ③ storeCatMap 머지 (로컬에 없는 것만 추가)
   if(remoteData.storeCatMap&&typeof remoteData.storeCatMap==='object'){
     let catChanged=false;
