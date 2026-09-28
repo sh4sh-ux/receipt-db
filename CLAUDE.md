@@ -416,6 +416,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 클래스 이름 재사용 주의 — `.pp-row`(사람별 분담)와 선불권 행이 겹쳐 모서리가 둥글어졌다 → `.ppw-row`(v3.91).
 - 헤더 높이는 `height` 말고 `min-height`, safe-area `env()`는 0이 올 수 있다(v2.56·v2.59). 헤더 수치는 「헤더 규칙」.
 - 배경만 고정색으로 두지 말 것 — 배경·글자를 한 쌍의 토큰으로(v2.60). 인쇄 블록엔 토큰 금지(PDF 섹션).
+- 접이식 칸(`.section-body`)에 **고정 max-height를 두지 말 것** — 펼침 움직임용 2000px 때문에 긴 검색 구매 이력이 잘렸다(v4.23). 펼친 상태는 `none`, 움직임은 `_bindSectionToggles`가 실제 높이로.
 - 항상 DOM에 있는 `.modal-overlay` 등은 존재가 아니라 `getClientRects().length`로 표시 여부를 본다(v2.67).
 - 날짜·시간 칸은 직접 그린 글자 + 투명 `date`/`time` input(v4.02). 코드로 value를 넣는 칸은 `_kvHookValue`로 표시를 갱신한다.
 **JS**
@@ -433,7 +434,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 검색 적용(`_applySearchInput`)은 **검색어가 그대로면 아무것도 하지 않는다**(v4.07). 한글 조합 중 결과 카드를 누르면 blur로 `compositionend`·`input`이 늦게 와 같은 검색어가 다시 적용되며 `selectedId`를 지워 상세가 검색 결과로 튕겼다. `selectReceipt`는 대기 중인 검색 타이머를 끈다. Playwright `keyboard.type`은 조합이 없어 재현되지 않으니 composition 이벤트를 직접 보내 검증.
 
 ## 현재 상태 (2026-09-27 기준)
-- **버전 `v4.22`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
+- **버전 `v4.23`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
 - 데이터: 실데이터 백업 기준 영수증 151건(2025-03 ~ 2026-09), 사진 142장, 선불권 사용. 3,000건 가상 데이터에서도 목록 0.01초·검색 0.1초·사람 화면 0.4초(데스크탑).
 
 ### 작업 흐름 (Claude Code 웹 세션)
