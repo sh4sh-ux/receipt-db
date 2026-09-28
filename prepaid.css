@@ -154,3 +154,65 @@
  .pp-price-grid{grid-template-columns:minmax(0,1fr) 104px}
 }
 .pp-meta-danger{color:var(--red)!important}
+/* v4.25 — 선불권 상세 새 디자인(사용자 확정 시안 A): 월렛 카드 · 아이콘 버튼 · 월별 내역(잔액·화살표 없음) · 기록 창 */
+.ppx{gap:22px}
+.ppx-wal{border-radius:18px;padding:18px 20px 16px;color:#fff;background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 90%,#000),color-mix(in srgb,var(--blue) 68%,#000));box-shadow:0 10px 24px rgba(0,0,0,.28)} /* 다크(기본): 흰 글자가 읽히게 어둡게 */
+html[data-theme="light"] .ppx-wal{background:linear-gradient(135deg,var(--blue),color-mix(in srgb,var(--blue) 70%,#fff));box-shadow:0 10px 24px color-mix(in srgb,var(--blue) 24%,transparent)}
+.ppx-wal.expired{filter:grayscale(1)}
+.ppx-wal-top{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;opacity:.9}
+.ppx-wal-bal{font-size:34px;font-weight:700;letter-spacing:-.5px;margin-top:6px;line-height:1.15;overflow-wrap:anywhere}
+.ppx-wal-bal small{font-size:22px;font-weight:700;margin-left:2px}
+.ppx-wal-sub{font-size:13px;opacity:.88;margin-top:4px}
+.ppx-wal-bar{height:6px;border-radius:3px;background:rgba(255,255,255,.28);margin-top:16px;overflow:hidden}
+.ppx-wal-bar i{display:block;height:100%;border-radius:3px;background:#fff}
+.ppx-wal-foot{display:flex;justify-content:space-between;gap:10px;margin-top:8px;font-size:12.5px;opacity:.92}
+.ppx-tiles{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
+.ppx-tile{display:flex;flex-direction:column;align-items:center;gap:7px;width:100%;padding:2px 0;border:0;background:none;color:var(--label2);font:inherit;font-size:12.5px;font-weight:500;cursor:pointer}
+.ppx-tile>i{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:var(--fill2);border:1px solid var(--sep);color:var(--label)}
+.ppx-tile>i .pp-ico{width:20px;height:20px;flex:none}
+.ppx-tile.primary{color:var(--blue);font-weight:600}
+.ppx-tile.primary>i{background:var(--blue);border-color:var(--blue);color:#fff}
+@media(hover:hover){.ppx-tile:hover>i{background:var(--fill)}.ppx-tile.primary:hover>i{background:var(--blue);opacity:.9}}
+.ppx-morewrap{position:relative}
+.ppx-morewrap.mobonly{display:none}
+.ppx-morewrap .pp-menu{top:calc(100% + 4px);bottom:auto;right:0}
+.ppx-hist{display:flex;flex-direction:column}
+.ppx-mh{padding:16px 12px 6px;font-size:11px;font-weight:600;color:var(--label3);border-bottom:1px solid var(--sep)}
+.ppx-row{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:13px 12px;border:0;border-bottom:1px solid var(--sep);border-radius:0;background:none;color:var(--label);font:inherit;text-align:left;cursor:pointer}
+@media(hover:hover){.ppx-row:hover{background:var(--fill2)}}
+.ppx-row-l{min-width:0;display:flex;flex-direction:column;gap:3px}
+.ppx-row-d{font-size:12px;color:var(--label3)}
+.ppx-row-n{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ppx-row-a{flex:none;font-size:14.5px;font-weight:600;white-space:nowrap}
+.ppx-row-a.pos{color:var(--blue)}
+/* 기록 창(.mtg-sheet 틀 재사용) */
+.mtg-sheet.ppx-rs{max-width:440px}
+.ppx-kind{display:inline-block;padding:3px 9px;border-radius:7px;background:var(--fill);color:var(--label2);font-size:12.5px;font-weight:600}
+.ppx-kind.k-plus{background:var(--blue-bg);color:var(--blue-txt)}
+.ppx-rs-amt{font-size:28px;font-weight:700;letter-spacing:-.4px;margin-top:2px}
+.ppx-rs-amt.pos{color:var(--blue)}
+.ppx-rs-sub{font-size:13px;color:var(--label2);margin-top:4px}
+.ppx-rs-rows{margin-top:14px;border-top:1px solid var(--divider)}
+.ppx-rs-rows>div{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--divider);font-size:14px}
+.ppx-rs-rows span{color:var(--label2);flex:none}
+.ppx-rs-rows b{font-weight:600;text-align:right;min-width:0;overflow-wrap:anywhere}
+.ppx-rs-link{margin-top:10px;padding:6px 0;border:0;background:none;color:var(--blue);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.ppx-rs-note{margin-top:10px;font-size:12px;color:var(--label3);line-height:1.5}
+.ppx-rs-warn{margin-top:14px;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--red) 10%,transparent);color:var(--red);font-size:13.5px;line-height:1.55}
+.ppx-rs-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.ppx-btn{height:46px;border:0;border-radius:12px;background:var(--fill);color:var(--label);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.ppx-btn:disabled{opacity:.45;cursor:not-allowed}
+.ppx-btn.primary{background:var(--blue);color:#fff}
+.ppx-btn.danger{background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red)}
+.ppx-btn.danger-solid{background:var(--red);color:#fff}
+.ppx-rs-form label{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--divider);font-size:14px}
+.ppx-rs-form label>span{color:var(--label2);flex:none}
+.ppx-rs-form input{flex:1 1 auto;max-width:230px;min-width:0;height:40px;padding:0 12px;border:1px solid var(--sep2);border-radius:10px;background:var(--fill2);color:var(--label);font:inherit;font-size:16px;font-weight:600;text-align:right}
+.ppx-rs-form input:focus{outline:none;border-color:var(--blue);background:var(--card)}
+.ppx-rs-form .pp-error{margin-top:10px;min-height:0}
+@media(max-width:780px){
+ .ppx-tile.deskonly{display:none}
+ .ppx-morewrap.mobonly{display:block}
+ .ppx-mh{padding-left:2px;padding-right:2px}
+ .ppx-row{padding-left:2px;padding-right:2px}
+}

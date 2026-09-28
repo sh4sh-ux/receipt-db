@@ -187,8 +187,6 @@ function renderPrepaidSide(){
 }
 function ppLatestUse(totals){return totals.active.filter(e=>e.kind==='use').sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id))[0]||null;}
 function ppSuggestedUseAmount(wallet,totals){return wallet.defaultUseAmount||ppLatestUse(totals)?.amount||0;}
-function ppDisplayDate(date){return String(date||'').replace(/-/g,'. ') +(date?'\.':'');}
-function ppRelDay(date){if(!date)return '';const d=Math.round((Date.parse(_todayYMD())-Date.parse(date))/86400000);return d<=0?'오늘':d===1?'어제':d+'일 전';}
 // v3.31 — 선불권 화면 전용 인라인 아이콘(외부 의존성 없음)
 const PP_ICO={
   use:'<svg class="pp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>',
@@ -237,12 +235,8 @@ function renderPrepaid(){
   }
   document.getElementById('prepaidNew').hidden=true; // v3.91 — 등록은 좌측 범위 행(#ppSideNew)
   document.getElementById('prepaidBack').hidden=true; // v3.30 — 화면 내 뒤로가기 화살표 UI 제거(목록 복귀는 breadcrumb)
-  // 진행바 조각: 총 충전(=충전+기초 잔액 합)이 양수일 때만. 계산은 기존 active 이벤트만 사용(저장/계산 로직 불변).
-  const barHtml=(charged,used,pct)=>charged>0?`<div class="pp-bar" role="img" aria-label="사용 ${pct}%"><span style="width:${Math.max(0,Math.min(100,pct))}%"></span></div><div class="pp-bar-legend"><span>사용 ${money(used)} (${pct}%)</span><span>총 ${money(charged)}</span></div>`:'';
   // 파생값(전부 기존 계산 함수만 사용)
   const derive=w=>{const t=ppTotals(prepaidRecords,w.id);const uses=t.active.filter(e=>e.kind==='use').length;const charged=t.active.filter(e=>e.kind==='charge'||e.kind==='opening').reduce((s,e)=>s+e.amount,0);const suggested=ppSuggestedUseAmount(w,t);return {t,uses,charged,pct:charged>0?Math.round(t.used/charged*100):null,avg:uses>0?Math.round(t.used/uses):0,latestUse:ppLatestUse(t),suggested,remaining:suggested?Math.floor(t.balance/suggested):null,expired:w.expiresOn&&w.expiresOn<_todayYMD()};};
-  const idRow=(w,expired,clickable)=>`<div class="pp-id"><div class="pp-id-text"><b class="pp-id-name"><span class="pp-id-nm">${esc(w.name)}</span>${clickable?'<span class="pp-id-chev" aria-hidden="true">›</span>':''}</b><small>${esc(getCategoryLabel(w.category))}</small></div><span class="pp-id-expiry${expired?' danger':''}">${expired?'유효기간 지남':w.expiresOn?esc(w.expiresOn):'유효기간 없음'}</span></div>`;
-  const statBoxes=d=>`<div class="pp-sbox"><small>사용 횟수</small><b>${d.uses}회</b>${d.remaining!==null?`<i>약 ${d.remaining}회 남음</i>`:''}</div>${d.latestUse?`<div class="pp-sbox"><small>최근 방문</small><b>${esc(ppDisplayDate(d.latestUse.date))}</b><i>${ppRelDay(d.latestUse.date)}</i></div>`:''}${d.uses>0?`<div class="pp-sbox"><small>1회 평균 사용</small><b>${money(d.avg)}</b><i>총 ${d.uses}회 기준</i></div>`:''}`;
   if(!wallet){
     // v3.91 — 목록은 좌측 패널. 오른쪽은 선불권이 없을 때만 안내(모바일 목록 화면에선 오른쪽이 안 보임).
     root.innerHTML=`<div class="empty-state" style="padding:56px 12px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg><div>${wallets.length?'목록에서 선불권을 선택하세요':'등록된 선불권이 없어요'}</div>${wallets.length?'':'<button class="primary-btn" type="button" id="ppEmptyNew" style="margin-top:14px;width:auto;padding:0 18px">선불권 등록</button>'}</div>`;
@@ -250,57 +244,143 @@ function renderPrepaid(){
   }
   const d=derive(wallet),t=d.t;
   const priceInfo=wallet.regularPrice?`정가 ${money(wallet.regularPrice)}${wallet.discountRate?` · ${wallet.discountRate}% 할인`:''}`:'';
-  // 실행 잔액(표시용): 오래된 순으로 누적. 저장 데이터·계산 함수는 변경하지 않음.
-  const asc=t.active.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.createdAt.localeCompare(b.createdAt)||a.id.localeCompare(b.id));
-  const runMap={};let run=0;for(const e of asc){run+=(e.kind==='charge'||e.kind==='opening'?1:-1)*e.amount;runMap[e.id]=run;}
-  const desc=asc.slice().reverse();
+  // v4.25 — 월렛 카드 · 아이콘 버튼 · 잔액·화살표 없는 내역(월별) · 줄을 누르면 기록 창(보기 → 수정 / 삭제 확인). 계산은 기존 ppTotals 그대로.
+  const asc=t.active.slice().sort(ppEventOrder);
   const grpOf=e=>e.kind==='use'?'use':'charge'; // 사용 내역 vs 충전 내역(충전·기초·환불·만료 포함) — 표시 분류만
   const useCount=t.active.filter(e=>e.kind==='use').length,allCount=t.active.length,chargeCount=allCount-useCount;
   let curTab=ppHistTab; if(curTab==='use'&&useCount===0&&chargeCount>0)curTab='charge'; if(curTab==='charge'&&chargeCount===0&&useCount>0)curTab='use';
-  const rows=ppHistSort==='old'?asc:desc;
-  const contentOf=e=>e.kind==='use'?`${esc(wallet.name)}${e.description?' ('+esc(e.description)+')':''}`:(e.description?esc(e.description):PP_LABELS[e.kind]);
-  const chip=e=>`<span class="pp-chip pp-chip-${grpOf(e)}">${PP_LABELS[e.kind]}</span>`;
-  const rowMenu=e=>`<div class="pp-rowmenu"><button type="button" class="pp-dots" aria-haspopup="menu" aria-label="관리"><span class="pp-dots-more">${PP_ICO.more}</span><span class="pp-dots-chev" aria-hidden="true">›</span></button><div class="pp-menu" hidden>${e.receiptId?`<button type="button" data-receipt="${esc(e.receiptId)}">${PP_ICO.rcpt}<span>영수증 보기</span></button>`:''}<button type="button" class="danger" data-void="${esc(e.id)}">${PP_ICO.trash}<span>기록 삭제</span></button></div></div>`;
-  const tableRows=rows.map(e=>{const p=e.kind==='charge'||e.kind==='opening';return `<tr data-grp="${grpOf(e)}"><td class="pp-td-date">${esc(ppDisplayDate(e.date))}</td><td>${chip(e)}</td><td class="pp-td-desc">${contentOf(e)}</td><td class="num ${p?'pos':'neg'}">${p?'+':'−'}${money(e.amount)}</td><td class="num pp-td-bal">${money(runMap[e.id])}</td><td class="pp-td-act">${rowMenu(e)}</td></tr>`;}).join('');
-  const listRows=rows.map(e=>{const p=e.kind==='charge'||e.kind==='opening';return `<div class="pp-mrow" data-grp="${grpOf(e)}"><div class="pp-mrow-main"><small class="pp-mrow-meta">${esc(ppDisplayDate(e.date))}</small><b class="pp-mrow-desc">${contentOf(e)}</b></div><div class="pp-mrow-amt"><strong class="${p?'pos':'neg'}">${p?'+':'−'}${money(e.amount)}</strong><small class="pp-mrow-bal">잔액 ${money(runMap[e.id])}</small></div><div class="pp-mrow-act">${rowMenu(e)}</div></div>`;}).join('');
+  const shown=(ppHistSort==='old'?asc:asc.slice().reverse()).filter(e=>grpOf(e)===curTab);
+  const thisYear=new Date().getFullYear();
+  const mLbl=k=>{const [y,m]=k.split('-');return (+y===thisYear?'':y+'년 ')+(+m)+'월';};
+  let histHtml='',lastM='';
+  for(const e of shown){
+    const k=e.date.slice(0,7);if(k!==lastM){histHtml+=`<div class="ppx-mh">${mLbl(k)}</div>`;lastM=k;}
+    const p=ppIsPlus(e);
+    histHtml+=`<button type="button" class="ppx-row" data-ev="${esc(e.id)}"><span class="ppx-row-l"><span class="ppx-row-d">${ppDayLabel(e.date)}${e.kind!=='use'&&e.description?' · '+PP_LABELS[e.kind]:''}</span><span class="ppx-row-n">${esc(ppEventDesc(e))}</span></span><span class="ppx-row-a${p?' pos':''}">${p?'+':'−'}${money(e.amount)}</span></button>`;
+  }
   const emptyHist='<div class="empty-state">충전 또는 사용 기록이 없어요.</div>';
-  const actionsHtml=`<div class="pp-actions">
-    <button class="primary-btn" data-kind="use">${PP_ICO.use}<span>1회 사용<span class="pp-amt">${d.suggested?' · '+money(d.suggested):''}</span></span></button>
-    <button class="ghost-btn" data-kind="charge">${PP_ICO.charge}<span>충전</span></button>
-    <button class="ghost-btn" data-kind="refund">${PP_ICO.refund}<span>환불</span></button>
-    <button class="ghost-btn pp-a-deskonly" data-kind="expire">${PP_ICO.expire}<span>만료 차감</span></button>
-    <button class="ghost-btn pp-a-deskonly js-pp-edit" type="button">${PP_ICO.edit}<span>정보 수정</span></button>
-    <div class="pp-morewrap pp-a-mobonly"><button class="ghost-btn" id="ppMore" type="button" aria-haspopup="menu">${PP_ICO.more}<span>더보기</span></button><div class="pp-menu" id="ppMoreMenu" hidden><button type="button" data-kind="expire">${PP_ICO.expire}<span>만료 차감 처리</span></button><button type="button" class="js-pp-edit">${PP_ICO.edit}<span>정보 수정</span></button></div></div>
-  </div>`;
-  root.innerHTML=`<div class="pp-detail">
-    <div class="pp-card pp-card--detail">
-      <div class="pp-core"><div class="pp-core-bal"><span class="pp-bc-label">남은 잔액</span><strong class="pp-bc-value">${money(t.balance)}</strong>${priceInfo?`<span class="pp-bc-meta">${priceInfo}</span>`:''}${barHtml(d.charged,t.used,d.pct)}</div><div class="pp-core-stats">${statBoxes(d)}</div></div>
-      ${t.balance<0?'<p class="alert err">동기화된 사용 기록이 잔액을 초과했어요. 최근 기록을 확인해 주세요.</p>':''}
-      ${actionsHtml}
-    </div>
-    <div class="pp-hist tab-${curTab}">
+  const remainPct=d.charged>0?Math.max(0,Math.min(100,Math.round(t.balance/d.charged*100))):null;
+  const expTxt=d.expired?'유효기간 지남':wallet.expiresOn?'유효기간 '+wallet.expiresOn.replace(/-/g,'.'):'유효기간 없음';
+  const sub=d.remaining!==null&&d.remaining>=0&&t.balance>0?`약 ${d.remaining}회 더 이용할 수 있어요`:priceInfo;
+  const cardHtml=`<div class="ppx-wal${d.expired?' expired':''}"><div class="ppx-wal-top"><span>남은 잔액</span><span>${esc(expTxt)}</span></div>`
+    +`<div class="ppx-wal-bal">${fmtMoney(t.balance)}<small>원</small></div>${sub?`<div class="ppx-wal-sub">${esc(sub)}</div>`:''}`
+    +(remainPct!==null?`<div class="ppx-wal-bar" role="img" aria-label="${remainPct}% 남음"><i style="width:${remainPct}%"></i></div><div class="ppx-wal-foot"><span>총 ${money(d.charged)} 중 ${remainPct}% 남음</span>${d.suggested?`<span>1회 ${money(d.suggested)}</span>`:''}</div>`:'')
+    +`</div>`;
+  const tile=(attrs,ico,label,cls)=>`<button type="button" class="ppx-tile${cls||''}" ${attrs}><i>${ico}</i><span>${label}</span></button>`;
+  const actionsHtml=`<div class="ppx-tiles">${tile('data-kind="use"',PP_ICO.use,'1회 사용',' primary')}${tile('data-kind="charge"',PP_ICO.charge,'충전')}${tile('data-kind="refund"',PP_ICO.refund,'환불')}`
+    +`${tile('data-kind="expire"',PP_ICO.expire,'만료 차감',' deskonly')}${tile('data-ppedit="1"',PP_ICO.edit,'정보 수정',' deskonly js-pp-edit')}`
+    +`<div class="ppx-morewrap mobonly"><button type="button" class="ppx-tile" id="ppMore" aria-haspopup="menu"><i>${PP_ICO.more}</i><span>더보기</span></button><div class="pp-menu" id="ppMoreMenu" hidden><button type="button" data-kind="expire">${PP_ICO.expire}<span>만료 차감 처리</span></button><button type="button" class="js-pp-edit">${PP_ICO.edit}<span>정보 수정</span></button></div></div></div>`;
+  root.innerHTML=`<div class="pp-detail ppx">${cardHtml}
+    ${t.balance<0?'<p class="alert err">동기화된 사용 기록이 잔액을 초과했어요. 최근 기록을 확인해 주세요.</p>':''}
+    ${actionsHtml}
+    <div class="ppx-hist">
       <div class="pp-hist-head"><div class="pp-tabs" role="tablist"><button type="button" data-htab="use" class="${curTab==='use'?'on':''}">사용 내역 <span>${useCount}</span></button><button type="button" data-htab="charge" class="${curTab==='charge'?'on':''}">충전 내역 <span>${chargeCount}</span></button></div><label class="pp-sort"><select id="ppSortSel" aria-label="정렬"><option value="recent"${ppHistSort==='recent'?' selected':''}>최신순</option><option value="old"${ppHistSort==='old'?' selected':''}>오래된순</option></select></label></div>
-      ${allCount?`<table class="pp-table"><thead><tr><th>날짜</th><th>구분</th><th>내용</th><th class="num">금액</th><th class="num">잔액</th><th aria-label="관리"></th></tr></thead><tbody>${tableRows}</tbody></table><div class="pp-mlist">${listRows}</div>`:emptyHist}
+      ${allCount?(histHtml||'<div class="empty-state">이 탭에는 기록이 없어요.</div>'):emptyHist}
     </div>
   </div>`;
   root.querySelectorAll('[data-kind]').forEach(b=>b.addEventListener('click',()=>ppEventForm(b.dataset.kind)));
   root.querySelectorAll('.js-pp-edit').forEach(b=>b.addEventListener('click',()=>ppWalletForm(wallet)));
-  // 탭(표시 전용 — 원본·계산 불변)
-  root.querySelectorAll('[data-htab]').forEach(b=>b.addEventListener('click',()=>{ppHistTab=b.dataset.htab;const h=root.querySelector('.pp-hist');if(h){h.classList.remove('tab-use','tab-charge');h.classList.add('tab-'+ppHistTab);}root.querySelectorAll('[data-htab]').forEach(x=>x.classList.toggle('on',x===b));}));
-  // 정렬(표시 전용 — 재렌더로 표시만 재정렬)
+  // 탭 — 월 제목이 탭마다 달라 다시 그린다(표시 전용)
+  root.querySelectorAll('[data-htab]').forEach(b=>b.addEventListener('click',()=>{ppHistTab=b.dataset.htab;renderPrepaid();}));
   const sortSel=root.querySelector('#ppSortSel');if(sortSel)sortSel.addEventListener('change',()=>{ppHistSort=sortSel.value;renderPrepaid();});
-  // ••• / 더보기 메뉴 토글(다른 메뉴는 닫음)
-  root.querySelectorAll('.pp-dots,#ppMore').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const menu=btn.parentElement.querySelector('.pp-menu');if(!menu)return;const willOpen=menu.hidden;ppCloseMenus();menu.hidden=!willOpen;}));
-  root.querySelectorAll('[data-receipt]').forEach(b=>b.addEventListener('click',()=>{
-    if(!receipts.some(r=>r.id===b.dataset.receipt)){toast('연결된 영수증을 찾을 수 없어요.',{type:'warning'});return;}
-    selectReceipt(b.dataset.receipt);
-  }));
-  root.querySelectorAll('[data-void]').forEach(b=>b.addEventListener('click',async()=>{
-    if(!confirm('이 기록을 삭제할까요? 결제 기록이 있으면 반대 금액의 정정 영수증이 추가됩니다.'))return;
-    b.disabled=true;
-    try{await ppCommit(null,{walletId:wallet.id,kind:'void',reverses:b.dataset.void,date:_todayYMD(),amount:0,paid:0,createdAt:nowISO(),description:'삭제'});toast('기록을 삭제했어요.');}
-    catch(e){b.disabled=false;toast(e.message,{type:'error'});}
-  }));
+  root.querySelectorAll('#ppMore').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const menu=btn.parentElement.querySelector('.pp-menu');if(!menu)return;const willOpen=menu.hidden;ppCloseMenus();menu.hidden=!willOpen;}));
+  root.querySelectorAll('.ppx-row[data-ev]').forEach(b=>b.addEventListener('click',()=>ppRecordSheet(wallet.id,b.dataset.ev)));
+}
+// v4.25 — 선불권 기록 표시 헬퍼(표시 전용)
+function ppEventOrder(a,b){return a.date.localeCompare(b.date)||a.createdAt.localeCompare(b.createdAt)||a.id.localeCompare(b.id);}
+function ppIsPlus(e){return e.kind==='charge'||e.kind==='opening';}
+function ppEventDesc(e){return e.description||(e.kind==='use'?'사용':PP_LABELS[e.kind]);}
+const PP_WD=['일','월','화','수','목','금','토'];
+function ppDayLabel(iso){const x=new Date(iso+'T00:00:00');return `${x.getMonth()+1}월 ${x.getDate()}일 ${PP_WD[x.getDay()]}`;}
+function ppDayFull(iso){const x=new Date(iso+'T00:00:00');return `${x.getFullYear()}년 ${x.getMonth()+1}월 ${x.getDate()}일 ${PP_WD[x.getDay()]}요일`;}
+// v4.25 — 기록 수정 = 원래 기록 취소(void) + 고친 기록 추가를 한 트랜잭션으로(둘 다 되거나 둘 다 안 됨). 결제 영수증이 연결된 기록은 수정하지 않는다.
+async function ppCommitEdit(walletId,origId,values){
+  const db=await openDB();
+  await new Promise((resolve,reject)=>{
+    const tx=db.transaction(['settings'],'readwrite'),settings=tx.objectStore('settings');let failure=null;
+    tx.oncomplete=resolve;tx.onabort=()=>reject(failure||tx.error||new Error('저장하지 못했어요.'));
+    const req=settings.getAll();
+    req.onsuccess=()=>{
+      try{
+        const rows=ppValidateRecords(req.result.filter(r=>r.key.startsWith(PP_PREFIX)));
+        const wallet=rows.find(r=>r.type==='wallet'&&r.id===walletId);if(!wallet)throw new Error('선불권을 찾을 수 없어요.');
+        const orig=ppTotals(rows,walletId).active.find(e=>e.id===origId);
+        if(!orig)throw new Error('이미 취소되었거나 찾을 수 없는 기록이에요.');
+        if(orig.paid||orig.receiptId)throw new Error('결제 영수증이 연결된 기록은 수정할 수 없어요. 삭제한 뒤 다시 등록해 주세요.');
+        const now=nowISO();
+        const voidEv={key:PP_PREFIX+'void_'+orig.id,id:'void_'+orig.id,type:'event',walletId,kind:'void',date:_todayYMD(),amount:orig.amount,paid:0,description:'수정',receiptId:'',reverses:orig.id,createdAt:now};
+        ppValidateRecords([voidEv]);
+        const rows2=rows.concat([voidEv]);
+        const {event,cash}=ppBuildEvent(rows2,wallet,{id:'event_'+crypto.randomUUID(),kind:orig.kind,date:values.date,amount:values.amount,paid:0,description:String(values.description||'').trim(),receiptId:'',createdAt:orig.createdAt||now},null);
+        if(cash)throw new Error('수정할 수 없는 기록이에요.');
+        if(ppTotals(rows2.concat([event]),walletId).balance<0)throw new Error('이미 사용한 잔액이 있어 이 금액으로 바꿀 수 없어요.');
+        ppValidateRecords([event]);
+        settings.add(voidEv);settings.add(event);
+      }catch(e){failure=e;tx.abort();}
+    };
+  });
+  await ppLoad();await loadAll();renderDetail();renderPrepaid();if(typeof renderSide==='function'&&document.getElementById('viewPrepaid')?.classList.contains('on'))renderSide();
+  void dbxSyncUpload();
+}
+// v4.25 — 기록 창: 줄을 누르면 열린다. 보기 → [수정](같은 창이 입력칸 + [취소][저장]) / [삭제](같은 창에서 잔액 변화 확인 + [취소][삭제하기]).
+function ppRecordSheet(walletId,evId){
+  if(typeof _mtgSheetOpen!=='function')return;
+  const {card,close}=_mtgSheetOpen();card.classList.add('ppx-rs');
+  const esc=escapeHtml,money=n=>fmtMoney(n)+'원';
+  let mode='view';
+  const paint=()=>{
+    const t=ppTotals(prepaidRecords,walletId),e=t.active.find(x=>x.id===evId);
+    if(!e){close();return;}
+    const p=ppIsPlus(e),sign=p?'+':'−';
+    let run=0,after=0;for(const x of t.active.slice().sort(ppEventOrder)){run+=(ppIsPlus(x)?1:-1)*x.amount;if(x.id===e.id){after=run;break;}}
+    const editable=!e.paid&&!e.receiptId;
+    const title=mode==='edit'?'기록 수정':mode==='del'?'기록 삭제':`<span class="ppx-kind${p?' k-plus':''}">${PP_LABELS[e.kind]}</span>`;
+    const hd=`<div class="mtg-sheet-hd"><div class="mtg-sheet-title">${title}</div><button class="mtg-sheet-x" id="ppRsX" type="button" aria-label="닫기">×</button></div>`;
+    if(mode==='view'){
+      card.innerHTML=hd+`<div class="ppx-rs-amt${p?' pos':''}">${sign}${money(e.amount)}</div>`
+        +`<div class="ppx-rs-rows"><div><span>날짜</span><b>${ppDayFull(e.date)}</b></div><div><span>내용</span><b>${esc(ppEventDesc(e))}</b></div>`
+        +(e.paid?`<div><span>${e.kind==='refund'?'실제 환불액':'실제 결제액'}</span><b>${money(e.paid)}</b></div>`:'')
+        +`<div><span>${p?'충전 후 잔액':'이후 잔액'}</span><b>${money(after)}</b></div></div>`
+        +(e.receiptId?`<button type="button" class="ppx-rs-link" id="ppRsRcpt">연결된 영수증 보기</button>`:'')
+        +(editable?'':`<p class="ppx-rs-note">결제 영수증이 연결된 기록은 수정할 수 없어요. 삭제한 뒤 다시 등록해 주세요.</p>`)
+        +`<div class="ppx-rs-btns"><button type="button" class="ppx-btn" id="ppRsEdit"${editable?'':' disabled'}>수정</button><button type="button" class="ppx-btn danger" id="ppRsDel">삭제</button></div>`;
+      card.querySelector('#ppRsEdit').onclick=()=>{mode='edit';paint();};
+      card.querySelector('#ppRsDel').onclick=()=>{mode='del';paint();};
+      const rc=card.querySelector('#ppRsRcpt');
+      if(rc)rc.onclick=()=>{if(!receipts.some(r=>r.id===e.receiptId)){toast('연결된 영수증을 찾을 수 없어요.',{type:'warning'});return;}close(()=>selectReceipt(e.receiptId));};
+    }else if(mode==='edit'){
+      card.innerHTML=hd+`<form class="ppx-rs-form" id="ppRsForm" novalidate>`
+        +`<label><span>날짜</span><input name="date" type="date" value="${esc(e.date)}" required></label>`
+        +`<label><span>내용</span><input name="description" type="text" maxlength="200" value="${esc(e.description||'')}" placeholder="${e.kind==='use'?'예: 커트':esc(PP_LABELS[e.kind])}"></label>`
+        +`<label><span>금액</span><input name="amount" type="text" inputmode="numeric" value="${fmtMoney(e.amount)}" required></label>`
+        +`<p class="pp-error" role="alert"></p><div class="ppx-rs-btns"><button type="button" class="ppx-btn" id="ppRsCancel">취소</button><button type="submit" class="ppx-btn primary">저장</button></div></form>`;
+      const f=card.querySelector('#ppRsForm'),amt=f.querySelector('[name=amount]'),err=f.querySelector('.pp-error');
+      amt.addEventListener('input',()=>{const raw=amt.value.replace(/[^0-9]/g,'');amt.value=raw?Number(raw).toLocaleString('ko-KR'):'';});
+      card.querySelector('#ppRsCancel').onclick=()=>{mode='view';paint();};
+      f.addEventListener('submit',async ev=>{
+        ev.preventDefault();const btn=f.querySelector('[type=submit]');if(btn.disabled)return;btn.disabled=true;err.textContent='';
+        try{
+          const amount=ppMoney(amt.value||'0');if(amount<=0)throw new Error('금액을 입력해 주세요.');
+          await ppCommitEdit(walletId,e.id,{date:f.querySelector('[name=date]').value,description:f.querySelector('[name=description]').value,amount});
+          close(()=>toast('수정했어요.',{type:'success'}));
+        }catch(x){err.textContent=x.message;btn.disabled=false;}
+      });
+    }else{
+      const nb=t.balance-(p?e.amount:-e.amount);
+      card.innerHTML=hd+`<div class="ppx-rs-amt${p?' pos':''}">${sign}${money(e.amount)}</div><div class="ppx-rs-sub">${ppDayLabel(e.date)} · ${esc(ppEventDesc(e))}</div>`
+        +`<div class="ppx-rs-warn">이 기록을 삭제할까요?<br>잔액이 <b>${money(t.balance)} → ${money(nb)}</b>${nb<t.balance?'으로 줄어요':'으로 돌아가요'}.${e.paid?'<br>결제 기록이 있어 반대 금액의 정정 영수증이 추가돼요.':''}</div>`
+        +`<p class="pp-error" role="alert">${nb<0?'이미 사용한 잔액이 있어 삭제할 수 없어요.':''}</p>`
+        +`<div class="ppx-rs-btns"><button type="button" class="ppx-btn" id="ppRsCancel">취소</button><button type="button" class="ppx-btn danger-solid" id="ppRsDo"${nb<0?' disabled':''}>삭제하기</button></div>`;
+      card.querySelector('#ppRsCancel').onclick=()=>{mode='view';paint();};
+      card.querySelector('#ppRsDo').onclick=async()=>{
+        const btn=card.querySelector('#ppRsDo'),err=card.querySelector('.pp-error');if(btn.disabled)return;btn.disabled=true;
+        try{await ppCommit(null,{walletId,kind:'void',reverses:e.id,date:_todayYMD(),amount:0,paid:0,createdAt:nowISO(),description:'삭제'});close(()=>toast('기록을 삭제했어요.'));}
+        catch(x){err.textContent=x.message;btn.disabled=false;}
+      };
+    }
+    card.querySelector('#ppRsX').onclick=close;
+  };
+  paint();
 }
 // v3.31 — 행/더보기 메뉴 바깥 클릭·ESC 닫기(1회 등록)
 function ppCloseMenus(except){document.querySelectorAll('#viewPrepaid .pp-menu').forEach(m=>{if(m!==except)m.hidden=true;});}
