@@ -475,7 +475,6 @@ function ppEventForm(kind){
 const SB_PREFIX='sub:';
 const SB_PAY=[['card','카드'],['cash','현금'],['transfer','계좌이체'],['other','기타']];
 const SB_DEFAULT_CAT='영화'; // 화면 이름 '문화'(사용자 지정)
-const SB_COLORS=['#E5484D','#F76B15','#E2A000','#30A46C','#12A594','#0090FF','#3E63DD','#8E4EC6','#D6409F','#6E7681'];
 let subRecords=[];
 let sbLastSel=null;
 let ppSeg=(()=>{try{return localStorage.getItem('ppSeg')||'';}catch(_){return '';}})();
@@ -566,7 +565,6 @@ function sbYearly(s){return s.cycle==='year'?s.amount:s.amount*12;}
 function sbOrdered(ctx=sbCtx()){
   return sbSubs().map(s=>({s,st:sbState(s,ctx)})).sort((a,b)=>(a.st.ended-b.st.ended)||((a.st.next?.date||'9')<(b.st.next?.date||'9')?-1:(a.st.next?.date||'9')>(b.st.next?.date||'9')?1:0)||a.s.name.localeCompare(b.s.name,'ko'));
 }
-function sbIcon(s){let h=0;for(const ch of s.name)h=(h*31+ch.codePointAt(0))>>>0;const c=SB_COLORS[h%SB_COLORS.length];const l=[...s.name.replace(/^[\s(（]*(주식회사|㈜|\(주\))\s*/,'')][0]||'?';return `<span class="sbx-ic" style="background:${c}" aria-hidden="true">${escapeHtml(l.toUpperCase())}</span>`;}
 // ── 등록·건너뛰기
 async function sbRegister(s,period,amount){
   if(receipts.some(r=>r.subId===s.id&&r.subPeriod===period))throw new Error('이미 영수증으로 등록한 결제예요.');
@@ -596,8 +594,8 @@ function sbAskHtml(x,more){
 }
 function sbRowHtml(x,sel){
   const s=x.s,st=x.st,esc=escapeHtml;
-  const right=st.ended?`<div class="sbx-row-dd">해지함</div>`:st.pending.length?`<div class="sbx-row-dd due">확인 대기</div>`:st.next?`<div class="sbx-row-dd${st.dday<=7?' soon':''}">${sbDayShort(st.next.date)} · ${st.dday===0?'오늘':'D-'+st.dday}</div>`:'';
-  return `<div class="r-card ppw-row sbx-row${sel?' sel':''}${st.ended?' ended':''}" data-sub="${esc(s.id)}" role="button" tabindex="0"${sel?' aria-current="true"':''}>${sbIcon(s)}`
+  const right=st.ended?`<div class="sbx-row-dd">해지함</div>`:st.pending.length?`<div class="sbx-row-dd due">확인 대기</div>`:st.next?`<div class="sbx-row-dd${st.dday<=7?' soon':''}">${+st.next.date.slice(5,7)}월 ${+st.next.date.slice(8,10)}일 · ${st.dday===0?'오늘':'D-'+st.dday}</div>`:''; // v4.31 — 목록은 연도 없이(D-N이 거리를 알려 준다, 연도까지 넣으면 이름·메타가 밀렸다)
+  return `<div class="r-card ppw-row sbx-row${sel?' sel':''}${st.ended?' ended':''}" data-sub="${esc(s.id)}" role="button" tabindex="0"${sel?' aria-current="true"':''}>`
     +`<div class="r-card-info"><div class="r-card-store-row"><span class="r-card-store">${esc(s.name)}</span>${s.cycle==='year'?'<span class="sbx-tag">연간</span>':''}</div><div class="r-card-meta">${esc(sbCycleLabel(s))} · ${esc(sbPayLabel(s))}</div></div>`
     +`<div class="sbx-row-r"><div class="r-card-amt">${fmtMoney(s.amount)}원</div>${right}</div></div>`;
 }

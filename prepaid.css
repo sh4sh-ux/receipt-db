@@ -221,18 +221,19 @@ html[data-theme="light"] .ppx-wal{background:linear-gradient(135deg,var(--blue),
 .sbx-seg button{height:26px;padding:0 11px;border:0;border-radius:7px;background:none;color:var(--label2);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .sbx-seg button i{font-style:normal;font-weight:500;color:var(--label3)}
 .sbx-seg button.on{background:var(--fill2);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.sbx-seg button:focus{outline:none}.sbx-seg button:focus-visible{outline:2px solid var(--blue);outline-offset:1px} /* v4.31 — 누른 뒤 파란 테두리가 남던 것(키보드 이동 때만 표시) */
 html[data-theme="light"] .sbx-seg button.on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .sbx-ask{margin:12px var(--pad-x,18px) 4px;padding:12px 14px;border-radius:12px;border:1px solid color-mix(in srgb,var(--blue) 30%,var(--sep));background:color-mix(in srgb,var(--blue) 7%,var(--card))}
-.sbx-ask-q{font-size:13.5px;line-height:1.45;color:var(--label)}
+.sbx-ask-q{font-size:13.5px;line-height:1.45;color:var(--label);word-break:keep-all}
 .sbx-ask-q b{font-weight:700}
-.sbx-ask-s{font-size:12px;color:var(--label2);margin-top:2px;line-height:1.4}
+.sbx-ask-s{font-size:12px;color:var(--label2);margin-top:2px;line-height:1.4;word-break:keep-all}
 .sbx-ask-b{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
 .sbx-ask-b button{height:32px;padding:0 12px;border:0;border-radius:8px;background:var(--fill);color:var(--label2);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
 .sbx-ask-b .sbx-ask-reg{background:var(--blue);color:#fff}
 .sbx-ask-b button:disabled{opacity:.5;cursor:default}
 .sbx-row{gap:12px}
-.sbx-ic{width:34px;height:34px;border-radius:10px;flex:none;display:grid;place-items:center;color:#fff;font-size:14px;font-weight:700;line-height:1}
 .sbx-row .r-card-info{min-width:0}
+.sbx-row .r-card-meta{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* v4.31 — 결제수단이 길어도 한 줄(줄바꿈으로 행 높이가 달라졌다) */
 .sbx-row-r{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:3px;text-align:right}
 .sbx-row-dd{font-size:11.5px;color:var(--label2);white-space:nowrap}
 .sbx-row-dd.soon,.sbx-row-dd.due{color:var(--blue);font-weight:600}
