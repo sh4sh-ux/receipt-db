@@ -12,7 +12,7 @@
 
 ## 현재 파일
 - `index.html` — 앱 전체 (HTML/CSS/JS 통합, 약 1MB·1만4천 줄)
-- `prepaid.js` · `prepaid.css` — 선불권 화면(계산·저장·화면)
+- `prepaid.js` · `prepaid.css` — 선불권 화면(계산·저장·화면). v4.25 상세 = 월렛 카드 · 아이콘 버튼 · 월별 내역(잔액·화살표 없음) · 줄을 누르면 기록 창(`ppRecordSheet`: 보기 → 수정/삭제 확인). **수정은 `ppCommitEdit`로 void + 새 기록을 한 트랜잭션**(원본 기록을 고쳐 쓰지 말 것 — 선불권 기록은 추가만 한다), 결제 영수증이 연결된 기록은 수정 불가. 새 클래스는 `ppx-` 접두어(기존 `.pp-*`·`.ppw-*`와 겹치지 않게)
 - `sw.js` — 서비스 워커. 모든 셸 파일 network-first(오프라인일 때만 캐시)
 - `manifest.webmanifest` — PWA 설치 정보
 - `README.md` — GitHub repo 첫 페이지용 한글 설명(첫 줄에 버전)
@@ -434,7 +434,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 검색 적용(`_applySearchInput`)은 **검색어가 그대로면 아무것도 하지 않는다**(v4.07). 한글 조합 중 결과 카드를 누르면 blur로 `compositionend`·`input`이 늦게 와 같은 검색어가 다시 적용되며 `selectedId`를 지워 상세가 검색 결과로 튕겼다. `selectReceipt`는 대기 중인 검색 타이머를 끈다. Playwright `keyboard.type`은 조합이 없어 재현되지 않으니 composition 이벤트를 직접 보내 검증.
 
 ## 현재 상태 (2026-09-27 기준)
-- **버전 `v4.24`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
+- **버전 `v4.25`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
 - 데이터: 실데이터 백업 기준 영수증 151건(2025-03 ~ 2026-09), 사진 142장, 선불권 사용. 3,000건 가상 데이터에서도 목록 0.01초·검색 0.1초·사람 화면 0.4초(데스크탑).
 
 ### 작업 흐름 (Claude Code 웹 세션)

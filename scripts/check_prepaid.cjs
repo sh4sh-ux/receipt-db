@@ -1,7 +1,8 @@
 const fs=require('node:fs');
 const vm=require('node:vm');
 const assert=require('node:assert/strict');
-const ctx=vm.createContext({});
+// prepaid.js는 화면 이벤트(document.addEventListener)도 등록한다 — 계산만 검사하므로 빈 document로 대신한다.
+const ctx=vm.createContext({document:{addEventListener(){}}});
 vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../prepaid.js'),'utf8'),ctx);
 const {ppTotals,ppBuildEvent,ppValidateRecords,ppMoney,ppDiscountedAmount}=ctx;
 const wallet={key:'prepaid:wallet_test',id:'wallet_test',type:'wallet',name:'미용실',category:'스파',expiresOn:'2027-01-01',regularPrice:23000,discountRate:10,defaultUseAmount:20700};
