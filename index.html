@@ -1477,14 +1477,12 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-xaxis{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--label2);font-variant-numeric:tabular-nums;}
 /* v3.22 — 밝은 툴팁(흰 카드). 금액만 Bold+진하게, 날짜/건수는 얇고 차분하게. 자식 요소라 부분 스타일 가능.
    흰 배경+흰 글자 금지 규칙 준수(배경 흰색, 글자는 #111827/#6B7280 고정 — 두 테마 모두 가독). */
-.lp-bar .lp-tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(2px);opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:9px;box-shadow:0 4px 14px rgba(17,24,39,.10);padding:8px 11px;white-space:nowrap;text-align:center;z-index:7;}
-.lp-col:hover .lp-tip,.lp-col.pin .lp-tip{opacity:1;transform:translateX(-50%) translateY(0);}
-.lp-col.pin .lp-bar.has{opacity:1;}
-/* v4.26 — 양 끝 막대의 툴팁은 가운데 대신 막대 쪽 끝에 맞춘다. 가운데 정렬이면 마지막 막대 툴팁이 화면 밖으로 삐져나와
-   (전체 기간에서 약 1~수 px) 모바일 스크롤 영역이 옆으로 밀렸다. */
-.lp-col.tip-l .lp-tip{left:0;transform:translateY(2px);}
-.lp-col.tip-r .lp-tip{left:auto;right:0;transform:translateY(2px);}
-.lp-col.tip-l:hover .lp-tip,.lp-col.tip-l.pin .lp-tip,.lp-col.tip-r:hover .lp-tip,.lp-col.tip-r.pin .lp-tip{transform:translateY(0);}
+.lp-float{position:absolute;top:0;left:0;pointer-events:none;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:9px;box-shadow:0 4px 14px rgba(17,24,39,.10);padding:8px 11px;white-space:nowrap;text-align:left;z-index:7;}
+/* v4.27 — 짚은 칸 세로선(그리기 전용). 칸을 고르는 동안 다른 막대는 흐리게 */
+.lp-cursor{position:absolute;top:0;bottom:0;left:0;width:1px;margin-left:-.5px;background:var(--label2);opacity:.6;pointer-events:none;z-index:6;}
+.lp-canvas-col{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:crosshair;}
+.lp-bars.scrub .lp-bar.has{opacity:.4;}
+.lp-bars.scrub .lp-col.on .lp-bar.has{opacity:1;}
 .lp-tip .d{display:block;font-size:12px;font-weight:500;color:#6B7280;line-height:1.3;}
 .lp-tip .a{display:block;font-size:14px;font-weight:700;color:#111827;line-height:1.35;margin-top:1px;}
 .lp-tip .c{display:block;font-size:12px;font-weight:400;color:#6B7280;line-height:1.3;margin-top:1px;}
@@ -3883,6 +3881,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.27 — 지출 추이 짚어 보기: 그래프(축 글자 포함) 아무 데나 대고 옆으로 밀면 가장 가까운 칸에 얇은 세로선 + 금액·영수증 건수(선 옆 카드, 그래프 안에서만). 칸 폭이 아니라 x 위치로 골라 가는 막대도 고를 수 있다. 손 떼도 남고 다른 곳 누르면 닫힘, 위아래로 밀면 스크롤. PC는 마우스 올리면. 막대마다 있던 숨은 툴팁(.lp-tip)·탭 고정(pin)·v4.26 끝 정렬은 삭제.
 // v4.26 — 버그: 폰 통계에서 '전체 기간'을 고르면 화면이 옆으로 밀림. 지출 추이 마지막 막대의 숨은 툴팁(가운데 정렬)이 화면 밖으로 삐져나와 스크롤 영역이 옆으로 움직였다 → 양 끝 막대 툴팁은 막대 쪽 끝에 맞추고(.tip-l/.tip-r), .main-body는 overflow-x:hidden.
 // v4.25 — 선불권 상세 새 디자인(사용자 확정 시안): 월렛 카드(남은 잔액·약 N회·남은 비율·1회 금액) · 아이콘 버튼 · 월별 내역(잔액·화살표 없음) · 줄을 누르면 기록 창(보기 → [수정] 같은 창에서 입력칸+[취소][저장] / [삭제] 잔액 변화 확인+[삭제하기]). 수정 = 원래 기록 취소 + 고친 기록 추가를 한 트랜잭션으로(prepaid.js ppCommitEdit), 결제 영수증이 연결된 기록은 수정 불가.
 // v4.24 — 카테고리 '스파' → 화면 이름 '뷰티' + 연꽃 아이콘(beauty-line.svg). 저장값은 그대로 '스파'(기존 데이터·더치페이 호환), '뷰티'·'미용' 입력은 스파로. 자동 분류에 헤어·미용실·네일·왁싱·에스테틱·뷰티·바버 추가.
@@ -4299,7 +4298,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.26';
+const APP_VERSION='v4.27';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -10127,8 +10126,9 @@ function renderLedgerPanel(recs){
           <div class="lp-canvas">
             <div class="lp-grid">${tr.yTicks.map(()=>'<span></span>').join('')}</div>
             <div class="lp-bars">
-              ${tr.bars.map((b,i,a)=>{const h=yMax>0?(b.amt>0?Math.max(2,Math.round(b.amt/yMax*100)):0):0;const f=(i+.5)/a.length,edge=f<.15?' tip-l':f>.85?' tip-r':'';return `<div class="lp-col${b.amt>0?' has':''}${edge}"><div class="lp-bar${b.amt>0?' has':''}" style="height:${h}%;">${b.amt>0?`<span class="lp-tip"><span class="d">${escapeHtml(b.lbl)}</span><span class="a">${fmtMoney(b.amt)}원</span><span class="c">영수증 ${b.cnt}건</span></span>`:''}</div></div>`;}).join('')}
+              ${tr.bars.map(b=>{const h=yMax>0?(b.amt>0?Math.max(2,Math.round(b.amt/yMax*100)):0):0;return `<div class="lp-col${b.amt>0?' has':''}" data-l="${escapeHtml(b.lbl)}" data-a="${b.amt}" data-c="${b.cnt}"><div class="lp-bar${b.amt>0?' has':''}" style="height:${h}%;"></div></div>`;}).join('')}
             </div>
+            <div class="lp-cursor" hidden></div><div class="lp-tip lp-float" hidden></div>
           </div>
           <div class="lp-xaxis">${tr.axis.map(a=>`<span>${escapeHtml(a)}</span>`).join('')}</div>
         </div>
@@ -10927,12 +10927,50 @@ async function renderDetail(){
       _openRelationGroupSplitDetail(g.dataset.rgid,_splitSectionList);
     });
     body.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')){const g=e.target.closest&&e.target.closest('.psplit-row[data-rgid]');if(g&&body.contains(g)){e.preventDefault();_openRelationGroupSplitDetail(g.dataset.rgid,_splitSectionList);}}});
-    // v3.38 — 지출 추이 칸을 탭하면 툴팁이 고정(pin)돼 손가락을 떼도 남는다. 다른 곳 탭하면 닫힘.
-    body.addEventListener('click',e=>{
-      const col=e.target.closest('.lp-col.has');
-      const wasPin=col&&col.classList.contains('pin');
-      body.querySelectorAll('.lp-col.pin').forEach(c=>c.classList.remove('pin'));
-      if(col&&!wasPin)col.classList.add('pin');
+    // v4.27 — 지출 추이: 그래프(축 글자 포함) 아무 데나 손가락을 대고 옆으로 밀면 가장 가까운 칸에 세로선 + 금액·건수.
+    //   막대가 가늘어도(일별 30칸) 고를 수 있게 칸 폭이 아니라 x 위치로 고른다. 손을 떼도 남고, 다른 곳을 누르면 닫힘.
+    //   위아래로 밀면 브라우저 스크롤(touch-action:pan-y → pointercancel)로 넘겨 닫는다. 마우스는 올리면 보이고 벗어나면 닫힘.
+    const lpAt=(wrap,clientX)=>{
+      const bars=wrap.querySelector('.lp-bars'),canvas=wrap.querySelector('.lp-canvas');
+      const cols=bars?[...bars.children]:[];if(!cols.length||!canvas)return;
+      const br=bars.getBoundingClientRect();
+      const i=Math.max(0,Math.min(cols.length-1,Math.floor((clientX-br.left)/br.width*cols.length)));
+      const col=cols[i],cur=canvas.querySelector('.lp-cursor'),tip=canvas.querySelector('.lp-float');
+      cols.forEach(c=>c.classList.toggle('on',c===col));bars.classList.add('scrub');
+      const cr=canvas.getBoundingClientRect(),kr=col.getBoundingClientRect(),x=kr.left+kr.width/2-cr.left;
+      cur.style.left=x+'px';cur.hidden=false;
+      const cnt=+col.dataset.c||0;
+      tip.innerHTML=`<span class="d">${escapeHtml(col.dataset.l||'')}</span><span class="a">${fmtMoney(+col.dataset.a||0)}원</span><span class="c">영수증 ${cnt}건</span>`;
+      tip.hidden=false;
+      const w=tip.offsetWidth;
+      tip.style.left=Math.max(0,Math.min(cr.width-w,x<cr.width/2?x+8:x-8-w))+'px';
+    };
+    const lpOff=()=>{
+      body.querySelectorAll('.lp-bars.scrub').forEach(b=>{b.classList.remove('scrub');b.querySelectorAll('.lp-col.on').forEach(c=>c.classList.remove('on'));});
+      body.querySelectorAll('.lp-cursor,.lp-float').forEach(n=>{n.hidden=true;});
+    };
+    let lpDrag=null;
+    body.addEventListener('pointerdown',e=>{
+      const wrap=e.target.closest&&e.target.closest('.lp-canvas-col');
+      if(!wrap||!body.contains(wrap)){lpOff();return;}
+      if(e.pointerType==='mouse')return;
+      lpDrag={wrap,id:e.pointerId};
+      try{wrap.setPointerCapture(e.pointerId);}catch(_){}
+      lpAt(wrap,e.clientX);
+    });
+    body.addEventListener('pointermove',e=>{
+      if(lpDrag&&e.pointerId===lpDrag.id){lpAt(lpDrag.wrap,e.clientX);return;}
+      if(e.pointerType!=='mouse')return;
+      const wrap=e.target.closest&&e.target.closest('.lp-canvas-col');
+      if(wrap&&body.contains(wrap))lpAt(wrap,e.clientX);
+    });
+    const lpUp=e=>{if(lpDrag&&e.pointerId===lpDrag.id)lpDrag=null;};
+    body.addEventListener('pointerup',lpUp);
+    body.addEventListener('pointercancel',e=>{if(lpDrag&&e.pointerId===lpDrag.id){lpDrag=null;lpOff();}});
+    body.addEventListener('pointerout',e=>{
+      if(e.pointerType!=='mouse'||lpDrag)return;
+      const from=e.target.closest&&e.target.closest('.lp-canvas-col');
+      if(from&&!(e.relatedTarget&&from.contains(e.relatedTarget)))lpOff();
     });
   }
   // v3.33 — 기간 바텀시트가 body로 포탈된 채 남으면(다른 렌더로 전환 시) 반투명 백드롭이 화면을 덮는다.
