@@ -3879,6 +3879,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.34 — 대납 공유 이미지를 Dutch Pay '상세내역' 이미지(generateFullDetailCanvases, v6.23~)와 같은 모양·글자로 다시 그림: 파란 눈썹 'RECEIPT DB v…' · 제목 '대신 결제' + 받을 돈 · 날짜 · 연파랑 카드(매장 + 회색 '결제' 알약 + 금액) · 품목 표 · '입금 기록' 카드(입금 N번 알약 + 남은 금액) · 입금 표. 글자는 Dutch Pay처럼 2px 작게·가는 굵기(v4.33은 너무 굵었다).
 // v4.33 — 대납 공유: 대신 결제 창 [공유] → Dutch Pay '상세내역'과 같은 흰 바탕 이미지(제목·날짜·결제자·남은 금액 요약·구매 내역·입금 기록 표·버전). 폰은 공유 창, 안 되면 미리보기 + 이미지 저장(advShareCanvas·advShareImage).
 // v4.32 — 대납(다른 사람 대신 결제한 돈 돌려받기, advance.js·advance.css): 영수증 상세 [+ 대신 결제로 기록] → 사람·받을 금액·카드 할부. 입금 확인(입금액·실제 입금일·메모를 매번 직접) → 몇 번째·입금 후 남은 금액. 완료 = 남은 0원(입금 횟수·할부와 묶지 않음). 사람 상세 맨 위 '받을 돈', 사람 목록 [받을 돈] 칩. 통계: 그 영수증 내 부담 = 총액 − 받을 금액, 상대 부담 = 받을 금액(_splitShareMap). 입금은 수입 아님. 동기화·백업 advRecords.
 // v4.31 — 구독 목록 다듬기(사용자 제보·요청): 왼쪽 목록 아이콘 뺌, 다음 결제일은 연도 없이('2월 16일 · D-141' — 연도까지 넣으면 이름이 잘리고 결제수단이 줄바꿈돼 행 높이가 달라졌다), 결제수단 한 줄, [구독|선불권] 누른 뒤 파란 테두리 없앰, 결제 확인 문장 단어 단위 줄바꿈.
@@ -4302,7 +4303,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.33';
+const APP_VERSION='v4.34';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
