@@ -85,6 +85,7 @@ function advDecorateReceipt(body,r){
     const st=advState(a);
     html=`<div class="advx-rc"><div class="advx-rc-hd"><b>${esc(a.person)} 대신 결제</b><span class="advx-tag${st.done?' done':''}">${st.done?'완료':'진행 중'}</span></div>`
       +`<div class="advx-rc-s">${st.done?(st.over?`${money(st.over)} 더 받음`:'다 받았어요'):`남은 금액 <b>${money(st.remaining)}</b>`} · 받은 ${money(st.received)} · 입금 ${st.n}번 · ${advMonthsLabel(a)}</div>`
+      +(a.amount>(r.total||0)?`<div class="advx-rc-w">받을 금액 ${money(a.amount)}이 영수증 총액보다 커요 · [자세히] ▸ 정보 수정에서 고쳐 주세요</div>`:'') // v4.37
       +`<div class="advx-rc-n">통계: 내 부담 ${money(Math.max(0,(r.total||0)-Math.min(a.amount,r.total||0)))} · ${esc(a.person)} 부담 ${money(Math.min(a.amount,r.total||0))}</div>`
       +`<div class="advx-rc-b"><button type="button" class="ppx-btn" data-advopen="${esc(a.id)}">자세히</button><button type="button" class="ppx-btn primary" data-advpay="${esc(a.id)}">입금 확인</button></div></div>`;
   }
@@ -310,4 +311,12 @@ async function advCreateFor(rec,person){
   if(!advValidOne(row))throw new Error('대신 결제 기록이 올바르지 않아요.');
   await advPut([row]);
   return row;
+}
+// v4.37 — 영수증 상세에서 총액을 고치면: 받을 금액이 원래 총액과 같았으면(따로 정한 적 없음) 새 총액을 따라간다.
+//   따로 정한 금액이면 그대로 두고, 총액보다 크면 상세 대신 결제 칸에 알림이 뜬다(advDecorateReceipt). 바꿨으면 알림에 덧붙일 글을 돌려준다.
+async function advFollowTotal(rec,oldTotal){
+  const a=advForReceipt(rec.id),nt=Math.round(Number(rec.total)||0);
+  if(!a||!(nt>0)||nt===oldTotal||a.amount!==oldTotal)return '';
+  await advPut([{...a,amount:nt,updatedAt:nowISO()}]);
+  return ` · 받을 금액도 ${fmtMoney(nt)}원으로 바꿨어요`;
 }
