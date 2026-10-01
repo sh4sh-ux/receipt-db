@@ -122,7 +122,7 @@ function advSheet({advId=null,receiptId=null,mode='view',payId=null}){
   if(typeof _mtgSheetOpen!=='function')return;
   const {card,close}=_mtgSheetOpen();card.classList.add('ppx-rs','advx-sheet');
   const esc=escapeHtml,money=n=>fmtMoney(n)+'원',today=_todayYMD();
-  let curPay=payId;
+  let curPay=payId,shareBlob=null;
   const hd=t=>`<div class="mtg-sheet-hd"><div class="mtg-sheet-title">${t}</div><button class="mtg-sheet-x" type="button" aria-label="닫기">×</button></div>`;
   const moneyInput=inp=>inp.addEventListener('input',()=>{const raw=inp.value.replace(/[^0-9]/g,'');inp.value=raw?Number(raw).toLocaleString('ko-KR'):'';});
   const paint=()=>{
@@ -189,6 +189,16 @@ function advSheet({advId=null,receiptId=null,mode='view',payId=null}){
         e.currentTarget.disabled=true;
         try{await advPut([{...p,deleted:true,updatedAt:nowISO()}]);curPay=null;mode='view';paint();toast('입금 기록을 삭제했어요.');}catch(x){err.textContent=x.message;}
       });
+    }else if(mode==='share'){
+      // 공유 창이 열리지 않는 기기(PC 일부 브라우저 등): 미리보기 + 저장 / 다시 공유
+      const url=URL.createObjectURL(shareBlob.blob);
+      let canRetry=false;try{canRetry=!!(navigator.share&&(!navigator.canShare||navigator.canShare({files:[shareBlob.file]})));}catch(_){}
+      card.innerHTML=hd('공유 이미지')+`<div class="ppx-rs-sub">공유 창이 열리지 않으면 이미지를 저장해서 보내 주세요.</div><img class="advx-share-img" alt="대신 결제 공유 이미지 미리보기" src="${url}">`
+        +`<div class="ppx-rs-btns${canRetry?'':' advx-one'}"><a class="ppx-btn advx-dl" download="${esc(shareBlob.name)}" href="${url}">이미지 저장</a>${canRetry?'<button type="button" class="ppx-btn primary advx-retry">다시 공유</button>':''}</div>`
+        +`<button type="button" class="advx-del-pay advx-back">돌아가기</button>`;
+      card.querySelector('.advx-dl').addEventListener('click',()=>setTimeout(()=>toast('이미지를 저장했어요.',{type:'success'}),0));
+      card.querySelector('.advx-retry')?.addEventListener('click',async()=>{try{await navigator.share({files:[shareBlob.file]});}catch(_){}});
+      card.querySelector('.advx-back').onclick=()=>{URL.revokeObjectURL(url);mode='view';paint();};
     }else if(mode==='del'){
       const st=advState(a);
       card.innerHTML=hd('대신 결제 기록 삭제')+`<div class="ppx-rs-warn">${esc(a.person)} 대신 결제 기록을 지울까요?<br>입금 기록 ${st.n}건도 함께 지워져요. 원본 영수증은 그대로 남고, 통계는 원래대로(내 부담 전액) 돌아가요.</div>`
@@ -205,10 +215,11 @@ function advSheet({advId=null,receiptId=null,mode='view',payId=null}){
         +`<div class="advx-card-bar"><i style="width:${st.pct}%"></i></div><div class="advx-card-f"><span>총 ${money(a.amount)} 중 ${st.pct}% 받음</span><span>입금 ${st.n}번</span></div></div>`
         +`<div class="advx-stats"><div><small>받을 돈</small><b>${money(a.amount)}</b></div><div><small>받은 돈</small><b>${money(st.received)}</b></div><div><small>실제 입금</small><b>${st.n}번</b></div></div>`
         +(a.note?`<div class="advx-note">${esc(a.note)}</div>`:'')
-        +`<button type="button" class="ppx-btn primary advx-paybtn">입금 확인</button>`
+        +`<div class="advx-acts"><button type="button" class="ppx-btn advx-sharebtn">공유</button><button type="button" class="ppx-btn primary advx-paybtn">입금 확인</button></div>`
         +`<div class="advx-hh">입금 기록<span>${st.n?'최신순 · 누르면 수정·삭제':''}</span></div>${rows||'<div class="advx-empty">아직 받은 돈이 없어요. 돈을 받으면 [입금 확인]을 눌러 주세요.</div>'}`
         +`<div class="advx-foot"><button type="button" class="advx-link" data-advedit>정보 수정</button><button type="button" class="advx-link danger" data-advdel>기록 삭제</button></div>`;
       card.querySelector('.advx-paybtn').onclick=()=>{curPay=null;mode='pay';paint();};
+      card.querySelector('.advx-sharebtn').onclick=async e=>{const b=e.currentTarget;if(b.disabled)return;b.disabled=true;try{await advShareImage(a,(blob,file,name)=>{shareBlob={blob,file,name};mode='share';paint();});}finally{b.disabled=false;}};
       card.querySelectorAll('.advx-pay').forEach(b=>b.onclick=()=>{curPay=b.dataset.pay;mode='pay';paint();});
       card.querySelector('[data-advedit]').onclick=()=>{mode='edit';paint();};
       card.querySelector('[data-advdel]').onclick=()=>{mode='del';paint();};
@@ -217,4 +228,59 @@ function advSheet({advId=null,receiptId=null,mode='view',payId=null}){
     card.querySelector('.mtg-sheet-x').onclick=()=>close();
   };
   paint();
+}
+// ── 공유 이미지(v4.33) — Dutch Pay '상세내역' 공유와 같은 모양: 흰 바탕 · 제목 · 날짜·결제자 · 회색 띠 표 머리 · 표 · 아래 버전.
+//   위에 남은 금액 요약, 그 아래 구매 내역(원본 영수증 품목) · 입금 기록. 폰은 공유 창(navigator.share files), 안 되면 미리보기에서 저장.
+function advShareCanvas(a){
+  const st=advState(a),r=advReceipt(a),items=((r&&r.items)||[]).filter(i=>i&&String(i.name||'').trim());
+  const W=1080,rowH=60,fmt=n=>fmtMoney(n);
+  const itemsH=items.length?(96+items.length*rowH+108):0,paysH=96+Math.max(1,st.n)*rowH;
+  const H=370+itemsH+paysH+90;
+  const canvas=document.createElement('canvas');canvas.width=W*2;canvas.height=H*2;
+  const ctx=canvas.getContext('2d');ctx.scale(2,2);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+  const font=(s,w=400)=>ctx.font=`${w} ${s}px system-ui,-apple-system,'Apple SD Gothic Neo',Arial,sans-serif`;
+  const fit=(t,max)=>{t=String(t||'');if(ctx.measureText(t).width<=max)return t;while(t&&ctx.measureText(t+'…').width>max)t=t.slice(0,-1);return t+'…';};
+  const box=(x,y,w,h,rad,c)=>{ctx.fillStyle=c;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,rad);else ctx.rect(x,y,w,h);ctx.fill();};
+  const line=y=>{ctx.strokeStyle='#ececf0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(40,y);ctx.lineTo(1040,y);ctx.stroke();};
+  // 머리
+  ctx.textAlign='left';ctx.fillStyle='#111';font(42,800);ctx.fillText(fit(r?(r.store||'영수증'):'대신 결제',980),50,72);
+  ctx.fillStyle='#8e8e93';font(22,500);
+  ctx.fillText(fit([r?r.date.replace(/-/g,'.'):'',`${(r&&r.paidBy)||getMyName()} 결제`,`${a.person} 대신`].filter(Boolean).join(' · '),980),50,112);
+  ctx.fillText(fit([advMonthsLabel(a),a.note].filter(Boolean).join(' · '),980),50,146);
+  // 요약 카드
+  box(40,178,1000,156,20,'#f4f5f8');
+  ctx.fillStyle='#666';font(22,600);ctx.fillText(st.done?(st.over?`완료 · ${fmt(st.over)}원 더 받음`:'완료'):'남은 금액',76,224);
+  ctx.fillStyle=st.done?'#16843b':'#4355E8';font(52,800);ctx.fillText(fmt(st.remaining)+'원',76,288);
+  ctx.textAlign='right';ctx.fillStyle='#444';font(22,500);
+  ctx.fillText(`받을 돈 ${fmt(a.amount)}원`,1004,224);ctx.fillText(`받은 돈 ${fmt(st.received)}원 · 입금 ${st.n}번`,1004,262);
+  box(76,304,928,10,5,'#e3e5ec');if(st.pct>0)box(76,304,Math.max(10,928*st.pct/100),10,5,st.done?'#16843b':'#4355E8');
+  let y=388;
+  const section=(t)=>{ctx.textAlign='left';ctx.fillStyle='#111';font(24,800);ctx.fillText(t,50,y);y+=22;};
+  const head=(cols)=>{box(40,y,1000,52,10,'#f4f5f8');ctx.fillStyle='#666';font(20,700);for(const [t,x,al] of cols){ctx.textAlign=al;ctx.fillText(t,x,y+34);}y+=52;};
+  // 구매 내역
+  if(items.length){
+    section('구매 내역');head([['품목명',50,'left'],['수량',640,'right'],['단가',820,'right'],['금액',1030,'right']]);
+    font(22,500);
+    for(const it of items){y+=rowH;const amt=Number(it.amount);ctx.fillStyle=amt<0?'#d92d20':'#222';ctx.textAlign='left';ctx.fillText(fit(it.name,540),50,y-20);ctx.textAlign='right';
+      ctx.fillText(it.quantity!=null&&it.quantity!==''?String(it.quantity):'',640,y-20);ctx.fillText(Number.isFinite(Number(it.unitPrice))&&it.unitPrice!==''?fmt(Number(it.unitPrice)):'',820,y-20);ctx.fillText(Number.isFinite(amt)?fmt(amt):'',1030,y-20);line(y);}
+    y+=50;ctx.fillStyle='#111';font(24,800);ctx.textAlign='left';ctx.fillText('합계',50,y);ctx.textAlign='right';ctx.fillText(fmt((r&&r.total)||0)+'원',1030,y);y+=84;
+  }
+  // 입금 기록
+  section('입금 기록');head([['회차',50,'left'],['입금일',140,'left'],['메모',330,'left'],['입금액',850,'right'],['남은 금액',1030,'right']]);
+  font(22,500);
+  if(!st.n){y+=rowH;ctx.fillStyle='#8e8e93';ctx.textAlign='left';ctx.fillText('아직 받은 돈이 없어요',50,y-20);line(y);}
+  st.pays.forEach((p,i)=>{y+=rowH;ctx.textAlign='left';ctx.fillStyle='#8e8e93';ctx.fillText(`${i+1}번째`,50,y-20);ctx.fillStyle='#222';ctx.fillText(p.date.replace(/-/g,'.'),140,y-20);
+    ctx.fillStyle='#666';ctx.fillText(fit(p.memo,370),330,y-20);ctx.textAlign='right';ctx.fillStyle='#4355E8';font(22,700);ctx.fillText('+'+fmt(p.amount),850,y-20);font(22,500);ctx.fillStyle='#222';ctx.fillText(fmt(Math.max(0,st.after.get(p.id))),1030,y-20);line(y);});
+  ctx.fillStyle='#a0a0a6';font(18,500);ctx.textAlign='center';ctx.fillText(`영수증 보관함 ${typeof APP_VERSION==='string'?APP_VERSION:''} · ${_todayYMD().replace(/-/g,'.')} 기준`,W/2,H-30);
+  return canvas;
+}
+async function advShareImage(a,onFallback){
+  const r=advReceipt(a),safe=s=>String(s||'').replace(/[\\/:*?"<>|]/g,'_').slice(0,40);
+  const blob=await new Promise(res=>advShareCanvas(a).toBlob(res,'image/png'));
+  if(!blob){toast('공유 이미지를 만들지 못했어요.',{type:'error'});return;}
+  const filename=`대신결제_${(r?.date||'').replace(/-/g,'')}_${safe(a.person)}_${safe(r?.store||'영수증')}.png`;
+  const file=new File([blob],filename,{type:'image/png'});
+  let can=false;try{can=!!(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]})));}catch(_){}
+  if(can){try{await navigator.share({files:[file]});return;}catch(e){if(e&&e.name==='AbortError')return;}}
+  onFallback(blob,file,filename);
 }

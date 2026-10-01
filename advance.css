@@ -71,3 +71,10 @@ html[data-theme="light"] .advx-card.done{background:linear-gradient(135deg,var(-
 .advx-over{color:var(--label);font-weight:600}
 .advx-ok{color:var(--green);font-weight:600}
 .advx-del-pay{display:block;margin:14px auto 0;padding:6px;border:0;background:none;color:var(--red);font:inherit;font-size:13px;cursor:pointer}
+/* 공유(v4.33) */
+.advx-acts{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:14px}
+.advx-acts .advx-paybtn{margin-top:0}
+.advx-share-img{display:block;width:100%;margin-top:12px;border:1px solid var(--sep);border-radius:12px;background:#fff}
+.advx-dl{display:flex;align-items:center;justify-content:center;text-decoration:none}
+.ppx-rs-btns.advx-one{grid-template-columns:1fr}
+.advx-back{color:var(--label2)!important}
