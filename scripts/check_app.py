@@ -70,7 +70,7 @@ def main() -> int:
 
     # v4.10 — Dropbox 파일 안전 규칙. 앱은 Dropbox 파일을 지우지 않는다('지우기' = 정리 보관함으로 옮기기, _dbxTrash).
     #   v4.04 '중복 정리'가 완료 JPG 수십 개를 잘못 지운 사고(v4.09 복구) 뒤 세운 규칙이라, 새 코드가 어기면 릴리스를 막는다.
-    app_js = index + "\n" + (ROOT / "prepaid.js").read_text(encoding="utf-8") + "\n" + worker
+    app_js = index + "\n" + (ROOT / "prepaid.js").read_text(encoding="utf-8") + "\n" + (ROOT / "advance.js").read_text(encoding="utf-8") + "\n" + worker
     for banned in ("files/delete_batch", "files/permanently_delete", "files/delete\"", "files/delete'"):
         if banned in app_js:
             errors.append(f"Dropbox 삭제 API를 쓰면 안 됩니다(정리 보관함 _dbxTrash 사용): {banned}")

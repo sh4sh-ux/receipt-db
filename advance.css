@@ -1,0 +1,73 @@
+/* v4.32 — 대납(대신 결제한 돈 돌려받기). 클래스는 advx- 접두어. 창 틀·입력·버튼은 선불권 기록 창(.ppx-rs*·.ppx-btn) 그대로 쓴다. */
+/* 영수증 상세 */
+.advx-start{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;margin:0 0 18px;padding:13px 14px;border:1px dashed var(--sep2);border-radius:var(--rm);background:none;color:var(--blue);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.advx-start small{font-size:12px;font-weight:400;color:var(--label3)}
+@media(hover:hover){.advx-start:hover{background:var(--fill2)}}
+.advx-rc{margin:0 0 18px;padding:14px 16px;border:1px solid var(--sep);border-radius:var(--rm);background:var(--card)}
+.advx-rc-hd{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.advx-rc-hd b{font-size:14.5px;font-weight:700}
+.advx-tag{padding:2px 8px;border-radius:6px;background:var(--blue-bg);color:var(--blue-txt);font-size:11.5px;font-weight:600;flex:none}
+.advx-tag.done{background:color-mix(in srgb,var(--green) 14%,transparent);color:var(--green)}
+.advx-rc-s{margin-top:6px;font-size:13px;color:var(--label2);line-height:1.5;word-break:keep-all}
+.advx-rc-s b{color:var(--blue);font-weight:700}
+.advx-rc-n{margin-top:2px;font-size:12px;color:var(--label3);word-break:keep-all}
+.advx-rc-b{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.advx-rc-b .ppx-btn{height:40px;font-size:14px}
+/* 사람 상세 '받을 돈' 카드 */
+.advx-pc{padding:18px 20px 12px}
+.advx-pc-hd{display:flex;justify-content:space-between;align-items:baseline}
+.advx-pc-c{font-size:12px;color:var(--label3)}
+.advx-pc-big{margin-top:8px;font-size:26px;font-weight:700;letter-spacing:-.3px;color:var(--blue)}
+.advx-pc-sub{margin-top:2px;font-size:12.5px;color:var(--label2)}
+.advx-pc-list{margin-top:10px}
+.advx-pr{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:12px 0;border:0;border-top:1px solid var(--sep);border-radius:0;background:none;color:var(--label);font:inherit;text-align:left;cursor:pointer}
+.advx-pr.done{opacity:.6}
+.advx-pr-l{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.advx-pr-n{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.advx-pr-m{font-size:11.5px;color:var(--label3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.advx-bar{display:block;height:5px;max-width:180px;margin-top:4px;border-radius:3px;background:var(--fill);overflow:hidden}
+.advx-bar i{display:block;height:100%;border-radius:3px;background:var(--blue)}
+.advx-pr.done .advx-bar i{background:var(--green)}
+.advx-pr-r{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
+.advx-pr-r b{font-size:14.5px;font-weight:600}
+.advx-pr-r small{font-size:11px;color:var(--label3)}
+.advx-pc-more{width:100%;padding:11px 0 4px;border:0;border-top:1px solid var(--sep);background:none;color:var(--label3);font:inherit;font-size:12.5px;text-align:left;cursor:pointer}
+/* 사람 목록 */
+.pl-owe{margin-left:6px;padding:1px 6px;border-radius:6px;background:var(--blue-bg);color:var(--blue-txt);font-size:11px;font-weight:600;white-space:nowrap;flex:none}
+/* 대납 창 */
+.mtg-sheet.advx-sheet{max-width:460px}
+.advx-link{padding:0;border:0;background:none;color:var(--blue);font:inherit;font-size:inherit;font-weight:600;cursor:pointer}
+.advx-link.danger{color:var(--red)}
+.advx-card{margin-top:14px;border-radius:18px;padding:16px 18px 14px;color:#fff;background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 90%,#000),color-mix(in srgb,var(--blue) 68%,#000))}
+html[data-theme="light"] .advx-card{background:linear-gradient(135deg,var(--blue),color-mix(in srgb,var(--blue) 70%,#fff))}
+.advx-card.done{background:linear-gradient(135deg,color-mix(in srgb,var(--green) 85%,#000),color-mix(in srgb,var(--green) 65%,#000))}
+html[data-theme="light"] .advx-card.done{background:linear-gradient(135deg,var(--green),color-mix(in srgb,var(--green) 70%,#fff))}
+.advx-card-t,.advx-card-f{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;opacity:.92}
+.advx-card-v{margin-top:4px;font-size:30px;font-weight:700;letter-spacing:-.4px;line-height:1.15}
+.advx-card-v small{font-size:19px;margin-left:2px}
+.advx-card-bar{height:6px;margin-top:12px;border-radius:3px;background:rgba(255,255,255,.28);overflow:hidden}
+.advx-card-bar i{display:block;height:100%;border-radius:3px;background:#fff}
+.advx-card-f{margin-top:8px}
+.advx-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.advx-stats>div{min-width:0;padding:10px 9px;border-radius:12px;background:var(--fill2)}
+.advx-stats small{display:block;font-size:11px;color:var(--label2)}
+.advx-stats b{display:block;margin-top:2px;font-size:13px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.advx-note{margin-top:10px;font-size:13px;color:var(--label2);line-height:1.5}
+.advx-paybtn{width:100%;margin-top:14px}
+.advx-hh{display:flex;justify-content:space-between;align-items:baseline;margin-top:18px;padding-bottom:6px;border-bottom:1px solid var(--sep);font-size:13px;font-weight:600}
+.advx-hh span{font-size:11.5px;font-weight:500;color:var(--label3)}
+.advx-pay{padding-left:2px;padding-right:2px}
+.advx-pay-r{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.advx-pay-r b{font-size:14.5px;font-weight:600;color:var(--blue)}
+.advx-pay-r small{font-size:11px;color:var(--label3)}
+.advx-empty{padding:16px 2px;font-size:13px;color:var(--label3);line-height:1.5}
+.advx-foot{display:flex;justify-content:space-between;margin-top:14px;font-size:13px}
+.advx-mo{display:flex;align-items:center;gap:6px;flex:1 1 auto;max-width:230px;justify-content:flex-end}
+.advx-mo input{max-width:120px!important}
+.advx-mo em{font-style:normal;color:var(--label2);font-size:14px}
+.advx-after{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--blue-bg);font-size:13.5px;line-height:1.6;color:var(--label)}
+.advx-after b{color:var(--blue-txt)}
+.advx-after small{font-size:12px;color:var(--label2)}
+.advx-over{color:var(--label);font-weight:600}
+.advx-ok{color:var(--green);font-weight:600}
+.advx-del-pay{display:block;margin:14px auto 0;padding:6px;border:0;background:none;color:var(--red);font:inherit;font-size:13px;cursor:pointer}
