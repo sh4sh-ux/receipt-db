@@ -35,7 +35,6 @@
 /* 사람 목록 */
 .pl-owe{margin-left:6px;padding:1px 6px;border-radius:6px;background:var(--blue-bg);color:var(--blue-txt);font-size:11px;font-weight:600;white-space:nowrap;flex:none}
 /* 대납 창 */
-.mtg-sheet.advx-sheet{max-width:460px}
 .advx-link{padding:0;border:0;background:none;color:var(--blue);font:inherit;font-size:inherit;font-weight:600;cursor:pointer}
 .advx-link.danger{color:var(--red)}
 .advx-card{margin-top:14px;border-radius:18px;padding:16px 18px 14px;color:#fff;background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 90%,#000),color-mix(in srgb,var(--blue) 68%,#000))}
@@ -54,14 +53,26 @@ html[data-theme="light"] .advx-card.done{background:linear-gradient(135deg,var(-
 .advx-stats b{display:block;margin-top:2px;font-size:13px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .advx-note{margin-top:10px;font-size:13px;color:var(--label2);line-height:1.5}
 .advx-paybtn{width:100%;margin-top:14px}
-.advx-hh{display:flex;justify-content:space-between;align-items:baseline;margin-top:18px;padding-bottom:6px;border-bottom:1px solid var(--sep);font-size:13px;font-weight:600}
-.advx-hh span{font-size:11.5px;font-weight:500;color:var(--label3)}
-.advx-pay{padding-left:2px;padding-right:2px}
-.advx-pay-r{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
-.advx-pay-r b{font-size:14.5px;font-weight:600;color:var(--blue)}
-.advx-pay-r small{font-size:11px;color:var(--label3)}
+.advx-hh{display:flex;justify-content:space-between;align-items:baseline;margin-top:6px;padding:18px 0 6px;border-bottom:1px solid var(--divider);font-size:11px;font-weight:600;color:var(--label3)}
+.advx-hh span{font-weight:500}
+/* 입금 줄 = 만남 창 줄(.mtl-row)과 같은 글자 */
+.advx-pay{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;align-items:center;width:100%;padding:12px 0;border:0;border-bottom:1px solid var(--divider);border-radius:0;background:none;font:inherit;color:var(--label);text-align:left;cursor:pointer}
+@media(hover:hover){.advx-pay:hover{background:var(--fill2)}}
+@media(min-width:781px){.advx-hh,.advx-pay,.advx-foot{padding-left:12px;padding-right:12px}} /* 만남 창처럼 PC는 글자를 구분선 끝에서 12px 안쪽 */
+.advx-pay-l{min-width:0;display:flex;flex-direction:column}
+.advx-pay-n{font-size:12px;font-weight:500;color:var(--label3);margin-bottom:3px}
+.advx-pay-d{font-size:14px;font-weight:600}
+.advx-pay-m{font-size:12px;color:var(--label3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.advx-pay-r{display:flex;flex-direction:column;align-items:flex-end;gap:3px;text-align:right}
+.advx-pay-r b{font-size:13.5px;font-weight:600;color:var(--blue);white-space:nowrap}
+.advx-pay-r small{font-size:12px;color:var(--label3);white-space:nowrap}
+/* 보기 화면: 창은 그대로, 입금 기록만 스크롤 */
+.mtg-sheet.advx-v{display:flex;flex-direction:column;overflow:hidden}
+.mtg-sheet.advx-v>*{flex:none}
+.mtg-sheet.advx-v>.advx-list{flex:1 1 auto;min-height:120px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+@media(max-height:600px){.mtg-sheet.advx-v{display:block;overflow-y:auto}}
 .advx-empty{padding:16px 2px;font-size:13px;color:var(--label3);line-height:1.5}
-.advx-foot{display:flex;justify-content:space-between;margin-top:14px;font-size:13px}
+.advx-foot{display:flex;justify-content:space-between;padding:16px 0 10px;font-size:13px}
 .advx-mo{display:flex;align-items:center;gap:6px;flex:1 1 auto;max-width:230px;justify-content:flex-end}
 .advx-mo input{max-width:120px!important}
 .advx-mo em{font-style:normal;color:var(--label2);font-size:14px}
@@ -78,3 +89,4 @@ html[data-theme="light"] .advx-card.done{background:linear-gradient(135deg,var(-
 .advx-dl{display:flex;align-items:center;justify-content:center;text-decoration:none}
 .ppx-rs-btns.advx-one{grid-template-columns:1fr}
 .advx-back{color:var(--label2)!important}
+.mtg-sheet.advx-sheet{max-width:560px} /* 만남 창과 같은 폭 */

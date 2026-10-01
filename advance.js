@@ -84,7 +84,7 @@ function advDecorateReceipt(body,r){
   }else{
     const st=advState(a);
     html=`<div class="advx-rc"><div class="advx-rc-hd"><b>${esc(a.person)} 대신 결제</b><span class="advx-tag${st.done?' done':''}">${st.done?'완료':'진행 중'}</span></div>`
-      +`<div class="advx-rc-s">${st.done?(st.over?`${money(st.over)} 더 받음`:'다 받았어요'):`남은 <b>${money(st.remaining)}</b>`} · 받은 ${money(st.received)} · 입금 ${st.n}번 · ${advMonthsLabel(a)}</div>`
+      +`<div class="advx-rc-s">${st.done?(st.over?`${money(st.over)} 더 받음`:'다 받았어요'):`남은 금액 <b>${money(st.remaining)}</b>`} · 받은 ${money(st.received)} · 입금 ${st.n}번 · ${advMonthsLabel(a)}</div>`
       +`<div class="advx-rc-n">통계: 내 부담 ${money(Math.max(0,(r.total||0)-Math.min(a.amount,r.total||0)))} · ${esc(a.person)} 부담 ${money(Math.min(a.amount,r.total||0))}</div>`
       +`<div class="advx-rc-b"><button type="button" class="ppx-btn" data-advopen="${esc(a.id)}">자세히</button><button type="button" class="ppx-btn primary" data-advpay="${esc(a.id)}">입금 확인</button></div></div>`;
   }
@@ -126,6 +126,7 @@ function advSheet({advId=null,receiptId=null,mode='view',payId=null}){
   const hd=t=>`<div class="mtg-sheet-hd"><div class="mtg-sheet-title">${t}</div><button class="mtg-sheet-x" type="button" aria-label="닫기">×</button></div>`;
   const moneyInput=inp=>inp.addEventListener('input',()=>{const raw=inp.value.replace(/[^0-9]/g,'');inp.value=raw?Number(raw).toLocaleString('ko-KR'):'';});
   const paint=()=>{
+    card.classList.remove('advx-v');card.scrollTop=0;
     const a=advId?advAll().find(x=>x.id===advId):null;
     if(advId&&!a){close();return;}
     const r=a?advReceipt(a):receipts.find(x=>x.id===receiptId);
@@ -182,7 +183,7 @@ function advSheet({advId=null,receiptId=null,mode='view',payId=null}){
           const now=nowISO(),id=p?.id||'pay_'+crypto.randomUUID();
           await advPut([{key:ADV_PREFIX+id,id,type:'pay',advId:a.id,amount,date,memo:String(f.memo.value||'').trim(),deleted:false,createdAt:p?.createdAt||now,updatedAt:now}]);
           const st2=advState(advAll().find(x=>x.id===a.id));curPay=null;mode='view';paint();
-          toast(st2.done?'다 받았어요 · 완료':`${p?'수정했어요':'입금을 기록했어요'} · 남은 ${money(st2.remaining)}`,{type:'success'});
+          toast(st2.done?'다 받았어요 · 완료':`${p?'수정했어요':'입금을 기록했어요'} · 남은 금액 ${money(st2.remaining)}`,{type:'success'});
         }catch(x){err.textContent=x.message;btn.disabled=false;}
       });
       f.querySelector('.advx-del-pay')?.addEventListener('click',async e=>{
@@ -206,8 +207,10 @@ function advSheet({advId=null,receiptId=null,mode='view',payId=null}){
       card.querySelector('.advx-cancel').onclick=()=>{mode='view';paint();};
       card.querySelector('.advx-do').onclick=async()=>{const now=nowISO();await advPut([{...a,deleted:true,updatedAt:now},...st.pays.map(p=>({...p,deleted:true,updatedAt:now}))]);close(()=>toast('대신 결제 기록을 삭제했어요.'));};
     }else{
+      card.classList.add('advx-v');
       const st=advState(a);
-      const rows=st.pays.slice().reverse().map(p=>`<button type="button" class="ppx-row advx-pay" data-pay="${esc(p.id)}"><span class="ppx-row-l"><span class="ppx-row-d">${st.pays.indexOf(p)+1}번째</span><span class="ppx-row-n">${ppDayLabel(p.date)}</span>${p.memo?`<span class="ppx-row-d">${esc(p.memo)}</span>`:''}</span><span class="advx-pay-r"><b>+${money(p.amount)}</b><small>남은 ${money(Math.max(0,st.after.get(p.id)))}</small></span></button>`).join('');
+      // v4.33 — 입금 줄은 만남 창(.mtl-row) 글자와 같게: 회차 12/500 회색 · 날짜 14/600 · 메모 12 회색 · 금액 13.5/600
+      const rows=st.pays.slice().reverse().map(p=>`<button type="button" class="advx-pay" data-pay="${esc(p.id)}"><span class="advx-pay-l"><span class="advx-pay-n">${st.pays.indexOf(p)+1}번째</span><span class="advx-pay-d">${ppDayLabel(p.date)}</span>${p.memo?`<span class="advx-pay-m">${esc(p.memo)}</span>`:''}</span><span class="advx-pay-r"><b>+${money(p.amount)}</b><small>남은 금액 ${money(Math.max(0,st.after.get(p.id)))}</small></span></button>`).join('');
       const top=st.done?(st.over?`${money(st.over)} 더 받음`:'완료'):'남은 금액';
       card.innerHTML=hd(esc(advTitle(a)))
         +`<div class="ppx-rs-sub">${esc(a.person)} 대신 결제${r?` · ${advMD(r.date)} · <button type="button" class="advx-link" data-advrc>원본 영수증 ›</button>`:' · 원본 영수증 없음'}</div>`
@@ -216,7 +219,7 @@ function advSheet({advId=null,receiptId=null,mode='view',payId=null}){
         +`<div class="advx-stats"><div><small>받을 돈</small><b>${money(a.amount)}</b></div><div><small>받은 돈</small><b>${money(st.received)}</b></div><div><small>실제 입금</small><b>${st.n}번</b></div></div>`
         +(a.note?`<div class="advx-note">${esc(a.note)}</div>`:'')
         +`<div class="advx-acts"><button type="button" class="ppx-btn advx-sharebtn">공유</button><button type="button" class="ppx-btn primary advx-paybtn">입금 확인</button></div>`
-        +`<div class="advx-hh">입금 기록<span>${st.n?'최신순 · 누르면 수정·삭제':''}</span></div>${rows||'<div class="advx-empty">아직 받은 돈이 없어요. 돈을 받으면 [입금 확인]을 눌러 주세요.</div>'}`
+        +`<div class="advx-hh">입금 기록<span>${st.n?'최신순 · 누르면 수정·삭제':''}</span></div><div class="advx-list">${rows||'<div class="advx-empty">아직 받은 돈이 없어요. 돈을 받으면 [입금 확인]을 눌러 주세요.</div>'}</div>`
         +`<div class="advx-foot"><button type="button" class="advx-link" data-advedit>정보 수정</button><button type="button" class="advx-link danger" data-advdel>기록 삭제</button></div>`;
       card.querySelector('.advx-paybtn').onclick=()=>{curPay=null;mode='pay';paint();};
       card.querySelector('.advx-sharebtn').onclick=async e=>{const b=e.currentTarget;if(b.disabled)return;b.disabled=true;try{await advShareImage(a,(blob,file,name)=>{shareBlob={blob,file,name};mode='share';paint();});}finally{b.disabled=false;}};
