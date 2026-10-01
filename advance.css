@@ -48,7 +48,7 @@ html[data-theme="light"] .advx-card.done{background:linear-gradient(135deg,var(-
 .advx-card-bar i{display:block;height:100%;border-radius:3px;background:#fff}
 .advx-card-f{margin-top:8px}
 .advx-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
-.advx-stats>div{min-width:0;padding:10px 9px;border-radius:12px;background:var(--fill2)}
+.advx-stats>div{min-width:0;padding:10px 9px;border-radius:12px;background:var(--fill2);text-align:center} /* v4.36 — 누르지 않는 같은 크기 숫자 칸 = 가운데 */
 .advx-stats small{display:block;font-size:11px;color:var(--label2)}
 .advx-stats b{display:block;margin-top:2px;font-size:13px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .advx-note{margin-top:10px;font-size:13px;color:var(--label2);line-height:1.5}
