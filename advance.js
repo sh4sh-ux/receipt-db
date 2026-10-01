@@ -253,9 +253,9 @@ function advShareCanvas(a){
   const hline=(y,c,w)=>{ctx.strokeStyle=c;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(BL,y);ctx.lineTo(BR,y);ctx.stroke();};
   const ymd=d=>String(d||'').replace(/-/g,'.');
   // 머리
-  ctx.fillStyle='#4355e8';font(17,800);ctx.textAlign='left';ctx.fillText('RECEIPT DB '+(typeof APP_VERSION==='string'?APP_VERSION:''),TL,42);
-  ctx.textAlign='right';font(29,800);const amtTxt=fmt(a.amount)+'원',amtW=ctx.measureText(amtTxt).width;ctx.fillStyle='#111';ctx.fillText(amtTxt,TR,90);
-  ctx.textAlign='left';font(34,800);ctx.fillText(fit('대신 결제',TR-TL-amtW-20),TL,90);
+  ctx.fillStyle='#4355e8';font(17,700);ctx.textAlign='left';ctx.fillText('RECEIPT DB '+(typeof APP_VERSION==='string'?APP_VERSION:''),TL,42);
+  ctx.textAlign='right';font(29,700);const amtTxt=fmt(a.amount)+'원',amtW=ctx.measureText(amtTxt).width;ctx.fillStyle='#111';ctx.fillText(amtTxt,TR,90);
+  ctx.textAlign='left';font(34,700);ctx.fillText(fit('대신 결제',TR-TL-amtW-20),TL,90);
   ctx.fillStyle='#777';font(16,500);ctx.textAlign='right';const mo=advMonthsLabel(a),moW=ctx.measureText(mo).width;ctx.fillText(mo,TR,126);
   ctx.textAlign='left';ctx.fillText(fit([r?ymd(r.date):'',`${a.person} 대신`].filter(Boolean).join(' · '),TR-TL-moW-20),TL,126);
   hline(142,'#dedee3',2);
@@ -263,22 +263,22 @@ function advShareCanvas(a){
   // 연파랑 카드: 이름 + 회색 알약 + 오른쪽 금액 / 아래 회색 글 + 오른쪽 상태
   const card=(name,pill,amt,sub,stTxt,stCol)=>{
     ctx.fillStyle='#f3f5ff';rr(BL,y,BR-BL,CARD,14);ctx.fill();
-    font(22,800);const aw=ctx.measureText(amt).width;
+    font(22,700);const aw=ctx.measureText(amt).width;
     font(14,500);const pillW=pill?Math.min(150,ctx.measureText(pill).width+22):0;
-    font(22,750);ctx.fillStyle='#111';ctx.textAlign='left';const nm=fit(name,IR-IL-aw-pillW-34);ctx.fillText(nm,IL,y+45);
+    font(22,650);ctx.fillStyle='#111';ctx.textAlign='left';const nm=fit(name,IR-IL-aw-pillW-34);ctx.fillText(nm,IL,y+45);
     if(pill){const px=IL+ctx.measureText(nm).width+10;ctx.fillStyle='#e9e9ec';rr(px,y+25,pillW,26,13);ctx.fill();ctx.fillStyle='#666';font(14,500);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(fit(pill,pillW-16),px+pillW/2,y+38);ctx.textBaseline='alphabetic';}
-    ctx.textAlign='right';ctx.fillStyle='#111';font(22,800);ctx.fillText(amt,IR,y+45);
+    ctx.textAlign='right';ctx.fillStyle='#111';font(22,700);ctx.fillText(amt,IR,y+45);
     font(15,500);ctx.textAlign='right';ctx.fillStyle=stCol;ctx.fillText(stTxt,IR,y+79);const sw=ctx.measureText(stTxt).width;
     ctx.fillStyle='#777';ctx.textAlign='left';ctx.fillText(fit(sub,IR-IL-sw-16),IL,y+79);y+=CARD+GAP;
   };
   // 표: 머리 15/400 회색 + 선, 줄 17/500(굵은 칸 17/700) + 옅은 선, 합계 19/800
   const table=(cols,rows,empty,sumLbl,badge,badgeCol,sumAmt)=>{
     ctx.fillStyle='#9a9aa1';font(15,400);for(const c of cols){ctx.textAlign=c.al;ctx.fillText(c.t,c.x,y+29);}hline(y+44,'#dedee3',1);y+=44;
-    if(!rows.length){ctx.fillStyle='#8e8e93';font(17,500);ctx.textAlign='left';ctx.fillText(empty,IL,y+31);hline(y+ROW,'#ececf0',1);y+=ROW;}
-    for(const row of rows){row.forEach((v,i)=>{const c=cols[i];font(17,c.bold?700:500);ctx.fillStyle=v&&v.c||'#222';ctx.textAlign=c.al;const t=v&&typeof v==='object'?v.t:v;ctx.fillText(c.max?fit(t,c.max):String(t??''),c.x,y+31);});hline(y+ROW,'#ececf0',1);y+=ROW;}
-    ctx.fillStyle='#111';font(19,800);ctx.textAlign='left';ctx.fillText(sumLbl,IL,y+35);const lw=ctx.measureText(sumLbl).width;
+    if(!rows.length){ctx.fillStyle='#8e8e93';font(17,400);ctx.textAlign='left';ctx.fillText(empty,IL,y+31);hline(y+ROW,'#ececf0',1);y+=ROW;}
+    for(const row of rows){row.forEach((v,i)=>{const c=cols[i];font(17,c.bold?600:400);ctx.fillStyle=v&&v.c||'#222';ctx.textAlign=c.al;const t=v&&typeof v==='object'?v.t:v;ctx.fillText(c.max?fit(t,c.max):String(t??''),c.x,y+31);});hline(y+ROW,'#ececf0',1);y+=ROW;}
+    ctx.fillStyle='#111';font(19,700);ctx.textAlign='left';ctx.fillText(sumLbl,IL,y+35);const lw=ctx.measureText(sumLbl).width;
     if(badge){ctx.fillStyle=badgeCol;font(15,700);ctx.fillText(badge,IL+lw+16,y+35);}
-    ctx.fillStyle='#111';font(20,800);ctx.textAlign='right';ctx.fillText(sumAmt,IR,y+35);y+=72+22;
+    ctx.fillStyle='#111';font(20,700);ctx.textAlign='right';ctx.fillText(sumAmt,IR,y+35);y+=72+22;
   };
   // ① 원본 영수증
   const linked=!!(r&&(r.imageId||r.scanPath));
