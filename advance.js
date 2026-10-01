@@ -232,49 +232,62 @@ function advSheet({advId=null,receiptId=null,mode='view',payId=null}){
   };
   paint();
 }
-// ── 공유 이미지(v4.33) — Dutch Pay '상세내역' 공유와 같은 모양: 흰 바탕 · 제목 · 날짜·결제자 · 회색 띠 표 머리 · 표 · 아래 버전.
-//   위에 남은 금액 요약, 그 아래 구매 내역(원본 영수증 품목) · 입금 기록. 폰은 공유 창(navigator.share files), 안 되면 미리보기에서 저장.
+// ── 공유 이미지(v4.34) — Dutch Pay '상세내역' 이미지(generateFullDetailCanvases, v6.23~)와 같은 모양·글자:
+//   파란 눈썹(앱 이름·버전 17/800) · 제목 34/800 + 오른쪽 금액 29/800 · 회색 날짜 16/500 · 선 #dedee3,
+//   연파랑 카드(#f3f5ff, 이름 22/750 + 회색 알약 + 오른쪽 금액 22/800, 아래 15/500 #777) · 표 머리 15/400 #9a9aa1 · 줄 17/500(금액 17/700) · 합계 19/800.
+//   Dutch Pay처럼 모든 글자는 적힌 값보다 2px 작게 그린다. 색은 토큰 없이 직접(이미지는 흰 바탕).
 function advShareCanvas(a){
   const st=advState(a),r=advReceipt(a),items=((r&&r.items)||[]).filter(i=>i&&String(i.name||'').trim());
-  const W=1080,rowH=60,fmt=n=>fmtMoney(n);
-  const itemsH=items.length?(96+items.length*rowH+108):0,paysH=96+Math.max(1,st.n)*rowH;
-  const H=370+itemsH+paysH+90;
-  const canvas=document.createElement('canvas');canvas.width=W*2;canvas.height=H*2;
-  const ctx=canvas.getContext('2d');ctx.scale(2,2);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
-  const font=(s,w=400)=>ctx.font=`${w} ${s}px system-ui,-apple-system,'Apple SD Gothic Neo',Arial,sans-serif`;
+  const W=1080,SCALE=2,HEADER=154,FOOTER=58,ROW=48,CARD=104,GAP=14,fmt=n=>fmtMoney(n);
+  const secH=rows=>CARD+GAP+44+Math.max(1,rows)*ROW+72+22;
+  const H=Math.max(620,HEADER+secH(items.length)+secH(st.n)+FOOTER);
+  const canvas=document.createElement('canvas');canvas.width=W*SCALE;canvas.height=H*SCALE;
+  const ctx=canvas.getContext('2d');ctx.scale(SCALE,SCALE);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+  const font=(size,weight=400)=>ctx.font=`${weight} ${Math.max(1,size-2)}px -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',Arial,sans-serif`;
   const fit=(t,max)=>{t=String(t||'');if(ctx.measureText(t).width<=max)return t;while(t&&ctx.measureText(t+'…').width>max)t=t.slice(0,-1);return t+'…';};
-  const box=(x,y,w,h,rad,c)=>{ctx.fillStyle=c;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,rad);else ctx.rect(x,y,w,h);ctx.fill();};
-  const line=y=>{ctx.strokeStyle='#ececf0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(40,y);ctx.lineTo(1040,y);ctx.stroke();};
+  const rr=(x,y,w,h,rad)=>{ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,rad);else ctx.rect(x,y,w,h);};
+  const hline=(y,c,w)=>{ctx.strokeStyle=c;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(42,y);ctx.lineTo(1038,y);ctx.stroke();};
+  const ymd=d=>String(d||'').replace(/-/g,'.');
   // 머리
-  ctx.textAlign='left';ctx.fillStyle='#111';font(42,800);ctx.fillText(fit(r?(r.store||'영수증'):'대신 결제',980),50,72);
-  ctx.fillStyle='#8e8e93';font(22,500);
-  ctx.fillText(fit([r?r.date.replace(/-/g,'.'):'',`${(r&&r.paidBy)||getMyName()} 결제`,`${a.person} 대신`].filter(Boolean).join(' · '),980),50,112);
-  ctx.fillText(fit([advMonthsLabel(a),a.note].filter(Boolean).join(' · '),980),50,146);
-  // 요약 카드
-  box(40,178,1000,156,20,'#f4f5f8');
-  ctx.fillStyle='#666';font(22,600);ctx.fillText(st.done?(st.over?`완료 · ${fmt(st.over)}원 더 받음`:'완료'):'남은 금액',76,224);
-  ctx.fillStyle=st.done?'#16843b':'#4355E8';font(52,800);ctx.fillText(fmt(st.remaining)+'원',76,288);
-  ctx.textAlign='right';ctx.fillStyle='#444';font(22,500);
-  ctx.fillText(`받을 돈 ${fmt(a.amount)}원`,1004,224);ctx.fillText(`받은 돈 ${fmt(st.received)}원 · 입금 ${st.n}번`,1004,262);
-  box(76,304,928,10,5,'#e3e5ec');if(st.pct>0)box(76,304,Math.max(10,928*st.pct/100),10,5,st.done?'#16843b':'#4355E8');
-  let y=388;
-  const section=(t)=>{ctx.textAlign='left';ctx.fillStyle='#111';font(24,800);ctx.fillText(t,50,y);y+=22;};
-  const head=(cols)=>{box(40,y,1000,52,10,'#f4f5f8');ctx.fillStyle='#666';font(20,700);for(const [t,x,al] of cols){ctx.textAlign=al;ctx.fillText(t,x,y+34);}y+=52;};
-  // 구매 내역
-  if(items.length){
-    section('구매 내역');head([['품목명',50,'left'],['수량',640,'right'],['단가',820,'right'],['금액',1030,'right']]);
-    font(22,500);
-    for(const it of items){y+=rowH;const amt=Number(it.amount);ctx.fillStyle=amt<0?'#d92d20':'#222';ctx.textAlign='left';ctx.fillText(fit(it.name,540),50,y-20);ctx.textAlign='right';
-      ctx.fillText(it.quantity!=null&&it.quantity!==''?String(it.quantity):'',640,y-20);ctx.fillText(Number.isFinite(Number(it.unitPrice))&&it.unitPrice!==''?fmt(Number(it.unitPrice)):'',820,y-20);ctx.fillText(Number.isFinite(amt)?fmt(amt):'',1030,y-20);line(y);}
-    y+=50;ctx.fillStyle='#111';font(24,800);ctx.textAlign='left';ctx.fillText('합계',50,y);ctx.textAlign='right';ctx.fillText(fmt((r&&r.total)||0)+'원',1030,y);y+=84;
-  }
-  // 입금 기록
-  section('입금 기록');head([['회차',50,'left'],['입금일',140,'left'],['메모',330,'left'],['입금액',850,'right'],['남은 금액',1030,'right']]);
-  font(22,500);
-  if(!st.n){y+=rowH;ctx.fillStyle='#8e8e93';ctx.textAlign='left';ctx.fillText('아직 받은 돈이 없어요',50,y-20);line(y);}
-  st.pays.forEach((p,i)=>{y+=rowH;ctx.textAlign='left';ctx.fillStyle='#8e8e93';ctx.fillText(`${i+1}번째`,50,y-20);ctx.fillStyle='#222';ctx.fillText(p.date.replace(/-/g,'.'),140,y-20);
-    ctx.fillStyle='#666';ctx.fillText(fit(p.memo,370),330,y-20);ctx.textAlign='right';ctx.fillStyle='#4355E8';font(22,700);ctx.fillText('+'+fmt(p.amount),850,y-20);font(22,500);ctx.fillStyle='#222';ctx.fillText(fmt(Math.max(0,st.after.get(p.id))),1030,y-20);line(y);});
-  ctx.fillStyle='#a0a0a6';font(18,500);ctx.textAlign='center';ctx.fillText(`영수증 보관함 ${typeof APP_VERSION==='string'?APP_VERSION:''} · ${_todayYMD().replace(/-/g,'.')} 기준`,W/2,H-30);
+  ctx.fillStyle='#4355e8';font(17,800);ctx.textAlign='left';ctx.fillText('RECEIPT DB '+(typeof APP_VERSION==='string'?APP_VERSION:''),46,42);
+  ctx.fillStyle='#111';font(34,800);ctx.fillText('대신 결제',46,90);ctx.textAlign='right';font(29,800);ctx.fillText(fmt(a.amount)+'원',1034,90);
+  ctx.fillStyle='#777';font(16,500);ctx.textAlign='left';ctx.fillText(fit([r?ymd(r.date):'',`${a.person} 대신`].filter(Boolean).join(' · '),640),46,126);
+  ctx.textAlign='right';ctx.fillText(advMonthsLabel(a),1034,126);hline(142,'#dedee3',2);
+  let y=HEADER;
+  // 연파랑 카드: 이름 + 회색 알약 + 오른쪽 금액 / 아래 회색 글 + 오른쪽 상태
+  const card=(name,pill,amt,sub,stTxt,stCol)=>{
+    ctx.fillStyle='#f3f5ff';rr(42,y,996,CARD,14);ctx.fill();
+    font(14,500);const pillW=pill?Math.min(170,ctx.measureText(pill).width+22):0;
+    font(22,750);ctx.fillStyle='#111';ctx.textAlign='left';const nm=fit(name,650-pillW);ctx.fillText(nm,62,y+45);
+    if(pill){const px=62+ctx.measureText(nm).width+10;ctx.fillStyle='#e9e9ec';rr(px,y+25,pillW,26,13);ctx.fill();ctx.fillStyle='#666';font(14,500);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(fit(pill,pillW-16),px+pillW/2,y+38);ctx.textBaseline='alphabetic';}
+    ctx.textAlign='right';ctx.fillStyle='#111';font(22,800);ctx.fillText(amt,1018,y+45);
+    ctx.fillStyle='#777';font(15,500);ctx.textAlign='left';ctx.fillText(fit(sub,700),62,y+79);
+    ctx.textAlign='right';ctx.fillStyle=stCol;ctx.fillText(stTxt,1018,y+79);y+=CARD+GAP;
+  };
+  // 표: 머리 15/400 회색 + 선, 줄 17/500(마지막 금액 칸 17/700) + 옅은 선, 합계 19/800
+  const table=(cols,rows,empty,sumLbl,badge,badgeCol,sumAmt)=>{
+    ctx.fillStyle='#9a9aa1';font(15,400);for(const c of cols){ctx.textAlign=c.al;ctx.fillText(c.t,c.x,y+29);}hline(y+44,'#dedee3',1);y+=44;
+    if(!rows.length){ctx.fillStyle='#8e8e93';font(17,500);ctx.textAlign='left';ctx.fillText(empty,62,y+31);hline(y+ROW,'#ececf0',1);y+=ROW;}
+    for(const row of rows){row.forEach((v,i)=>{const c=cols[i];font(17,c.bold?700:500);ctx.fillStyle=v&&v.c||'#222';ctx.textAlign=c.al;const t=v&&typeof v==='object'?v.t:v;ctx.fillText(c.max?fit(t,c.max):String(t??''),c.x,y+31);});hline(y+ROW,'#ececf0',1);y+=ROW;}
+    ctx.fillStyle='#111';font(19,800);ctx.textAlign='left';ctx.fillText(sumLbl,62,y+35);const lw=ctx.measureText(sumLbl).width;
+    if(badge){ctx.fillStyle=badgeCol;font(15,700);ctx.fillText(badge,62+lw+18,y+35);}
+    ctx.fillStyle='#111';font(20,800);ctx.textAlign='right';ctx.fillText(sumAmt,1018,y+35);y+=72+22;
+  };
+  // ① 원본 영수증
+  const linked=!!(r&&(r.imageId||r.scanPath));
+  card(r?(r.store||'영수증'):'원본 영수증 없음',r?`${(r.paidBy||getMyName()||'').trim()||'나'} 결제`:'',fmt((r&&r.total)||0)+'원',
+    r?[ymd(r.date)+(r.time?' '+r.time:''),r.paymentDetail||''].filter(Boolean).join(' · '):'',linked?'영수증 연결됨':'영수증 없음',linked?'#16843b':'#8e8e93');
+  const neg=n=>Number(n)<0?'#d92d20':null,num=v=>{const n=Number(v);return v===''||v==null||!Number.isFinite(n)?'':fmt(n);};
+  table([{t:'품목명',x:62,al:'left',max:570},{t:'수량',x:700,al:'right'},{t:'단가',x:855,al:'right'},{t:'금액',x:1018,al:'right',bold:true}],
+    items.map(i=>[{t:i.name,c:neg(i.amount)},{t:i.quantity??'',c:neg(i.amount)},{t:num(i.unitPrice),c:neg(i.amount)},{t:num(i.amount),c:neg(i.amount)}]),
+    '상세 품목 없음','합계','','#777',fmt((r&&r.total)||0)+'원');
+  // ② 입금 기록
+  card('입금 기록',`입금 ${st.n}번`,fmt(st.remaining)+'원',`받을 돈 ${fmt(a.amount)}원 · 받은 돈 ${fmt(st.received)}원${a.note?' · '+a.note:''}`,
+    st.done?(st.over?`완료 · ${fmt(st.over)}원 더 받음`:'완료'):'남은 금액',st.done?'#16843b':'#4355e8');
+  table([{t:'회차',x:62,al:'left'},{t:'입금일',x:150,al:'left'},{t:'메모',x:300,al:'left',max:380},{t:'입금액',x:855,al:'right',bold:true},{t:'남은 금액',x:1018,al:'right'}],
+    st.pays.map((p,i)=>[{t:`${i+1}번째`,c:'#8e8e93'},ymd(p.date),{t:p.memo||'',c:'#777'},'+'+fmt(p.amount),fmt(Math.max(0,st.after.get(p.id)))]),
+    '아직 받은 돈이 없어요','받은 돈',st.done?'✓ 다 받음':`남은 금액 ${fmt(st.remaining)}원`,st.done?'#16843b':'#777',fmt(st.received)+'원');
+  ctx.fillStyle='#a0a0a6';font(14,500);ctx.textAlign='center';ctx.fillText(`대신 결제 내역 · ${ymd(_todayYMD())} 기준 · ${typeof APP_VERSION==='string'?APP_VERSION:''}`,W/2,H-22);
   return canvas;
 }
 async function advShareImage(a,onFallback){
