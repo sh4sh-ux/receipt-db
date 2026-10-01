@@ -3907,7 +3907,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
-// v4.35 — ① 결제자·결제수단 드롭다운 = 카테고리처럼 앱 안 상자(제목 줄 + 목록 + ✓, 폭 = 그 칸, 추가·상세 공통 _kvsOpen). <select>는 값·이벤트 그대로, pointer-events:none이라 칸을 누르면 열림. ② 추가 화면 결제자 ▸ '💳 대신 결제…' → 누구 대신(사람 고르기 창) → '○○ 대신 결제' + '○○에게 받을 돈 N원 · 해제', 참석자·분담 방식 숨김(참석자 없이 저장). 저장 직후 대신 결제 기록(받을 금액 = 총액, 일시불 — advCreateFor).
+// v4.35 — ① 결제자·결제수단 드롭다운 = 카테고리처럼 앱 안 상자(제목 줄 + 목록 + ✓, 폭 = 그 칸, 추가·상세 공통 _kvsOpen). <select>는 값·이벤트 그대로, pointer-events:none이라 칸을 누르면 열림. ② 추가 화면 결제자 ▸ '대신 결제…' → 누구 대신(사람 고르기 창) → '○○ 대신 결제' + '○○에게 받을 돈 N원 · 해제', 참석자·분담 방식 숨김(참석자 없이 저장). 저장 직후 대신 결제 기록(받을 금액 = 총액, 일시불 — advCreateFor).
 // v4.34 — 대납 공유 이미지를 Dutch Pay '상세내역' 이미지(generateFullDetailCanvases, v6.23~)와 같은 모양·글자로 다시 그림: 파란 눈썹 'RECEIPT DB v…' · 제목 '대신 결제' + 받을 돈 · 날짜 · 연파랑 카드(매장 + 회색 '결제' 알약 + 금액) · 품목 표 · '입금 기록' 카드(입금 N번 알약 + 남은 금액) · 입금 표. 글자는 Dutch Pay처럼 2px 작게·가는 굵기(v4.33은 너무 굵었다).
 // v4.33 — 대납 공유: 대신 결제 창 [공유] → Dutch Pay '상세내역'과 같은 흰 바탕 이미지(제목·날짜·결제자·남은 금액 요약·구매 내역·입금 기록 표·버전). 폰은 공유 창, 안 되면 미리보기 + 이미지 저장(advShareCanvas·advShareImage).
 // v4.32 — 대납(다른 사람 대신 결제한 돈 돌려받기, advance.js·advance.css): 영수증 상세 [+ 대신 결제로 기록] → 사람·받을 금액·카드 할부. 입금 확인(입금액·실제 입금일·메모를 매번 직접) → 몇 번째·입금 후 남은 금액. 완료 = 남은 0원(입금 횟수·할부와 묶지 않음). 사람 상세 맨 위 '받을 돈', 사람 목록 [받을 돈] 칩. 통계: 그 영수증 내 부담 = 총액 − 받을 금액, 상대 부담 = 받을 금액(_splitShareMap). 입금은 수입 아님. 동기화·백업 advRecords.
@@ -7702,7 +7702,7 @@ function _payerSelectRender(sel,c){
   sel.innerHTML=(eff?'':'<option value="" selected disabled>결제자 선택</option>')
     +opts.map(v=>`<option value="${escapeHtml(v)}"${eff&&normalizeName(v)===normalizeName(eff)?' selected':''}>${escapeHtml(v)}</option>`).join('')
     +'<option value="__other__">+ 다른 사람…</option>'
-    +(c.advOpt?'<option value="__adv__" data-tone="adv">💳 대신 결제…</option>':''); // v4.35 — 추가 화면만: 내가 다른 사람 대신 결제
+    +(c.advOpt?'<option value="__adv__" data-tone="adv">대신 결제…</option>':''); // v4.35 — 추가 화면만: 내가 다른 사람 대신 결제
   sel.classList.toggle('me',!!eff&&isMe(eff));
   sel.classList.toggle('empty',!eff);
 }
@@ -7758,7 +7758,7 @@ let _addSplitUI=null, _dSplitUI=null, _addPeople=null;
     onChange:()=>{}
   });
   const sel=document.getElementById('addPayerSel');
-  // v4.35 — 결제자 ▸ 💳 대신 결제…: 누구 대신인지 고르면 받을 금액 = 영수증 총액(일시불)으로 저장 직후 기록. 할부·금액은 저장 후 대신 결제 창에서.
+  // v4.35 — 결제자 ▸ 대신 결제…: 누구 대신인지 고르면 받을 금액 = 영수증 총액(일시불)으로 저장 직후 기록. 할부·금액은 저장 후 대신 결제 창에서.
   const advInp=document.getElementById('addAdvPerson');
   const advPc={partsId:'participantsInp',payerId:'addAdvPerson',emptyIsMe:false,excludeMe:true,ctx:()=>null,pkTitle:'누구 대신 결제했나요?',pkNew:'대신 결제로 지정'};
   const pc={partsId:'participantsInp',payerId:'payerInp',emptyIsMe:true,ctx:()=>_qcCtxPerson,advOpt:true,onAdv:()=>_qcOpenPicker('payer',advPc)};

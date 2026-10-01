@@ -300,7 +300,7 @@ async function advShareImage(a,onFallback){
   if(can){try{await navigator.share({files:[file]});return;}catch(e){if(e&&e.name==='AbortError')return;}}
   onFallback(blob,file,filename);
 }
-// ── 추가 화면 '결제자 ▸ 💳 대신 결제…'(v4.35): 영수증 저장 직후 받을 금액 = 영수증 총액, 일시불로 기록. 할부·금액·메모는 대신 결제 창에서 고친다.
+// ── 추가 화면 '결제자 ▸ 대신 결제…'(v4.35): 영수증 저장 직후 받을 금액 = 영수증 총액, 일시불로 기록. 할부·금액·메모는 대신 결제 창에서 고친다.
 async function advCreateFor(rec,person){
   person=normalizeName(person);
   if(!person||!rec||!rec.id)return null;
