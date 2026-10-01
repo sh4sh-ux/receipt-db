@@ -318,6 +318,7 @@ P오플레 클래식 플레인 1+1 680.0g | 1 | 3,980 | 3,980
 - **공유**(v4.33~34): 창의 [공유] → `advShareCanvas` = **Dutch Pay 최신 '상세내역' 이미지(`generateFullDetailCanvases`)의 크기·굵기·색을 그대로**(파란 눈썹·34/800 제목·연파랑 #f3f5ff 카드 + 회색 알약·표 17/500(금액만 700)·글자 전부 2px 작게). ⚠️ Dutch Pay를 참고할 땐 **`git fetch` 후 최신 `origin/main`에서 사용자가 말한 그 화면의 함수를 찾을 것** — v4.33은 오래된 사본의 다른 함수(`shareHistoryItemImage`, 굵은 글자)를 본떠 다시 만들었다. `navigator.share({files})`, 안 되면 창 안 미리보기 + [이미지 저장](PC 등). 이미지는 인쇄처럼 토큰 없이 색을 직접 쓴다.
 - 대납 창은 **만남 창과 같은 폭(560)·같은 글자**(입금 줄 = `.mtl-row` 크기), 보기 화면은 `.advx-v`로 **입금 기록(`.advx-list`)만 스크롤**(v4.33 사용자 요청). 금액 라벨은 '남은'이 아니라 **'남은 금액'**.
 - 저장: settings `adv:` 기록 — `type:'adv'`(receiptId·person·amount·months(0=일시불)·note) / `type:'pay'`(advId·amount·date·memo). 둘 다 updatedAt 최신 우선(`advMerge`), 지우기 = `deleted:true`. 동기화·백업 `advRecords`.
+- 원본 영수증을 지워도 대신 결제 기록은 **지우지 않는다**(돈 기록 — '원본 영수증 없음'으로 남고 삭제 확인에 알린다, v4.37). 상세에서 총액을 고치면 받을 금액이 원래 총액과 같았을 때만 따라간다(`advFollowTotal`), 따로 정한 금액이 총액보다 크면 대신 결제 칸에 알림.
 - **입금은 수입이 아니다** — 영수증·통계에 넣지 않는다. 원본 영수증은 통계에서 **내 부담 = 총액 − 받을 금액, 상대 부담 = 받을 금액**(`_splitShareMap`·`_myShareOf`가 `advForReceipt`를 먼저 본다 — 참석자·한턱보다 우선). 총지출엔 그대로. 영수증 참석자는 바꾸지 않는다(만남·결제 밸런스에 섞이지 않게).
 
 ## ⚠️ 숫자 규칙 (v3.84~ · Dutch Pay와 동일 — 매번 다시 묻지 않도록 고정)
@@ -439,7 +440,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 배경만 고정색으로 두지 말 것 — 배경·글자를 한 쌍의 토큰으로(v2.60). 인쇄 블록엔 토큰 금지(PDF 섹션).
 - 접이식 칸(`.section-body`)에 **고정 max-height를 두지 말 것** — 펼침 움직임용 2000px 때문에 긴 검색 구매 이력이 잘렸다(v4.23). 펼친 상태는 `none`, 움직임은 `_bindSectionToggles`가 실제 높이로.
 - 항상 DOM에 있는 `.modal-overlay` 등은 존재가 아니라 `getClientRects().length`로 표시 여부를 본다(v2.67).
-- 정보 상자 드롭다운(결제자·결제수단, 추가·상세)은 앱 안 상자 `_kvsOpen`(v4.35, 카테고리와 같은 모양·폭 = 그 칸). `<select>`는 `pointer-events:none`으로 값·이벤트만 — 칸(.kv)이 누름을 받는다. 새 select 칸도 `.detail-kv-grid .kv` 안이면 저절로 적용. `'__'`로 시작하는 값은 선 아래 특수 항목.
+- 정보 상자 드롭다운(결제자·결제수단, 추가·상세)은 앱 안 상자 `_kvsOpen`(v4.35, 카테고리와 같은 모양·폭 = 그 칸). `<select>`는 `pointer-events:none`으로 값·이벤트만 — 칸(.kv)이 누름을 받는다. 새 select 칸도 `.detail-kv-grid .kv` 안이면 저절로 적용. 열리는 방향은 화면이 아니라 **스크롤 영역(.main-body·창) 아래 끝** 기준(v4.37 — 폰 저장 바 뒤로 숨었다). `'__'`로 시작하는 값은 선 아래 특수 항목.
 - 날짜·시간 칸은 직접 그린 글자 + 투명 `date`/`time` input(v4.02). 코드로 value를 넣는 칸은 `_kvHookValue`로 표시를 갱신한다.
 **JS**
 - 같은 이름의 함수를 두 번 선언하면 뒤의 것이 조용히 덮는다(v3.79 — `_setSaveState` 충돌로 추가 화면 저장이 안 켜졌다).
@@ -456,7 +457,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 검색 적용(`_applySearchInput`)은 **검색어가 그대로면 아무것도 하지 않는다**(v4.07). 한글 조합 중 결과 카드를 누르면 blur로 `compositionend`·`input`이 늦게 와 같은 검색어가 다시 적용되며 `selectedId`를 지워 상세가 검색 결과로 튕겼다. `selectReceipt`는 대기 중인 검색 타이머를 끈다. Playwright `keyboard.type`은 조합이 없어 재현되지 않으니 composition 이벤트를 직접 보내 검증.
 
 ## 현재 상태 (2026-09-27 기준)
-- **버전 `v4.36`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
+- **버전 `v4.37`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
 - 데이터: 실데이터 백업 기준 영수증 151건(2025-03 ~ 2026-09), 사진 142장, 선불권 사용. 3,000건 가상 데이터에서도 목록 0.01초·검색 0.1초·사람 화면 0.4초(데스크탑).
 
 ### 작업 흐름 (Claude Code 웹 세션)

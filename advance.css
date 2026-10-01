@@ -90,3 +90,4 @@ html[data-theme="light"] .advx-card.done{background:linear-gradient(135deg,var(-
 .ppx-rs-btns.advx-one{grid-template-columns:1fr}
 .advx-back{color:var(--label2)!important}
 .mtg-sheet.advx-sheet{max-width:560px} /* 만남 창과 같은 폭 */
+.advx-rc-w{margin-top:6px;padding:7px 10px;border-radius:8px;background:color-mix(in srgb,var(--red) 10%,transparent);color:var(--red);font-size:12px;line-height:1.45;word-break:keep-all} /* v4.37 받을 금액 > 총액 */
