@@ -300,3 +300,14 @@ async function advShareImage(a,onFallback){
   if(can){try{await navigator.share({files:[file]});return;}catch(e){if(e&&e.name==='AbortError')return;}}
   onFallback(blob,file,filename);
 }
+// ── 추가 화면 '결제자 ▸ 💳 대신 결제…'(v4.35): 영수증 저장 직후 받을 금액 = 영수증 총액, 일시불로 기록. 할부·금액·메모는 대신 결제 창에서 고친다.
+async function advCreateFor(rec,person){
+  person=normalizeName(person);
+  if(!person||!rec||!rec.id)return null;
+  if(advForReceipt(rec.id))return null;
+  const now=nowISO(),id='adv_'+crypto.randomUUID();
+  const row={key:ADV_PREFIX+id,id,type:'adv',receiptId:rec.id,person,amount:Math.round(Number(rec.total)||0),months:0,note:'',deleted:false,createdAt:now,updatedAt:now};
+  if(!advValidOne(row))throw new Error('대신 결제 기록이 올바르지 않아요.');
+  await advPut([row]);
+  return row;
+}

@@ -599,6 +599,33 @@ svg{display:block;flex-shrink:0;}
 .kv:focus-within{border-color:var(--blue);}
 .kv-lbl{font-size:var(--fs-caption);font-weight:var(--fw-med);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}
 .kv select.kv-inp{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:18px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239AA0A6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>") right 2px center/12px no-repeat;} /* v3.86 — 결제자·결제수단 드롭다운 표시 */
+
+/* v4.35 — 결제자·결제수단 드롭다운 = 카테고리처럼 앱 안 상자(폭 = 그 칸). select는 값만 쓰고 누르는 건 칸(.kv)이 받는다. */
+.detail-kv-grid .kv>select.kv-inp{pointer-events:none;}
+.detail-kv-grid .kv:has(>select.kv-inp:not(:disabled)){cursor:pointer;}
+.kv.kvs-open{position:relative;border-color:var(--blue);}
+.kvs-pop{position:absolute;z-index:40;top:calc(100% + 8px);left:-1px;right:-1px;padding:0 6px 6px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:var(--app-shadow);cursor:default;}
+.kvs-pop.up{top:auto;bottom:calc(100% + 8px);}
+.kvs-title{margin:0 -6px 4px;padding:13px 16px;border-bottom:1px solid var(--sep);color:var(--label2);font-size:12px;font-weight:700;letter-spacing:-.1px;}
+.kvs-opt{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:42px;padding:9px 10px;border:0;border-radius:10px;background:none;color:var(--label);font:inherit;font-size:14px;text-align:left;cursor:pointer;}
+.kvs-opt span{min-width:0;word-break:keep-all;overflow-wrap:anywhere;}
+.kvs-opt svg{flex:none;color:var(--blue);}
+@media(hover:hover){.kvs-opt:hover{background:var(--fill);}}
+.kvs-opt:focus-visible{outline:none;background:var(--fill);}
+.kvs-opt.on{background:var(--blue-bg);color:var(--blue-txt);font-weight:600;}
+.kvs-opt.adv{color:var(--blue);font-weight:600;}
+.kvs-sep{height:1px;margin:4px 4px;background:var(--sep);}
+.kvs-sub{margin-top:2px;font-size:12.5px;font-weight:600;color:var(--blue);}
+/* v4.35 — 추가 화면 결제자 ▸ 대신 결제: 받을 돈 한 줄, 참석자·분담 방식은 숨김(참석자 없이 저장) */
+.addadv-line{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-radius:var(--rm);background:var(--blue-bg);}
+.addadv-line[hidden]{display:none;}
+.addadv-txt{min-width:0;}
+.addadv-t{font-size:13.5px;color:var(--label);word-break:keep-all;}
+.addadv-t b{color:var(--blue-txt);font-weight:700;}
+.addadv-s{margin-top:2px;font-size:11.5px;color:var(--label2);word-break:keep-all;}
+.addadv-x{flex:none;padding:6px 8px;border:0;background:none;color:var(--label2);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;border-radius:8px;}
+@media(hover:hover){.addadv-x:hover{background:var(--fill);}}
+.addx-info.addadv-on .addx-ppl-kv,.addx-info.addadv-on #addSplitBlock{display:none;}
 .kv-inp{width:100%;border:none;background:transparent;font-size:var(--fs-body);font-weight:var(--fw-reg);color:var(--text-primary);outline:none;font-family:inherit;padding:0;line-height:1.4;text-align:left;}
 .kv-inp::placeholder{color:var(--label3);font-weight:400;}
 .kv-inp:is(select){cursor:pointer;-webkit-appearance:none;appearance:none;}
@@ -3019,7 +3046,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                     </button>
                     <div class="cat-picker-popover detail-cat-popover" id="catPickerPopover" role="listbox" aria-label="카테고리 선택" hidden></div>
                   </div>
-                  <div class="kv"><div class="kv-lbl">결제자</div><select id="addPayerSel" class="kv-inp" aria-label="결제자"></select><input type="hidden" id="payerInp"/></div>
+                  <div class="kv"><div class="kv-lbl">결제자</div><select id="addPayerSel" class="kv-inp" aria-label="결제자"></select><div class="kvs-sub" id="addAdvSub" hidden></div><input type="hidden" id="payerInp"/><input type="hidden" id="addAdvPerson"/></div>
                   <div class="kv"><div class="kv-lbl">결제수단</div>
                     <select id="payMethod" class="kv-inp" aria-label="결제수단">
                       <option value="card">카드</option>
@@ -3028,7 +3055,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
                       <option value="other">기타</option>
                     </select>
                   </div>
-                  <div class="kv full"><div class="kv-lbl">참석자</div><input id="participantsInp" class="kv-inp" type="text" placeholder="예: 철수, 영희, 민준" autocomplete="off"/></div>
+                  <div class="full addadv-line" id="addAdvLine" hidden></div>
+                  <div class="kv full addx-ppl-kv"><div class="kv-lbl">참석자</div><input id="participantsInp" class="kv-inp" type="text" placeholder="예: 철수, 영희, 민준" autocomplete="off"/></div>
                   <div class="kv full pp-split-block" id="addSplitBlock">
                     <div class="kv-lbl">분담 방식 <span class="field-lbl-hint">참석자가 있을 때 적용</span></div>
                     <div class="pp-treatbar" id="addTreatBar">
@@ -3879,6 +3907,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.35 — ① 결제자·결제수단 드롭다운 = 카테고리처럼 앱 안 상자(제목 줄 + 목록 + ✓, 폭 = 그 칸, 추가·상세 공통 _kvsOpen). <select>는 값·이벤트 그대로, pointer-events:none이라 칸을 누르면 열림. ② 추가 화면 결제자 ▸ '💳 대신 결제…' → 누구 대신(사람 고르기 창) → '○○ 대신 결제' + '○○에게 받을 돈 N원 · 해제', 참석자·분담 방식 숨김(참석자 없이 저장). 저장 직후 대신 결제 기록(받을 금액 = 총액, 일시불 — advCreateFor).
 // v4.34 — 대납 공유 이미지를 Dutch Pay '상세내역' 이미지(generateFullDetailCanvases, v6.23~)와 같은 모양·글자로 다시 그림: 파란 눈썹 'RECEIPT DB v…' · 제목 '대신 결제' + 받을 돈 · 날짜 · 연파랑 카드(매장 + 회색 '결제' 알약 + 금액) · 품목 표 · '입금 기록' 카드(입금 N번 알약 + 남은 금액) · 입금 표. 글자는 Dutch Pay처럼 2px 작게·가는 굵기(v4.33은 너무 굵었다).
 // v4.33 — 대납 공유: 대신 결제 창 [공유] → Dutch Pay '상세내역'과 같은 흰 바탕 이미지(제목·날짜·결제자·남은 금액 요약·구매 내역·입금 기록 표·버전). 폰은 공유 창, 안 되면 미리보기 + 이미지 저장(advShareCanvas·advShareImage).
 // v4.32 — 대납(다른 사람 대신 결제한 돈 돌려받기, advance.js·advance.css): 영수증 상세 [+ 대신 결제로 기록] → 사람·받을 금액·카드 할부. 입금 확인(입금액·실제 입금일·메모를 매번 직접) → 몇 번째·입금 후 남은 금액. 완료 = 남은 0원(입금 횟수·할부와 묶지 않음). 사람 상세 맨 위 '받을 돈', 사람 목록 [받을 돈] 칩. 통계: 그 영수증 내 부담 = 총액 − 받을 금액, 상대 부담 = 받을 금액(_splitShareMap). 입금은 수입 아님. 동기화·백업 advRecords.
@@ -4303,7 +4332,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.34';
+const APP_VERSION='v4.35';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6815,6 +6844,8 @@ const photoZone=document.getElementById('photoZone');
 const photoInp=document.getElementById('photoInp');
 
 let _currentParsed=null;
+let _addAdvRender=()=>{},_addAdvReset=()=>{}; // v4.35 — 추가 화면 결제자 ▸ 대신 결제(아래 추가 화면 초기화에서 채움)
+const _addAdvPerson=()=>normalizeName(document.getElementById('addAdvPerson')?.value||'');
 let _pasteComposing=false;
 let _catAutoFilled=false;  // 카테고리가 자동 채워진 상태인지
 
@@ -6979,6 +7010,7 @@ function _qcSyncRows(){
 // v3.95 — 추가 화면 = 영수증 상세와 같은 화면. 상단 카드(매장 · 결제자 … 총액 / 참석자)는 '정보' 상자 값을 그대로 비춘다.
 function _addxIsDirect(){return !!document.getElementById('addx')?.classList.contains('addx-direct');}
 function _addxSyncHeader(){
+  _addAdvRender();
   const store=(document.getElementById('addStore')?.value||'').trim();
   const name=_gjComposed()||store;
   const payer=(document.getElementById('payerInp')?.value||'').trim()||(getMyName()||'').trim();
@@ -7439,7 +7471,8 @@ saveBtn.addEventListener('click',async()=>{
     await dbPut('images',{id:imageId,blob:pendingPhotoBlob,mime:pendingPhotoBlob.type||'image/jpeg',contentHash:imageHash});
     _dbxUploadImage(imageId);
   }
-  const participants=(document.getElementById('participantsInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const _advP=_addAdvPerson(); // v4.35 — 대신 결제면 참석자·분담 없이
+  const participants=_advP?[]:(document.getElementById('participantsInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const tags=(document.getElementById('tagInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const finalCat=document.getElementById('catInp').value.trim();
   // 경조사 컨텍스트 — 관계자 태그 자동 추가, 매장명 재구성
@@ -7469,7 +7502,7 @@ saveBtn.addEventListener('click',async()=>{
     createdAt:nowISO(),updatedAt:nowISO(),
   };
   // v3.35 — 분담 방식(한턱/제외). 참석자에 실제로 있는 이름만 남긴다.
-  if(_addSplitUI){
+  if(_addSplitUI&&!_advP){
     const sp=_addSplitUI.getState();
     if(sp.treat)rec.treat=true;
     const ex=(sp.splitExclude||[]).filter(n=>participants.includes(n));
@@ -7481,6 +7514,7 @@ saveBtn.addEventListener('click',async()=>{
   const dup=receipts.find(r=>r.date===rec.date&&(r.store||'').trim()===(rec.store||'').trim()&&r.total===rec.total);
   if(dup){const ok=await _confirmDup(rec.store,rec.date,rec.total);if(!ok)return;}
   await dbPut('receipts',rec);
+  const _advMsg=await _addAdvAfterSave(rec,_advP); // v4.35 — 영수증 저장 뒤 대신 결제 기록(실패해도 영수증은 남는다)
   // 사진을 붙였으면 완료 폴더에도 사람이 알아볼 이름으로 올린다.
   // 이러면 Dropbox 스캔함을 거치지 않아도 사진이 제대로 정리된다.
   // 조용히 실패하면 정리가 안 된 걸 알 수 없으니 결과를 말해 준다.
@@ -7493,9 +7527,9 @@ saveBtn.addEventListener('click',async()=>{
   if(rec.store&&finalCat){
     await learnCategory(rec.store,finalCat);
   }
-  toast(_archivedName
+  toast((_archivedName
     ? `저장됨 · ${_archivedName}`
-    : `'${rec.store||'영수증'}' 저장됨`,{type:'success',duration:_archivedName?5000:3000});
+    : `'${rec.store||'영수증'}' 저장됨`)+_advMsg,{type:'success',duration:_archivedName||_advMsg?5000:3000});
   clearInputs();
   await loadAll();
   // 저장한 영수증의 월로 viewMonth 이동 + 검색 클리어
@@ -7667,7 +7701,8 @@ function _payerSelectRender(sel,c){
   const isMe=v=>!!me&&normalizeName(v)===normalizeName(me);
   sel.innerHTML=(eff?'':'<option value="" selected disabled>결제자 선택</option>')
     +opts.map(v=>`<option value="${escapeHtml(v)}"${eff&&normalizeName(v)===normalizeName(eff)?' selected':''}>${escapeHtml(v)}</option>`).join('')
-    +'<option value="__other__">+ 다른 사람…</option>';
+    +'<option value="__other__">+ 다른 사람…</option>'
+    +(c.advOpt?'<option value="__adv__" data-tone="adv">💳 대신 결제…</option>':''); // v4.35 — 추가 화면만: 내가 다른 사람 대신 결제
   sel.classList.toggle('me',!!eff&&isMe(eff));
   sel.classList.toggle('empty',!eff);
 }
@@ -7675,6 +7710,7 @@ function _payerSelectBindChange(sel,c,refresh){
   sel.addEventListener('change',()=>{
     const v=sel.value;
     if(v==='__other__'){refresh();_qcOpenPicker('payer',c);return;} // 표시를 현재 값으로 되돌리고 참석자 밖 결제자 picker
+    if(v==='__adv__'){refresh();if(c.onAdv)c.onAdv();return;} // v4.35 — 대신 결제: 누구 대신인지 고르는 창
     _qcSetField(c.payerId,v);
   });
 }
@@ -7722,8 +7758,37 @@ let _addSplitUI=null, _dSplitUI=null, _addPeople=null;
     onChange:()=>{}
   });
   const sel=document.getElementById('addPayerSel');
-  const pc={partsId:'participantsInp',payerId:'payerInp',emptyIsMe:true,ctx:()=>_qcCtxPerson};
+  // v4.35 — 결제자 ▸ 💳 대신 결제…: 누구 대신인지 고르면 받을 금액 = 영수증 총액(일시불)으로 저장 직후 기록. 할부·금액은 저장 후 대신 결제 창에서.
+  const advInp=document.getElementById('addAdvPerson');
+  const advPc={partsId:'participantsInp',payerId:'addAdvPerson',emptyIsMe:false,excludeMe:true,ctx:()=>null,pkTitle:'누구 대신 결제했나요?',pkNew:'대신 결제로 지정'};
+  const pc={partsId:'participantsInp',payerId:'payerInp',emptyIsMe:true,ctx:()=>_qcCtxPerson,advOpt:true,onAdv:()=>_qcOpenPicker('payer',advPc)};
   const refreshPay=()=>{if(sel)_payerSelectRender(sel,pc);};
+  let advStash=null; // 켜기 전 참석자 — 해제하면 되돌린다
+  _addAdvRender=()=>{
+    const n=(advInp.value||'').trim(),on=!!n;
+    document.querySelector('#viewInput .addx-info')?.classList.toggle('addadv-on',on);
+    const sub=document.getElementById('addAdvSub');if(sub){sub.hidden=!on;sub.textContent=on?`${n} 대신 결제`:'';}
+    const line=document.getElementById('addAdvLine');if(!line)return;line.hidden=!on;
+    if(on){const t=_addxIsDirect()?_parseN(document.getElementById('directTotal')?.value||''):((_currentParsed&&_currentParsed.total)||0);
+      line.innerHTML=`<div class="addadv-txt"><div class="addadv-t">${escapeHtml(n)}에게 받을 돈 <b>${t>0?fmtMoney(t)+'원':'영수증 총액'}</b></div><div class="addadv-s">할부·입금은 저장 후 대신 결제 창에서</div></div><button type="button" class="addadv-x" data-addadvoff>해제</button>`;}
+  };
+  const advOff=()=>{advInp.value='';if(advStash!==null){_qcSetField('participantsInp',advStash);advStash=null;}_addAdvRender();refreshPay();};
+  _addAdvReset=()=>{advInp.value='';advStash=null;_addAdvRender();};
+  advInp.addEventListener('input',()=>{
+    const n=normalizeName(advInp.value||''),me=normalizeName(getMyName()||'');
+    if(n&&me&&n===me){advInp.value='';toast('내 이름 말고 대신 결제해 준 사람을 골라 주세요.',{type:'error'});_addAdvRender();return;}
+    if(n){
+      if(advInp.value!==n)advInp.value=n;
+      const pv=(payerEl.value||'').trim();if(pv&&me&&normalizeName(pv)!==me)_qcSetField('payerInp',getMyName()||''); // 대신 결제 = 내가 결제
+      if(advStash===null){advStash=partsEl.value||'';if(advStash)_qcSetField('participantsInp','');} // 참석자 없이 저장(만남·결제 밸런스에 섞이지 않게)
+      if(_addSplitUI)_addSplitUI.reset();
+    }
+    _addAdvRender();refreshPay();
+  });
+  document.getElementById('addAdvLine')?.addEventListener('click',e=>{if(e.target.closest('[data-addadvoff]'))advOff();});
+  payerEl.addEventListener('input',()=>{const n=(advInp.value||'').trim(),pv=(payerEl.value||'').trim(),me=normalizeName(getMyName()||'');
+    if(n&&pv&&me&&normalizeName(pv)!==me){advOff();toast('결제자가 바뀌어 대신 결제를 해제했어요.');}});
+  document.getElementById('directTotal')?.addEventListener('input',()=>_addAdvRender());
   if(sel)_payerSelectBindChange(sel,pc,refreshPay);
   [partsEl,payerEl].forEach(el=>el.addEventListener('input',()=>{_addSplitUI.render();refreshPay();_addxSyncHeader();}));
   _addSplitUI.render();refreshPay();
@@ -7806,7 +7871,8 @@ function _qcOpenPicker(mode,c){
     const sel=_qcNames(c.partsId);const selN=new Set(sel.map(normalizeName));
     const payer=((document.getElementById(c.payerId)?.value||'').trim())||(c.emptyIsMe?me:'');
     const cands=[];const push=n=>{const t=(n||'').trim();if(t&&!cands.some(x=>normalizeName(x)===normalizeName(t)))cands.push(t);};
-    if(me)push(me);if(ctx)push(ctx);sel.forEach(push);_qcRecentPeople(0).forEach(push);
+    if(me&&!c.excludeMe)push(me);if(ctx)push(ctx);sel.forEach(push);_qcRecentPeople(0).forEach(push);
+    if(c.excludeMe&&me){const i=cands.findIndex(x=>normalizeName(x)===normalizeName(me));if(i>=0)cands.splice(i,1);}
     const qq=q.trim();
     const multi=_qcSplitNames(qq);
     const term=multi.length>1?'':qq;
@@ -7817,16 +7883,16 @@ function _qcOpenPicker(mode,c){
       return `<button type="button" class="qc-pk-row${o?' on':''}${isMe?' me':''}" data-pk="${escapeHtml(n)}" ${payerMode?`role="radio" aria-checked="${o}"`:`aria-pressed="${o}"`}><span class="qc-pk-nm">${escapeHtml(n)}</span><span class="qc-pk-ck" aria-hidden="true"></span></button>`;};
     // 직접 입력: 목록에 없는 이름(여러 명이면 쉼표) — 결제자 모드는 한 명만
     const fresh=(payerMode?(multi.length?[multi[0]]:[]):multi).filter(n=>!cands.some(x=>normalizeName(x)===normalizeName(n))||(!payerMode&&multi.length>1&&!selN.has(normalizeName(n))));
-    const newRow=fresh.length?`<button type="button" class="qc-pk-row qc-pk-new" data-pknew="1"><span class="qc-pk-nm">${fresh.length>1?`${fresh.map(escapeHtml).join(' · ')} — ${fresh.length}명 추가`:`‘${escapeHtml(fresh[0])}’ ${payerMode?'결제자로 지정':'추가'}`}</span><span class="qc-pk-plus" aria-hidden="true">+</span></button>`:'';
+    const newRow=fresh.length?`<button type="button" class="qc-pk-row qc-pk-new" data-pknew="1"><span class="qc-pk-nm">${fresh.length>1?`${fresh.map(escapeHtml).join(' · ')} — ${fresh.length}명 추가`:`‘${escapeHtml(fresh[0])}’ ${payerMode?(c.pkNew||'결제자로 지정'):'추가'}`}</span><span class="qc-pk-plus" aria-hidden="true">+</span></button>`:'';
     card.querySelector('.qc-pk-list').innerHTML=newRow
       +(multi.length>1?'':(list.length?list.map(row).join(''):(qq?'':'<div class="qc-pk-empty">아직 함께한 사람이 없어요 · 이름을 입력해 추가하세요</div>')));
     const selBox=card.querySelector('.qc-pk-sel');
     if(selBox){selBox.hidden=!sel.length;
       selBox.innerHTML=sel.map(n=>{const isMe=!!me&&normalizeName(n)===normalizeName(me);return `<span class="qc-pk-selc${isMe?' me':''}">${escapeHtml(n)}<button type="button" data-pkrm="${escapeHtml(n)}" aria-label="${escapeHtml(n)} 빼기">×</button></span>`;}).join('');}
-    const cntEl=card.querySelector('.qc-pk-cnt');if(cntEl)cntEl.textContent=sel.length?`${sel.length}명`:'';
+    const cntEl=card.querySelector('.qc-pk-cnt');if(cntEl)cntEl.textContent=sel.length&&!c.pkTitle?`${sel.length}명`:'';
     card._fresh=fresh;
   };
-  card.innerHTML=`<div class="mtg-sheet-hd qc-pk-hd"><div class="mtg-sheet-title">${payerMode?'다른 결제자':'사람 추가'} <span class="qc-pk-cnt"></span></div>`
+  card.innerHTML=`<div class="mtg-sheet-hd qc-pk-hd"><div class="mtg-sheet-title">${c.pkTitle||(payerMode?'다른 결제자':'사람 추가')} <span class="qc-pk-cnt"></span></div>`
     +(payerMode?'<button class="mtg-sheet-x" type="button" aria-label="닫기">×</button>':'<button type="button" class="qc-pk-done">완료</button>')+`</div>`
     +`<input class="field-inp qc-pk-q" type="text" enterkeyhint="done" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="${payerMode?'이름 검색 · 회사·가족 등 직접 입력':'이름 검색 · 쉼표로 여러 명 입력'}"/>`
     +(payerMode?'':'<div class="qc-pk-sel" hidden></div>')
@@ -7893,6 +7959,7 @@ function clearInputs(){
   { const tm=document.getElementById('addTime'); if(tm){tm.value='';_kvTimeSync(tm);} } // v4.00
   document.getElementById('addDate').value=_addxIsDirect()?new Date().toISOString().slice(0,10):'';
   if(_addSplitUI)_addSplitUI.reset();
+  _addAdvReset(); // v4.35
   _qcItemsOpen=false;_qcCtxPerson=null;_qcMoreOpen=false; // v3.79·v3.80
   document.getElementById('qcMore')?.classList.remove('open');
   document.getElementById('qcMoreRow')?.setAttribute('aria-expanded','false');
@@ -7952,6 +8019,12 @@ function _setInputMode(mode){
   }
 }
 
+// v4.35 — 추가 화면 '결제자 ▸ 대신 결제': 영수증을 저장한 뒤 받을 금액 = 총액(일시불)으로 대신 결제를 붙인다. 알림에 덧붙일 글을 돌려준다.
+async function _addAdvAfterSave(rec,person){
+  if(!person||typeof advCreateFor!=='function')return '';
+  try{const a=await advCreateFor(rec,person);return a?` · ${a.person}에게 받을 돈 ${fmtMoney(a.amount)}원`:'';}
+  catch(e){console.warn('advCreateFor',e);setTimeout(()=>toast('대신 결제 기록은 저장하지 못했어요. 영수증 상세에서 다시 기록해 주세요.',{type:'error',duration:6000}),400);return '';}
+}
 async function _saveDirectEntry(){
   const store=(document.getElementById('addStore').value||'').trim();
   const totalRaw=(document.getElementById('directTotal').value||'').trim();
@@ -7972,7 +8045,8 @@ async function _saveDirectEntry(){
     await dbPut('images',{id:imageId,blob:pendingPhotoBlob,mime:pendingPhotoBlob.type||'image/jpeg',contentHash:imageHash});
     _dbxUploadImage(imageId);
   }
-  const participants=(document.getElementById('participantsInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const _advP=_addAdvPerson(); // v4.35 — 대신 결제면 참석자·분담 없이
+  const participants=_advP?[]:(document.getElementById('participantsInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const tags=(document.getElementById('tagInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const finalCat=document.getElementById('catInp').value.trim();
   if(_gjP&&!tags.includes(_gjP))tags.push(_gjP);
@@ -7995,7 +8069,7 @@ async function _saveDirectEntry(){
     createdAt:nowISO(),updatedAt:nowISO(),
   };
   // v3.35 — 분담 방식(한턱/제외). 참석자에 실제로 있는 이름만 남긴다.
-  if(_addSplitUI){
+  if(_addSplitUI&&!_advP){
     const sp=_addSplitUI.getState();
     if(sp.treat)rec.treat=true;
     const ex=(sp.splitExclude||[]).filter(n=>participants.includes(n));
@@ -8006,8 +8080,9 @@ async function _saveDirectEntry(){
   const dup=receipts.find(r=>r.date===rec.date&&(r.store||'').trim()===rec.store&&r.total===rec.total);
   if(dup){const ok=await _confirmDup(rec.store,rec.date,rec.total);if(!ok)return;}
   await dbPut('receipts',rec);
+  const _advMsg=await _addAdvAfterSave(rec,_advP); // v4.35
   if(rec.store&&finalCat)await learnCategory(rec.store,finalCat);
-  toast(`'${rec.store}' 저장됨`,{type:'success'});
+  toast(`'${rec.store}' 저장됨`+_advMsg,{type:'success',duration:_advMsg?5000:3000});
   clearInputs();
   await loadAll();
   if(rec.date)viewMonth=rec.date.slice(0,7);
@@ -11770,6 +11845,59 @@ function _kvHookValue(inp,sync){
 document.addEventListener('input',e=>{const t=e.target;if(!t||!t.classList)return;if(t.classList.contains('kv-time-inp'))_kvTimeSync(t);else if(t.classList.contains('kv-date-inp'))_kvDateSync(t);},true);
 document.addEventListener('change',e=>{const t=e.target;if(!t||!t.classList)return;if(t.classList.contains('kv-time-inp'))_kvTimeSync(t);else if(t.classList.contains('kv-date-inp'))_kvDateSync(t);},true);
 document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('.kv-time-inp,.kv-date-inp');if(t&&!t.disabled&&typeof t.showPicker==='function'){try{t.showPicker();}catch(_){}}},true);
+// v4.35 — 정보 상자의 드롭다운(결제자·결제수단)을 카테고리처럼 앱 안 상자로(사용자 요청: 칸에 딱 맞는 폭).
+//   <select>는 값·input/change 이벤트를 그대로 쓰고(저장 경로 불변) 누르는 것만 가로챈다 — select는 pointer-events:none이라
+//   칸(.kv)을 누르면 열리고, 키보드로 select에 오면 Enter·Space·↓로 연다. '__'로 시작하는 값(다른 사람…·대신 결제…)은 선 아래에.
+const _KVS='.detail-kv-grid .kv select.kv-inp';
+let _kvsCur=null;
+function _kvsClose(focus){
+  if(!_kvsCur)return;const {kv,pop,sel}=_kvsCur;_kvsCur=null;
+  pop.remove();kv.classList.remove('kvs-open');sel.setAttribute('aria-expanded','false');
+  if(focus)try{sel.focus({preventScroll:true});}catch(_){}
+}
+function _kvsOpen(sel){
+  const kv=sel.closest('.kv');if(!kv||sel.disabled)return;
+  if(_kvsCur&&_kvsCur.sel===sel){_kvsClose(true);return;}
+  _kvsClose();
+  const lbl=(kv.querySelector('.kv-lbl')?.firstChild?.textContent||sel.getAttribute('aria-label')||'').trim();
+  const ck='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  let sep=false;
+  const rows=[...sel.options].filter(o=>!o.disabled&&!o.hidden).map(o=>{
+    const sp=o.value.startsWith('__'),on=o.selected&&!sp;
+    const pre=sp&&!sep?(sep=true,'<div class="kvs-sep" role="separator"></div>'):'';
+    return pre+`<button type="button" class="kvs-opt${on?' on':''}${o.dataset.tone?' '+o.dataset.tone:''}" role="option" aria-selected="${on}" data-i="${o.index}"><span>${escapeHtml(o.textContent)}</span>${on?ck:''}</button>`;
+  }).join('');
+  const pop=document.createElement('div');pop.className='kvs-pop';pop.setAttribute('role','listbox');pop.setAttribute('aria-label',lbl+' 선택');
+  pop.innerHTML=`<div class="kvs-title">${escapeHtml(lbl)} 선택</div>${rows}`;
+  kv.appendChild(pop);kv.classList.add('kvs-open');sel.setAttribute('aria-expanded','true');
+  _kvsCur={kv,pop,sel};
+  const pr=pop.getBoundingClientRect(),kr=kv.getBoundingClientRect(),vh=(window.visualViewport&&visualViewport.height)||innerHeight;
+  if(pr.bottom>vh-8&&kr.top-pr.height-16>0)pop.classList.add('up'); // 아래가 모자라면 위로
+  (pop.querySelector('.kvs-opt.on')||pop.querySelector('.kvs-opt'))?.focus({preventScroll:true});
+  pop.addEventListener('click',e=>{
+    e.stopPropagation();const b=e.target.closest('.kvs-opt');if(!b)return;
+    const o=sel.options[+b.dataset.i];_kvsClose(true);if(!o)return;
+    if(o.value===sel.value&&!o.value.startsWith('__'))return; // 같은 값 — 바뀐 것 없음
+    sel.value=o.value;sel.dispatchEvent(new Event('input',{bubbles:true}));sel.dispatchEvent(new Event('change',{bubbles:true}));
+  });
+  pop.addEventListener('keydown',e=>{
+    const bs=[...pop.querySelectorAll('.kvs-opt')],i=bs.indexOf(document.activeElement);
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();bs[(i+(e.key==='ArrowDown'?1:-1)+bs.length)%bs.length]?.focus();}
+    else if(e.key==='Escape'||e.key==='Tab'){e.preventDefault();e.stopPropagation();_kvsClose(true);}
+  });
+}
+document.addEventListener('click',e=>{
+  const t=e.target;if(!t||!t.closest)return;
+  if(_kvsCur&&_kvsCur.pop.contains(t))return;
+  const kv=t.closest('.detail-kv-grid .kv'),sel=kv&&kv.querySelector(':scope>select.kv-inp');
+  if(sel){_kvsOpen(sel);return;}
+  _kvsClose();
+});
+document.addEventListener('keydown',e=>{
+  const t=e.target;if(!t||!t.matches||!t.matches(_KVS))return;
+  if(e.key==='Enter'||e.key===' '||e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();_kvsOpen(t);}
+},true);
+window.addEventListener('resize',()=>_kvsClose());
 function detailCategoryKvHtml(rawValue){
   const cat=normalizeCategory(rawValue)||'기타';
   const options=BASE_CATEGORIES.map(name=>`<button class="cat-picker-option detail-cat-option" type="button" role="option" data-category="${escapeHtml(name)}" aria-selected="${name===cat?'true':'false'}">${getCatSvg(name)}<span>${escapeHtml(getCategoryLabel(name))}</span></button>`).join('');
@@ -15227,7 +15355,7 @@ function _dbxBindEvents(){
 (()=>{
   if(!('ontouchstart' in window))return;
   // v3.72 — 오버레이가 열려 있으면 당겨서 새로고침(→location.reload) 금지. 최근 추가된 오버레이도 포함.
-  const BLOCK='.modal-overlay,.modal-card,.cat-picker-popover:not([hidden]),.mtg-sheet-backdrop,.org-backdrop,.rg-ov,.lp-pop-backdrop,.review-backdrop';
+  const BLOCK='.modal-overlay,.modal-card,.cat-picker-popover:not([hidden]),.kvs-pop,.mtg-sheet-backdrop,.org-backdrop,.rg-ov,.lp-pop-backdrop,.review-backdrop';
   const TH=70,MAX=104,EDGE=28;
   let y0=0,x0=0,pulling=false,dist=0,busy=false,axisLock=false;
 
