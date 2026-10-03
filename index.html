@@ -599,6 +599,9 @@ svg{display:block;flex-shrink:0;}
 .kv:focus-within{border-color:var(--blue);}
 .kv-lbl{font-size:var(--fs-caption);font-weight:var(--fw-med);color:var(--text-secondary);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}
 .kv select.kv-inp{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:18px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239AA0A6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>") right 2px center/12px no-repeat;} /* v3.86 — 결제자·결제수단 드롭다운 표시 */
+/* v4.40 — 저장 중 */
+.primary-btn.saving svg{display:none;}
+.primary-btn.saving,.detail-header-btn.saving{cursor:progress;}
 
 /* v4.35 — 결제자·결제수단 드롭다운 = 카테고리처럼 앱 안 상자(폭 = 그 칸). select는 값만 쓰고 누르는 건 칸(.kv)이 받는다. */
 .detail-kv-grid .kv>select.kv-inp{pointer-events:none;}
@@ -3124,7 +3127,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
           <button class="ghost-btn" id="clearBtn">초기화</button>
           <button class="primary-btn" id="saveBtn" disabled>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            저장
+            <span class="sv-lbl">저장</span>
           </button>
         </div>
       </section>
@@ -3907,6 +3910,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.40 — ① 저장 속도: 사진의 Dropbox 완료 폴더 정리를 저장 뒤 백그라운드로(전엔 네트워크를 기다린 뒤 화면이 넘어감) + 누르는 즉시 '저장 중…'·중복 저장 차단 ② 레일 '추가'를 다른 탭에서 누르면 쓰다 만 내용 대신 빈 화면(+ 되돌리기) ③ 한턱 문장 조사 이/가 자동(어머니가 조상현에게…).
 // v4.39 — 대신 결제 공유 이미지 글자 굵기 한 단계 낮춤(제목·금액 800→700, 카드 이름 750→650, 표 금액 700→600, 표 본문 500→400).
 // v4.38 — 대신 결제 공유 이미지 가로 1080 → 720(글자 크기는 그대로): 폰은 이미지를 화면 폭에 맞춰 줄여 보여 주므로 화면에서 글자가 1.5배 크게 보인다(사용자: 모바일에서 글자가 너무 작다). 줄어든 폭은 메모 칸이 가장 많이 내준다(긴 메모는 …).
 // v4.37 — 점검 수정: ① 폰에서 결제수단 상자가 저장 바 뒤로 숨던 것(아래 끝 = 화면과 스크롤 영역 중 위쪽, 모자라면 위로·그래도 모자라면 스크롤) + Tab 한 번에 다음 칸 ② 대신 결제가 있는 영수증 삭제 확인에 '대신 결제 기록은 사람 화면에 남아요' ③ 상세에서 총액을 고치면 받을 금액이 원래 총액과 같았을 때 따라가고(advFollowTotal), 따로 정한 금액이 총액보다 크면 대신 결제 칸에 알림.
@@ -4336,7 +4340,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.39';
+const APP_VERSION='v4.40';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -4947,7 +4951,7 @@ function _treatSummarySentence(r){
   const amt=fmtMoney(r.total||0);
   const subjTxt=subj.join(' · ');
   const recipTxt=recip.length?recip.join(' · '):'참석자';
-  return `${subjTxt}이 ${recipTxt}에게 ${amt}원 한턱`;
+  return `${subjTxt}${_psnJosa(subjTxt,'이','가')} ${recipTxt}에게 ${amt}원 한턱`;
 }
 // v3.71 — 공동 한턱 판정: treat && treatBy(관계그룹·members 2명↑). 개인 한턱은 이 조건이 아니면(=treatBy 없음) 그대로.
 function _isCoTreat(r){return !!(r&&r.treat===true&&_isPlainObject(r.treatBy)&&r.treatBy.type==='relationGroup'&&Array.isArray(r.treatBy.members)&&r.treatBy.members.length>=2);}
@@ -6651,6 +6655,7 @@ document.querySelectorAll('.tab').forEach(t=>{
     // v3.91 — 모바일은 목록부터, 데스크탑은 renderPrepaid가 마지막으로 본(또는 첫) 선불권을 오른쪽에 연다.
     if(t.dataset.tab==='prepaid'&&typeof prepaidSelectedId!=='undefined')prepaidSelectedId=null;
     if(_leftPerson)selectedId=null;
+    if(t.dataset.tab==='input'&&!document.getElementById('viewInput').classList.contains('on'))_freshAddScreen(); // v4.40 — 다른 탭에서 '추가'를 누르면 빈 화면
     switchTab(t.dataset.tab);
     if(_leftPerson){renderSide();renderDetail();} // 사람 목록·상세를 영수증 목록·가계부로 되돌림
   });
@@ -7448,7 +7453,7 @@ document.addEventListener('keydown',e=>{
 });
 
 // ── SAVE ──
-saveBtn.addEventListener('click',async()=>{
+const _addSaveCore=async()=>{
   if(_inputMode==='direct'){await _saveDirectEntry();return;}
   if(!_currentParsed)return;
   const p=_currentParsed;
@@ -7519,21 +7524,19 @@ saveBtn.addEventListener('click',async()=>{
   if(dup){const ok=await _confirmDup(rec.store,rec.date,rec.total);if(!ok)return;}
   await dbPut('receipts',rec);
   const _advMsg=await _addAdvAfterSave(rec,_advP); // v4.35 — 영수증 저장 뒤 대신 결제 기록(실패해도 영수증은 남는다)
-  // 사진을 붙였으면 완료 폴더에도 사람이 알아볼 이름으로 올린다.
-  // 이러면 Dropbox 스캔함을 거치지 않아도 사진이 제대로 정리된다.
-  // 조용히 실패하면 정리가 안 된 걸 알 수 없으니 결과를 말해 준다.
-  let _archivedName='';
+  // 사진을 붙였으면 완료 폴더에도 사람이 알아볼 이름으로 올린다 — v4.40: 저장은 여기서 끝내고(로컬에 이미 안전) 올리기는 화면을 넘긴 뒤 뒤에서 한다.
+  //   전엔 완료 폴더 목록 읽기·업로드(네트워크 몇 초)를 기다린 뒤에야 화면이 넘어가 저장이 오래 걸렸다.
+  //   중간에 앱을 닫아도 다음 동기화의 _dbxArchivePending이 이어서 올린다(scanPath 없는 사진 영수증).
+  let _bgArchive=false;
   if(rec.imageId){
     if(!dbxIsConnected())_warnNotConnectedOnce();
-    else if(await _dbxArchiveReceiptPhoto(rec))_archivedName=(rec.scanPath||'').split('/').pop();
+    else _bgArchive=true;
   }
   // 카테고리 학습 — 가게명 + 카테고리 둘 다 있을 때, 사용자가 손댄 경우(또는 자동값이 맞다고 확인한 경우 모두)
   if(rec.store&&finalCat){
     await learnCategory(rec.store,finalCat);
   }
-  toast((_archivedName
-    ? `저장됨 · ${_archivedName}`
-    : `'${rec.store||'영수증'}' 저장됨`)+_advMsg,{type:'success',duration:_archivedName||_advMsg?5000:3000});
+  toast(`'${rec.store||'영수증'}' 저장됨`+_advMsg,{type:'success',duration:_advMsg?5000:3000});
   clearInputs();
   await loadAll();
   // 저장한 영수증의 월로 viewMonth 이동 + 검색 클리어
@@ -7546,8 +7549,43 @@ saveBtn.addEventListener('click',async()=>{
   renderDetail();
   // (구) 저장 후 .main 으로 문서 스크롤 — 지금은 내부 스크롤 구조라 불필요하고
   //     문서를 밀어 헤더가 상태바 아래로 들어가는 원인이 되어 제거했다.
-  // 양방향 동기화 (다운로드→머지→업로드, 백그라운드)
-  dbxSyncNow(true);
+  // 양방향 동기화 (다운로드→머지→업로드, 백그라운드). 사진이 있으면 완료 폴더 정리를 먼저(순서 불변) 끝낸 뒤 동기화.
+  if(_bgArchive)_addBgArchive(rec);else dbxSyncNow(true);
+};
+// v4.40 — 완료 폴더 정리(Dropbox)를 저장 뒤 백그라운드로. 끝나면 알리고, 열려 있는 상세를 새로 그린다(편집 중이면 건드리지 않음). 마지막에 동기화.
+function _addBgArchive(rec){
+  (async()=>{
+    try{
+      const ok=await _dbxArchiveReceiptPhoto(rec);
+      if(ok){
+        toast(`완료 폴더에 정리했어요 · ${(rec.scanPath||'').split('/').pop()}`,{type:'success',duration:4000});
+        if(selectedId===rec.id&&!(typeof _isDetailEditing==='function'&&_isDetailEditing()))renderDetail();
+      }
+    }catch(e){console.warn('bg archive:',e&&e.message||e);}
+    finally{dbxSyncNow(true);}
+  })();
+}
+// v4.40 — 저장 중 표시: 누르는 즉시 버튼이 '저장 중…'으로 바뀌고 잠긴다(두 번 눌러 중복 저장되던 것도 막음).
+let _addSaving=false;
+function _addSavingUI(on){
+  const hs=document.getElementById('addHdrSave'),lb=saveBtn.querySelector('.sv-lbl');
+  saveBtn.classList.toggle('saving',on);if(hs)hs.classList.toggle('saving',on);
+  if(lb)lb.textContent=on?'저장 중…':'저장';
+  if(hs)hs.textContent=on?'저장 중…':'저장';
+  if(on)_setAddSaveState(true,'저장 중이에요…');
+}
+saveBtn.addEventListener('click',async()=>{
+  if(_addSaving||saveBtn.disabled)return;
+  const _prev={hint:saveHint?saveHint.textContent:'',warn:!!(saveHint&&saveHint.classList.contains('warn'))};
+  _addSaving=true;_addSavingUI(true);
+  try{await _addSaveCore();}
+  catch(e){console.error('add save',e);toast('저장하지 못했어요. 다시 시도해 주세요.',{type:'error'});}
+  finally{
+    _addSaving=false;_addSavingUI(false);
+    // 저장이 끝나 입력이 비워졌으면 저장 버튼은 잠긴 채(clearInputs), 못 끝낸 경우(검증 실패·중복 취소·오류)엔 다시 켠다.
+    if(_inputMode==='direct'){if(typeof _updateDirectSaveBtn==='function')_updateDirectSaveBtn();}
+    else if(_currentParsed){_setAddSaveState(false,_prev.hint,{warn:_prev.warn});}
+  }
 });
 
 // ── v3.35 분담 방식 UI 컨트롤러(추가·상세 폼 공용) ──────────────────
@@ -7586,7 +7624,8 @@ function _makeSplitUI(o){
     const subj=treatBy&&(treatBy.members||[]).length>=2?treatBy.members:(payer?[payer]:[]);
     const recip=[...new Set(pp.filter(n=>!subj.includes(n)).concat(payer&&!pp.includes(payer)?[]:[]))].filter(n=>!subj.includes(n));
     const total=o.getTotal?(o.getTotal()||0):0;
-    const summary=(subj.length&&total)?`<div class="tb-summary">${escapeHtml(subj.join(' · '))}이 ${escapeHtml(recip.length?recip.join(' · '):'참석자')}에게 ${fmtMoney(total)}원 한턱</div>`:'';
+    const _subjTxt=subj.join(' · ');
+    const summary=(subj.length&&total)?`<div class="tb-summary">${escapeHtml(_subjTxt)}${_psnJosa(_subjTxt,'이','가')} ${escapeHtml(recip.length?recip.join(' · '):'참석자')}에게 ${fmtMoney(total)}원 한턱</div>`:'';
     o.treatByBox.innerHTML=(only?'':`<div class="tb-lbl">한턱 주체</div><div class="tb-opts">${opts}</div>`)+summary;
     o.treatByBox.querySelectorAll('[data-tbi]').forEach(b=>b.onclick=()=>{
       const c=cands[+b.dataset.tbi];
@@ -8147,6 +8186,30 @@ function _gjPerson(){return (document.getElementById('gjPersonInp').value||'').t
   gjPerson.addEventListener('input',_updateGjHint);
   gjRel.addEventListener('input',_updateGjHint);
 })();
+// v4.40 — 레일 '추가'를 누르면 이전에 쓰다 만 내용이 아니라 빈 화면(사용자 요청). 쓰던 게 있으면 비우고 '되돌리기'를 준다
+//   (붙여넣은 글·직접 입력 칸·사진). 이미 추가 화면에 있을 때 다시 눌러도 건드리지 않는다. 사람 화면 '+ 영수증 추가'는 _qcCtxNext로 사람만 넘기므로 영향 없음.
+function _freshAddScreen(){
+  if(_addSaving)return;
+  const direct=_inputMode==='direct';
+  const text=pasteTa.value,photo=pendingPhotoBlob;
+  const store=(document.getElementById('addStore')?.value||'').trim(),total=(document.getElementById('directTotal')?.value||'').trim();
+  const had=!!(text.trim()||photo||(direct&&(store||total)));
+  if(!had)return;
+  const snap={text,photo,direct,store,total,date:document.getElementById('addDate')?.value||''};
+  clearInputs();
+  toast('이전에 쓰던 내용을 비웠어요',{duration:7000,actionLabel:'되돌리기',action:()=>{
+    switchTab('input');
+    if(snap.direct&&_inputMode!=='direct')_setInputMode('direct');
+    if(snap.text){pasteTa.value=snap.text;updatePreview();}
+    if(snap.photo)_applyPhoto(snap.photo);
+    if(snap.direct){
+      const st=document.getElementById('addStore'),dt=document.getElementById('directTotal'),dd=document.getElementById('addDate');
+      if(st){st.value=snap.store;st.dispatchEvent(new Event('input',{bubbles:true}));}
+      if(dt){dt.value=snap.total;dt.dispatchEvent(new Event('input',{bubbles:true}));}
+      if(dd&&snap.date){dd.value=snap.date;dd.dispatchEvent(new Event('change',{bubbles:true}));}
+    }
+  }});
+}
 document.getElementById('clearBtn').addEventListener('click',()=>{
   if(pasteTa.value||pendingPhotoBlob){
     if(!confirm('입력 내용을 모두 비울까요?'))return;
@@ -9092,7 +9155,7 @@ function _openPersonDetail(type,initFilter){
   }else if(type==='pay'){
     const tgtW=sortD(d.tgtWith), myW=sortD(d.myWith), all=sortD(dedup([...d.tgtWith,...d.myWith]));
     const pick=k=>k==='tgt'?tgtW:k==='me'?myW:all;
-    _pdShell({title:'전체 결제', subtitle:`${nm}이 결제 ${fmtMoney(sumT(d.tgtWith))}원·${d.tgtWith.length}건 · 내가 결제 ${fmtMoney(sumT(d.myWith))}원·${d.myWith.length}건`,
+    _pdShell({title:'전체 결제', subtitle:`${nm}${_psnJosa(nm,'이','가')} 결제 ${fmtMoney(sumT(d.tgtWith))}원·${d.tgtWith.length}건 · 내가 결제 ${fmtMoney(sumT(d.myWith))}원·${d.myWith.length}건`,
       filters:[{key:'all',label:'전체'},{key:'tgt',label:nm},{key:'me',label:'나'}], defaultFilter:'all',
       rows:k=>pick(k).map(r=>({r, rightHtml:`${fmtMoney(r.total||0)}원`, subHtml:escapeHtml(sub(r,[payer(r)+' 결제']))})),
       foot:k=>({label:'합계', amount:sumT(pick(k))})});
@@ -9507,15 +9570,15 @@ function _openDuoDrill(which){
   const map={tgt:d.tgt,me:d.me,normal:d.normal,unknown:d.unknown};
   const recs=map[which]||[];
   const isNormal=which==='normal';
-  const title = which==='tgt'?`${d.name}이 나에게 한턱`
+  const title = which==='tgt'?`${d.name}${_psnJosa(d.name,'이','가')} 나에게 한턱`
               : which==='me'?`내가 ${d.name}에게 한턱`
               : which==='normal'?'일반 분담'
               : '한턱 결제자 미상';
-  const sub = which==='tgt'?`나와 단둘이 있을 때`:`${d.name}과 단둘이 있을 때`;
+  const sub = which==='tgt'?`나와 단둘이 있을 때`:`${d.name}${_psnJosa(d.name,'과','와')} 단둘이 있을 때`;
   const sorted=[...recs].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id))); // 최신순
   const total=sorted.reduce((s,r)=>s+(r.total||0),0); // 총액 합(§8: 일반 분담은 총액만 — 한턱 금액과 섞지 않음)
   const {card,close}=_mtgSheetOpen();
-  const emptyMsg = which==='tgt'?`단둘이 있을 때 ${d.name}이 한턱낸 영수증이 없어요.`
+  const emptyMsg = which==='tgt'?`단둘이 있을 때 ${d.name}${_psnJosa(d.name,'이','가')} 한턱낸 영수증이 없어요.`
                  : which==='me'?`단둘이 있을 때 내가 한턱낸 영수증이 없어요.`
                  : which==='normal'?'단둘이 일반 분담 영수증이 없어요.'
                  : '한턱 결제자 미상 영수증이 없어요.';
@@ -9585,7 +9648,7 @@ function renderPersonDashboardHtml(name, payerRecs, partRecs){
         <div class="rel-hero-cnt">영수증 ${duoAllCnt}건</div>
       </div>
       <div class="rel-duo">
-        ${_duoSideHtml('tgt',`${nm}이 한턱`,sum(duoTreatTgt),duoTreatTgt.length,false)}
+        ${_duoSideHtml('tgt',`${nm}${_psnJosa(nm,'이','가')} 한턱`,sum(duoTreatTgt),duoTreatTgt.length,false)}
         ${_duoSideHtml('me','내가 한턱',sum(duoTreatMe),duoTreatMe.length,true)}
       </div>
       ${_duoSecondaryHtml('normal','일반 분담',duoNormal)}${_duoSecondaryHtml('unknown','한턱 결제자 미상',duoTreatUnknown)}
