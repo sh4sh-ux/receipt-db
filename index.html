@@ -1508,7 +1508,6 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-ctl{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;flex-wrap:wrap;}
 .lp-rangebtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--sep2);border-radius:var(--rs);background:var(--card);color:var(--label);font:inherit;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;cursor:pointer;}
 .lp-rangebtn svg{color:var(--label3);flex:none;}
-.lp-rangebtn.on{border-color:var(--blue);}
 .lp-tabs{display:inline-flex;padding:3px;border-radius:10px;background:var(--fill);}
 .lp-tab{border:0;background:none;padding:5px 11px;border-radius:8px;font:inherit;font-size:12.5px;font-weight:600;color:var(--label2);cursor:pointer;}
 .lp-tab.on{background:var(--card);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.14);}
@@ -3966,6 +3965,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
 // v3.56 — 사람 검색 renderer 일관성: 데이터 유무·건수와 무관하게 항상 같은 Person Dashboard. ⚠️ 계산 불변, 분기/이관만.
 //   근본 원인: 평문 이름 검색이 데이터 유형으로 갈렸다 — hasPayer&&!hasPart → 결제자 전용 view, hasPart&&!hasPayer →
+// v4.49 — 지출 추이 달력 버튼 파란 테두리 제거.
 // v4.48 — 지출 추이 기간 창 [기본으로]·[적용] 높이 통일.
 //   참석자 전용 view(김승환: 참석 기록만 → '김승환 참석 내역'), hasPayer&&hasPart → 통합 대시보드(김영석). 수정: 명시
 //   접두어('결제자 X'/'참석자 X')만 전용 필터 뷰로 남기고, **평문 이름 검색은 (hasPayer||hasPart)면 무조건 통합
@@ -4413,7 +4413,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.48';
+const APP_VERSION='v4.49';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
