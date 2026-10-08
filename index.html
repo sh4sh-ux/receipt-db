@@ -3965,6 +3965,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   참석자 전용 view(김승환: 참석 기록만 → '김승환 참석 내역'), hasPayer&&hasPart → 통합 대시보드(김영석). 수정: 명시
 //   접두어('결제자 X'/'참석자 X')만 전용 필터 뷰로 남기고, **평문 이름 검색은 (hasPayer||hasPart)면 무조건 통합
 //   대시보드**(renderPersonDashboardHtml)로 라우팅. renderPersonDashboardHtml은 payerRecs/partRecs 한쪽이 비어도 안전
+// v4.46 — 지출 추이: 맨 오른쪽 칸 = 오늘(기간 끝이 미래면 오늘까지만).
 // v4.45 — PC: 지출 추이 그래프를 마우스 휠·‹ › 버튼으로 넘김.
 //   (결제 내역/참석 내역 섹션이 각자 length>0일 때만 렌더). §5 데이터 보존: 참석 전용 view에만 있던 '자주 함께한 멤버'를
 //   재사용 헬퍼 `_coMembersHtml`로 통합 대시보드에 이관(참석 receipt 동행자 빈도 top5, 집계 로직 동일, 칩은 기존
@@ -4406,7 +4407,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.45';
+const APP_VERSION='v4.46';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -10288,10 +10289,12 @@ function _trendBuckets(cfg){
   const me=getMyName(),map=new Map();
   const keyOf=d=>cfg.unit==='day'?d:cfg.unit==='month'?d.slice(0,7):d.slice(0,4);
   for(const r of receipts){const d=r.date||'';if(!d||d<cfg.from||d>cfg.to)continue;const k=keyOf(d),b=map.get(k)||{t:0,m:0,c:0};b.t+=r.total||0;b.m+=_myShareOf(r,me)||0;b.c++;map.set(k,b);}
+  // v4.46 — 가장 오른쪽 칸 = 오늘(이번 달·올해): 기간 끝이 미래면 오늘까지만(미래 날짜 영수증이 있으면 그 날까지)
+  let last=cfg.to;{const today=_ymd(new Date());if(cfg.from<=today&&cfg.to>today){let mx=today;for(const r of receipts){const d=r.date||'';if(d>mx&&d<=cfg.to)mx=d;}last=mx;}}
   const keys=[];
-  if(cfg.unit==='day'){const e=new Date(cfg.to+'T00:00:00');for(let d=new Date(cfg.from+'T00:00:00'),g=0;d<=e&&g<3700;d.setDate(d.getDate()+1),g++)keys.push(_ymd(d));}
-  else if(cfg.unit==='month'){let c=cfg.from.slice(0,7),g=0;const l=cfg.to.slice(0,7);while(c<=l&&g++<130){keys.push(c);c=ymOffset(c,1);}}
-  else{for(let y=+cfg.from.slice(0,4);y<=+cfg.to.slice(0,4);y++)keys.push(String(y));}
+  if(cfg.unit==='day'){const e=new Date(last+'T00:00:00');for(let d=new Date(cfg.from+'T00:00:00'),g=0;d<=e&&g<3700;d.setDate(d.getDate()+1),g++)keys.push(_ymd(d));}
+  else if(cfg.unit==='month'){let c=cfg.from.slice(0,7),g=0;const l=last.slice(0,7);while(c<=l&&g++<130){keys.push(c);c=ymOffset(c,1);}}
+  else{for(let y=+cfg.from.slice(0,4);y<=+last.slice(0,4);y++)keys.push(String(y));}
   return keys.map(k=>{const v=map.get(k)||{t:0,m:0,c:0};
     const lbl=cfg.unit==='day'?`${+k.slice(5,7)}월 ${+k.slice(8)}일`:cfg.unit==='month'?ymLabel(k):`${k}년`;
     const sax=cfg.unit==='day'?(cfg.from.slice(0,7)===cfg.to.slice(0,7)?`${+k.slice(8)}일`:`${+k.slice(5,7)}.${+k.slice(8)}`):cfg.unit==='month'?`${k.slice(0,4)}.${k.slice(5)}`:k;
