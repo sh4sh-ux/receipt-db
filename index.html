@@ -3004,6 +3004,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
             </button>
             <div class="detail-header-save detail-desk-act" id="detailSaveBar">
               <button class="detail-header-btn" id="detailRevertBtn" type="button">되돌리기</button>
+              <button class="detail-header-btn" id="detailCopyBtn" type="button" title="이 영수증을 글로 복사(추가 화면에 붙여 넣을 수 있는 형식)">복사</button>
               <button class="detail-header-btn primary" id="detailConfirmBtn" type="button" disabled>저장</button>
             </div>
             <button class="icon-btn danger detail-desk-act" id="detailDeleteBtn" title="삭제">
@@ -3964,6 +3965,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   근본 원인: 평문 이름 검색이 데이터 유형으로 갈렸다 — hasPayer&&!hasPart → 결제자 전용 view, hasPart&&!hasPayer →
 //   참석자 전용 view(김승환: 참석 기록만 → '김승환 참석 내역'), hasPayer&&hasPart → 통합 대시보드(김영석). 수정: 명시
 //   접두어('결제자 X'/'참석자 X')만 전용 필터 뷰로 남기고, **평문 이름 검색은 (hasPayer||hasPart)면 무조건 통합
+// v4.47 — 영수증 상세 [복사]: 내용을 GPT 텍스트 형식으로 클립보드에.
 //   대시보드**(renderPersonDashboardHtml)로 라우팅. renderPersonDashboardHtml은 payerRecs/partRecs 한쪽이 비어도 안전
 // v4.46 — 지출 추이: 맨 오른쪽 칸 = 오늘(기간 끝이 미래면 오늘까지만).
 // v4.45 — PC: 지출 추이 그래프를 마우스 휠·‹ › 버튼으로 넘김.
@@ -4407,7 +4409,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.46';
+const APP_VERSION='v4.47';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -11975,6 +11977,7 @@ async function renderDetail(){
   // v3.47 — meetingId가 있으면(2건 이상) 더치페이 전송 범위 선택, 아니면 기존 단일 전송.
   document.getElementById('sendDutchPayBtn').onclick=()=>{ if(_mtgHasMeeting(r))_mtgOpenDutchScope(r); else sendReceiptToDutchPay(r); };
   // v3.51 — 모바일 [···] 더보기: 기존 헤더 액션(더치페이·되돌리기·삭제) 핸들러를 그대로 재사용
+  document.getElementById('detailCopyBtn').onclick=()=>_copyReceiptText(r);
   const _moreBtn=document.getElementById('detailMoreBtn');
   if(_moreBtn)_moreBtn.onclick=()=>_openDetailMoreMenu(r);
   const _mtgDetailRowBtn=document.getElementById('mtgDetailRow');
@@ -12001,17 +12004,36 @@ async function renderDetail(){
 
 // v3.51 — 모바일 [···] 더보기 시트: 더치페이로 보내기 / 되돌리기 / 삭제(위험). 기존 헤더 버튼 핸들러를
 //   그대로 재사용한다(hidden이어도 .click()은 동작). 바텀시트는 만남 시트(_mtgSheetOpen)와 같은 패턴.
+// v4.47 — 영수증 내용 복사: 추가 화면 'GPT 텍스트' 형식 그대로라 카톡·메모에 붙이거나 추가 화면에 다시 붙여 넣을 수 있다.
+//   (결제자·참석자는 파서가 읽지 않는 줄이라 넣지 않는다.) 저장된 값 기준 — 아직 저장 안 한 수정은 반영되지 않는다.
+function _receiptCopyText(r){
+  const pm={card:'카드',cash:'현금',transfer:'계좌이체',other:'기타'}[r.paymentMethod]||'';
+  const head=[`매장명: ${r.store||''}`,`일자: ${(r.date||'').replace(/-/g,'.')}`];
+  if(r.time)head.push(`시간: ${r.time}`);
+  head.push(`총액: ${fmtMoney(r.total||0)}원`);
+  if(pm)head.push(`결제수단: ${pm}`);
+  const lines=(r.items||[]).map(it=>`${String(it.name||'').replace(/\|/g,'/')} | ${it.quantity||0} | ${fmtMoney(it.unitPrice||0)} | ${(it.amount||0)===0?'증정품':fmtMoney(it.amount)}`);
+  return head.join('\n')+'\n\n품목명 | 수량 | 단가 | 금액\n\n'+lines.join('\n');
+}
+function _copyReceiptText(r){
+  const text=_receiptCopyText(r);
+  const ok=()=>toast('영수증 내용을 복사했어요',{type:'success'});
+  const fallback=()=>{try{const t=document.createElement('textarea');t.value=text;t.style.cssText='position:fixed;opacity:0;top:0;left:0';document.body.appendChild(t);t.select();const y=document.execCommand('copy');t.remove();y?ok():toast('복사 실패',{type:'error'});}catch(e){toast('복사 실패',{type:'error'});}};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok).catch(fallback);else fallback();
+}
 function _openDetailMoreMenu(r){
   const {card,close}=_mtgSheetOpen();
   card.innerHTML=`
     <div class="mtg-sheet-hd"><div class="mtg-sheet-title">${escapeHtml(r.store||'영수증')}</div><button class="mtg-sheet-x" id="dmX" type="button" aria-label="닫기">×</button></div>
     <div class="detail-more-list" role="menu">
       <button type="button" class="detail-more-item" id="dmDutch" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10M7 12h7M7 17h4"/><path d="m16 15 3 3 3-3M19 18V9"/></svg>더치페이로 보내기</button>
+      <button type="button" class="detail-more-item" id="dmCopy" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>내용 복사</button>
       <button type="button" class="detail-more-item" id="dmRevert" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M3.5 13a9 9 0 1 0 2.6-7.6L3 8"/></svg>되돌리기</button>
       <button type="button" class="detail-more-item danger" id="dmDelete" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>삭제</button>
     </div>`;
   card.querySelector('#dmX').onclick=close;
   card.querySelector('#dmDutch').onclick=()=>{close();document.getElementById('sendDutchPayBtn')?.click();};
+  card.querySelector('#dmCopy').onclick=()=>{close();_copyReceiptText(r);};
   card.querySelector('#dmRevert').onclick=()=>{close();document.getElementById('detailRevertBtn')?.click();};
   card.querySelector('#dmDelete').onclick=()=>{close();document.getElementById('detailDeleteBtn')?.click();};
 }
