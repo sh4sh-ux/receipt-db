@@ -429,6 +429,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - Dutch Pay 전송 항목(`sendReceiptsToDutchPay`)은 `members`·`watchers`·`treat`까지 보낸다(v3.99). 필드를 바꾸면 dutch-pay `_consumeReceiptDbTransfer`도 같이 본다.
 **레이아웃·CSS**
 - `.main-body`는 `overflow-x:hidden`(v4.26) — 세로 스크롤러는 `overflow-x`가 자동으로 auto가 돼, 1px만 삐져나와도 iOS에서 화면이 옆으로 밀린다(지출 추이 끝 막대 툴팁).
+- 지출 추이(v4.41): **막대 짝 = 총 지출(연한) + 내 부담(진한 `--blue`)**, 컨트롤은 한 줄(달력 기간 버튼 + [연간|월별|일별]), 달력 기간은 **그래프에만** 적용(`_trendOv`, 위쪽 통계 기간이 바뀌면 풀림, 기본값은 위쪽 기간을 따름 `_trendDefault`). 데이터는 `receipts` 전체에서 직접 모은다(`_trendBuckets`) — 위쪽 기간 필터와 무관. 일별은 31칸·월별은 12칸을 넘으면 이전/다음 기간. 가로 스크롤은 쓰지 않는다(짚어 보기와 부딪침).
 - 지출 추이 = **짚어 보기**(v4.27): `.lp-canvas-col`에 손을 대고 밀면 x 위치로 칸을 골라 `.lp-cursor`(0.5px 연한 세로선) + 제목 줄 오른쪽 `.lp-hd`에 '날짜 · N건 금액'(v4.28 사용자 선택 — 그래프 안 카드는 손가락·막대를 가려서 뺐다, 손 떼면 `data-note`로 되돌림). 칸 데이터는 `.lp-col`의 `data-l/a/c`. `touch-action:pan-y`라 위아래는 스크롤. 막대마다 툴팁을 다시 넣지 말 것(가는 막대는 못 누르고, 끝 막대 툴팁이 화면 밖으로 나갔다 — v4.26).
 - 문서가 아니라 `.main-body`/`.side-list`가 스크롤한다 — `window.scrollY`는 늘 0(v2.67). `html,body{overflow:hidden}`은 프로그램·iOS 시스템 스크롤은 못 막는다(v2.66).
 - 모바일 저장 바는 sticky도 fixed도 아니라 **스크롤 컨테이너 밖 flex 형제**(v2.64). fixed는 iOS 키보드에 밀린다(v2.30).
@@ -463,7 +464,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 문장 속 이름 뒤 조사(이/가·과/와)는 **`_psnJosa(이름,'이','가')`로 붙인다**(받침 기준) — '이'로 고정하지 말 것(v4.40, '어머니이 …').
 
 ## 현재 상태 (2026-09-27 기준)
-- **버전 `v4.40`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
+- **버전 `v4.41`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
 - 데이터: 실데이터 백업 기준 영수증 151건(2025-03 ~ 2026-09), 사진 142장, 선불권 사용. 3,000건 가상 데이터에서도 목록 0.01초·검색 0.1초·사람 화면 0.4초(데스크탑).
 
 ### 작업 흐름 (Claude Code 웹 세션)
