@@ -236,6 +236,8 @@ svg{display:block;flex-shrink:0;}
 .list-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px var(--pad-x) 8px;border-bottom:1px solid var(--sep);}
 .lt-info{font-size:12px;color:var(--label2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .lt-info b{color:var(--label);font-weight:600;}
+.lt-info .lt-x{margin-left:6px;width:20px;height:20px;border:none;border-radius:50%;background:var(--fill2);color:var(--label2);font-size:11px;line-height:20px;padding:0;cursor:pointer;vertical-align:middle;}
+.lt-info .lt-x:hover{background:var(--fill);color:var(--label);}
 .lt-sort{flex:0 0 auto;display:inline-flex;}
 #listSortSel,#personSortSel,#ppSortSel2{border:1px solid var(--sep2);border-radius:7px;padding:5px 26px 5px 10px;font:inherit;font-size:12px;font-weight:600;color:var(--label);background:var(--card) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 8px center;appearance:none;-webkit-appearance:none;cursor:pointer;}
 #listSortSel:focus,#personSortSel:focus,#ppSortSel2:focus{border-color:var(--blue);outline:none;}
@@ -1570,6 +1572,8 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-inner .lp-col,.lp-inner .lp-xaxis.per span,.lp-inner .lp-ulrow span{flex:0 0 calc((100% - 3px*(var(--n) - 1)) / var(--n));min-width:0;}
 .lp-inner.few .lp-bars,.lp-inner.few .lp-xaxis.per,.lp-inner.few .lp-ulrow{justify-content:center;}
 .lp-plot{position:relative;}
+.lp-go{display:none;}
+@media(max-width:780px){.lp-go:not([hidden]){display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin-top:12px;padding:12px 14px;border:1px solid var(--sep2);border-radius:var(--rm);background:var(--card);color:var(--blue);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;text-align:left;}.lp-go i{font-style:normal;font-size:16px;}}
 .lp-nav{position:absolute;top:calc(88px - 16px);z-index:3;width:32px;height:32px;border-radius:50%;border:1px solid var(--sep2);background:var(--card);color:var(--label);font-size:20px;line-height:1;display:grid;place-items:center;padding:0 0 3px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12);font-family:inherit;}
 .lp-nav[hidden]{display:none;}
 .lp-nav.l{left:-6px;}.lp-nav.r{right:-6px;}
@@ -3961,8 +3965,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 // v3.31 — 선불권 화면을 사용자 시안에 맞춰 재정렬(계산·저장·거래 로직 그대로 재사용). 상단 정보를 하나의 카드로
 //   통합(아이콘+이름+카테고리+유효기간 pill / 남은 잔액+진행바 왼쪽 · 3개 통계 박스[사용 횟수·최근 방문·1회 평균]
 //   오른쪽 / 아이콘 액션 버튼 행). 내역을 '사용 내역/충전 내역' 탭 + [최신순 ▾] 정렬로, 데스크탑 표(구분 컬러 칩 +
+// v4.52 — 폰: 지출 추이 막대 선택 후 그래프 아래 버튼으로 그 기간 목록에 이동.
 //   행별 ••• 메뉴)·모바일 compact 리스트. 모바일 액션은 아이콘 버튼 4개([1회 사용][충전][환불][더보기]),
 //   더보기에 만료 차감·정보 수정. 선불권 삭제(카드 전체 삭제)는 추가하지 않음(동기화 로직 보존).
+// v4.51 — PC: 지출 추이 막대를 누르면 그 기간 영수증만 왼쪽 목록에(_trendPick).
 // v3.32 — 선불권 목록 카드가 좁은 그리드 칸에서 잔액·통계가 깨지던 것 수정(전체폭 세로 스택).
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
@@ -4418,7 +4424,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.50';
+const APP_VERSION='v4.52';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6366,13 +6372,15 @@ function renderSide(){
   }
 
   const list=document.getElementById('sideList');
-  let _base=_monthCatFilter&&!searchQuery?_statsPeriodReceipts():getFiltered();
+  if(_trendPick&&!_trendPickOn())_trendPick=null;
+  const _tp=(_trendPick&&!searchQuery)?_trendPick:null;
+  let _base=_tp?receipts.filter(r=>{const d=r.date||'';return d>=_tp.from&&d<=_tp.to;}):(_monthCatFilter&&!searchQuery?_statsPeriodReceipts():getFiltered());
   if(_photoListFilter==='problem')_base=_base.filter(r=>_receiptCheckReasons(r).length>0);
   else if(_photoListFilter==='missing')_base=_base.filter(r=>_photoErrorKind(r)==='missing');
   _updatePhotoFilterUi();
   // 카테고리 필터 적용 (검색 없는 상태에서만)
   // v1.43 — 그룹 선택 시 모든 멤버 카테고리 포함
-  const filtered=(!searchQuery&&_monthCatFilter)
+  const filtered=(!searchQuery&&_monthCatFilter&&!_tp)
     ?_base.filter(r=>{
       const cat=r.category||'(미분류)';
       if(cat===_monthCatFilter) return true;
@@ -6386,12 +6394,13 @@ function renderSide(){
     const _now=new Date();const _curYm=`${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
     let _scope;
     if(searchQuery)_scope='검색 결과';
+    else if(_tp)_scope=_tp.label;
     else if(_photoListFilter==='problem')_scope='확인 필요';
     else if(_photoListFilter==='missing')_scope='사진 없음';
     else if(_monthCatFilter)_scope=_monthCatFilter;
     else if(_sideAllMonths)_scope='전체';
     else _scope=(viewMonth===_curYm)?'이번 달':ymLabel(viewMonth);
-    _ltInfo.innerHTML=`${escapeHtml(_scope)} <b>${filtered.length}건</b>`;
+    _ltInfo.innerHTML=`${escapeHtml(_scope)} <b>${filtered.length}건</b>`+(_tp?`<button type="button" class="lt-x" data-trendclear aria-label="기간 선택 풀기" title="기간 선택 풀기">✕</button>`:'');
   }
   const _sortSel=document.getElementById('listSortSel');
   if(_sortSel&&_sortSel.value!==_listSort)_sortSel.value=_listSort;
@@ -6402,6 +6411,8 @@ function renderSide(){
         ? '사진이 없는 영수증이 없어요'
       : searchQuery
       ? `검색 결과가 없어요`
+      : _tp
+        ? `${escapeHtml(_tp.label)}에<br/>저장된 영수증이 없어요`
       : _monthCatFilter
         ? `${_sideAllMonths?'전체 기간':ymLabel(viewMonth)} <b>${escapeHtml(_monthCatFilter)}</b> 영수증이 없어요`
         : `${_sideAllMonths?'전체 기간에':ymLabel(viewMonth)+'에'}<br/>저장된 영수증이 없어요`;
@@ -6414,7 +6425,7 @@ function renderSide(){
   }
   // v3.22 — 표시 직전 정렬(원본 불변). 날짜 정렬일 때만 날짜 그룹, 그 외(금액·매장명순)는 flat list.
   const sorted=_sortForList(filtered);
-  const multiMonth=_sideAllMonths||!!searchQuery; // 여러 달이 섞일 수 있는 범위
+  const multiMonth=_sideAllMonths||!!searchQuery||!!_tp; // 여러 달이 섞일 수 있는 범위
   const html=[];
   if(_isDateSort()){
     // v3.37 — 월 헤더만 유지. 일 헤더('5월 25일')는 카드에 이미 결제일자가 있어 중복이라 제거(사용자 요청).
@@ -10277,6 +10288,15 @@ function _pickAxis(bars){ const N=Math.min(5,bars.length); const out=[]; if(!bar
 // ── v4.41 지출 추이 = 총 지출 + 내 부담 막대 짝 · 연간/월별/일별 · 이 그래프 전용 달력 기간(참고: NARO Biz '매출·입금 현황').
 //   기본(손대기 전)은 위쪽 통계 기간을 따른다(이번 달=일별, 올해=월별, 전체=최근 12개월). 단위·기간을 고르면 _trendOv가 그 값을 쓰고, 위쪽 기간이 바뀌면 풀린다.
 let _trendOv=null,_trendFormOpen=false;
+// v4.51 — PC: 지출 추이 막대를 누르면 그 기간의 영수증만 왼쪽 목록에({from,to,label,unit,k,key}). 기간·월이 바뀌면(key 불일치) 저절로 풀린다.
+let _trendPick=null;
+function _trendPickSet(unit,k,label){
+  const from=unit==='day'?k:unit==='month'?k+'-01':k+'-01-01',to=unit==='day'?k:unit==='month'?k+'-31':k+'-12-31';
+  _trendPick={from,to,label,unit,k,key:_trendKey()};
+  if(searchQuery){searchQuery='';try{searchInp.value='';_updateSearchClear();}catch(_){}}
+  _photoListFilter='';_monthCatFilter=null;
+}
+const _trendPickOn=()=>!!(_trendPick&&_trendPick.key===_trendKey());
 const _trendKey=()=>JSON.stringify([_ledgerTimeFilter,viewMonth]);
 const _ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const _lastDay=ym=>ym+'-'+String(daysInMonth(ym)).padStart(2,'0');
@@ -10321,6 +10341,8 @@ function _trendSectionHtml(){
   const h=v=>yMax>0&&v>0?Math.max(2,Math.round(v/yMax*100)):0;
   const note=cfg.unit==='day'?'일별':cfg.unit==='month'?'월별':'연간';
   let def=-1;bars.forEach((b,i)=>{if(b.t>0||b.m>0)def=i;}); // 기본 강조 = 이 쪽의 가장 최근 지출 칸
+  const def0=def;
+  if(_trendPickOn()&&_trendPick.unit===cfg.unit){const pi=bars.findIndex(b=>b.key===_trendPick.k);if(pi>=0)def=pi;} // 누른 칸이 있으면 그 칸을 고정 강조
   const defHtml=def>=0?_lpReadout(bars[def].lbl,bars[def].cnt,bars[def].t,bars[def].m):note;
   const multiYear=cfg.from.slice(0,4)!==cfg.to.slice(0,4);
   const perBar=true; // v4.43 — 한 번에 7칸만 보이므로 칸마다 라벨
@@ -10341,7 +10363,7 @@ function _trendSectionHtml(){
       <div class="lp-plot"><button type="button" class="lp-nav l" data-lpnav="-1" aria-label="이전 7칸" hidden>‹</button><button type="button" class="lp-nav r" data-lpnav="1" aria-label="다음 7칸" hidden>›</button>
         <div class="lp-canvas-col"><div class="lp-inner${bars.length<7?' few':''}" style="width:${Math.max(bars.length,7)/7*100}%;--n:${Math.max(bars.length,7)}">
           <div class="lp-canvas">
-            <div class="lp-bars" data-def="${def}">${bars.map((b,i)=>{const has=b.t>0||b.m>0;const inner=b.t>0?Math.min(100,Math.max(0,b.m/b.t*100)):0;return `<div class="lp-col${has?' has':''}${i===def?' on def':''}" data-l="${escapeHtml(b.lbl)}" data-a="${b.t}" data-m="${b.m}" data-c="${b.cnt}"><div class="lp-bar${has?' has':''}" style="height:${h(b.t)}%;"><i style="height:${inner}%"></i></div></div>`;}).join('')}</div>
+            <div class="lp-bars" data-def="${def}" data-def0="${def0}">${bars.map((b,i)=>{const has=b.t>0||b.m>0;const inner=b.t>0?Math.min(100,Math.max(0,b.m/b.t*100)):0;return `<div class="lp-col${has?' has':''}${i===def?' on def':''}" data-k="${escapeHtml(b.key)}" data-l="${escapeHtml(b.lbl)}" data-a="${b.t}" data-m="${b.m}" data-c="${b.cnt}"><div class="lp-bar${has?' has':''}" style="height:${h(b.t)}%;"><i style="height:${inner}%"></i></div></div>`;}).join('')}</div>
           </div>
           ${perBar?`<div class="lp-xaxis per">${bars.map(b=>`<span>${escapeHtml(barLbl(b))}</span>`).join('')}</div>`:`<div class="lp-xaxis">${_pickAxis(bars).map(a=>`<span>${escapeHtml(a)}</span>`).join('')}</div>`}
           <div class="lp-ulrow">${bars.map((b,i)=>`<span class="${i===def?'on':''}"></span>`).join('')}</div>
@@ -10349,6 +10371,7 @@ function _trendSectionHtml(){
       </div>
       ${false?`<div class="lp-pager"><button type="button" data-lppage="-1" ${page===0?'disabled':''}>이전 기간</button><span>${escapeHtml(bars[0].sax)} ~ ${escapeHtml(bars[bars.length-1].sax)} · ${page+1}/${pages}</span><button type="button" data-lppage="1" ${page===pages-1?'disabled':''}>다음 기간</button></div>`:''}
       <div class="lp-leg"><span><i class="t"></i>총 지출</span><span><i class="m"></i>내 부담</span><em>내 부담 = 더치페이 분담·한턱·대신 결제 반영</em></div>
+      <button type="button" class="lp-go" data-lpgo hidden><span></span><i>›</i></button>
     </div>
   </div>`;
 }
@@ -11223,6 +11246,9 @@ async function renderDetail(){
       const bars=wrap.querySelector('.lp-bars');if(!bars)return;
       [...bars.children].forEach((c,j)=>c.classList.toggle('on',j===i));
       wrap.querySelectorAll('.lp-ulrow span').forEach((u,j)=>u.classList.toggle('on',j===i));
+      // v4.52 — 폰: 고른 칸의 영수증 목록으로 가는 버튼(그래프 아래). 칸에 영수증이 있을 때만.
+      const go=wrap.closest('[data-trend]')?.querySelector('[data-lpgo]'),c=bars.children[i];
+      if(go){const n=c?+c.dataset.c||0:0;go.hidden=!(c&&n>0);if(c&&n>0){go.dataset.k=c.dataset.k||'';go.dataset.l=c.dataset.l||'';go.firstElementChild.textContent=`${c.dataset.l||''} 영수증 ${n}건 보기`;}}
     };
     const lpAt=(wrap,clientX)=>{
       const bars=wrap.querySelector('.lp-bars');
@@ -11250,6 +11276,38 @@ async function renderDetail(){
       const nv=e.target.closest&&e.target.closest('[data-lpnav]');
       if(nv&&body.contains(nv)){const c=nv.closest('.lp-plot').querySelector('.lp-canvas-col');c.scrollBy({left:(+nv.dataset.lpnav)*c.clientWidth*(6/7),behavior:'smooth'});return;}
     });
+    // v4.51 — PC: 막대를 누르면 그 기간 영수증만 왼쪽 목록에(같은 막대를 다시 누르면 풀림). 폰은 왼쪽 패널이 없어 기존 그대로.
+    const _lpPickSync=()=>{
+      body.querySelectorAll('.lp-bars').forEach(bs=>{
+        const wrap=bs.closest('.lp-canvas-col'),sec=bs.closest('[data-trend]'),unit=sec?.querySelector('.lp-tab.on')?.dataset.lpunit;
+        let d=+bs.dataset.def0;
+        if(_trendPickOn()&&_trendPick.unit===unit){const i=[...bs.children].findIndex(c=>c.dataset.k===_trendPick.k);if(i>=0)d=i;}
+        bs.dataset.def=d;bs.classList.remove('scrub');lpMark(wrap,d);
+        const hd=sec?.querySelector('.lp-hd'),c=bs.children[d];
+        if(hd&&c)hd.dataset.def=c.dataset.a!=null&&(+c.dataset.a>0||+c.dataset.m>0)?_lpReadout(c.dataset.l||'',+c.dataset.c||0,+c.dataset.a||0,+c.dataset.m||0):(hd.dataset.def||'');
+      });
+      lpOff();
+    };
+    body.addEventListener('click',e=>{
+      const col=e.target.closest&&e.target.closest('.lp-col.has');
+      if(col&&body.contains(col)&&!_isMobileLayout()){
+        const sec=col.closest('[data-trend]'),unit=sec.querySelector('.lp-tab.on')?.dataset.lpunit,k=col.dataset.k;
+        if(_trendPickOn()&&_trendPick.unit===unit&&_trendPick.k===k)_trendPick=null;
+        else _trendPickSet(unit,k,col.dataset.l||k);
+        renderSide();_lpPickSync();return;
+      }
+    });
+    // v4.52 — 폰: 그래프 아래 '영수증 N건 보기 ›' → 내역 탭에서 그 기간 목록(✕로 풀림)
+    body.addEventListener('click',e=>{
+      const g=e.target.closest&&e.target.closest('[data-lpgo]');if(!g||!body.contains(g))return;
+      const unit=g.closest('[data-trend]').querySelector('.lp-tab.on')?.dataset.lpunit;
+      _trendPickSet(unit,g.dataset.k,g.dataset.l||g.dataset.k);
+      renderSide();_mobileListMode='list';switchTab('list');
+    });
+    document.addEventListener('click',e=>{
+      const x=e.target.closest&&e.target.closest('[data-trendclear]');if(!x)return;
+      _trendPick=null;renderSide();_lpPickSync();
+    });
     // v4.41 — 지출 추이 컨트롤(단위 탭·달력 기간·이전/다음 기간)
     body.addEventListener('click',e=>{
       const t=e.target.closest&&e.target.closest('[data-trend]');if(!t||!body.contains(t))return;
@@ -11273,7 +11331,7 @@ async function renderDetail(){
     let lpDrag=null;
     body.addEventListener('pointerdown',e=>{
       const wrap=e.target.closest&&e.target.closest('.lp-canvas-col');
-      if(!wrap||!body.contains(wrap)){lpOff();return;}
+      if(!wrap||!body.contains(wrap)){if(e.target.closest&&e.target.closest('[data-lpgo]'))return;lpOff();return;}
       if(e.pointerType==='mouse')return;
       lpDrag={wrap,id:e.pointerId};
       try{wrap.setPointerCapture(e.pointerId);}catch(_){}
