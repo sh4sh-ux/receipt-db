@@ -1501,14 +1501,14 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-xaxis.per span{flex:1;min-width:0;text-align:center;font-size:11px;white-space:nowrap;overflow:visible;}
 .lp-ulrow{display:flex;gap:3px;margin-top:6px;height:2px;}
 .lp-ulrow span{flex:1;min-width:0;border-radius:1px;background:transparent;}
-.lp-ulrow span.on{background:var(--blue);}
+.lp-ulrow span{position:relative;}
+.lp-ulrow span.on::after{content:'';position:absolute;left:50%;top:0;bottom:0;width:min(72%,26px);transform:translateX(-50%);border-radius:1px;background:var(--blue);} /* v4.50 — 밑줄 길이 = 막대 폭 */
 .lp-leg i.t{background:color-mix(in srgb,var(--blue) 24%,transparent);}
 .lp-leg i.m{background:var(--blue);}
 /* v4.41 — 지출 추이: 막대 짝(총 지출 연한 · 내 부담 진한), 한 줄 컨트롤, 달력 기간 */
 .lp-ctl{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;flex-wrap:wrap;}
 .lp-rangebtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--sep2);border-radius:var(--rs);background:var(--card);color:var(--label);font:inherit;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;cursor:pointer;}
 .lp-rangebtn svg{color:var(--label3);flex:none;}
-.lp-rangebtn.on{border-color:var(--blue);}
 .lp-tabs{display:inline-flex;padding:3px;border-radius:10px;background:var(--fill);}
 .lp-tab{border:0;background:none;padding:5px 11px;border-radius:8px;font:inherit;font-size:12.5px;font-weight:600;color:var(--label2);cursor:pointer;}
 .lp-tab.on{background:var(--card);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.14);}
@@ -1566,6 +1566,9 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 
 /* v4.43 — 한 번에 7칸(안쪽 너비 = 칸 수/7 × 100%), 옆으로 밀어 넘김 */
 .lp-inner{min-width:100%;}
+/* v4.50 — 칸 폭은 항상 화면의 1/7(칸이 7개 미만이어도 한 칸이 화면 전체로 늘어나지 않게), 7개 미만이면 가운데에 모은다 */
+.lp-inner .lp-col,.lp-inner .lp-xaxis.per span,.lp-inner .lp-ulrow span{flex:0 0 calc((100% - 3px*(var(--n) - 1)) / var(--n));min-width:0;}
+.lp-inner.few .lp-bars,.lp-inner.few .lp-xaxis.per,.lp-inner.few .lp-ulrow{justify-content:center;}
 .lp-plot{position:relative;}
 .lp-nav{position:absolute;top:calc(88px - 16px);z-index:3;width:32px;height:32px;border-radius:50%;border:1px solid var(--sep2);background:var(--card);color:var(--label);font-size:20px;line-height:1;display:grid;place-items:center;padding:0 0 3px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12);font-family:inherit;}
 .lp-nav[hidden]{display:none;}
@@ -3963,9 +3966,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 // v3.32 — 선불권 목록 카드가 좁은 그리드 칸에서 잔액·통계가 깨지던 것 수정(전체폭 세로 스택).
 //   선불권 헤더에 공통 헤더 규칙대로 버전칩(.js-app-version) 추가 — 다른 탭과 동일하게 버전 표시.
 // v3.33 — 감사 후속: 모바일 '기간' 바텀시트가 body로 포탈된 채 다른 화면으로 렌더될 때 반투명 백드롭이
+// v4.50 — 지출 추이: 칸 폭 1/7 고정, 7개 미만이면 가운데.
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
 // v3.56 — 사람 검색 renderer 일관성: 데이터 유무·건수와 무관하게 항상 같은 Person Dashboard. ⚠️ 계산 불변, 분기/이관만.
 //   근본 원인: 평문 이름 검색이 데이터 유형으로 갈렸다 — hasPayer&&!hasPart → 결제자 전용 view, hasPart&&!hasPayer →
+// v4.49 — 지출 추이 달력 버튼 파란 테두리 제거.
 // v4.48 — 지출 추이 기간 창 [기본으로]·[적용] 높이 통일.
 //   참석자 전용 view(김승환: 참석 기록만 → '김승환 참석 내역'), hasPayer&&hasPart → 통합 대시보드(김영석). 수정: 명시
 //   접두어('결제자 X'/'참석자 X')만 전용 필터 뷰로 남기고, **평문 이름 검색은 (hasPayer||hasPart)면 무조건 통합
@@ -4413,7 +4418,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.48';
+const APP_VERSION='v4.50';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -10334,7 +10339,7 @@ function _trendSectionHtml(){
     </form>
     <div class="lp-trend">
       <div class="lp-plot"><button type="button" class="lp-nav l" data-lpnav="-1" aria-label="이전 7칸" hidden>‹</button><button type="button" class="lp-nav r" data-lpnav="1" aria-label="다음 7칸" hidden>›</button>
-        <div class="lp-canvas-col"><div class="lp-inner" style="width:${Math.max(bars.length,7)/7*100}%">
+        <div class="lp-canvas-col"><div class="lp-inner${bars.length<7?' few':''}" style="width:${Math.max(bars.length,7)/7*100}%;--n:${Math.max(bars.length,7)}">
           <div class="lp-canvas">
             <div class="lp-bars" data-def="${def}">${bars.map((b,i)=>{const has=b.t>0||b.m>0;const inner=b.t>0?Math.min(100,Math.max(0,b.m/b.t*100)):0;return `<div class="lp-col${has?' has':''}${i===def?' on def':''}" data-l="${escapeHtml(b.lbl)}" data-a="${b.t}" data-m="${b.m}" data-c="${b.cnt}"><div class="lp-bar${has?' has':''}" style="height:${h(b.t)}%;"><i style="height:${inner}%"></i></div></div>`;}).join('')}</div>
           </div>
