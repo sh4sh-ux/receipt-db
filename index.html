@@ -1489,6 +1489,21 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .spark-bar[data-day]:hover::after{content:attr(data-day)'일\A'attr(data-amt)'원';position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(24,26,29,.92);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:.5px solid rgba(255,255,255,.12);color:#fff;font-size:12px;font-weight:650;line-height:1.45;letter-spacing:0;padding:7px 10px;border-radius:8px;white-space:pre;text-align:center;pointer-events:none;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.24);}
 .spark-bar[data-lbl]:hover::after{content:attr(data-lbl)'\A'attr(data-amt)'원';position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(24,26,29,.92);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:.5px solid rgba(255,255,255,.12);color:#fff;font-size:12px;font-weight:650;line-height:1.45;letter-spacing:0;padding:7px 10px;border-radius:8px;white-space:pre;text-align:center;pointer-events:none;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.24);}
 .spark-axis{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;color:var(--label2);}
+/* v4.42 — 지출 추이: 막대 하나에 총 지출(옅은 전체) + 내 부담(진한 아래쪽), 평소 흐리게 · 가리키거나 누르면 진하게 + 파란 밑줄. 얇은 선(세로선·눈금·Y축)은 없앰. */
+.lp-col{justify-content:center;gap:0;}
+.lp-col .lp-bar{width:min(72%,26px);background:transparent;opacity:1;border-radius:5px 5px 0 0;position:relative;overflow:hidden;transition:background .12s;}
+.lp-col .lp-bar.has{background:color-mix(in srgb,var(--blue) 16%,transparent);}
+.lp-col .lp-bar i{position:absolute;left:0;right:0;bottom:0;display:block;background:color-mix(in srgb,var(--blue) 34%,transparent);transition:background .12s;}
+.lp-col.on .lp-bar.has{background:color-mix(in srgb,var(--blue) 30%,transparent);}
+.lp-col.on .lp-bar i{background:var(--blue);}
+.lp-bars.scrub .lp-bar.has{opacity:1;}
+.lp-xaxis.per{gap:3px;justify-content:stretch;}
+.lp-xaxis.per span{flex:1;min-width:0;text-align:center;font-size:11px;white-space:nowrap;overflow:visible;}
+.lp-ulrow{display:flex;gap:3px;margin-top:6px;height:2px;}
+.lp-ulrow span{flex:1;min-width:0;border-radius:1px;background:transparent;}
+.lp-ulrow span.on{background:var(--blue);}
+.lp-leg i.t{background:color-mix(in srgb,var(--blue) 24%,transparent);}
+.lp-leg i.m{background:var(--blue);}
 /* v4.41 — 지출 추이: 막대 짝(총 지출 연한 · 내 부담 진한), 한 줄 컨트롤, 달력 기간 */
 .lp-ctl{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;flex-wrap:wrap;}
 .lp-rangebtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--sep2);border-radius:var(--rs);background:var(--card);color:var(--label);font:inherit;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;cursor:pointer;}
@@ -1512,11 +1527,7 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-pager button:disabled{opacity:.4;cursor:default;}
 .lp-leg{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--label2);}
 .lp-leg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;}
-.lp-leg i.t,.lp-bar.t.has{background:color-mix(in srgb,var(--blue) 30%,transparent);}
-.lp-leg i.m,.lp-bar.m.has{background:var(--blue);}
 .lp-leg em{font-style:normal;color:var(--label3);}
-.lp-col{gap:2px;}
-.lp-col .lp-bar{width:50%;opacity:1;}
 .lp-hm{color:var(--blue);}
 .lp-hm i{font-style:normal;color:var(--label3);margin:0 3px;font-weight:400;}
 /* v3.19 — 전체 내역 지출 추이 차트(Y축 눈금·점선 그리드·다중 X라벨·건수 툴팁). 전용 클래스라 다른 화면 sparkline과 독립 */
@@ -1539,8 +1550,6 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-hdv{white-space:nowrap;line-height:1;font-size:11.5px;font-weight:500;color:var(--label2);}
 .lp-hdv b{font-size:13.5px;font-weight:700;color:var(--label);margin-left:6px;line-height:1;}
 /* v4.27 — 짚은 칸 세로선(그리기 전용, v4.28 더 얇고 연하게). 칸을 고르는 동안 다른 막대는 흐리게 */
-.lp-cursor{position:absolute;top:0;bottom:0;left:0;width:1px;margin-left:-.5px;background:var(--label2);opacity:.4;pointer-events:none;z-index:6;}
-@media (min-resolution:2dppx){.lp-cursor{transform:scaleX(.5);}} /* v4.28 — 고해상도 화면은 0.5px 실선 */
 .lp-canvas-col{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:crosshair;}
 .lp-bars.scrub .lp-bar.has{opacity:.4;}
 .lp-bars.scrub .lp-col.on .lp-bar.has{opacity:1;}
@@ -3940,6 +3949,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.42 — 지출 추이를 막대 하나(옅은 전체 = 총 지출, 진한 아래쪽 = 내 부담)로: 평소 흐리게, 마우스를 올리거나(폰은 누르면) 진해지고 라벨 밑에 파란 밑줄, 가장 최근 칸이 기본 강조. 얇은 선(세로선·점선 눈금·Y축) 제거.
 // v4.41 — 지출 추이: 총 지출 + 내 부담 막대 짝, 연간/월별/일별 탭, 이 그래프 전용 달력 기간(이번 달·지난달·올해·전체·직접), 한 줄 컨트롤, 31칸(월별 12칸) 넘으면 이전/다음 기간. 참고: NARO Biz '매출·입금 현황'.
 // v4.40 — ① 저장 속도: 사진의 Dropbox 완료 폴더 정리를 저장 뒤 백그라운드로(전엔 네트워크를 기다린 뒤 화면이 넘어감) + 누르는 즉시 '저장 중…'·중복 저장 차단 ② 레일 '추가'를 다른 탭에서 누르면 쓰다 만 내용 대신 빈 화면(+ 되돌리기) ③ 한턱 문장 조사 이/가 자동(어머니가 조상현에게…).
 // v4.39 — 대신 결제 공유 이미지 글자 굵기 한 단계 낮춤(제목·금액 800→700, 카드 이름 750→650, 표 금액 700→600, 표 본문 500→400).
@@ -4371,7 +4381,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.41';
+const APP_VERSION='v4.42';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -10262,6 +10272,8 @@ function _trendBuckets(cfg){
     const sax=cfg.unit==='day'?(cfg.from.slice(0,7)===cfg.to.slice(0,7)?`${+k.slice(8)}일`:`${+k.slice(5,7)}.${+k.slice(8)}`):cfg.unit==='month'?`${k.slice(0,4)}.${k.slice(5)}`:k;
     return {key:k,lbl,sax,t:v.t,m:v.m,cnt:v.c};});
 }
+// 짚은(또는 기본) 칸의 값 줄: '날짜 · N건 총지출원 / 내부담원'
+const _lpReadout=(l,c,a,m)=>`<span class="lp-hdv">${escapeHtml(l)} · ${c}건<b>${fmtMoney(a)}원</b><b class="lp-hm"><i>/</i>${fmtMoney(m)}원</b></span>`;
 const _trendRangeTxt=cfg=>{const f=x=>x.slice(2).replace(/-/g,'.');return `${f(cfg.from)} – ${f(cfg.to)}`;};
 function _trendSectionHtml(){
   const cfg=_trendCfg(),all=_trendBuckets(cfg),size=cfg.unit==='day'?31:12,pages=Math.max(1,Math.ceil(all.length/size));
@@ -10271,11 +10283,16 @@ function _trendSectionHtml(){
   const {max:yMax,ticks:yTicks}=_yTicks(peak);
   const h=v=>yMax>0&&v>0?Math.max(2,Math.round(v/yMax*100)):0;
   const note=cfg.unit==='day'?'일별':cfg.unit==='month'?'월별':'연간';
+  let def=-1;bars.forEach((b,i)=>{if(b.t>0||b.m>0)def=i;}); // 기본 강조 = 이 쪽의 가장 최근 지출 칸
+  const defHtml=def>=0?_lpReadout(bars[def].lbl,bars[def].cnt,bars[def].t,bars[def].m):note;
+  const multiYear=cfg.from.slice(0,4)!==cfg.to.slice(0,4);
+  const perBar=bars.length<=12; // 12칸 이하면 칸마다 라벨, 일별(많음)은 5개만
+  const barLbl=b=>cfg.unit==='year'?b.key:cfg.unit==='month'?(multiYear?((+b.key.slice(5)===1||b===bars[0])?`${b.key.slice(2,4)}.${+b.key.slice(5)}`:`${+b.key.slice(5)}`):`${+b.key.slice(5)}월`):b.sax;
   const tabs=[['year','연간'],['month','월별'],['day','일별']].map(([k,l])=>`<button type="button" class="lp-tab${cfg.unit===k?' on':''}" data-lpunit="${k}" aria-pressed="${cfg.unit===k}">${l}</button>`).join('');
   const cal='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
   const sp=_trendDataSpan();
   return `<div class="budget-section" data-trend>
-    <div class="budget-section-hd">지출 추이 <span class="hd-sub lp-hd" data-note="${note}">${note}</span></div>
+    <div class="budget-section-hd">지출 추이 <span class="hd-sub lp-hd" data-def="${escapeHtml(defHtml)}">${defHtml}</span></div>
     <div class="lp-ctl"><button type="button" class="lp-rangebtn${_trendOv?' on':''}" data-lprange aria-expanded="${_trendFormOpen}">${cal}<span>${_trendRangeTxt(cfg)}</span></button><div class="lp-tabs" role="group" aria-label="집계 단위">${tabs}</div></div>
     <form class="lp-rf" ${_trendFormOpen?'':'hidden'} novalidate>
       <div class="lp-rq">${[['month','이번 달'],['prev','지난달'],['year','올해'],['all','전체']].map(([k,l])=>`<button type="button" data-lpq="${k}">${l}</button>`).join('')}</div>
@@ -10285,14 +10302,12 @@ function _trendSectionHtml(){
     </form>
     <div class="lp-trend">
       <div class="lp-plot">
-        <ul class="lp-yaxis">${yTicks.map(v=>`<li>${_fmtAxisAmt(v)}</li>`).join('')}</ul>
         <div class="lp-canvas-col">
           <div class="lp-canvas">
-            <div class="lp-grid">${yTicks.map(()=>'<span></span>').join('')}</div>
-            <div class="lp-bars">${bars.map(b=>`<div class="lp-col${b.t>0||b.m>0?' has':''}" data-l="${escapeHtml(b.lbl)}" data-a="${b.t}" data-m="${b.m}" data-c="${b.cnt}"><div class="lp-bar t${b.t>0?' has':''}" style="height:${h(b.t)}%;"></div><div class="lp-bar m${b.m>0?' has':''}" style="height:${h(b.m)}%;"></div></div>`).join('')}</div>
-            <div class="lp-cursor" hidden></div>
+            <div class="lp-bars" data-def="${def}">${bars.map((b,i)=>{const has=b.t>0||b.m>0;const inner=b.t>0?Math.min(100,Math.max(0,b.m/b.t*100)):0;return `<div class="lp-col${has?' has':''}${i===def?' on def':''}" data-l="${escapeHtml(b.lbl)}" data-a="${b.t}" data-m="${b.m}" data-c="${b.cnt}"><div class="lp-bar${has?' has':''}" style="height:${h(b.t)}%;"><i style="height:${inner}%"></i></div></div>`;}).join('')}</div>
           </div>
-          <div class="lp-xaxis">${_pickAxis(bars).map(a=>`<span>${escapeHtml(a)}</span>`).join('')}</div>
+          ${perBar?`<div class="lp-xaxis per">${bars.map(b=>`<span>${escapeHtml(barLbl(b))}</span>`).join('')}</div>`:`<div class="lp-xaxis">${_pickAxis(bars).map(a=>`<span>${escapeHtml(a)}</span>`).join('')}</div>`}
+          <div class="lp-ulrow">${bars.map((b,i)=>`<span class="${i===def?'on':''}"></span>`).join('')}</div>
         </div>
       </div>
       ${pages>1?`<div class="lp-pager"><button type="button" data-lppage="-1" ${page===0?'disabled':''}>이전 기간</button><span>${escapeHtml(bars[0].sax)} ~ ${escapeHtml(bars[bars.length-1].sax)} · ${page+1}/${pages}</span><button type="button" data-lppage="1" ${page===pages-1?'disabled':''}>다음 기간</button></div>`:''}
@@ -11162,21 +11177,23 @@ async function renderDetail(){
     // v4.27 — 지출 추이: 그래프(축 글자 포함) 아무 데나 손가락을 대고 옆으로 밀면 가장 가까운 칸에 세로선 + 금액·건수(v4.28 제목 줄 오른쪽).
     //   막대가 가늘어도(일별 30칸) 고를 수 있게 칸 폭이 아니라 x 위치로 고른다. 손을 떼도 남고, 다른 곳을 누르면 닫힘.
     //   위아래로 밀면 브라우저 스크롤(touch-action:pan-y → pointercancel)로 넘겨 닫는다. 마우스는 올리면 보이고 벗어나면 닫힘.
+    const lpMark=(wrap,i)=>{ // 칸 i를 진하게 + 밑줄(i<0이면 모두 흐리게)
+      const bars=wrap.querySelector('.lp-bars');if(!bars)return;
+      [...bars.children].forEach((c,j)=>c.classList.toggle('on',j===i));
+      wrap.querySelectorAll('.lp-ulrow span').forEach((u,j)=>u.classList.toggle('on',j===i));
+    };
     const lpAt=(wrap,clientX)=>{
-      const bars=wrap.querySelector('.lp-bars'),canvas=wrap.querySelector('.lp-canvas');
-      const cols=bars?[...bars.children]:[];if(!cols.length||!canvas)return;
+      const bars=wrap.querySelector('.lp-bars');
+      const cols=bars?[...bars.children]:[];if(!cols.length)return;
       const br=bars.getBoundingClientRect();
       const i=Math.max(0,Math.min(cols.length-1,Math.floor((clientX-br.left)/br.width*cols.length)));
-      const col=cols[i],cur=canvas.querySelector('.lp-cursor'),hd=wrap.closest('.budget-section')?.querySelector('.lp-hd');
-      cols.forEach(c=>c.classList.toggle('on',c===col));bars.classList.add('scrub');
-      const cr=canvas.getBoundingClientRect(),kr=col.getBoundingClientRect();
-      cur.style.left=(kr.left+kr.width/2-cr.left)+'px';cur.hidden=false;
-      if(hd)hd.innerHTML=`<span class="lp-hdv">${escapeHtml(col.dataset.l||'')} · ${+col.dataset.c||0}건<b>${fmtMoney(+col.dataset.a||0)}원</b><b class="lp-hm"><i>/</i>${fmtMoney(+col.dataset.m||0)}원</b></span>`;
+      const col=cols[i],hd=wrap.closest('.budget-section')?.querySelector('.lp-hd');
+      lpMark(wrap,i);bars.classList.add('scrub');
+      if(hd)hd.innerHTML=_lpReadout(col.dataset.l||'',+col.dataset.c||0,+col.dataset.a||0,+col.dataset.m||0);
     };
-    const lpOff=()=>{
-      body.querySelectorAll('.lp-bars.scrub').forEach(b=>{b.classList.remove('scrub');b.querySelectorAll('.lp-col.on').forEach(c=>c.classList.remove('on'));});
-      body.querySelectorAll('.lp-cursor').forEach(n=>{n.hidden=true;});
-      body.querySelectorAll('.lp-hd').forEach(h=>{if(h.firstElementChild)h.textContent=h.dataset.note||'';});
+    const lpOff=()=>{ // 손을 떼고 다른 곳을 누르거나 마우스가 벗어나면: 가장 최근 칸을 기본 강조로
+      body.querySelectorAll('.lp-bars').forEach(b=>{b.classList.remove('scrub');const w=b.closest('.lp-canvas-col');if(w)lpMark(w,+b.dataset.def);});
+      body.querySelectorAll('.lp-hd').forEach(h=>{if(h.dataset.def!=null)h.innerHTML=h.dataset.def;});
     };
     // v4.41 — 지출 추이 컨트롤(단위 탭·달력 기간·이전/다음 기간)
     body.addEventListener('click',e=>{
