@@ -1553,6 +1553,14 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 /* v4.27 — 짚은 칸 세로선(그리기 전용, v4.28 더 얇고 연하게). 칸을 고르는 동안 다른 막대는 흐리게 */
 .lp-canvas-col{touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:pointer;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;}
 .lp-canvas-col::-webkit-scrollbar{display:none;}
+/* v4.44 — 품목명 수정 창 */
+.inm-ta{display:block;width:100%;box-sizing:border-box;margin:6px 0 10px;border:1px solid var(--sep2);border-radius:var(--rm);background:var(--card);color:var(--label);padding:11px 12px;font:inherit;font-size:16px;line-height:1.45;resize:none;outline:none;}
+.inm-ta:focus{border-color:var(--blue);}
+.inm-hint{margin:0 0 14px;padding:0 0 0 16px;font-size:12px;color:var(--label3);line-height:1.7;}
+.inm-save,.inm-cancel{display:block;width:100%;height:46px;border:none;border-radius:var(--rm);font:inherit;font-size:15px;font-weight:700;cursor:pointer;}
+.inm-save{background:var(--blue);color:#fff;}
+.inm-cancel{background:var(--fill);color:var(--blue);margin-top:8px;}
+
 /* v4.43 — 한 번에 7칸(안쪽 너비 = 칸 수/7 × 100%), 옆으로 밀어 넘김 */
 .lp-inner{min-width:100%;}
 .lp-xaxis.per{gap:3px;}
@@ -3957,6 +3965,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.44 — 폰: 영수증 상세 품목명을 누르면 품목명 수정 창(_itemNameSheet).
 // v4.43 — 지출 추이: 한 번에 7칸 + 옆으로 스크롤(이전/다음 기간 버튼 제거), 값 줄을 카테고리 행처럼 총(회색)·총액(굵게)·/·내 부담(파랑)으로.
 // v4.42 — 지출 추이를 막대 하나(옅은 전체 = 총 지출, 진한 아래쪽 = 내 부담)로: 평소 흐리게, 마우스를 올리거나(폰은 누르면) 진해지고 라벨 밑에 파란 밑줄, 가장 최근 칸이 기본 강조. 얇은 선(세로선·점선 눈금·Y축) 제거.
 // v4.41 — 지출 추이: 총 지출 + 내 부담 막대 짝, 연간/월별/일별 탭, 이 그래프 전용 달력 기간(이번 달·지난달·올해·전체·직접), 한 줄 컨트롤, 31칸(월별 12칸) 넘으면 이전/다음 기간. 참고: NARO Biz '매출·입금 현황'.
@@ -4390,7 +4399,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.43';
+const APP_VERSION='v4.44';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -12199,6 +12208,24 @@ function _refreshDetailAmountAudit(r){
     tr.classList.toggle('amount-mismatch',mismatchIndexes.has(parseInt(tr.dataset.idx,10)));
   });
 }
+// v4.44 — 품목명 수정 창(폰). 저장하면 표의 입력칸 값을 바꾸고 기존 '변경됨' 흐름을 그대로 탄다. 이름의 '|'는 파싱이 깨져 '/'로 바꾼다.
+function _itemNameSheet(inp){
+  const {card,close}=_mtgSheetOpen();
+  card.classList.add('inm-sheet');
+  card.innerHTML=`<div class="mtg-sheet-hd"><div class="mtg-sheet-title">품목명 수정</div><button type="button" class="mtg-sheet-x" aria-label="닫기">×</button></div>
+    <textarea class="inm-ta" rows="4" autocomplete="off" spellcheck="false">${escapeHtml(inp.value)}</textarea>
+    <ul class="inm-hint"><li>품목명을 자유롭게 수정할 수 있어요.</li><li>수량·단가·금액은 표에서 따로 고쳐요.</li></ul>
+    <button type="button" class="inm-save">저장</button><button type="button" class="inm-cancel">취소</button>`;
+  const ta=card.querySelector('.inm-ta');
+  card.querySelector('.mtg-sheet-x').onclick=()=>close();
+  card.querySelector('.inm-cancel').onclick=()=>close();
+  card.querySelector('.inm-save').onclick=()=>{
+    const v=ta.value.replace(/[\r\n]+/g,' ').replace(/\|/g,'/').trim();
+    if(v!==inp.value){inp.value=v;_detailSetDirty(true);}
+    close();
+  };
+  setTimeout(()=>{try{ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}catch(_){}},60);
+}
 function _bindDetailItemTableEvents(r){
   const tbl=document.getElementById('itemsTable');if(!tbl)return;
 
@@ -12259,6 +12286,11 @@ function _bindDetailItemTableEvents(r){
       }else{
         inp.addEventListener('focus',()=>inp.select());
         inp.addEventListener('input',()=>_detailSetDirty(true));
+        // v4.44 — 폰: 품목명을 누르면 전체 이름을 보고 고치는 창(칸이 좁아 긴 이름이 잘린다). PC는 칸에서 바로 고친다.
+        if(f==='name'){
+          inp.addEventListener('click',()=>{if(_isMobileLayout()&&!inp.disabled)_itemNameSheet(inp);});
+          inp.addEventListener('focus',()=>{if(_isMobileLayout())inp.blur();});
+        }
       }
     });
   });
