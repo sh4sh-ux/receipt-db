@@ -1572,6 +1572,8 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-inner .lp-col,.lp-inner .lp-xaxis.per span,.lp-inner .lp-ulrow span{flex:0 0 calc((100% - 3px*(var(--n) - 1)) / var(--n));min-width:0;}
 .lp-inner.few .lp-bars,.lp-inner.few .lp-xaxis.per,.lp-inner.few .lp-ulrow{justify-content:center;}
 .lp-plot{position:relative;}
+.lp-go{display:none;}
+@media(max-width:780px){.lp-go:not([hidden]){display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin-top:12px;padding:12px 14px;border:1px solid var(--sep2);border-radius:var(--rm);background:var(--card);color:var(--blue);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;text-align:left;}.lp-go i{font-style:normal;font-size:16px;}}
 .lp-nav{position:absolute;top:calc(88px - 16px);z-index:3;width:32px;height:32px;border-radius:50%;border:1px solid var(--sep2);background:var(--card);color:var(--label);font-size:20px;line-height:1;display:grid;place-items:center;padding:0 0 3px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12);font-family:inherit;}
 .lp-nav[hidden]{display:none;}
 .lp-nav.l{left:-6px;}.lp-nav.r{right:-6px;}
@@ -3963,6 +3965,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 // v3.31 — 선불권 화면을 사용자 시안에 맞춰 재정렬(계산·저장·거래 로직 그대로 재사용). 상단 정보를 하나의 카드로
 //   통합(아이콘+이름+카테고리+유효기간 pill / 남은 잔액+진행바 왼쪽 · 3개 통계 박스[사용 횟수·최근 방문·1회 평균]
 //   오른쪽 / 아이콘 액션 버튼 행). 내역을 '사용 내역/충전 내역' 탭 + [최신순 ▾] 정렬로, 데스크탑 표(구분 컬러 칩 +
+// v4.52 — 폰: 지출 추이 막대 선택 후 그래프 아래 버튼으로 그 기간 목록에 이동.
 //   행별 ••• 메뉴)·모바일 compact 리스트. 모바일 액션은 아이콘 버튼 4개([1회 사용][충전][환불][더보기]),
 //   더보기에 만료 차감·정보 수정. 선불권 삭제(카드 전체 삭제)는 추가하지 않음(동기화 로직 보존).
 // v4.51 — PC: 지출 추이 막대를 누르면 그 기간 영수증만 왼쪽 목록에(_trendPick).
@@ -4421,7 +4424,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.51';
+const APP_VERSION='v4.52';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -10287,6 +10290,12 @@ function _pickAxis(bars){ const N=Math.min(5,bars.length); const out=[]; if(!bar
 let _trendOv=null,_trendFormOpen=false;
 // v4.51 — PC: 지출 추이 막대를 누르면 그 기간의 영수증만 왼쪽 목록에({from,to,label,unit,k,key}). 기간·월이 바뀌면(key 불일치) 저절로 풀린다.
 let _trendPick=null;
+function _trendPickSet(unit,k,label){
+  const from=unit==='day'?k:unit==='month'?k+'-01':k+'-01-01',to=unit==='day'?k:unit==='month'?k+'-31':k+'-12-31';
+  _trendPick={from,to,label,unit,k,key:_trendKey()};
+  if(searchQuery){searchQuery='';try{searchInp.value='';_updateSearchClear();}catch(_){}}
+  _photoListFilter='';_monthCatFilter=null;
+}
 const _trendPickOn=()=>!!(_trendPick&&_trendPick.key===_trendKey());
 const _trendKey=()=>JSON.stringify([_ledgerTimeFilter,viewMonth]);
 const _ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -10362,6 +10371,7 @@ function _trendSectionHtml(){
       </div>
       ${false?`<div class="lp-pager"><button type="button" data-lppage="-1" ${page===0?'disabled':''}>이전 기간</button><span>${escapeHtml(bars[0].sax)} ~ ${escapeHtml(bars[bars.length-1].sax)} · ${page+1}/${pages}</span><button type="button" data-lppage="1" ${page===pages-1?'disabled':''}>다음 기간</button></div>`:''}
       <div class="lp-leg"><span><i class="t"></i>총 지출</span><span><i class="m"></i>내 부담</span><em>내 부담 = 더치페이 분담·한턱·대신 결제 반영</em></div>
+      <button type="button" class="lp-go" data-lpgo hidden><span></span><i>›</i></button>
     </div>
   </div>`;
 }
@@ -11236,6 +11246,9 @@ async function renderDetail(){
       const bars=wrap.querySelector('.lp-bars');if(!bars)return;
       [...bars.children].forEach((c,j)=>c.classList.toggle('on',j===i));
       wrap.querySelectorAll('.lp-ulrow span').forEach((u,j)=>u.classList.toggle('on',j===i));
+      // v4.52 — 폰: 고른 칸의 영수증 목록으로 가는 버튼(그래프 아래). 칸에 영수증이 있을 때만.
+      const go=wrap.closest('[data-trend]')?.querySelector('[data-lpgo]'),c=bars.children[i];
+      if(go){const n=c?+c.dataset.c||0:0;go.hidden=!(c&&n>0);if(c&&n>0){go.dataset.k=c.dataset.k||'';go.dataset.l=c.dataset.l||'';go.firstElementChild.textContent=`${c.dataset.l||''} 영수증 ${n}건 보기`;}}
     };
     const lpAt=(wrap,clientX)=>{
       const bars=wrap.querySelector('.lp-bars');
@@ -11280,14 +11293,16 @@ async function renderDetail(){
       if(col&&body.contains(col)&&!_isMobileLayout()){
         const sec=col.closest('[data-trend]'),unit=sec.querySelector('.lp-tab.on')?.dataset.lpunit,k=col.dataset.k;
         if(_trendPickOn()&&_trendPick.unit===unit&&_trendPick.k===k)_trendPick=null;
-        else{
-          const from=unit==='day'?k:unit==='month'?k+'-01':k+'-01-01',to=unit==='day'?k:unit==='month'?k+'-31':k+'-12-31';
-          _trendPick={from,to,label:col.dataset.l||k,unit,k,key:_trendKey()};
-          if(searchQuery){searchQuery='';try{searchInp.value='';_updateSearchClear();}catch(_){}}
-          _photoListFilter='';_monthCatFilter=null;
-        }
+        else _trendPickSet(unit,k,col.dataset.l||k);
         renderSide();_lpPickSync();return;
       }
+    });
+    // v4.52 — 폰: 그래프 아래 '영수증 N건 보기 ›' → 내역 탭에서 그 기간 목록(✕로 풀림)
+    body.addEventListener('click',e=>{
+      const g=e.target.closest&&e.target.closest('[data-lpgo]');if(!g||!body.contains(g))return;
+      const unit=g.closest('[data-trend]').querySelector('.lp-tab.on')?.dataset.lpunit;
+      _trendPickSet(unit,g.dataset.k,g.dataset.l||g.dataset.k);
+      renderSide();_mobileListMode='list';switchTab('list');
     });
     document.addEventListener('click',e=>{
       const x=e.target.closest&&e.target.closest('[data-trendclear]');if(!x)return;
@@ -11316,7 +11331,7 @@ async function renderDetail(){
     let lpDrag=null;
     body.addEventListener('pointerdown',e=>{
       const wrap=e.target.closest&&e.target.closest('.lp-canvas-col');
-      if(!wrap||!body.contains(wrap)){lpOff();return;}
+      if(!wrap||!body.contains(wrap)){if(e.target.closest&&e.target.closest('[data-lpgo]'))return;lpOff();return;}
       if(e.pointerType==='mouse')return;
       lpDrag={wrap,id:e.pointerId};
       try{wrap.setPointerCapture(e.pointerId);}catch(_){}
