@@ -1523,6 +1523,9 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-rerr{margin:8px 0 0;font-size:12px;color:var(--red);}
 .lp-ract{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:10px;}
 .lp-ract .lp-range-apply{width:auto;}
+.lp-ract button,.lp-ract .lp-range-apply{height:40px;padding:0 14px;margin:0;box-sizing:border-box;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.lp-ract button:not(.lp-range-apply){height:40px;padding:0 14px;font-size:13px;color:var(--label2);font-weight:600;border-radius:9px;}
+.lp-ract .lp-range-apply{border-radius:9px;}
 .lp-pager{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;font-size:12px;color:var(--label2);}
 .lp-pager button:disabled{opacity:.4;cursor:default;}
 .lp-leg{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--label2);}
@@ -3963,6 +3966,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   남아 화면을 덮던 잠재 버그 수정(백드롭 잔재 정리를 renderDetail 진입 시 항상 실행). 죽은 CSS(.pp-id-icon) 제거.
 // v3.56 — 사람 검색 renderer 일관성: 데이터 유무·건수와 무관하게 항상 같은 Person Dashboard. ⚠️ 계산 불변, 분기/이관만.
 //   근본 원인: 평문 이름 검색이 데이터 유형으로 갈렸다 — hasPayer&&!hasPart → 결제자 전용 view, hasPart&&!hasPayer →
+// v4.48 — 지출 추이 기간 창 [기본으로]·[적용] 높이 통일.
 //   참석자 전용 view(김승환: 참석 기록만 → '김승환 참석 내역'), hasPayer&&hasPart → 통합 대시보드(김영석). 수정: 명시
 //   접두어('결제자 X'/'참석자 X')만 전용 필터 뷰로 남기고, **평문 이름 검색은 (hasPayer||hasPart)면 무조건 통합
 // v4.47 — 영수증 상세 [복사]: 내용을 GPT 텍스트 형식으로 클립보드에.
@@ -4409,7 +4413,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.47';
+const APP_VERSION='v4.48';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
