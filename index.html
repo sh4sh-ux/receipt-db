@@ -1489,6 +1489,46 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .spark-bar[data-day]:hover::after{content:attr(data-day)'일\A'attr(data-amt)'원';position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(24,26,29,.92);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:.5px solid rgba(255,255,255,.12);color:#fff;font-size:12px;font-weight:650;line-height:1.45;letter-spacing:0;padding:7px 10px;border-radius:8px;white-space:pre;text-align:center;pointer-events:none;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.24);}
 .spark-bar[data-lbl]:hover::after{content:attr(data-lbl)'\A'attr(data-amt)'원';position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(24,26,29,.92);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:.5px solid rgba(255,255,255,.12);color:#fff;font-size:12px;font-weight:650;line-height:1.45;letter-spacing:0;padding:7px 10px;border-radius:8px;white-space:pre;text-align:center;pointer-events:none;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.24);}
 .spark-axis{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;color:var(--label2);}
+/* v4.42 — 지출 추이: 막대 하나에 총 지출(옅은 전체) + 내 부담(진한 아래쪽), 평소 흐리게 · 가리키거나 누르면 진하게 + 파란 밑줄. 얇은 선(세로선·눈금·Y축)은 없앰. */
+.lp-col{justify-content:center;gap:0;}
+.lp-col .lp-bar{width:min(72%,26px);background:transparent;opacity:1;border-radius:5px 5px 0 0;position:relative;overflow:hidden;transition:background .12s;}
+.lp-col .lp-bar.has{background:color-mix(in srgb,var(--blue) 16%,transparent);}
+.lp-col .lp-bar i{position:absolute;left:0;right:0;bottom:0;display:block;background:color-mix(in srgb,var(--blue) 34%,transparent);transition:background .12s;}
+.lp-col.on .lp-bar.has{background:color-mix(in srgb,var(--blue) 30%,transparent);}
+.lp-col.on .lp-bar i{background:var(--blue);}
+.lp-bars.scrub .lp-bar.has{opacity:1;}
+.lp-xaxis.per{gap:3px;justify-content:stretch;}
+.lp-xaxis.per span{flex:1;min-width:0;text-align:center;font-size:11px;white-space:nowrap;overflow:visible;}
+.lp-ulrow{display:flex;gap:3px;margin-top:6px;height:2px;}
+.lp-ulrow span{flex:1;min-width:0;border-radius:1px;background:transparent;}
+.lp-ulrow span.on{background:var(--blue);}
+.lp-leg i.t{background:color-mix(in srgb,var(--blue) 24%,transparent);}
+.lp-leg i.m{background:var(--blue);}
+/* v4.41 — 지출 추이: 막대 짝(총 지출 연한 · 내 부담 진한), 한 줄 컨트롤, 달력 기간 */
+.lp-ctl{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;flex-wrap:wrap;}
+.lp-rangebtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--sep2);border-radius:var(--rs);background:var(--card);color:var(--label);font:inherit;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;cursor:pointer;}
+.lp-rangebtn svg{color:var(--label3);flex:none;}
+.lp-rangebtn.on{border-color:var(--blue);}
+.lp-tabs{display:inline-flex;padding:3px;border-radius:10px;background:var(--fill);}
+.lp-tab{border:0;background:none;padding:5px 11px;border-radius:8px;font:inherit;font-size:12.5px;font-weight:600;color:var(--label2);cursor:pointer;}
+.lp-tab.on{background:var(--card);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.14);}
+.lp-rf{margin:0 0 10px;padding:12px;border:1px solid var(--sep);border-radius:var(--rm);background:var(--card);}
+.lp-rf[hidden]{display:none;}
+.lp-rq{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.lp-rq button,.lp-ract button:not(.lp-range-apply),.lp-pager button{height:30px;padding:0 12px;border:1px solid var(--sep2);border-radius:var(--rs);background:var(--card);color:var(--label2);font:inherit;font-size:12px;font-weight:600;cursor:pointer;}
+.lp-rfields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;}
+.lp-rfields .lp-range-field{min-width:0;}
+.lp-rfields input[type=date]{min-width:0;width:100%;box-sizing:border-box;}
+.lp-rfields .lp-range-field{margin-bottom:0;}
+.lp-rerr{margin:8px 0 0;font-size:12px;color:var(--red);}
+.lp-ract{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:10px;}
+.lp-ract .lp-range-apply{width:auto;}
+.lp-pager{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;font-size:12px;color:var(--label2);}
+.lp-pager button:disabled{opacity:.4;cursor:default;}
+.lp-leg{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--label2);}
+.lp-leg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;}
+.lp-leg em{font-style:normal;color:var(--label3);}
+.lp-hdv b.lp-hm,.lp-hm{color:var(--blue);}
 /* v3.19 — 전체 내역 지출 추이 차트(Y축 눈금·점선 그리드·다중 X라벨·건수 툴팁). 전용 클래스라 다른 화면 sparkline과 독립 */
 .lp-trend{background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:16px 16px 12px;}
 .lp-plot{display:flex;gap:10px;}
@@ -1507,17 +1547,32 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-xaxis{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--label2);font-variant-numeric:tabular-nums;}
 /* v4.28 — 짚은 칸의 날짜·건수·금액은 그래프 안 카드가 아니라 '지출 추이' 제목 줄 오른쪽에(그래프·손가락에 안 가림, 사용자 선택 B) */
 .lp-hdv{white-space:nowrap;line-height:1;font-size:11.5px;font-weight:500;color:var(--label2);}
-.lp-hdv b{font-size:13.5px;font-weight:700;color:var(--label);margin-left:6px;line-height:1;}
+.lp-hdv b{font-size:13.5px;font-weight:700;color:var(--label);margin-left:3px;line-height:1;}
+.lp-hdv u{text-decoration:none;margin-left:8px;color:var(--label3);font-weight:500;}
+.lp-hdv i{font-style:normal;color:var(--label3);margin-left:4px;font-weight:400;}
 /* v4.27 — 짚은 칸 세로선(그리기 전용, v4.28 더 얇고 연하게). 칸을 고르는 동안 다른 막대는 흐리게 */
-.lp-cursor{position:absolute;top:0;bottom:0;left:0;width:1px;margin-left:-.5px;background:var(--label2);opacity:.4;pointer-events:none;z-index:6;}
-@media (min-resolution:2dppx){.lp-cursor{transform:scaleX(.5);}} /* v4.28 — 고해상도 화면은 0.5px 실선 */
-.lp-canvas-col{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:crosshair;}
+.lp-canvas-col{touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:pointer;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;}
+.lp-canvas-col::-webkit-scrollbar{display:none;}
+/* v4.44 — 품목명 수정 창 */
+.inm-ta{display:block;width:100%;box-sizing:border-box;margin:6px 0 10px;border:1px solid var(--sep2);border-radius:var(--rm);background:var(--card);color:var(--label);padding:11px 12px;font:inherit;font-size:16px;line-height:1.45;resize:none;outline:none;}
+.inm-ta:focus{border-color:var(--blue);}
+.inm-hint{margin:0 0 14px;padding:0 0 0 16px;font-size:12px;color:var(--label3);line-height:1.7;}
+.inm-save,.inm-cancel{display:block;width:100%;height:46px;border:none;border-radius:var(--rm);font:inherit;font-size:15px;font-weight:700;cursor:pointer;}
+.inm-save{background:var(--blue);color:#fff;}
+.inm-cancel{background:var(--fill);color:var(--blue);margin-top:8px;}
+
+/* v4.43 — 한 번에 7칸(안쪽 너비 = 칸 수/7 × 100%), 옆으로 밀어 넘김 */
+.lp-inner{min-width:100%;}
+.lp-xaxis.per{gap:3px;}
 .lp-bars.scrub .lp-bar.has{opacity:.4;}
 .lp-bars.scrub .lp-col.on .lp-bar.has{opacity:1;}
 /* v3.17 — 모바일 툴팁도 읽히게(고해상도) 11px */
 @media(max-width:780px){
   .spark-bar[data-day]:hover::after,.spark-bar[data-lbl]:hover::after{font-size:11px;padding:6px 9px;}
   .lp-yaxis,.lp-canvas{height:146px;}
+  [data-trend] .budget-section-hd{flex-wrap:wrap;row-gap:6px;}
+  [data-trend] .lp-hd{margin-left:auto;}
+  .lp-hdv{font-size:11px;}.lp-hdv b{font-size:13px;}
   .lp-yaxis{font-size:10px;}
   .lp-xaxis{font-size:10.5px;}
   /* v3.19 — 기간 컨트롤을 모바일에서도 헤더 우측에. 좁은 폭에 맞게 pill 축소 */
@@ -3910,6 +3965,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   receiptPeople/_receiptShare/_participantSplit/_personRelation/단둘이 실결제/여럿이/한턱/참석부담/meetingId/만남통계/
 //   Dutch Pay·기간필터·v3.54~55 drill-down/미상 전부 불변. 검증(실데이터): 신유철·김영석·김승환·1건/참석만/결제만/결제+참석
 //   사용자 모두 renderPersonDashboardHtml 단일 사용, 헤더 구조 동일, Desktop/Mobile·콘솔에러 0. 변경 파일 index.html만.
+// v4.44 — 폰: 영수증 상세 품목명을 누르면 품목명 수정 창(_itemNameSheet).
+// v4.43 — 지출 추이: 한 번에 7칸 + 옆으로 스크롤(이전/다음 기간 버튼 제거), 값 줄을 카테고리 행처럼 총(회색)·총액(굵게)·/·내 부담(파랑)으로.
+// v4.42 — 지출 추이를 막대 하나(옅은 전체 = 총 지출, 진한 아래쪽 = 내 부담)로: 평소 흐리게, 마우스를 올리거나(폰은 누르면) 진해지고 라벨 밑에 파란 밑줄, 가장 최근 칸이 기본 강조. 얇은 선(세로선·점선 눈금·Y축) 제거.
+// v4.41 — 지출 추이: 총 지출 + 내 부담 막대 짝, 연간/월별/일별 탭, 이 그래프 전용 달력 기간(이번 달·지난달·올해·전체·직접), 한 줄 컨트롤, 31칸(월별 12칸) 넘으면 이전/다음 기간. 참고: NARO Biz '매출·입금 현황'.
 // v4.40 — ① 저장 속도: 사진의 Dropbox 완료 폴더 정리를 저장 뒤 백그라운드로(전엔 네트워크를 기다린 뒤 화면이 넘어감) + 누르는 즉시 '저장 중…'·중복 저장 차단 ② 레일 '추가'를 다른 탭에서 누르면 쓰다 만 내용 대신 빈 화면(+ 되돌리기) ③ 한턱 문장 조사 이/가 자동(어머니가 조상현에게…).
 // v4.39 — 대신 결제 공유 이미지 글자 굵기 한 단계 낮춤(제목·금액 800→700, 카드 이름 750→650, 표 금액 700→600, 표 본문 500→400).
 // v4.38 — 대신 결제 공유 이미지 가로 1080 → 720(글자 크기는 그대로): 폰은 이미지를 화면 폭에 맞춰 줄여 보여 주므로 화면에서 글자가 1.5배 크게 보인다(사용자: 모바일에서 글자가 너무 작다). 줄어든 폭은 메모 칸이 가장 많이 내준다(긴 메모는 …).
@@ -4340,7 +4399,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.40';
+const APP_VERSION='v4.44';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -10196,47 +10255,101 @@ function _fmtAxisAmt(n){ if(n<=0)return '0'; if(n>=100000000)return (Math.round(
 function _yTicks(peak){ if(peak<=0)return {max:1,ticks:[0]}; const step=_niceCeil(peak/3)||1; const n=Math.max(1,Math.ceil(peak/step-1e-9)); const max=step*n; const ticks=[]; for(let i=n;i>=0;i--)ticks.push(step*i); return {max,ticks}; }
 // axis: bars에서 최대 5개 라벨을 균등 간격으로 뽑는다(labelKey로 짧은 라벨 선택).
 function _pickAxis(bars){ const N=Math.min(5,bars.length); const out=[]; if(!bars.length)return out; for(let i=0;i<N;i++){const idx=N===1?0:Math.round(i*(bars.length-1)/(N-1));out.push(bars[idx].sax);} return out; }
-function _ledgerTrend(recs){
-  const t=_ledgerTimeFilter.type;
-  let mode='month';
-  if(t==='month')mode='day';
-  else if(t==='range'){
-    const {from,to}=_ledgerTimeFilter;
-    if(from&&to){const dd=(new Date(to)-new Date(from))/86400000;mode=dd<=62?'day':'month';}
+// ── v4.41 지출 추이 = 총 지출 + 내 부담 막대 짝 · 연간/월별/일별 · 이 그래프 전용 달력 기간(참고: NARO Biz '매출·입금 현황').
+//   기본(손대기 전)은 위쪽 통계 기간을 따른다(이번 달=일별, 올해=월별, 전체=최근 12개월). 단위·기간을 고르면 _trendOv가 그 값을 쓰고, 위쪽 기간이 바뀌면 풀린다.
+let _trendOv=null,_trendFormOpen=false;
+const _trendKey=()=>JSON.stringify([_ledgerTimeFilter,viewMonth]);
+const _ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const _lastDay=ym=>ym+'-'+String(daysInMonth(ym)).padStart(2,'0');
+function _trendDataSpan(){let a='',b='';for(const r of receipts){const d=r.date||'';if(!d)continue;if(!a||d<a)a=d;if(!b||d>b)b=d;}return {min:a,max:b};}
+function _trendDefault(){
+  const t=_ledgerTimeFilter.type,sp=_trendDataSpan();
+  if(t==='month')return {unit:'day',from:viewMonth+'-01',to:_lastDay(viewMonth)};
+  if(t==='year'){const y=_ledgerTimeFilter.value;return {unit:'month',from:y+'-01-01',to:y+'-12-31'};}
+  if(t==='range'){
+    const from=_ledgerTimeFilter.from||sp.min||_ymd(new Date()),to=_ledgerTimeFilter.to||sp.max||from;
+    return {unit:(new Date(to)-new Date(from))/86400000<=62?'day':'month',from,to};
   }
-  let bars,note;
-  if(mode==='day'){
-    // 일별 버킷 (금액·건수)
-    let start,end;
-    if(t==='month'){start=viewMonth+'-01';end=viewMonth+'-'+String(daysInMonth(viewMonth)).padStart(2,'0');}
-    else {start=_ledgerTimeFilter.from;end=_ledgerTimeFilter.to;}
-    const amtMap=new Map(),cntMap=new Map();
-    for(const r of recs){const d=r.date||'';if(d){amtMap.set(d,(amtMap.get(d)||0)+(r.total||0));cntMap.set(d,(cntMap.get(d)||0)+1);}}
-    bars=[];const s=new Date(start),e=new Date(end);
-    for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1)){
-      const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      bars.push({lbl:`${d.getMonth()+1}월 ${d.getDate()}일`,sax:`${d.getDate()}일`,amt:amtMap.get(key)||0,cnt:cntMap.get(key)||0});
-    }
-    note='일별';
-  } else {
-    // 월별 버킷 (금액·건수)
-    const amtMap=new Map(),cntMap=new Map();
-    for(const r of recs){const d=r.date||'';if(d){const k=d.slice(0,7);amtMap.set(k,(amtMap.get(k)||0)+(r.total||0));cntMap.set(k,(cntMap.get(k)||0)+1);}}
-    let yms=[];
-    if(t==='year'){for(let m=1;m<=12;m++)yms.push(`${_ledgerTimeFilter.value}-${String(m).padStart(2,'0')}`);}
-    else if(t==='range'&&_ledgerTimeFilter.from&&_ledgerTimeFilter.to){
-      let cur=_ledgerTimeFilter.from.slice(0,7);const last=_ledgerTimeFilter.to.slice(0,7);let guard=0;
-      while(cur<=last&&guard++<240){yms.push(cur);cur=ymOffset(cur,1);}
-    } else { // all
-      const keys=[...amtMap.keys()].sort();
-      if(keys.length){const lastYm=keys[keys.length-1];for(let i=11;i>=0;i--)yms.push(ymOffset(lastYm,-i));}
-    }
-    bars=yms.map(ym=>{const[y,m]=ym.split('-');return {lbl:ymLabel(ym),sax:`${y}.${m}`,amt:amtMap.get(ym)||0,cnt:cntMap.get(ym)||0,ym};});
-    note=t==='all'?'최근 12개월':'월별';
-  }
-  const peak=Math.max(0,...bars.map(b=>b.amt));
+  const lastYm=(sp.max||_ymd(new Date())).slice(0,7),f=ymOffset(lastYm,-11);
+  return {unit:'month',from:f+'-01',to:_lastDay(lastYm)};
+}
+function _trendCfg(){
+  if(_trendOv&&_trendOv.key!==_trendKey())_trendOv=null;
+  return _trendOv?{unit:_trendOv.unit,from:_trendOv.from,to:_trendOv.to,page:_trendOv.page}:{..._trendDefault(),page:null};
+}
+function _trendBuckets(cfg){
+  const me=getMyName(),map=new Map();
+  const keyOf=d=>cfg.unit==='day'?d:cfg.unit==='month'?d.slice(0,7):d.slice(0,4);
+  for(const r of receipts){const d=r.date||'';if(!d||d<cfg.from||d>cfg.to)continue;const k=keyOf(d),b=map.get(k)||{t:0,m:0,c:0};b.t+=r.total||0;b.m+=_myShareOf(r,me)||0;b.c++;map.set(k,b);}
+  const keys=[];
+  if(cfg.unit==='day'){const e=new Date(cfg.to+'T00:00:00');for(let d=new Date(cfg.from+'T00:00:00'),g=0;d<=e&&g<3700;d.setDate(d.getDate()+1),g++)keys.push(_ymd(d));}
+  else if(cfg.unit==='month'){let c=cfg.from.slice(0,7),g=0;const l=cfg.to.slice(0,7);while(c<=l&&g++<130){keys.push(c);c=ymOffset(c,1);}}
+  else{for(let y=+cfg.from.slice(0,4);y<=+cfg.to.slice(0,4);y++)keys.push(String(y));}
+  return keys.map(k=>{const v=map.get(k)||{t:0,m:0,c:0};
+    const lbl=cfg.unit==='day'?`${+k.slice(5,7)}월 ${+k.slice(8)}일`:cfg.unit==='month'?ymLabel(k):`${k}년`;
+    const sax=cfg.unit==='day'?(cfg.from.slice(0,7)===cfg.to.slice(0,7)?`${+k.slice(8)}일`:`${+k.slice(5,7)}.${+k.slice(8)}`):cfg.unit==='month'?`${k.slice(0,4)}.${k.slice(5)}`:k;
+    return {key:k,lbl,sax,t:v.t,m:v.m,cnt:v.c};});
+}
+// 짚은(또는 기본) 칸의 값 줄: '날짜 · N건 총지출원 / 내부담원'
+const _lpReadout=(l,c,a,m)=>`<span class="lp-hdv">${escapeHtml(l)} · ${c}건<u>총</u><b>${fmtMoney(a)}원</b><i>/</i><b class="lp-hm">${fmtMoney(m)}원</b></span>`;
+const _trendRangeTxt=cfg=>{const f=x=>x.slice(2).replace(/-/g,'.');return `${f(cfg.from)} – ${f(cfg.to)}`;};
+function _trendSectionHtml(){
+  const cfg=_trendCfg(),all=_trendBuckets(cfg),bars=all;
+  const peak=Math.max(0,...all.map(b=>Math.max(b.t,b.m)));
   const {max:yMax,ticks:yTicks}=_yTicks(peak);
-  return {bars,axis:_pickAxis(bars),note,yMax,yTicks};
+  const h=v=>yMax>0&&v>0?Math.max(2,Math.round(v/yMax*100)):0;
+  const note=cfg.unit==='day'?'일별':cfg.unit==='month'?'월별':'연간';
+  let def=-1;bars.forEach((b,i)=>{if(b.t>0||b.m>0)def=i;}); // 기본 강조 = 이 쪽의 가장 최근 지출 칸
+  const defHtml=def>=0?_lpReadout(bars[def].lbl,bars[def].cnt,bars[def].t,bars[def].m):note;
+  const multiYear=cfg.from.slice(0,4)!==cfg.to.slice(0,4);
+  const perBar=true; // v4.43 — 한 번에 7칸만 보이므로 칸마다 라벨
+  const barLbl=b=>cfg.unit==='year'?b.key:cfg.unit==='month'?(multiYear?((+b.key.slice(5)===1||b===bars[0])?`${b.key.slice(2,4)}.${+b.key.slice(5)}`:`${+b.key.slice(5)}`):`${+b.key.slice(5)}월`):b.sax;
+  const tabs=[['year','연간'],['month','월별'],['day','일별']].map(([k,l])=>`<button type="button" class="lp-tab${cfg.unit===k?' on':''}" data-lpunit="${k}" aria-pressed="${cfg.unit===k}">${l}</button>`).join('');
+  const cal='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
+  const sp=_trendDataSpan();
+  return `<div class="budget-section" data-trend>
+    <div class="budget-section-hd">지출 추이 <span class="hd-sub lp-hd" data-def="${escapeHtml(defHtml)}">${defHtml}</span></div>
+    <div class="lp-ctl"><button type="button" class="lp-rangebtn${_trendOv?' on':''}" data-lprange aria-expanded="${_trendFormOpen}">${cal}<span>${_trendRangeTxt(cfg)}</span></button><div class="lp-tabs" role="group" aria-label="집계 단위">${tabs}</div></div>
+    <form class="lp-rf" ${_trendFormOpen?'':'hidden'} novalidate>
+      <div class="lp-rq">${[['month','이번 달'],['prev','지난달'],['year','올해'],['all','전체']].map(([k,l])=>`<button type="button" data-lpq="${k}">${l}</button>`).join('')}</div>
+      <div class="lp-rfields"><label class="lp-range-field">시작일<input type="date" name="from" value="${cfg.from}" min="1900-01-01" required></label><label class="lp-range-field">종료일<input type="date" name="to" value="${cfg.to}" min="1900-01-01" required></label></div>
+      <p class="lp-rerr" role="alert" hidden></p>
+      <div class="lp-ract"><button type="button" data-lpreset>기본으로</button><button type="submit" class="lp-range-apply">적용</button></div>
+    </form>
+    <div class="lp-trend">
+      <div class="lp-plot">
+        <div class="lp-canvas-col"><div class="lp-inner" style="width:${Math.max(bars.length,7)/7*100}%">
+          <div class="lp-canvas">
+            <div class="lp-bars" data-def="${def}">${bars.map((b,i)=>{const has=b.t>0||b.m>0;const inner=b.t>0?Math.min(100,Math.max(0,b.m/b.t*100)):0;return `<div class="lp-col${has?' has':''}${i===def?' on def':''}" data-l="${escapeHtml(b.lbl)}" data-a="${b.t}" data-m="${b.m}" data-c="${b.cnt}"><div class="lp-bar${has?' has':''}" style="height:${h(b.t)}%;"><i style="height:${inner}%"></i></div></div>`;}).join('')}</div>
+          </div>
+          ${perBar?`<div class="lp-xaxis per">${bars.map(b=>`<span>${escapeHtml(barLbl(b))}</span>`).join('')}</div>`:`<div class="lp-xaxis">${_pickAxis(bars).map(a=>`<span>${escapeHtml(a)}</span>`).join('')}</div>`}
+          <div class="lp-ulrow">${bars.map((b,i)=>`<span class="${i===def?'on':''}"></span>`).join('')}</div>
+        </div></div>
+      </div>
+      ${false?`<div class="lp-pager"><button type="button" data-lppage="-1" ${page===0?'disabled':''}>이전 기간</button><span>${escapeHtml(bars[0].sax)} ~ ${escapeHtml(bars[bars.length-1].sax)} · ${page+1}/${pages}</span><button type="button" data-lppage="1" ${page===pages-1?'disabled':''}>다음 기간</button></div>`:''}
+      <div class="lp-leg"><span><i class="t"></i>총 지출</span><span><i class="m"></i>내 부담</span><em>내 부담 = 더치페이 분담·한턱·대신 결제 반영</em></div>
+    </div>
+  </div>`;
+}
+// 단위·기간 바꾸기(그래프만 다시 그림). page=null이면 가장 최근 쪽.
+function _trendSet(patch){
+  const cfg=_trendCfg();
+  _trendOv={unit:cfg.unit,from:cfg.from,to:cfg.to,page:null,...patch,key:_trendKey()};
+  _trendRerender();
+}
+function _trendRerender(){
+  const body=document.getElementById('detailBody'),sec=body&&body.querySelector('[data-trend]');if(!sec)return;
+  const t=document.createElement('div');t.innerHTML=_trendSectionHtml();const n=t.firstElementChild;sec.replaceWith(n);_trendScrollEnd(n);
+}
+// v4.43 — 처음엔 가장 최근(오른쪽 끝) 7칸이 보이게
+function _trendScrollEnd(root){(root||document).querySelectorAll('.lp-canvas-col').forEach(c=>{c.scrollLeft=c.scrollWidth;});}
+function _trendQuick(k){
+  const today=new Date(),ym=_ymd(today).slice(0,7),sp=_trendDataSpan();
+  if(k==='month')return {unit:'day',from:ym+'-01',to:_lastDay(ym)};
+  if(k==='prev'){const p=ymOffset(ym,-1);return {unit:'day',from:p+'-01',to:_lastDay(p)};}
+  if(k==='year'){const y=ym.slice(0,4);return {unit:'month',from:y+'-01-01',to:y+'-12-31'};}
+  const from=sp.min||_ymd(today),to=sp.max||from;
+  return {unit:(+to.slice(0,4)-+from.slice(0,4))>=5?'year':'month',from,to};
 }
 
 function renderLedgerPanel(recs){
@@ -10285,27 +10398,8 @@ function renderLedgerPanel(recs){
     </div>
   </div></div>`;
 
-  // 지출 추이 (v3.19 — Y축 눈금·점선 그리드·다중 X라벨·건수 툴팁)
-  const tr=_ledgerTrend(recs);
-  const yMax=tr.yMax||1;
-  const trendHtml=`<div class="budget-section">
-    <div class="budget-section-hd">지출 추이 <span class="hd-sub lp-hd" data-note="${escapeHtml(tr.note)}">${tr.note}</span></div>
-    <div class="lp-trend">
-      <div class="lp-plot">
-        <ul class="lp-yaxis">${tr.yTicks.map(v=>`<li>${_fmtAxisAmt(v)}</li>`).join('')}</ul>
-        <div class="lp-canvas-col">
-          <div class="lp-canvas">
-            <div class="lp-grid">${tr.yTicks.map(()=>'<span></span>').join('')}</div>
-            <div class="lp-bars">
-              ${tr.bars.map(b=>{const h=yMax>0?(b.amt>0?Math.max(2,Math.round(b.amt/yMax*100)):0):0;return `<div class="lp-col${b.amt>0?' has':''}" data-l="${escapeHtml(b.lbl)}" data-a="${b.amt}" data-c="${b.cnt}"><div class="lp-bar${b.amt>0?' has':''}" style="height:${h}%;"></div></div>`;}).join('')}
-            </div>
-            <div class="lp-cursor" hidden></div>
-          </div>
-          <div class="lp-xaxis">${tr.axis.map(a=>`<span>${escapeHtml(a)}</span>`).join('')}</div>
-        </div>
-      </div>
-    </div>
-  </div>`;
+  // 지출 추이 — v4.41: 총 지출 + 내 부담 짝, 연간/월별/일별, 그래프 전용 달력 기간(_trendSectionHtml)
+  const trendHtml=_trendSectionHtml();
 
   // 카테고리 구성 도넛
   let donutHtml='';
@@ -11101,22 +11195,44 @@ async function renderDetail(){
     // v4.27 — 지출 추이: 그래프(축 글자 포함) 아무 데나 손가락을 대고 옆으로 밀면 가장 가까운 칸에 세로선 + 금액·건수(v4.28 제목 줄 오른쪽).
     //   막대가 가늘어도(일별 30칸) 고를 수 있게 칸 폭이 아니라 x 위치로 고른다. 손을 떼도 남고, 다른 곳을 누르면 닫힘.
     //   위아래로 밀면 브라우저 스크롤(touch-action:pan-y → pointercancel)로 넘겨 닫는다. 마우스는 올리면 보이고 벗어나면 닫힘.
+    const lpMark=(wrap,i)=>{ // 칸 i를 진하게 + 밑줄(i<0이면 모두 흐리게)
+      const bars=wrap.querySelector('.lp-bars');if(!bars)return;
+      [...bars.children].forEach((c,j)=>c.classList.toggle('on',j===i));
+      wrap.querySelectorAll('.lp-ulrow span').forEach((u,j)=>u.classList.toggle('on',j===i));
+    };
     const lpAt=(wrap,clientX)=>{
-      const bars=wrap.querySelector('.lp-bars'),canvas=wrap.querySelector('.lp-canvas');
-      const cols=bars?[...bars.children]:[];if(!cols.length||!canvas)return;
+      const bars=wrap.querySelector('.lp-bars');
+      const cols=bars?[...bars.children]:[];if(!cols.length)return;
       const br=bars.getBoundingClientRect();
       const i=Math.max(0,Math.min(cols.length-1,Math.floor((clientX-br.left)/br.width*cols.length)));
-      const col=cols[i],cur=canvas.querySelector('.lp-cursor'),hd=wrap.closest('.budget-section')?.querySelector('.lp-hd');
-      cols.forEach(c=>c.classList.toggle('on',c===col));bars.classList.add('scrub');
-      const cr=canvas.getBoundingClientRect(),kr=col.getBoundingClientRect();
-      cur.style.left=(kr.left+kr.width/2-cr.left)+'px';cur.hidden=false;
-      if(hd)hd.innerHTML=`<span class="lp-hdv">${escapeHtml(col.dataset.l||'')} · ${+col.dataset.c||0}건<b>${fmtMoney(+col.dataset.a||0)}원</b></span>`;
+      const col=cols[i],hd=wrap.closest('.budget-section')?.querySelector('.lp-hd');
+      lpMark(wrap,i);bars.classList.add('scrub');
+      if(hd)hd.innerHTML=_lpReadout(col.dataset.l||'',+col.dataset.c||0,+col.dataset.a||0,+col.dataset.m||0);
     };
-    const lpOff=()=>{
-      body.querySelectorAll('.lp-bars.scrub').forEach(b=>{b.classList.remove('scrub');b.querySelectorAll('.lp-col.on').forEach(c=>c.classList.remove('on'));});
-      body.querySelectorAll('.lp-cursor').forEach(n=>{n.hidden=true;});
-      body.querySelectorAll('.lp-hd').forEach(h=>{if(h.firstElementChild)h.textContent=h.dataset.note||'';});
+    const lpOff=()=>{ // 손을 떼고 다른 곳을 누르거나 마우스가 벗어나면: 가장 최근 칸을 기본 강조로
+      body.querySelectorAll('.lp-bars').forEach(b=>{b.classList.remove('scrub');const w=b.closest('.lp-canvas-col');if(w)lpMark(w,+b.dataset.def);});
+      body.querySelectorAll('.lp-hd').forEach(h=>{if(h.dataset.def!=null)h.innerHTML=h.dataset.def;});
     };
+    // v4.41 — 지출 추이 컨트롤(단위 탭·달력 기간·이전/다음 기간)
+    body.addEventListener('click',e=>{
+      const t=e.target.closest&&e.target.closest('[data-trend]');if(!t||!body.contains(t))return;
+      const u=e.target.closest('[data-lpunit]');if(u){_trendSet({unit:u.dataset.lpunit});return;}
+      if(e.target.closest('[data-lprange]')){_trendFormOpen=!_trendFormOpen;_trendRerender();return;}
+      const q=e.target.closest('[data-lpq]');if(q){_trendSet(_trendQuick(q.dataset.lpq));return;}
+      if(e.target.closest('[data-lpreset]')){_trendOv=null;_trendFormOpen=false;_trendRerender();return;}
+    });
+    body.addEventListener('submit',e=>{
+      const f=e.target.closest&&e.target.closest('.lp-rf');if(!f||!body.contains(f))return;
+      e.preventDefault();
+      const from=f.elements.from.value,to=f.elements.to.value,err=f.querySelector('.lp-rerr');
+      const bad=m=>{err.textContent=m;err.hidden=false;};
+      if(!from||!to)return bad('시작일과 종료일을 모두 골라 주세요.');
+      if(from>to)return bad('시작일이 종료일보다 늦어요.');
+      if((new Date(to)-new Date(from))/86400000>3660)return bad('최대 10년까지 볼 수 있어요.');
+      const days=(new Date(to)-new Date(from))/86400000;
+      _trendFormOpen=false;
+      _trendSet({from,to,unit:days<=62?'day':days<=1100?'month':'year'}); // 기간에 맞는 단위로(바로 아래 탭에서 바꿀 수 있다)
+    });
     let lpDrag=null;
     body.addEventListener('pointerdown',e=>{
       const wrap=e.target.closest&&e.target.closest('.lp-canvas-col');
@@ -11134,7 +11250,7 @@ async function renderDetail(){
     });
     const lpUp=e=>{if(lpDrag&&e.pointerId===lpDrag.id)lpDrag=null;};
     body.addEventListener('pointerup',lpUp);
-    body.addEventListener('pointercancel',e=>{if(lpDrag&&e.pointerId===lpDrag.id){lpDrag=null;lpOff();}});
+    body.addEventListener('pointercancel',e=>{if(lpDrag&&e.pointerId===lpDrag.id)lpDrag=null;}); // 옆으로 밀어 스크롤되면 선택은 그대로
     body.addEventListener('pointerout',e=>{
       if(e.pointerType!=='mouse'||lpDrag)return;
       const from=e.target.closest&&e.target.closest('.lp-canvas-col');
@@ -11312,6 +11428,7 @@ async function renderDetail(){
       document.querySelectorAll('body > #lpBackdrop, body > #lpRangePop').forEach(n=>n.remove());
       if(_useSlot){body.innerHTML=renderLedgerPanel(_lrecs);periodSlot.innerHTML=pillsHtml;}
       else{if(periodSlot)periodSlot.innerHTML='';body.innerHTML=pillsHtml+renderLedgerPanel(_lrecs);}
+      _trendScrollEnd(body);
       const pslot=_useSlot?periodSlot:body;
       _bindSectionToggles(body);
       // v3.29 — 통합 기간 컨트롤. 트리거로 팝오버/바텀시트 열기, 빠른 선택은 즉시 실행 + 재렌더로 닫힘.
@@ -12091,6 +12208,24 @@ function _refreshDetailAmountAudit(r){
     tr.classList.toggle('amount-mismatch',mismatchIndexes.has(parseInt(tr.dataset.idx,10)));
   });
 }
+// v4.44 — 품목명 수정 창(폰). 저장하면 표의 입력칸 값을 바꾸고 기존 '변경됨' 흐름을 그대로 탄다. 이름의 '|'는 파싱이 깨져 '/'로 바꾼다.
+function _itemNameSheet(inp){
+  const {card,close}=_mtgSheetOpen();
+  card.classList.add('inm-sheet');
+  card.innerHTML=`<div class="mtg-sheet-hd"><div class="mtg-sheet-title">품목명 수정</div><button type="button" class="mtg-sheet-x" aria-label="닫기">×</button></div>
+    <textarea class="inm-ta" rows="4" autocomplete="off" spellcheck="false">${escapeHtml(inp.value)}</textarea>
+    <ul class="inm-hint"><li>품목명을 자유롭게 수정할 수 있어요.</li><li>수량·단가·금액은 표에서 따로 고쳐요.</li></ul>
+    <button type="button" class="inm-save">저장</button><button type="button" class="inm-cancel">취소</button>`;
+  const ta=card.querySelector('.inm-ta');
+  card.querySelector('.mtg-sheet-x').onclick=()=>close();
+  card.querySelector('.inm-cancel').onclick=()=>close();
+  card.querySelector('.inm-save').onclick=()=>{
+    const v=ta.value.replace(/[\r\n]+/g,' ').replace(/\|/g,'/').trim();
+    if(v!==inp.value){inp.value=v;_detailSetDirty(true);}
+    close();
+  };
+  setTimeout(()=>{try{ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}catch(_){}},60);
+}
 function _bindDetailItemTableEvents(r){
   const tbl=document.getElementById('itemsTable');if(!tbl)return;
 
@@ -12151,6 +12286,11 @@ function _bindDetailItemTableEvents(r){
       }else{
         inp.addEventListener('focus',()=>inp.select());
         inp.addEventListener('input',()=>_detailSetDirty(true));
+        // v4.44 — 폰: 품목명을 누르면 전체 이름을 보고 고치는 창(칸이 좁아 긴 이름이 잘린다). PC는 칸에서 바로 고친다.
+        if(f==='name'){
+          inp.addEventListener('click',()=>{if(_isMobileLayout()&&!inp.disabled)_itemNameSheet(inp);});
+          inp.addEventListener('focus',()=>{if(_isMobileLayout())inp.blur();});
+        }
       }
     });
   });
