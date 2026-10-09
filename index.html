@@ -1494,9 +1494,10 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .spark-axis{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;color:var(--label2);}
 /* v4.42 — 지출 추이: 막대 하나에 총 지출(옅은 전체) + 내 부담(진한 아래쪽), 평소 흐리게 · 가리키거나 누르면 진하게 + 파란 밑줄. 얇은 선(세로선·눈금·Y축)은 없앰. */
 .lp-col{justify-content:center;gap:0;}
-.lp-col .lp-bar{width:min(72%,26px);background:transparent;opacity:1;border-radius:5px 5px 0 0;position:relative;overflow:hidden;transition:background .12s;}
+.lp-col .lp-bar{width:14px;background:transparent;opacity:1;border-radius:7px;position:relative;overflow:hidden;transition:background .12s;}
+.lp-col .lp-bar.has{min-height:14px;} /* v4.55 — 얇은 알약 막대(배경 트랙 없음) */
 .lp-col .lp-bar.has{background:color-mix(in srgb,var(--blue) 16%,transparent);}
-.lp-col .lp-bar i{position:absolute;left:0;right:0;bottom:0;display:block;background:color-mix(in srgb,var(--blue) 34%,transparent);transition:background .12s;}
+.lp-col .lp-bar i{position:absolute;left:0;right:0;bottom:0;display:block;border-radius:7px;background:color-mix(in srgb,var(--blue) 34%,transparent);transition:background .12s;}
 .lp-col.on .lp-bar.has{background:color-mix(in srgb,var(--blue) 30%,transparent);}
 .lp-col.on .lp-bar i{background:var(--blue);}
 .lp-bars.scrub .lp-bar.has{opacity:1;}
@@ -1505,7 +1506,7 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-ulrow{display:flex;gap:3px;margin-top:6px;height:2px;}
 .lp-ulrow span{flex:1;min-width:0;border-radius:1px;background:transparent;}
 .lp-ulrow span{position:relative;}
-.lp-ulrow span.on::after{content:'';position:absolute;left:50%;top:0;bottom:0;width:min(72%,26px);transform:translateX(-50%);border-radius:1px;background:var(--blue);} /* v4.50 — 밑줄 길이 = 막대 폭 */
+.lp-ulrow span.on::after{content:'';position:absolute;left:50%;top:0;bottom:0;width:14px;transform:translateX(-50%);border-radius:1px;background:var(--blue);} /* v4.50 — 밑줄 길이 = 막대 폭 */
 .lp-leg i.t{background:color-mix(in srgb,var(--blue) 24%,transparent);}
 .lp-leg i.m{background:var(--blue);}
 /* v4.41 — 지출 추이: 막대 짝(총 지출 연한 · 내 부담 진한), 한 줄 컨트롤, 달력 기간 */
@@ -3964,6 +3965,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   상세=핵심 잔액 카드+진행바+통계 타일+Primary(1회 사용)/Secondary 액션+내역(전체/사용/충전 세그먼트,
 //   데스크탑 표·모바일 리스트, 실행 잔액 표시). 화면 내 뒤로가기 화살표 제거(헤더/구분선 유지, 탭 재선택으로 복귀).
 // v3.31 — 선불권 화면을 사용자 시안에 맞춰 재정렬(계산·저장·거래 로직 그대로 재사용). 상단 정보를 하나의 카드로
+// v4.55 — 지출 추이: 얇은 알약 막대(14px), 배경 트랙 없음.
 //   통합(아이콘+이름+카테고리+유효기간 pill / 남은 잔액+진행바 왼쪽 · 3개 통계 박스[사용 횟수·최근 방문·1회 평균]
 // v4.54 — 붙여넣기 칸: 긴 줄 접기 + 붙여넣을 때 줄 다시 나누기.
 //   오른쪽 / 아이콘 액션 버튼 행). 내역을 '사용 내역/충전 내역' 탭 + [최신순 ▾] 정렬로, 데스크탑 표(구분 컬러 칩 +
@@ -4427,7 +4429,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.54';
+const APP_VERSION='v4.55';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
