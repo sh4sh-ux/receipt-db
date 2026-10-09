@@ -23,7 +23,7 @@
 - `scripts/check_prepaid.cjs` — 선불권 계산 검사
 - `scripts/receipt_png_to_receipt_db.py` — PNG/JPG 영수증 스크린샷 자동 등록 (맥에서 실행)
 - `scripts/extract_category_svgs.py` — 이전 Illustrator SVG 정리 도구. 확인 적용된 숙박 자산은 덮어쓰지 않도록 제외
-- `.github/workflows/*.yml` — v2.51·v2.92·v2.93 때 한 번 쓴 자동 패치(지금은 앵커가 없어 실행해도 실패로 끝남 — 정리 대상)
+- `.github/workflows/deploy.yml` — **'영수증 배포' 버튼**(workflow_dispatch). 사용자가 GitHub → Actions → 영수증 배포 → Run workflow로 직접 배포한다(검사 후 작업 브랜치를 main에 fast-forward). 일회성 패치 3개는 삭제(v4.57 이후)
 
 ## 버전 관리
 - 단일 상수 `APP_VERSION` (JS 상단)이 진실의 원천. DOM(각 탭 헤더 칩·설정 앱 정보)에 init 시 주입
@@ -478,7 +478,7 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 
 ### 작업 흐름 (Claude Code 웹 세션)
 - 지정 브랜치에서 작업 → 1280·390(+375 입력 후 저장 버튼) Playwright 검증 → `check_app.py` → 커밋·push.
-- 사용자가 **"배포"**라고 하면: PR 생성 → squash merge → main 트리 = 검증한 트리인지 확인 → 브랜치를 `origin/main`으로 리셋(`git checkout -B <branch> origin/main` + `push --force-with-lease`).
+- **배포는 두 가지**: ① 사용자가 직접 — Actions의 **'영수증 배포'** 버튼(크레딧 절약, `deploy.yml`; 브랜치가 최신 main 위여야 한다 → 배포 뒤엔 아래처럼 브랜치를 main에 맞춰 둔다). ② 사용자가 **"배포"**라고 하면 Claude가: PR 생성 → squash merge → main 트리 = 검증한 트리인지 확인 → 브랜치를 `origin/main`으로 리셋(`git checkout -B <branch> origin/main` + `push --force-with-lease`).
 - `gh` CLI 없음 — GitHub 작업은 GitHub MCP 도구로. 실데이터 백업(sync JSON)은 사용자가 올려 준 파일로만 검증(repo에 없음).
 - Dropbox 기능은 Playwright `page.route`로 가짜 Dropbox(목록·업로드·이동·복사·삭제·내려받기, content_hash)를 붙여 검증한다(v4.04 방식).
 
