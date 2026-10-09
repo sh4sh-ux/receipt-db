@@ -1513,7 +1513,13 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-ctl{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;flex-wrap:wrap;}
 .lp-ctl .lp-hd{flex:0 1 auto;min-width:0;white-space:nowrap;}
 .lp-ctl .lp-tabs{margin-left:auto;flex:0 0 auto;}
-@media(min-width:781px){.lp-ctl{flex-wrap:nowrap;}} /* v4.61 — 기간 버튼 자리에 짚은 칸의 날짜·금액(기간 선택은 위쪽 헤더 한 곳) */
+/* v4.62 — 요약은 PC·폰 모두 두 줄(날짜·건수 / 총액 · 내 부담)로 쌓는다: 연간 큰 금액이 한 줄에선 탭과 겹쳤다 */
+.lp-ctl{flex-wrap:nowrap;align-items:center;}
+.lp-ctl .lp-hd{flex:1 1 auto;min-width:0;}
+.lp-hdv{display:flex;flex-direction:column;align-items:flex-start;gap:7px;}
+.lp-hdv .lp-h1{font-size:12px;color:var(--label2);}
+.lp-hdv .lp-h2{white-space:nowrap;}
+.lp-hdv .lp-h2 u{margin-left:0;} /* v4.61 — 기간 버튼 자리에 짚은 칸의 날짜·금액(기간 선택은 위쪽 헤더 한 곳) */
 .lp-rangebtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--sep2);border-radius:var(--rs);background:var(--card);color:var(--label);font:inherit;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;cursor:pointer;}
 .lp-rangebtn svg{color:var(--label3);flex:none;}
 .lp-tabs{display:inline-flex;padding:3px;border-radius:10px;background:var(--fill);}
@@ -1594,7 +1600,15 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
   .spark-bar[data-day]:hover::after,.spark-bar[data-lbl]:hover::after{font-size:11px;padding:6px 9px;}
   .lp-yaxis,.lp-canvas{height:120px;}
   [data-trend] .budget-section-hd{flex-wrap:wrap;row-gap:6px;}
-  .lp-ctl .lp-hd{flex-basis:100%;}
+  /* v4.62 — 폰: 요약(날짜·건수 / 총액 / 내 부담)을 두 줄로 쌓아 왼쪽에, [연간|월별|일별]은 같은 높이 오른쪽에(공간 절약) */
+  .lp-ctl{flex-wrap:nowrap;align-items:center;}
+  .lp-ctl .lp-hd{flex:1 1 auto;min-width:0;}
+  .lp-hdv{display:flex;flex-direction:column;align-items:flex-start;gap:7px;}
+  .lp-hdv .lp-h1{font-size:12px;color:var(--label2);}
+  .lp-hdv .lp-h2{white-space:nowrap;}
+  .lp-hdv u{margin-left:0;}
+  .lp-ctl .lp-tabs{flex:0 0 auto;}
+  .lp-tabs .lp-tab{padding:6px 9px;font-size:12px;}
   .lp-hdv{font-size:11px;}.lp-hdv b{font-size:13px;}
   .lp-yaxis{font-size:10px;}
   .lp-xaxis{font-size:10.5px;}
@@ -1604,8 +1618,10 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
   /* v3.29 — 모바일: 트리거 라벨은 항상 '기간'(폭 고정), 팝오버 → 바텀시트 */
   /* v3.38 — 모바일 '기간' 버튼이 좁아 답답해 보이던 것: 폭·높이 키우고 가운데 정렬 */
   .lp-trigger{height:38px;padding:0 18px;min-width:104px;justify-content:center;gap:8px;font-size:13.5px;}
-  .lp-trigger .lp-tr-label-d{display:none;}
-  .lp-trigger .lp-tr-label-m{display:inline;}
+  /* v4.62 — 폰도 PC처럼 지금 보는 기간을 그대로 표시('기간' 대신 '2026년 10월'). 긴 직접 기간은 말줄임 */
+  .lp-trigger .lp-tr-label-d{display:inline;}
+  .lp-trigger .lp-tr-label-m{display:none;}
+  .lp-trigger{max-width:min(210px,56vw);}
   .lp-pop-backdrop:not([hidden]){display:block;}
   .lp-pop{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;max-width:none;border-radius:20px 20px 0 0;padding:16px 18px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -8px 30px rgba(15,23,42,.18);}
   .lp-pop-handle{display:block;width:36px;height:4px;border-radius:2px;background:var(--sep2);margin:0 auto 12px;}
@@ -3957,6 +3973,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   두고 중앙 배치(데스크톱). 3개만 있어도 그 블록 위쪽 슬롯부터. 모바일은 기존 7슬롯(126px) 유지. 색·계산 불변.
 // v3.25 — 모바일도 데스크탑과 동일 조건으로. ① 요약 세로 간격 축소(sum-card padding 12→8, gap 12→3, sub margin
 //   5→3). ② 덜 중요한 부분 크기·색을 데스크탑과 통일: 라벨 11.5/600/none, 이름(Secondary) 14→15px/600/--sum-name,
+// v4.62 — 폰: 지출 추이 요약 두 줄 + 탭 같은 높이 오른쪽.
 //   보조정보 11.5/500/--label3. ③ 도넛 창을 데스크탑처럼 도넛 세로 중앙 + 7슬롯 범례(154px) 중앙(위·아래 여분).
 //   Primary(총 지출·영수증)·색·계산·데이터 불변.
 // v3.26 — 도넛 구성: 범례를 우측 정렬하고, 도넛을 (왼쪽 여분)=(도넛↔범례 여분)이 되도록 그 사이 정중앙에.
@@ -4444,7 +4461,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.61';
+const APP_VERSION='v4.62';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -10367,7 +10384,7 @@ function _trendBuckets(cfg){
     return {key:k,lbl,sax,t:v.t,m:v.m,cnt:v.c};});
 }
 // 짚은(또는 기본) 칸의 값 줄: '날짜 · N건 총지출원 / 내부담원'
-const _lpReadout=(l,c,a,m)=>`<span class="lp-hdv">${escapeHtml(l)} · ${c}건<u>총</u><b>${fmtMoney(a)}원</b><i>/</i><b class="lp-hm">${fmtMoney(m)}원</b></span>`;
+const _lpReadout=(l,c,a,m)=>`<span class="lp-hdv"><span class="lp-h1">${escapeHtml(l)} · ${c}건</span><span class="lp-h2"><u>총</u><b>${fmtMoney(a)}원</b><i>/</i><b class="lp-hm">${fmtMoney(m)}원</b></span></span>`;
 const _trendRangeTxt=cfg=>{const f=x=>x.slice(2).replace(/-/g,'.');return `${f(cfg.from)} – ${f(cfg.to)}`;};
 function _trendSectionHtml(){
   const cfg=_trendCfg(),all=_trendBuckets(cfg),bars=all;
