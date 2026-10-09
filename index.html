@@ -700,7 +700,7 @@ svg{display:block;flex-shrink:0;}
 .psplit-row.top1 .psplit-rank{background:var(--blue);color:#fff;}
 .psplit-name{font-size:12.5px;font-weight:500;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .psplit-row.top1 .psplit-name{font-weight:600;}
-.psplit-bar{display:block;height:7px;background:var(--fill);border-radius:999px;overflow:hidden;}
+.psplit-bar{display:block;height:4px;background:var(--fill);border-radius:999px;overflow:hidden;}
 .psplit-bar-fill{display:block;height:100%;background:var(--blue);border-radius:999px;}
 .psplit-amt{text-align:right;font-size:12.5px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums;white-space:nowrap;}
 .psplit-pct{text-align:right;font-size:12px;color:var(--label3);font-variant-numeric:tabular-nums;white-space:nowrap;}
@@ -3965,6 +3965,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   오른쪽 끝 정렬(right:0) + 폭=타일 폭이라 왼쪽 모서리가 그 타일 왼쪽 구분선에 정렬된다(데스크탑·모바일).
 // v3.29 — 기간 선택 UI 통합. 4-pill 세그먼트 → 단일 트리거 버튼(데스크탑=현재 기간 라벨, 모바일=고정 '기간').
 //   트리거를 누르면 데스크탑은 팝오버, 모바일은 바텀시트가 열린다(빠른 선택 3개 + 직접 기간 선택 + 적용).
+// v4.60 — 사람별 분담 막대 굵기 4px(카테고리별 지출과 같게).
 // v4.59 — 지출 추이 ‹ › 화살표: 배경 없는 글자 모양.
 // v4.58 — 지출 추이 ‹ › 버튼: 마우스를 올릴 때만 보임.
 //   기존 필터/계산 로직(_ledgerTimeFilter·viewMonth·_ledgerRange·_statsPeriodReceipts·renderSide/renderDetail)은 불변.
@@ -4439,7 +4440,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.59';
+const APP_VERSION='v4.60';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
