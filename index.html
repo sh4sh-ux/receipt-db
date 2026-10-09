@@ -3965,6 +3965,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v4.63 — 지출 추이: 선택 해제하면 전체가 흐리게(자동으로 최근 칸 강조하지 않음), 요약은 기간 합계.
 //     (_sortForList 안정정렬, 원본 불변). 날짜 정렬만 날짜(월+일) 그룹, 금액·매장명순은 flat. 품목 등 안 보이는 필드
 //     매칭 시 '품목 · …' 이유 표시(getFiltered 불변, 읽기 전용 재확인). placeholder 실제 지원 필드 반영(기존 유지).
 // v3.23 — 도넛 범례를 7슬롯(상위 6 + 기타) 고정 높이 + 위에서부터 균등 간격으로. grid-auto-rows 고정 +
@@ -4461,7 +4462,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.62';
+const APP_VERSION='v4.63';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -10392,10 +10393,12 @@ function _trendSectionHtml(){
   const {max:yMax,ticks:yTicks}=_yTicks(peak);
   const h=v=>yMax>0&&v>0?Math.max(2,Math.round(v/yMax*100)):0;
   const note=cfg.unit==='day'?'일별':cfg.unit==='month'?'월별':'연간';
-  let def=-1;bars.forEach((b,i)=>{if(b.t>0||b.m>0)def=i;}); // 기본 강조 = 이 쪽의 가장 최근 지출 칸
-  const def0=def;
+  let def=-1; // v4.63 — 기본은 아무 칸도 강조하지 않는다(전체가 흐림). 누르면 그 칸, 다른 곳을 누르면 다시 전체 흐림
+  const def0=-1;
   if(_trendPickOn()&&_trendPick.unit===cfg.unit){const pi=bars.findIndex(b=>b.key===_trendPick.k);if(pi>=0)def=pi;} // 누른 칸이 있으면 그 칸을 고정 강조
-  const defHtml=def>=0?_lpReadout(bars[def].lbl,bars[def].cnt,bars[def].t,bars[def].m):note;
+  const sumT=bars.reduce((a,b)=>a+b.t,0),sumM=bars.reduce((a,b)=>a+b.m,0),sumC=bars.reduce((a,b)=>a+b.cnt,0);
+  const sumHtml=_lpReadout('기간 합계',sumC,sumT,sumM); // 아무 칸도 안 골랐을 때 요약 = 그래프 전체 기간 합계
+  const defHtml=def>=0?_lpReadout(bars[def].lbl,bars[def].cnt,bars[def].t,bars[def].m):sumHtml;
   const multiYear=cfg.from.slice(0,4)!==cfg.to.slice(0,4);
   const perBar=true; // v4.43 — 한 번에 7칸만 보이므로 칸마다 라벨
   const barLbl=b=>cfg.unit==='year'?b.key:cfg.unit==='month'?(multiYear?((+b.key.slice(5)===1||b===bars[0])?`${b.key.slice(2,4)}.${+b.key.slice(5)}`:`${+b.key.slice(5)}`):`${+b.key.slice(5)}월`):b.sax;
@@ -10409,7 +10412,7 @@ function _trendSectionHtml(){
       <div class="lp-plot"><button type="button" class="lp-nav l" data-lpnav="-1" aria-label="이전 7칸" hidden>‹</button><button type="button" class="lp-nav r" data-lpnav="1" aria-label="다음 7칸" hidden>›</button>
         <div class="lp-canvas-col"><div class="lp-inner${bars.length<7?' few':''}" style="width:${Math.max(bars.length,7)/7*100}%;--n:${Math.max(bars.length,7)}">
           <div class="lp-canvas">
-            <div class="lp-bars" data-def="${def}" data-def0="${def0}">${bars.map((b,i)=>{const has=b.t>0||b.m>0;const inner=b.t>0?Math.min(100,Math.max(0,b.m/b.t*100)):0;return `<div class="lp-col${has?' has':''}${i===def?' on def':''}" data-k="${escapeHtml(b.key)}" data-l="${escapeHtml(b.lbl)}" data-a="${b.t}" data-m="${b.m}" data-c="${b.cnt}"><div class="lp-bar${has?' has':''}" style="height:${h(b.t)}%;"><i style="height:${inner}%"></i></div></div>`;}).join('')}</div>
+            <div class="lp-bars" data-def="${def}" data-def0="${def0}" data-sum="${escapeHtml(sumHtml)}">${bars.map((b,i)=>{const has=b.t>0||b.m>0;const inner=b.t>0?Math.min(100,Math.max(0,b.m/b.t*100)):0;return `<div class="lp-col${has?' has':''}${i===def?' on def':''}" data-k="${escapeHtml(b.key)}" data-l="${escapeHtml(b.lbl)}" data-a="${b.t}" data-m="${b.m}" data-c="${b.cnt}"><div class="lp-bar${has?' has':''}" style="height:${h(b.t)}%;"><i style="height:${inner}%"></i></div></div>`;}).join('')}</div>
           </div>
           ${perBar?`<div class="lp-xaxis per">${bars.map(b=>`<span>${escapeHtml(barLbl(b))}</span>`).join('')}</div>`:`<div class="lp-xaxis">${_pickAxis(bars).map(a=>`<span>${escapeHtml(a)}</span>`).join('')}</div>`}
           <div class="lp-ulrow">${bars.map((b,i)=>`<span class="${i===def?'on':''}"></span>`).join('')}</div>
@@ -11330,7 +11333,7 @@ async function renderDetail(){
         if(_trendPickOn()&&_trendPick.unit===unit){const i=[...bs.children].findIndex(c=>c.dataset.k===_trendPick.k);if(i>=0)d=i;}
         bs.dataset.def=d;bs.classList.remove('scrub');lpMark(wrap,d);
         const hd=sec?.querySelector('.lp-hd'),c=bs.children[d];
-        if(hd&&c)hd.dataset.def=c.dataset.a!=null&&(+c.dataset.a>0||+c.dataset.m>0)?_lpReadout(c.dataset.l||'',+c.dataset.c||0,+c.dataset.a||0,+c.dataset.m||0):(hd.dataset.def||'');
+        if(hd)hd.dataset.def=c?_lpReadout(c.dataset.l||'',+c.dataset.c||0,+c.dataset.a||0,+c.dataset.m||0):(bs.dataset.sum||hd.dataset.def||'');
       });
       lpOff();
     };
