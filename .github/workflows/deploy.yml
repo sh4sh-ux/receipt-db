@@ -1,0 +1,59 @@
+name: 영수증 배포
+
+# 사용법: GitHub → Actions → "영수증 배포" → Run workflow → Run workflow
+# 하는 일: 작업 브랜치를 검사(scripts/check_app.py)한 뒤 main에 그대로 합친다(fast-forward).
+#   main에 올라가면 GitHub Pages가 새 버전을 공개한다. 폰은 배포 후 앱을 두 번 열어야 새 버전이 보인다.
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: '배포할 브랜치 (Claude 작업 브랜치)'
+        required: true
+        default: 'claude/bold-goldberg-jxhmuy'
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: receipt-db-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 브랜치 가져오기
+        run: git fetch origin "${{ inputs.branch }}"
+
+      - name: 릴리스 검사 (버전·README·서비스 워커·Dropbox 삭제 금지 규칙)
+        run: |
+          git checkout --detach "origin/${{ inputs.branch }}"
+          python3 scripts/check_app.py
+
+      - name: main에 합치기 (fast-forward)
+        run: |
+          git checkout -B main origin/main
+          if ! git merge --ff-only "origin/${{ inputs.branch }}"; then
+            echo "::error::브랜치가 최신 main 위에 있지 않아 자동으로 합칠 수 없어요. Claude에게 '배포 준비(브랜치를 main에 맞춰줘)'라고 말해 주세요."
+            exit 1
+          fi
+          git push origin main
+
+      - name: Pages 새로 빌드 요청 (실패해도 무시)
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" || true
+
+      - name: 결과
+        run: |
+          VER=$(grep -m1 "const APP_VERSION" index.html | sed "s/.*'\(v[0-9.]*\)'.*/\1/")
+          echo "### 배포 완료 — ${VER}" >> "$GITHUB_STEP_SUMMARY"
+          echo "main = $(git rev-parse --short HEAD)" >> "$GITHUB_STEP_SUMMARY"
+          echo "폰은 앱을 두 번 열어야 새 버전이 보여요." >> "$GITHUB_STEP_SUMMARY"
