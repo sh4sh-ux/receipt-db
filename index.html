@@ -1576,12 +1576,12 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-plot{position:relative;}
 .lp-go{display:none;}
 @media(max-width:780px){.lp-go:not([hidden]){display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin-top:12px;padding:12px 14px;border:1px solid var(--sep2);border-radius:var(--rm);background:var(--card);color:var(--blue);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;text-align:left;}.lp-go i{font-style:normal;font-size:16px;}}
-.lp-nav{position:absolute;top:calc(70px - 16px);z-index:3;width:32px;height:32px;border-radius:50%;border:1px solid var(--sep2);background:var(--card);color:var(--label);font-size:20px;line-height:1;display:grid;place-items:center;padding:0 0 3px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12);font-family:inherit;}
+.lp-nav{position:absolute;top:calc(70px - 28px);z-index:3;width:30px;height:56px;border:none;border-radius:0;background:transparent;color:var(--label3);font-size:30px;font-weight:300;line-height:1;display:grid;place-items:center;padding:0 0 4px;cursor:pointer;font-family:inherit;transition:color .12s;}
 .lp-nav[hidden]{display:none;}
 .lp-nav{opacity:0;pointer-events:none;transition:opacity .15s;} /* v4.58 — 평소엔 숨기고 그래프에 마우스를 올리면(또는 키보드 포커스) 나타남 */
 .lp-plot:hover .lp-nav,.lp-nav:focus-visible{opacity:1;pointer-events:auto;}
-.lp-nav.l{left:-6px;}.lp-nav.r{right:-6px;}
-.lp-nav:hover{background:var(--fill);}
+.lp-nav.l{left:-4px;}.lp-nav.r{right:-4px;}
+.lp-nav:hover{color:var(--label);} /* v4.59 — 배경·테두리·그림자 없는 글자 화살표 */
 @media(hover:none){.lp-nav{display:none!important;}}
 .lp-xaxis.per{gap:3px;}
 .lp-bars.scrub .lp-bar.has{opacity:.4;}
@@ -3965,6 +3965,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   오른쪽 끝 정렬(right:0) + 폭=타일 폭이라 왼쪽 모서리가 그 타일 왼쪽 구분선에 정렬된다(데스크탑·모바일).
 // v3.29 — 기간 선택 UI 통합. 4-pill 세그먼트 → 단일 트리거 버튼(데스크탑=현재 기간 라벨, 모바일=고정 '기간').
 //   트리거를 누르면 데스크탑은 팝오버, 모바일은 바텀시트가 열린다(빠른 선택 3개 + 직접 기간 선택 + 적용).
+// v4.59 — 지출 추이 ‹ › 화살표: 배경 없는 글자 모양.
 // v4.58 — 지출 추이 ‹ › 버튼: 마우스를 올릴 때만 보임.
 //   기존 필터/계산 로직(_ledgerTimeFilter·viewMonth·_ledgerRange·_statsPeriodReceipts·renderSide/renderDetail)은 불변.
 // v3.30 — 선불권 화면(prepaid.js/css) UI/UX 개선. 계산·저장·거래(ppTotals·ppSuggestedUseAmount·ppLatestUse·
@@ -4438,7 +4439,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.58';
+const APP_VERSION='v4.59';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
