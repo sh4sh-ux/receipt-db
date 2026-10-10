@@ -2157,8 +2157,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .stats-redesign .sum-pcx{display:none;}
   .stats-redesign .sum-ph{display:inline;}
   .stats-redesign .sum-card{align-content:flex-start;}
-  .stats-redesign .sum-card .sum-lbl,.stats-redesign .sum-card .sum-val{line-height:34px;}
-  .stats-redesign .sum-card .sum-lbl,.stats-redesign .sum-card .sum-val{height:34px;}   /* 큰 숫자의 '원·건' 단위가 줄을 키우지 않게 */
+  .stats-redesign .sum-card .sum-lbl,.stats-redesign .sum-card .sum-val{line-height:28px;}
+  .stats-redesign .sum-card .sum-lbl,.stats-redesign .sum-card .sum-val{height:28px;}   /* 큰 숫자의 '원·건' 단위가 줄을 키우지 않게 */
   .stats-redesign .sum-card .sum-sub{line-height:16px;min-height:16px;}
   .stats-redesign .sum-card .sc-sub{display:flex;}
   .stats-redesign .sum-card:has(.sum-mine){align-items:center;}
@@ -4009,6 +4009,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v4.76 — 폰: 요약 카드 제목↔부제 간격 6px 좁힘.
 // v4.75 — 지출 추이 범례 가운데 정렬을 PC에도.
 // v4.74 — 폰: 지출 추이 범례 가운데 정렬.
 // v4.73 — 폰: 요약 카드 부제 높이 통일·총 지출 부제=기간·영수증 부제=건당 평균·카테고리 금액 · 비율.
@@ -4518,7 +4519,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.75';
+const APP_VERSION='v4.76';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
