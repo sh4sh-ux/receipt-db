@@ -3965,6 +3965,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v4.65 — 그래프에서 날짜를 고르면 헤더 달 표시도 그 달로.
 // v4.64 — 더치페이로 보내기: Dropbox 파일 전달(홈 화면 앱끼리·폰↔PC). 연결 안 됐으면 옛 방식.
 // v4.63 — 지출 추이: 선택 해제하면 전체가 흐리게(자동으로 최근 칸 강조하지 않음), 요약은 기간 합계.
 //     (_sortForList 안정정렬, 원본 불변). 날짜 정렬만 날짜(월+일) 그룹, 금액·매장명순은 flat. 품목 등 안 보이는 필드
@@ -4463,7 +4464,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.64';
+const APP_VERSION='v4.65';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -6434,7 +6435,7 @@ function renderSide(){
   // 월 네비 라벨 갱신 — 영수증 선택 중이면 파란색 힌트 표시
   const monthLabelEl=document.getElementById('monthLabel');
   if(monthLabelEl){
-    monthLabelEl.textContent=_sideAllMonths?'전체 내역':ymLabel(viewMonth);
+    monthLabelEl.textContent=_sideAllMonths?'전체 내역':(_trendPickOn()&&_trendPick.from)?(_trendPick.unit==='year'?_trendPick.k+'년':ymLabel(_trendPick.from.slice(0,7))):ymLabel(viewMonth); // v4.65 — 그래프에서 고른 날짜의 달을 보여준다
     monthLabelEl.title=selectedId?'클릭하면 가계부 요약으로 돌아가요':'';
     monthLabelEl.classList.toggle('has-sel',!!selectedId);
   }
