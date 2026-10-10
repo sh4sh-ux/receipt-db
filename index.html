@@ -3965,6 +3965,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v4.64 — 더치페이로 보내기: Dropbox 파일 전달(홈 화면 앱끼리·폰↔PC). 연결 안 됐으면 옛 방식.
 // v4.63 — 지출 추이: 선택 해제하면 전체가 흐리게(자동으로 최근 칸 강조하지 않음), 요약은 기간 합계.
 //     (_sortForList 안정정렬, 원본 불변). 날짜 정렬만 날짜(월+일) 그룹, 금액·매장명순은 flat. 품목 등 안 보이는 필드
 //     매칭 시 '품목 · …' 이유 표시(getFiltered 불변, 읽기 전용 재확인). placeholder 실제 지원 필드 반영(기존 유지).
@@ -4462,7 +4463,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.63';
+const APP_VERSION='v4.64';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -4905,6 +4906,19 @@ function _compressToJpegDataUrl(srcUrl,maxDim,quality){
     }catch(_){resolve('');}
   });
 }
+// v4.64 — 더치페이 전달 봉투를 Dropbox 파일로 올린다. 더치페이가 열릴 때 읽어 가고 '처리됨' 폴더로 옮긴다(지우지 않음).
+const DUTCH_PAY_INBOX_DIR='/07_Apps/더치페이(Dutch-Pay)/영수증DB 전송';
+async function _sendEnvelopeViaDropbox(env){
+  try{
+    await _dbxEnsureFolder(DUTCH_PAY_INBOX_DIR);
+    const token=await _dbxToken();
+    const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/octet-stream',
+        'Dropbox-API-Arg':_dbxApiArg({path:`${DUTCH_PAY_INBOX_DIR}/${env.batchId}.json`,mode:'add',autorename:false,mute:true})},
+      body:JSON.stringify(env)});
+    return resp.ok;
+  }catch(e){return false;}
+}
 async function sendReceiptsToDutchPay(records,{single=false}={}){
   const sourceRecords=(records||[]).filter(Boolean);
   if(!sourceRecords.length){toast('보낼 영수증을 선택해주세요',{type:'error'});return false;}
@@ -4941,7 +4955,8 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
     const batchId=`rb_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
     const dutchUrl=`/dutch-pay/?from=receipt-db&batch=${encodeURIComponent(batchId)}`;
     // 팝업 차단 방지: 사용자 제스처 안에서 창을 먼저 열고, 이미지 처리 후 채운다
-    const win=window.open('','_blank');
+    const useDbx=dbxIsConnected();   // v4.64 — Dropbox 연결돼 있으면 파일로 전달(홈 화면 앱끼리·폰↔PC), 아니면 옛 방식
+    const win=useDbx?null:window.open('','_blank');
     if(win){try{win.document.write('<!doctype html><meta charset="utf-8"><title>더치페이</title><body style="font:15px -apple-system,BlinkMacSystemFont,sans-serif;color:#555;padding:44px 24px;text-align:center">영수증을 더치페이로 보내는 중…</body>');}catch(_){}}
     // 각 영수증 사진을 압축해 함께 전송 → 더치페이에서 자동 첨부
     const entries=await Promise.all(prepared.map(async ({r,payer,people,members,watchers,treat})=>{
@@ -4955,6 +4970,14 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
         items:(r.items||[]).map(it=>({name:it.name||'',quantity:Number(it.quantity)||1,unitPrice:Number(it.unitPrice)||0,amount:Number(it.amount)||0})),
         receiptImage};
     }));
+    if(useDbx){
+      const env={version:1,batchId,createdAt:now,entries};
+      const ok=await _sendEnvelopeViaDropbox(env);
+      if(!ok){toast('더치페이로 보내지 못했어요 — Dropbox 연결을 확인하고 다시 시도해주세요',{type:'error',duration:5200});return false;}
+      if(getMyName())localStorage.setItem(DUTCH_PAY_NAME_KEY,getMyName());
+      toast(single?'더치페이로 보냈어요 — 더치페이를 열면 들어가요':`영수증 ${sourceRecords.length}건을 더치페이로 보냈어요 — 더치페이를 열면 들어가요`,{type:'success',duration:4200});
+      return true;
+    }
     const writeEnvelope=(withImg)=>{
       const env={version:1,batchId,createdAt:now,entries:withImg?entries:entries.map(e=>Object.assign({},e,{receiptImage:''}))};
       localStorage.setItem(DUTCH_PAY_TRANSFER_KEY,JSON.stringify(env));
