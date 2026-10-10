@@ -2836,6 +2836,20 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 @media(max-width:380px){.kv-dt-row{gap:6px;}.kv-time-txt{font-size:12px;}.kv-time.empty>.kv-time-txt{font-size:12px;}}
 @media(max-width:365px){.kv-date-txt{font-size:13px;letter-spacing:-.2px;}}
 .kv-time>.kv-time-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px;cursor:pointer;}
+
+/* v4.66 — 그래프에서 고른 기간 영수증 시트. 금액은 오른쪽 정렬 */
+.trs-sum{display:flex;justify-content:space-between;align-items:baseline;padding:2px 0 8px;font-size:13px;color:var(--label2)}
+.trs-sum b{font-size:15px;font-weight:700;color:var(--text-primary)}
+.trs-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;width:100%;padding:13px 0;border:0;border-bottom:1px solid var(--sep,rgba(128,128,128,.2));background:none;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.trs-row:active{background:var(--fill)}
+.trs-l{min-width:0;display:flex;flex-direction:column;gap:3px}
+.trs-n{font-size:15.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trs-m{font-size:12.5px;color:var(--label3)}
+.trs-a{flex:none;text-align:right;font-size:15.5px;font-weight:700}
+.trs-a small{display:block;margin-top:3px;font-size:11.5px;font-weight:600;color:var(--blue)}
+.trs-foot{display:flex;gap:8px;padding:14px 0 calc(14px + env(safe-area-inset-bottom,0px))}
+.trs-foot button{flex:1;padding:13px;border-radius:12px;border:1px solid var(--sep,rgba(128,128,128,.3));background:none;color:inherit;font:inherit;font-weight:600;font-size:15px}
+.trs-foot .trs-go{flex:0 0 auto;border-color:transparent;color:var(--blue);padding-inline:6px}
 </style>
 <link rel="stylesheet" href="prepaid.css">
 <link rel="stylesheet" href="advance.css">
@@ -3965,6 +3979,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v4.66 — 폰: 그래프 '영수증 N건 보기'가 시트(금액 오른쪽 정렬)로.
 // v4.65 — 그래프에서 날짜를 고르면 헤더 달 표시도 그 달로.
 // v4.64 — 더치페이로 보내기: Dropbox 파일 전달(홈 화면 앱끼리·폰↔PC). 연결 안 됐으면 옛 방식.
 // v4.63 — 지출 추이: 선택 해제하면 전체가 흐리게(자동으로 최근 칸 강조하지 않음), 요약은 기간 합계.
@@ -4464,7 +4479,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.65';
+const APP_VERSION='v4.66';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -10367,6 +10382,27 @@ function _pickAxis(bars){ const N=Math.min(5,bars.length); const out=[]; if(!bar
 let _trendOv=null,_trendFormOpen=false;
 // v4.51 — PC: 지출 추이 막대를 누르면 그 기간의 영수증만 왼쪽 목록에({from,to,label,unit,k,key}). 기간·월이 바뀌면(key 불일치) 저절로 풀린다.
 let _trendPick=null;
+// v4.66 — 폰: 그래프에서 고른 기간의 영수증을 시트로(금액 오른쪽 정렬). [내역에서 보기]는 예전 동작(내역 탭).
+function _trendPickSheet(unit,k,label){
+  const from=unit==='day'?k:unit==='month'?k+'-01':k+'-01-01',to=unit==='day'?k:unit==='month'?k+'-31':k+'-12-31';
+  const list=receipts.filter(r=>r.date>=from&&r.date<=to).sort((a,b)=>((b.date+(b.time||''))>(a.date+(a.time||''))?1:-1));
+  const me=getMyName(),tot=list.reduce((a,r)=>a+(r.total||0),0);
+  const {card,close}=_mtgSheetOpen();
+  const row=r=>{
+    const n=(r.participants||[]).length,mn=me?_myShareOf(r,me):0;
+    const meta=[(unit==='day'?'':r.date.slice(5).replace('-','.')),r.time||'',r.paidBy||'',n?n+'명':''].filter(Boolean).join(' · ');
+    return `<button type="button" class="trs-row" data-open="${escapeHtml(r.id)}"><span class="trs-l"><span class="trs-n">${escapeHtml(r.store||'(매장명 없음)')}</span><span class="trs-m">${escapeHtml(meta)}</span></span>`
+      +`<span class="trs-a">${fmtMoney(r.total||0)}원${me?`<small>내 부담 ${fmtMoney(mn)}원</small>`:''}</span></button>`;
+  };
+  card.innerHTML=`<div class="mtg-sheet-hd"><div class="mtg-sheet-title">${escapeHtml(label)} 영수증</div><button class="mtg-sheet-x" type="button" aria-label="닫기">×</button></div>
+    <div class="trs-sum"><span>${list.length}건</span><b>${fmtMoney(tot)}원</b></div>
+    <div class="trs-list">${list.map(row).join('')||'<div class="trs-m" style="padding:24px 0;text-align:center">영수증이 없어요</div>'}</div>
+    <div class="trs-foot"><button type="button" class="trs-go">내역에서 보기 ›</button><button type="button" class="trs-close">닫기</button></div>`;
+  card.querySelector('.mtg-sheet-x').onclick=()=>close();
+  card.querySelector('.trs-close').onclick=()=>close();
+  card.querySelectorAll('.trs-row').forEach(b=>b.onclick=()=>{const id=b.dataset.open;close(()=>selectReceipt(id));});
+  card.querySelector('.trs-go').onclick=()=>close(()=>{_trendPickSet(unit,k,label);renderSide();_mobileListMode='list';switchTab('list');});
+}
 function _trendPickSet(unit,k,label){
   const from=unit==='day'?k:unit==='month'?k+'-01':k+'-01-01',to=unit==='day'?k:unit==='month'?k+'-31':k+'-12-31';
   _trendPick={from,to,label,unit,k,key:_trendKey()};
@@ -11374,8 +11410,7 @@ async function renderDetail(){
     body.addEventListener('click',e=>{
       const g=e.target.closest&&e.target.closest('[data-lpgo]');if(!g||!body.contains(g))return;
       const unit=g.closest('[data-trend]').querySelector('.lp-tab.on')?.dataset.lpunit;
-      _trendPickSet(unit,g.dataset.k,g.dataset.l||g.dataset.k);
-      renderSide();_mobileListMode='list';switchTab('list');
+      _trendPickSheet(unit,g.dataset.k,g.dataset.l||g.dataset.k);   // v4.66 — 내역 탭으로 넘어가지 않고 그 자리에서 시트로
     });
     document.addEventListener('click',e=>{
       const x=e.target.closest&&e.target.closest('[data-trendclear]');if(!x)return;
