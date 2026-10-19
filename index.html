@@ -2029,6 +2029,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .detail-header-btn.dutch .dutch-label{display:none;}
   .detail-header-btn.dutch svg,
   #detailDeleteBtn svg{width:18px;height:18px;display:block;}
+  .detail-textcopy{border:0;background:none;padding:0 0 0 2px;margin:0;font:inherit;color:var(--label3);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+  .detail-textcopy:hover{color:var(--blue)}
   .detail-header-btn.dutch svg{
     position:absolute!important;
     left:50%;
@@ -3084,7 +3086,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
             </button>
             <div class="detail-header-save detail-desk-act" id="detailSaveBar">
               <button class="detail-header-btn" id="detailRevertBtn" type="button">되돌리기</button>
-              <button class="detail-header-btn" id="detailCopyBtn" type="button" title="이 영수증을 글로 복사(추가 화면에 붙여 넣을 수 있는 형식)">복사</button>
+              <button class="detail-header-btn" id="detailCopyBtn" type="button" title="이 영수증을 새 영수증으로 복사(사진 제외)">복사</button>
               <button class="detail-header-btn primary" id="detailConfirmBtn" type="button" disabled>저장</button>
             </div>
             <button class="icon-btn danger detail-desk-act" id="detailDeleteBtn" title="삭제">
@@ -4008,6 +4010,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v4.85 — 영수증 상세 [복사] = 새 영수증으로 복사(사진·연결 제외, [취소]로 바로 지움). 글 복사는 '내용 복사'(폰 ··· · PC 아래 ID 줄).
 // v4.84 — 사람별 분담 PC는 점 없이 `비율   금액`(폰만 점).
 // v4.83 — 폰: 사람별 분담 비율·점·금액 간격 동일(8px).
 // v4.82 — 사람별 분담 점(·)을 금액 바로 앞에(PC·폰).
@@ -4526,7 +4529,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.84';
+const APP_VERSION='v4.85';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 document.addEventListener('click',e=>{
@@ -11906,6 +11909,7 @@ async function renderDetail(){
 
     <div style="font-size:11px;color:var(--label3);margin-top:14px;">
       ID: ${escapeHtml(r.id)} · 생성 ${escapeHtml(r.createdAt?r.createdAt.slice(0,16).replace('T',' '):'—')} · 수정 ${escapeHtml(r.updatedAt?r.updatedAt.slice(0,16).replace('T',' '):'—')}
+      <button type="button" class="detail-textcopy" id="detailTextCopy" title="추가 화면 형식의 글로 클립보드에 복사">· 내용 복사</button>
     </div>
   `;
 
@@ -12199,7 +12203,8 @@ async function renderDetail(){
   // v3.47 — meetingId가 있으면(2건 이상) 더치페이 전송 범위 선택, 아니면 기존 단일 전송.
   document.getElementById('sendDutchPayBtn').onclick=()=>{ if(_mtgHasMeeting(r))_mtgOpenDutchScope(r); else sendReceiptToDutchPay(r); };
   // v3.51 — 모바일 [···] 더보기: 기존 헤더 액션(더치페이·되돌리기·삭제) 핸들러를 그대로 재사용
-  document.getElementById('detailCopyBtn').onclick=()=>_copyReceiptText(r);
+  document.getElementById('detailCopyBtn').onclick=()=>_duplicateReceipt(r);
+  const _txtCopy=document.getElementById('detailTextCopy');if(_txtCopy)_txtCopy.onclick=()=>_copyReceiptText(r);
   const _moreBtn=document.getElementById('detailMoreBtn');
   if(_moreBtn)_moreBtn.onclick=()=>_openDetailMoreMenu(r);
   const _mtgDetailRowBtn=document.getElementById('mtgDetailRow');
@@ -12237,6 +12242,30 @@ function _receiptCopyText(r){
   const lines=(r.items||[]).map(it=>`${String(it.name||'').replace(/\|/g,'/')} | ${it.quantity||0} | ${fmtMoney(it.unitPrice||0)} | ${(it.amount||0)===0?'증정품':fmtMoney(it.amount)}`);
   return head.join('\n')+'\n\n품목명 | 수량 | 단가 | 금액\n\n'+lines.join('\n');
 }
+// v4.85 — [복사] = 새 영수증으로 복사(사용자: 복사 뒤 고쳤더니 원본이 바뀌었다 — 전엔 글로 클립보드에만 복사했다).
+//   같은 내용으로 새 ID의 영수증을 만들어 바로 연다. 사진·완료 파일(scanPath)·스캔 해시·만남·선불권·구독 연결은 넘기지 않는다
+//   (사진 ID가 같으면 한쪽을 지울 때 다른 쪽 사진도 사라진다). 저장된 값 기준 — 고치던 중이면 먼저 묻는다.
+async function _duplicateReceipt(r){
+  if(!r)return;
+  if(_detailDirty&&!confirm('저장하지 않은 수정은 복사되지 않아요. 저장된 내용으로 복사할까요?'))return;
+  const src=receipts.find(x=>x.id===r.id)||r,now=nowISO();
+  const c=JSON.parse(JSON.stringify(src));
+  for(const k of ['imageId','imageHash','photoClaim','scanPath','srcHash','meetingId','meetingOrder','prepaidEventId','subId','subPeriod','createdAt','updatedAt'])delete c[k];
+  if(src.subId&&Array.isArray(c.tags))c.tags=c.tags.filter(t=>t!=='구독');
+  c.id=_newId(c.date);c.createdAt=now;c.updatedAt=now;
+  await dbPut('receipts',c);
+  if(typeof _detailDirty!=='undefined')_detailDirty=false;
+  await loadAll();
+  if(c.date)viewMonth=c.date.slice(0,7);
+  selectedId=c.id;renderSide();renderDetail();
+  toast(`'${c.store||'영수증'}' 복사본을 만들었어요 — 고쳐서 저장하세요`,{type:'success',duration:6000,actionLabel:'취소',action:async()=>{
+    if(!receipts.some(x=>x.id===c.id))return;
+    _dbxMarkDeleted(c.id);await dbDel('receipts',c.id);
+    selectedId=src.id;await loadAll();renderSide();renderDetail();dbxSyncNow(true);
+    toast('복사본을 지웠어요',{type:'success'});
+  }});
+  dbxSyncNow(true);
+}
 function _copyReceiptText(r){
   const text=_receiptCopyText(r);
   const ok=()=>toast('영수증 내용을 복사했어요',{type:'success'});
@@ -12249,12 +12278,14 @@ function _openDetailMoreMenu(r){
     <div class="mtg-sheet-hd"><div class="mtg-sheet-title">${escapeHtml(r.store||'영수증')}</div><button class="mtg-sheet-x" id="dmX" type="button" aria-label="닫기">×</button></div>
     <div class="detail-more-list" role="menu">
       <button type="button" class="detail-more-item" id="dmDutch" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10M7 12h7M7 17h4"/><path d="m16 15 3 3 3-3M19 18V9"/></svg>더치페이로 보내기</button>
+      <button type="button" class="detail-more-item" id="dmDup" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/><path d="M14.5 12v5M12 14.5h5"/></svg>새 영수증으로 복사</button>
       <button type="button" class="detail-more-item" id="dmCopy" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>내용 복사</button>
       <button type="button" class="detail-more-item" id="dmRevert" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M3.5 13a9 9 0 1 0 2.6-7.6L3 8"/></svg>되돌리기</button>
       <button type="button" class="detail-more-item danger" id="dmDelete" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>삭제</button>
     </div>`;
   card.querySelector('#dmX').onclick=close;
   card.querySelector('#dmDutch').onclick=()=>{close();document.getElementById('sendDutchPayBtn')?.click();};
+  card.querySelector('#dmDup').onclick=()=>{close();_duplicateReceipt(r);};
   card.querySelector('#dmCopy').onclick=()=>{close();_copyReceiptText(r);};
   card.querySelector('#dmRevert').onclick=()=>{close();document.getElementById('detailRevertBtn')?.click();};
   card.querySelector('#dmDelete').onclick=()=>{close();document.getElementById('detailDeleteBtn')?.click();};
