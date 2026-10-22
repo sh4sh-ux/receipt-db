@@ -67,12 +67,20 @@ def main() -> int:
         errors.append("사진 제거 버튼 SVG 중앙 정렬 보호 규칙이 없습니다")
 
     # v4.87 — PC는 마우스용 24시간 선택기, 터치는 네이티브 time picker를 사용한다.
-    if "const _desktopTimeMq=window.matchMedia('(hover:hover) and (pointer:fine)')" not in index or "function _timeOpen(inp)" not in index:
+    if "const _desktopPickerMq=window.matchMedia('(hover:hover) and (pointer:fine)')" not in index or "const _desktopTimeMq=_desktopPickerMq;" not in index or "function _timeOpen(inp)" not in index:
         errors.append("데스크톱 시간 선택기가 없습니다")
     if "closest('.kv-time-inp,.kv-date-inp')" in index or "dtEl.addEventListener('focus',openPicker)" in index:
         errors.append("날짜·시간 선택기에 중복 showPicker 호출이 남아 있습니다")
     if "const direct=e.target instanceof Element&&e.target.matches('input[type=\"date\"]')?e.target:null;" not in index or "e.preventDefault();\n  try{input.showPicker();}" not in index:
         errors.append("투명 날짜 input을 여는 단일 showPicker 위임 핸들러가 없습니다")
+
+    # v4.90 — PC 날짜·시간은 결제수단과 같은 필드 너비이며, 네 종류의 선택창은 서로 겹치지 않는다.
+    if "function _dateOpen(inp)" not in index or ".date-pop{position:absolute" not in index:
+        errors.append("데스크톱 앱 내부 날짜 선택기가 없습니다")
+    if ".time-pop{position:absolute;z-index:46;top:calc(100% + 8px);left:-1px;right:-1px;" not in index or "width:248px" in index:
+        errors.append("시간 선택기 너비가 결제수단 필드 너비와 같지 않습니다")
+    if "_kvsClose();_timeClose();_dateClose();_closeCategoryPicker();" not in index or "_timeClose();_dateClose();_kvsClose();_closeAnyCategoryPicker();" not in index:
+        errors.append("결제수단·카테고리·날짜·시간 선택창 상호 닫힘 규칙이 없습니다")
 
     # v4.89 — 더치페이 전송은 즉시 피드백하고, 평소 Dropbox 폴더 확인 왕복과 작은 JPEG 재압축을 피한다.
     if "let _dutchPaySending=false;" not in index or "send.textContent=_dutchPaySending?'보내는 중…':'더치페이로 보내기';" not in index:
