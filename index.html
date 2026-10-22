@@ -2892,16 +2892,25 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .date-pop{position:absolute;z-index:46;top:calc(100% + 8px);left:-1px;right:-1px;padding:0 10px 10px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:var(--app-shadow);cursor:default;}
 .date-pop.up{top:auto;bottom:calc(100% + 8px);}
 .date-pop-head{display:grid;grid-template-columns:34px 1fr 34px;align-items:center;margin:0 -10px 7px;padding:7px 8px;border-bottom:1px solid var(--sep);}
-.date-pop-title{text-align:center;color:var(--label);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;}
+.date-pop-title{min-height:32px;border:0;border-radius:8px;padding:0 4px;background:none;text-align:center;color:var(--label);font:inherit;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;cursor:pointer;}
+.date-pop-title:hover{background:var(--fill);color:var(--blue);}
+.date-pop-title::after{content:'⌄';display:inline-block;margin-left:5px;color:var(--label3);font-size:11px;transform:translateY(-1px);}
 .date-pop-nav{width:34px;height:34px;border:0;border-radius:8px;background:none;color:var(--label2);font:inherit;font-size:20px;line-height:1;cursor:pointer;}
 .date-pop-nav:hover{background:var(--fill);color:var(--label);}
 .date-pop-week,.date-pop-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;}
+.date-pop-week[hidden],.date-pop-days[hidden]{display:none;}
 .date-pop-week span{padding:4px 0;text-align:center;color:var(--label3);font-size:10.5px;font-weight:600;}
 .date-pop-day{aspect-ratio:1;min-height:29px;border:0;border-radius:8px;background:none;color:var(--label);font:inherit;font-size:12px;font-variant-numeric:tabular-nums;cursor:pointer;}
 .date-pop-day:hover{background:var(--fill);}
 .date-pop-day.today{box-shadow:inset 0 0 0 1px var(--blue);color:var(--blue);font-weight:700;}
 .date-pop-day.on{background:var(--blue);box-shadow:none;color:#fff;font-weight:700;}
 .date-pop-blank{aspect-ratio:1;min-height:29px;}
+.date-pop-select{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;align-content:center;min-height:226px;padding:7px 0;}
+.date-pop-select[hidden]{display:none;}
+.date-pop-choice{height:46px;border:0;border-radius:9px;background:none;color:var(--label);font:inherit;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;cursor:pointer;}
+.date-pop-choice:hover{background:var(--fill);color:var(--blue);}
+.date-pop-choice.on{background:var(--blue);color:#fff;}
+.date-pop-choice:disabled{opacity:.3;cursor:not-allowed;background:none;color:var(--label3);}
 .date-pop-actions{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--sep);}
 .date-pop-btn{height:32px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--label2);font:inherit;font-size:12px;font-weight:600;cursor:pointer;}
 .date-pop-btn:hover{background:var(--fill);color:var(--label);}
@@ -4050,6 +4059,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v4.91 — 달력 연·월 제목 클릭 시 연도 12개 → 월 12개 → 날짜를 같은 카드 안에서 빠르게 선택. 더치페이와 동일 동작.
 // v4.88 — 투명 date input은 기본 클릭만으로 달력이 안 열리는 환경이 있어, 공통 위임 핸들러에서 showPicker를 정확히 한 번 호출하도록 복구.
 // v4.87 — PC 시간 입력을 24시간제 시·분 선택 팝오버로 교체(현재·지우기·완료, 키보드 지원). 폰은 네이티브 다이얼 유지. 날짜·시간 showPicker 중복 호출 제거.
 // v4.86 — 사진 오른쪽 위 제거 버튼의 X가 3px 위로 밀리던 문제 수정. 빈 사진 안내 SVG 여백을 직계 자식에만 적용하고, 제거 버튼은 grid 중앙 정렬·여백 0·키보드 포커스 표시.
@@ -4572,7 +4582,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.90';
+const APP_VERSION='v4.91';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 // 날짜 input은 화면에 투명하게 겹쳐 있어 기본 클릭만으로 안 열리는 브라우저가 있으므로 여기서 정확히 한 번 연다(v4.88).
@@ -12459,24 +12469,38 @@ function _dateOpen(inp){
   const kv=inp.closest('.kv');if(!kv)return;
   const now=new Date(),match=String(inp.value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
   const picked=match?new Date(+match[1],+match[2]-1,+match[3]):now;
-  const state={year:picked.getFullYear(),month:picked.getMonth()};
+  const state={year:picked.getFullYear(),month:picked.getMonth(),mode:'day',yearStart:picked.getFullYear()-5};
   const pop=document.createElement('div');pop.className='date-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','일자 선택');
-  pop.innerHTML=`<div class="date-pop-head"><button class="date-pop-nav" type="button" data-date-prev aria-label="이전 달">‹</button><div class="date-pop-title" aria-live="polite"></div><button class="date-pop-nav" type="button" data-date-next aria-label="다음 달">›</button></div><div class="date-pop-week" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="date-pop-days"></div><div class="date-pop-actions"><button class="date-pop-btn" type="button" data-date-clear>지우기</button><button class="date-pop-btn today" type="button" data-date-today>오늘</button></div>`;
+  pop.innerHTML=`<div class="date-pop-head"><button class="date-pop-nav" type="button" data-date-prev aria-label="이전 달">‹</button><button class="date-pop-title" type="button" aria-live="polite" aria-label="연도와 월 선택"></button><button class="date-pop-nav" type="button" data-date-next aria-label="다음 달">›</button></div><div class="date-pop-week" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="date-pop-days"></div><div class="date-pop-select" hidden></div><div class="date-pop-actions"><button class="date-pop-btn" type="button" data-date-clear>지우기</button><button class="date-pop-btn today" type="button" data-date-today>오늘</button></div>`;
+  const title=pop.querySelector('.date-pop-title'),week=pop.querySelector('.date-pop-week'),daysEl=pop.querySelector('.date-pop-days'),selectEl=pop.querySelector('.date-pop-select');
   const render=()=>{
-    pop.querySelector('.date-pop-title').textContent=`${state.year}년 ${state.month+1}월`;
+    const dayMode=state.mode==='day';week.hidden=!dayMode;daysEl.hidden=!dayMode;selectEl.hidden=dayMode;
+    if(state.mode==='year'){
+      const end=state.yearStart+11;title.textContent=`${state.yearStart}–${String(end).slice(2)}년`;title.setAttribute('aria-label',`${state.yearStart}년부터 ${end}년`);
+      selectEl.innerHTML=Array.from({length:12},(_,i)=>{const year=state.yearStart+i;return `<button class="date-pop-choice${year===state.year?' on':''}" type="button" data-date-year="${year}" aria-pressed="${year===state.year}">${year}</button>`;}).join('');
+      return;
+    }
+    if(state.mode==='month'){
+      title.textContent=`${state.year}년`;title.setAttribute('aria-label',`${state.year}년 월 선택`);
+      selectEl.innerHTML=Array.from({length:12},(_,i)=>`<button class="date-pop-choice${i===state.month?' on':''}" type="button" data-date-month="${i}" aria-pressed="${i===state.month}">${i+1}월</button>`).join('');
+      return;
+    }
+    title.textContent=`${state.year}년 ${state.month+1}월`;title.setAttribute('aria-label','연도와 월 선택');
     const first=new Date(state.year,state.month,1).getDay(),last=new Date(state.year,state.month+1,0).getDate();
     const today=_dateIso(now.getFullYear(),now.getMonth(),now.getDate());
     const blanks=Array.from({length:first},()=>'<span class="date-pop-blank" aria-hidden="true"></span>').join('');
     const days=Array.from({length:last},(_,i)=>{const d=i+1,iso=_dateIso(state.year,state.month,d),on=iso===inp.value;
       return `<button class="date-pop-day${iso===today?' today':''}${on?' on':''}" type="button" data-date-value="${iso}" aria-label="${state.month+1}월 ${d}일" aria-pressed="${on}">${d}</button>`;}).join('');
-    pop.querySelector('.date-pop-days').innerHTML=blanks+days;
+    daysEl.innerHTML=blanks+days;
   };
   render();kv.appendChild(pop);kv.classList.add('date-open');_datePicker={pop,kv,inp};
-  pop.querySelector('[data-date-prev]').onclick=()=>{if(--state.month<0){state.month=11;state.year--;}render();};
-  pop.querySelector('[data-date-next]').onclick=()=>{if(++state.month>11){state.month=0;state.year++;}render();};
+  title.onclick=()=>{if(state.mode!=='year'){state.mode='year';state.yearStart=state.year-5;render();selectEl.querySelector('.on')?.focus({preventScroll:true});}};
+  pop.querySelector('[data-date-prev]').onclick=()=>{if(state.mode==='year')state.yearStart-=12;else if(state.mode==='month')state.year--;else if(--state.month<0){state.month=11;state.year--;}render();};
+  pop.querySelector('[data-date-next]').onclick=()=>{if(state.mode==='year')state.yearStart+=12;else if(state.mode==='month')state.year++;else if(++state.month>11){state.month=0;state.year++;}render();};
   pop.querySelector('[data-date-clear]').onclick=()=>{_dateSet(inp,'');_dateClose(true);};
   pop.querySelector('[data-date-today]').onclick=()=>{_dateSet(inp,_dateIso(now.getFullYear(),now.getMonth(),now.getDate()));_dateClose(true);};
-  pop.querySelector('.date-pop-days').onclick=e=>{const b=e.target.closest('[data-date-value]');if(!b)return;_dateSet(inp,b.dataset.dateValue);_dateClose(true);};
+  daysEl.onclick=e=>{const b=e.target.closest('[data-date-value]');if(!b)return;_dateSet(inp,b.dataset.dateValue);_dateClose(true);};
+  selectEl.onclick=e=>{const yearBtn=e.target.closest('[data-date-year]'),monthBtn=e.target.closest('[data-date-month]');if(yearBtn){state.year=+yearBtn.dataset.dateYear;state.mode='month';render();selectEl.querySelector('.on')?.focus({preventScroll:true});}else if(monthBtn){state.month=+monthBtn.dataset.dateMonth;state.mode='day';render();(daysEl.querySelector('.on')||daysEl.querySelector('.today')||daysEl.querySelector('.date-pop-day'))?.focus({preventScroll:true});}};
   pop.addEventListener('click',e=>e.stopPropagation());
   pop.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();_dateClose(true);}});
   const sc=kv.closest('.main-body,.mtg-sheet'),sr=sc?sc.getBoundingClientRect():{top:0,bottom:innerHeight},vh=(window.visualViewport&&visualViewport.height)||innerHeight;
