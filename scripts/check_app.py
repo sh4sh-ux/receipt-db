@@ -71,6 +71,8 @@ def main() -> int:
         errors.append("데스크톱 시간 선택기가 없습니다")
     if "closest('.kv-time-inp,.kv-date-inp')" in index or "dtEl.addEventListener('focus',openPicker)" in index:
         errors.append("날짜·시간 선택기에 중복 showPicker 호출이 남아 있습니다")
+    if "const direct=e.target instanceof Element&&e.target.matches('input[type=\"date\"]')?e.target:null;" not in index or "e.preventDefault();\n  try{input.showPicker();}" not in index:
+        errors.append("투명 날짜 input을 여는 단일 showPicker 위임 핸들러가 없습니다")
 
     for stale in ("_dbxCollectSyncImages", "_reRenderDetailItems", "consolidateReceiptFolders", "importFromAppFolder"):
         if re.search(rf"\b{re.escape(stale)}\b", index):
