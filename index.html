@@ -432,11 +432,14 @@ svg{display:block;flex-shrink:0;}
 .photo-zone.has{padding:0;border-style:solid;background:var(--card);}
 .photo-zone.drag,.det-photo-thumb.drag,.det-photo-thumb-empty.drag{border-color:var(--blue)!important;background:var(--blue-bg)!important;outline:2px dashed var(--blue);outline-offset:-3px;}
 .det-photo-thumb.drag img{opacity:.4;}
-.photo-zone svg{margin:0 auto 6px;}
+.photo-zone>svg{margin:0 auto 6px;}
 .photo-zone-text{font-size:13px;}
 .photo-zone-hint{font-size:11px;color:var(--label3);margin-top:3px;}
 .photo-preview{width:100%;max-height:280px;object-fit:contain;display:block;border-radius:var(--rm);}
-.photo-remove{position:absolute;top:8px;right:8px;width:30px;height:30px;border:none;border-radius:15px;background:rgba(0,0,0,.7);color:#fff;display:flex;align-items:center;justify-content:center;}
+.photo-remove{position:absolute;top:8px;right:8px;width:30px;height:30px;padding:0;border:none;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;display:grid;place-items:center;line-height:0;cursor:pointer;}
+.photo-remove svg{display:block;margin:0;}
+@media(hover:hover){.photo-remove:hover{background:rgba(0,0,0,.82);}}
+.photo-remove:focus-visible{outline:2px solid #fff;outline-offset:2px;}
 
 /* ── SVG CATEGORY PICKER ── */
 .category-field{position:relative;z-index:20;}
@@ -2821,7 +2824,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .addx-info .detail-cat-trigger-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .addx-info #gyeongjoFields .gyeongjo-box{margin:0;}
 .addx-info .detail-info-photo .photo-zone{position:absolute;inset:0;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px dashed var(--sep2);background:var(--card);color:var(--label3);}
-.addx-info .photo-zone svg{color:var(--sep2);}
+.addx-info .photo-zone>svg{color:var(--sep2);}
 .addx-info .photo-zone-text{font-size:11px;}
 .addx-info .photo-zone-hint{display:none;}
 .addx-info .detail-info-photo .photo-zone.has{display:block;border:1px solid var(--sep);overflow:hidden;}
@@ -2867,6 +2870,22 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 @media(max-width:380px){.kv-dt-row{gap:6px;}.kv-time-txt{font-size:12px;}.kv-time.empty>.kv-time-txt{font-size:12px;}}
 @media(max-width:365px){.kv-date-txt{font-size:13px;letter-spacing:-.2px;}}
 .kv-time>.kv-time-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px;cursor:pointer;}
+/* v4.87 — 마우스에서는 브라우저마다 다른 12시간 다이얼 대신 앱 안 24시간 선택기를 쓴다. 터치는 네이티브 다이얼 유지. */
+.kv.time-open{position:relative;z-index:45;border-color:var(--blue);}
+.time-pop{position:absolute;z-index:46;top:calc(100% + 8px);left:-1px;width:248px;padding:14px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:var(--app-shadow);cursor:default;}
+.time-pop.up{top:auto;bottom:calc(100% + 8px);}
+.time-pop-title{font-size:12px;font-weight:700;color:var(--label2);margin-bottom:10px;}
+.time-pop-fields{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:8px;}
+.time-pop-field{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;color:var(--label3);}
+.time-pop-select{width:100%;height:42px;padding:0 30px 0 11px;border:1px solid var(--sep2);border-radius:9px;background:var(--fill2) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239AA0A6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>") right 9px center/12px no-repeat;color:var(--label);font:inherit;font-size:15px;font-weight:650;font-variant-numeric:tabular-nums;appearance:none;-webkit-appearance:none;cursor:pointer;outline:none;}
+.time-pop-select:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg);}
+.time-pop-colon{height:42px;display:grid;place-items:center;color:var(--label2);font-size:16px;font-weight:700;}
+.time-pop-actions{display:flex;align-items:center;gap:6px;margin-top:12px;}
+.time-pop-btn{height:34px;padding:0 11px;border:0;border-radius:8px;background:transparent;color:var(--label2);font:inherit;font-size:12px;font-weight:600;cursor:pointer;}
+.time-pop-btn:hover{background:var(--fill);color:var(--label);}
+.time-pop-btn.done{margin-left:auto;background:var(--blue);color:#fff;padding-inline:15px;}
+.time-pop-btn.done:hover{filter:brightness(1.05);}
+@media(hover:none),(pointer:coarse){.time-pop{display:none!important;}}
 
 /* v4.66 — 그래프에서 고른 기간 영수증 시트. 금액은 오른쪽 정렬 */
 .trs-sum{display:flex;justify-content:space-between;align-items:baseline;padding:2px 0 8px;font-size:13px;color:var(--label2)}
@@ -4010,6 +4029,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v4.87 — PC 시간 입력을 24시간제 시·분 선택 팝오버로 교체(현재·지우기·완료, 키보드 지원). 폰은 네이티브 다이얼 유지. 날짜·시간 showPicker 중복 호출 제거.
+// v4.86 — 사진 오른쪽 위 제거 버튼의 X가 3px 위로 밀리던 문제 수정. 빈 사진 안내 SVG 여백을 직계 자식에만 적용하고, 제거 버튼은 grid 중앙 정렬·여백 0·키보드 포커스 표시.
 // v4.85 — 영수증 상세 [복사] = 새 영수증으로 복사(사진·연결 제외, [취소]로 바로 지움). 글 복사는 '내용 복사'(폰 ··· · PC 아래 ID 줄).
 // v4.84 — 사람별 분담 PC는 점 없이 `비율   금액`(폰만 점).
 // v4.83 — 폰: 사람별 분담 비율·점·금액 간격 동일(8px).
@@ -4529,12 +4550,13 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.85';
+const APP_VERSION='v4.87';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
+// 실제 input 클릭은 브라우저 기본 동작에 맡긴다. showPicker까지 다시 부르면 선택기가 두 번 열릴 수 있다(v4.87).
 document.addEventListener('click',e=>{
-  const direct=e.target instanceof Element&&e.target.matches('input[type="date"]')?e.target:null;
-  const input=direct||(e.target instanceof Element?e.target.closest('label')?.querySelector('input[type="date"]'):null);
+  if(e.target instanceof Element&&e.target.matches('input[type="date"]'))return;
+  const input=e.target instanceof Element?e.target.closest('label')?.querySelector('input[type="date"]'):null;
   if(!input||input.disabled||input.readOnly||typeof input.showPicker!=='function')return;
   try{input.showPicker();}catch(_){/* iOS 등 showPicker 미지원 환경은 기본 동작 사용 */}
 });
@@ -8085,9 +8107,6 @@ let _addSplitUI=null, _dSplitUI=null, _addPeople=null;
     if(v&&(_catAutoFilled||catInpEl.value.trim()==='')){const auto=autocategorize(v);if(auto)_setCategoryValue(auto,{auto:true});}
     pushStore();
   });
-  const openPicker=()=>{if(typeof dtEl.showPicker==='function'){try{dtEl.showPicker();}catch(_){}}};
-  dtEl.addEventListener('click',openPicker);
-  dtEl.addEventListener('focus',openPicker);
   dtEl.addEventListener('change',()=>{
     if(_currentParsed&&!_addxIsDirect()){_currentParsed.date=dtEl.value;_refreshPreviewSummary();}
     else{_addxSyncHeader();_updateDirectSaveBtn();}
@@ -11990,13 +12009,10 @@ async function renderDetail(){
     });
   }
 
-  // 정보 필드 dirty 추적 + 날짜 picker (저장은 수정 확인 버튼)
+  // 정보 필드 dirty 추적 (날짜·시간 선택기는 공통 위임 핸들러가 연다)
   body.querySelectorAll('.kv .kv-inp').forEach(inp=>{
     inp.addEventListener('input',()=>_detailSetDirty(true));
     inp.addEventListener('change',()=>_detailSetDirty(true));
-    if(inp.type==='date'){
-      inp.addEventListener('focus',()=>{if(typeof inp.showPicker==='function')try{inp.showPicker();}catch(_){}});
-    }
   });
 
   // 상세 정보 카테고리 — 입력 화면과 동일한 SVG 선택기
@@ -12332,7 +12348,49 @@ function _kvHookValue(inp,sync){
 }
 document.addEventListener('input',e=>{const t=e.target;if(!t||!t.classList)return;if(t.classList.contains('kv-time-inp'))_kvTimeSync(t);else if(t.classList.contains('kv-date-inp'))_kvDateSync(t);},true);
 document.addEventListener('change',e=>{const t=e.target;if(!t||!t.classList)return;if(t.classList.contains('kv-time-inp'))_kvTimeSync(t);else if(t.classList.contains('kv-date-inp'))_kvDateSync(t);},true);
-document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('.kv-time-inp,.kv-date-inp');if(t&&!t.disabled&&typeof t.showPicker==='function'){try{t.showPicker();}catch(_){}}},true);
+const _desktopTimeMq=window.matchMedia('(hover:hover) and (pointer:fine)');
+let _timePicker=null;
+function _timeClose(focus){
+  if(!_timePicker)return;const {pop,kv,inp}=_timePicker;_timePicker=null;pop.remove();kv.classList.remove('time-open');
+  if(focus)try{inp.focus({preventScroll:true});}catch(_){}
+}
+function _timeSet(inp,value){
+  if(inp.value===value)return;inp.value=value;_kvTimeSync(inp);
+  inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));
+}
+function _timeOpen(inp){
+  if(!inp||inp.disabled||inp.readOnly)return;
+  if(_timePicker&&_timePicker.inp===inp)return;
+  _timeClose();
+  const kv=inp.closest('.kv'),parts=(inp.value||'').split(':'),now=new Date();if(!kv)return;
+  const hour=/^\d{2}$/.test(parts[0])?+parts[0]:now.getHours(),minute=/^\d{2}$/.test(parts[1])?+parts[1]:now.getMinutes();
+  const options=(n,selected)=>Array.from({length:n},(_,i)=>`<option value="${String(i).padStart(2,'0')}"${i===selected?' selected':''}>${String(i).padStart(2,'0')}</option>`).join('');
+  const pop=document.createElement('div');pop.className='time-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','시간 선택');
+  pop.innerHTML=`<div class="time-pop-title">시간 선택 · 24시간</div><div class="time-pop-fields"><label class="time-pop-field">시<select class="time-pop-select" data-time-hour>${options(24,hour)}</select></label><span class="time-pop-colon" aria-hidden="true">:</span><label class="time-pop-field">분<select class="time-pop-select" data-time-minute>${options(60,minute)}</select></label></div><div class="time-pop-actions"><button type="button" class="time-pop-btn" data-time-now>현재</button><button type="button" class="time-pop-btn" data-time-clear>지우기</button><button type="button" class="time-pop-btn done" data-time-done>완료</button></div>`;
+  kv.appendChild(pop);kv.classList.add('time-open');_timePicker={pop,kv,inp};
+  const hourSel=pop.querySelector('[data-time-hour]'),minuteSel=pop.querySelector('[data-time-minute]');
+  const commit=()=>_timeSet(inp,`${hourSel.value}:${minuteSel.value}`);
+  hourSel.addEventListener('change',commit);minuteSel.addEventListener('change',commit);
+  pop.querySelector('[data-time-now]').onclick=()=>{const d=new Date();hourSel.value=String(d.getHours()).padStart(2,'0');minuteSel.value=String(d.getMinutes()).padStart(2,'0');commit();};
+  pop.querySelector('[data-time-clear]').onclick=()=>{_timeSet(inp,'');_timeClose(true);};
+  pop.querySelector('[data-time-done]').onclick=()=>{commit();_timeClose(true);};
+  pop.addEventListener('click',e=>e.stopPropagation());
+  pop.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();_timeClose(true);}});
+  const sc=kv.closest('.main-body,.mtg-sheet'),sr=sc?sc.getBoundingClientRect():{top:0,bottom:innerHeight},vh=(window.visualViewport&&visualViewport.height)||innerHeight;
+  if(pop.getBoundingClientRect().bottom>Math.min(vh,sr.bottom)-8)pop.classList.add('up');
+  hourSel.focus({preventScroll:true});
+}
+document.addEventListener('click',e=>{
+  const inp=e.target&&e.target.closest&&e.target.closest('.kv-time-inp');
+  if(inp&&_desktopTimeMq.matches){e.preventDefault();_timeOpen(inp);return;}
+  if(_timePicker&&!_timePicker.pop.contains(e.target))_timeClose(false);
+},true);
+document.addEventListener('keydown',e=>{
+  const inp=e.target;if(!_desktopTimeMq.matches||!inp?.classList?.contains('kv-time-inp'))return;
+  if(e.key==='Enter'||e.key===' '||e.key==='ArrowDown'){e.preventDefault();_timeOpen(inp);}
+  else if(e.key==='Escape')_timeClose(true);
+},true);
+window.addEventListener('resize',()=>_timeClose(false));
 // v4.35 — 정보 상자의 드롭다운(결제자·결제수단)을 카테고리처럼 앱 안 상자로(사용자 요청: 칸에 딱 맞는 폭).
 //   <select>는 값·input/change 이벤트를 그대로 쓰고(저장 경로 불변) 누르는 것만 가로챈다 — select는 pointer-events:none이라
 //   칸(.kv)을 누르면 열리고, 키보드로 select에 오면 Enter·Space·↓로 연다. '__'로 시작하는 값(다른 사람…·대신 결제…)은 선 아래에.

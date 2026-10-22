@@ -60,6 +60,18 @@ def main() -> int:
     if '<circle cx="12" cy="14" r="4"/>' in index:
         errors.append("이전 사진 없음 렌즈 좌표가 남아 있습니다")
 
+    # v4.86 — 빈 사진 안내 아이콘의 여백이 중첩된 제거 버튼 SVG까지 번지면 X가 위로 밀린다.
+    if ".photo-zone svg{margin:0 auto 6px;}" in index:
+        errors.append("사진 안내 SVG 여백은 직계 자식에만 적용해야 합니다(제거 버튼 X 정렬 보호)")
+    if ".photo-zone>svg{margin:0 auto 6px;}" not in index or ".photo-remove svg{display:block;margin:0;}" not in index:
+        errors.append("사진 제거 버튼 SVG 중앙 정렬 보호 규칙이 없습니다")
+
+    # v4.87 — PC는 마우스용 24시간 선택기, 터치는 네이티브 time picker를 사용한다.
+    if "const _desktopTimeMq=window.matchMedia('(hover:hover) and (pointer:fine)')" not in index or "function _timeOpen(inp)" not in index:
+        errors.append("데스크톱 시간 선택기가 없습니다")
+    if "closest('.kv-time-inp,.kv-date-inp')" in index or "dtEl.addEventListener('focus',openPicker)" in index:
+        errors.append("날짜·시간 선택기에 중복 showPicker 호출이 남아 있습니다")
+
     for stale in ("_dbxCollectSyncImages", "_reRenderDetailItems", "consolidateReceiptFolders", "importFromAppFolder"):
         if re.search(rf"\b{re.escape(stale)}\b", index):
             errors.append(f"정리 대상 함수가 남아 있습니다: {stale}")
