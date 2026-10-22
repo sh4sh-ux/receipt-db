@@ -281,6 +281,7 @@ svg{display:block;flex-shrink:0;}
 .batch-export-cancel{border:1px solid var(--sep2);background:var(--card);color:var(--label2);}
 .batch-export-send{border:1px solid var(--blue);background:var(--blue);color:#fff;}
 .batch-export-send:disabled{opacity:.42;cursor:not-allowed;}
+.batch-export-send.sending{min-width:112px;}
 
 .empty-state{padding:40px 24px;text-align:center;color:var(--label3);font-size:13px;}
 .empty-state svg{margin:0 auto 12px;color:var(--sep2);}
@@ -4551,7 +4552,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.88';
+const APP_VERSION='v4.89';
 
 // 모든 날짜 입력은 필드나 해당 라벨의 어느 곳을 눌러도 같은 방식으로 달력을 연다.
 // 날짜 input은 화면에 투명하게 겹쳐 있어 기본 클릭만으로 안 열리는 브라우저가 있으므로 여기서 정확히 한 번 연다(v4.88).
@@ -4996,20 +4997,56 @@ function _compressToJpegDataUrl(srcUrl,maxDim,quality){
     }catch(_){resolve('');}
   });
 }
+function _blobToDataUrl(blob){
+  return new Promise(resolve=>{
+    try{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(typeof reader.result==='string'?reader.result:'');
+      reader.onerror=()=>resolve('');
+      reader.readAsDataURL(blob);
+    }catch(_){resolve('');}
+  });
+}
+// 이미 전송 제한 안에 들어오는 JPEG는 다시 디코딩·캔버스 인코딩하지 않는다.
+// 휴대폰 사진처럼 큰 원본만 1400px로 줄여 전송한다.
+async function _prepareDutchReceiptImage(srcUrl){
+  if(!srcUrl)return '';
+  if(/^data:image\/jpe?g;base64,/i.test(srcUrl)&&srcUrl.length<1500000)return srcUrl;
+  if(String(srcUrl).startsWith('blob:')){
+    try{
+      const blob=await fetch(srcUrl).then(r=>r.ok?r.blob():null);
+      if(blob&&/^image\/jpe?g$/i.test(blob.type||'')&&blob.size<1100000){
+        const data=await _blobToDataUrl(blob);
+        if(data&&data.length<1500000)return data;
+      }
+    }catch(_){}
+  }
+  const compressed=await _compressToJpegDataUrl(srcUrl,1400,0.72);
+  return compressed&&compressed.length<1500000?compressed:'';
+}
 // v4.64 — 더치페이 전달 봉투를 Dropbox 파일로 올린다. 더치페이가 열릴 때 읽어 가고 '처리됨' 폴더로 옮긴다(지우지 않음).
 const DUTCH_PAY_INBOX_DIR='/07_Apps/더치페이(Dutch-Pay)/영수증DB 전송';
 async function _sendEnvelopeViaDropbox(env){
   try{
-    await _dbxEnsureFolder(DUTCH_PAY_INBOX_DIR);
     const token=await _dbxToken();
-    const resp=await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',
-      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/octet-stream',
-        'Dropbox-API-Arg':_dbxApiArg({path:`${DUTCH_PAY_INBOX_DIR}/${env.batchId}.json`,mode:'add',autorename:false,mute:true})},
-      body:JSON.stringify(env)});
+    const body=JSON.stringify(env);
+    const upload=()=>fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',
+        headers:{'Authorization':'Bearer '+token,'Content-Type':'application/octet-stream',
+          'Dropbox-API-Arg':_dbxApiArg({path:`${DUTCH_PAY_INBOX_DIR}/${env.batchId}.json`,mode:'add',autorename:false,mute:true})},
+        body});
+    // 평소에는 수신 폴더가 이미 있다. 먼저 바로 올려 불필요한 폴더 확인 API 3회를 없애고,
+    // 새 Dropbox에서 path/not_found(409)가 날 때만 폴더를 만든 뒤 한 번 재시도한다.
+    let resp=await upload();
+    if(resp.status===409){
+      await _dbxEnsureFolder(DUTCH_PAY_INBOX_DIR);
+      resp=await upload();
+    }
     return resp.ok;
   }catch(e){return false;}
 }
+let _dutchPaySending=false;
 async function sendReceiptsToDutchPay(records,{single=false}={}){
+  if(_dutchPaySending){toast('이미 더치페이로 보내고 있어요');return false;}
   const sourceRecords=(records||[]).filter(Boolean);
   if(!sourceRecords.length){toast('보낼 영수증을 선택해주세요',{type:'error'});return false;}
   const now=new Date().toISOString();
@@ -5041,6 +5078,9 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
     const more=sourceRecords.length>4?`\n외 ${sourceRecords.length-4}건`:'';
     if(!confirm(`${sourceRecords.length}건, 합계 ${fmtMoney(total)}원을 더치페이로 보낼까요?\n\n${preview}${more}`))return false;
   }
+  _dutchPaySending=true;
+  _updateBatchExportUi();
+  const progress=toast('더치페이 전송을 준비하고 있어요…',{duration:60000});
   try{
     const batchId=`rb_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
     const dutchUrl=`/dutch-pay/?from=receipt-db&batch=${encodeURIComponent(batchId)}`;
@@ -5048,19 +5088,28 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
     const useDbx=dbxIsConnected();   // v4.64 — Dropbox 연결돼 있으면 파일로 전달(홈 화면 앱끼리·폰↔PC), 아니면 옛 방식
     const win=useDbx?null:window.open('','_blank');
     if(win){try{win.document.write('<!doctype html><meta charset="utf-8"><title>더치페이</title><body style="font:15px -apple-system,BlinkMacSystemFont,sans-serif;color:#555;padding:44px 24px;text-align:center">영수증을 더치페이로 보내는 중…</body>');}catch(_){}}
+    // 팝업은 사용자 제스처 안에서 먼저 확보하고, 진행 UI를 한 프레임 그린 뒤 사진 처리를 시작한다.
+    await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
     // 각 영수증 사진을 압축해 함께 전송 → 더치페이에서 자동 첨부
+    let preparedCount=0;
+    progress.update(`사진을 준비하고 있어요 · 0/${prepared.length}`);
     const entries=await Promise.all(prepared.map(async ({r,payer,people,members,watchers,treat})=>{
       let receiptImage='';
       try{
-        const imgUrl=await _ensureReceiptImgUrl(r);
-        if(imgUrl){const comp=await _compressToJpegDataUrl(imgUrl,1400,0.72);if(comp&&comp.length<1500000)receiptImage=comp;}
+        // 사진이 없는 수기 영수증까지 표준 ID를 추측해 Dropbox를 조회하면 선택 건수만큼 전송이 늦어진다.
+        // 명시적 imageId 또는 완료 이미지 경로처럼 복구 근거가 있는 기록만 사진을 준비한다.
+        const imgUrl=(r.imageId||_receiptRecoveryImageId(r))?await _ensureReceiptImgUrl(r):null;
+        if(imgUrl)receiptImage=await _prepareDutchReceiptImage(imgUrl);
       }catch(_){}
+      preparedCount++;
+      progress.update(`사진을 준비하고 있어요 · ${preparedCount}/${prepared.length}`);
       return {sourceId:String(r.id),store:r.store||'영수증',date:r.date||new Date().toISOString().slice(0,10),
         total:Number(r.total)||0,payer:payer||people[0],people,members,watchers,treat,
         items:(r.items||[]).map(it=>({name:it.name||'',quantity:Number(it.quantity)||1,unitPrice:Number(it.unitPrice)||0,amount:Number(it.amount)||0})),
         receiptImage};
     }));
     if(useDbx){
+      progress.update('Dropbox로 보내고 있어요…');
       const env={version:1,batchId,createdAt:now,entries};
       const ok=await _sendEnvelopeViaDropbox(env);
       if(!ok){toast('더치페이로 보내지 못했어요 — Dropbox 연결을 확인하고 다시 시도해주세요',{type:'error',duration:5200});return false;}
@@ -5072,6 +5121,7 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
       const env={version:1,batchId,createdAt:now,entries:withImg?entries:entries.map(e=>Object.assign({},e,{receiptImage:''}))};
       localStorage.setItem(DUTCH_PAY_TRANSFER_KEY,JSON.stringify(env));
     };
+    progress.update('더치페이를 열고 있어요…');
     // 이미지 포함본이 용량 초과면 이미지 없이 폴백(기존 동작)
     try{writeEnvelope(true);}catch(quota){writeEnvelope(false);}
     if(getMyName())localStorage.setItem(DUTCH_PAY_NAME_KEY,getMyName());
@@ -5082,6 +5132,10 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
   }catch(e){
     toast('더치페이 연결에 실패했어요. 더치페이 데이터 백업 후 다시 시도해주세요',{type:'error'});
     return false;
+  }finally{
+    progress.dismiss();
+    _dutchPaySending=false;
+    _updateBatchExportUi();
   }
 }
 function sendReceiptToDutchPay(r){return sendReceiptsToDutchPay([r],{single:true});}
@@ -6275,7 +6329,12 @@ function _updateBatchExportUi(){
   bar?.classList.toggle('on',_batchSelectMode);
   const count=document.getElementById('batchExportCount');if(count)count.textContent=`${selected.length}건 선택`;
   const totalEl=document.getElementById('batchExportTotal');if(totalEl)totalEl.textContent=selected.length>1?`합계 ${fmtMoney(total)}원 · 누른 순서대로 보내요`:`합계 ${fmtMoney(total)}원`;
-  const send=document.getElementById('batchExportSend');if(send)send.disabled=!selected.length;
+  const send=document.getElementById('batchExportSend');if(send){
+    send.disabled=!selected.length||_dutchPaySending;
+    send.classList.toggle('sending',_dutchPaySending);
+    send.textContent=_dutchPaySending?'보내는 중…':'더치페이로 보내기';
+    send.setAttribute('aria-busy',String(_dutchPaySending));
+  }
 }
 function _setBatchSelectMode(active,{render=true}={}){
   _batchSelectMode=!!active;
