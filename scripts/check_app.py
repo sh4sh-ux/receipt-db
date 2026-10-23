@@ -87,6 +87,8 @@ def main() -> int:
         errors.append("모바일 시간 목록의 관성·세로 터치 스크롤 규칙이 없습니다")
     if "function _pickerLockPage()" not in index or "function _pickerUnlockPage()" not in index:
         errors.append("모바일 선택기 배경 페이지 스크롤 잠금이 없습니다")
+    if "document.body.classList.contains('picker-modal-open')" not in index or ".date-pop-backdrop,.time-pop-backdrop,.date-pop.mobile,.time-pop.mobile" not in index:
+        errors.append("모바일 날짜·시간 선택기에서 당겨서 새로고침 차단이 없습니다")
     if "select(kind,kind==='hour'?btn.dataset.timeHour:btn.dataset.timeMinute,{focus:!mobile})" not in index:
         errors.append("모바일 시간 선택 시 강제 포커스·재정렬 방지가 없습니다")
     if "try{input.showPicker();}" in index:

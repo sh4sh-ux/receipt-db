@@ -47,6 +47,22 @@ async function assertFits(page,selector,label){
   if(result.left<0||result.top<0||result.right>result.vw||result.bottom>result.vh||result.overflow)throw new Error(`${label} 화면 넘침: ${JSON.stringify(result)}`);
 }
 
+async function assertPullRefreshBlocked(page,targetSelector,pickerSelector,label){
+  await page.locator(targetSelector).evaluate(el=>{
+    const fire=(type,y)=>{
+      const point={clientX:innerWidth/2,clientY:y};
+      const event=new Event(type,{bubbles:true,cancelable:true});
+      Object.defineProperty(event,'touches',{value:type==='touchend'?[]:[point]});
+      Object.defineProperty(event,'changedTouches',{value:[point]});
+      el.dispatchEvent(event);
+    };
+    fire('touchstart',220);fire('touchmove',320);fire('touchend',320);
+  });
+  await page.waitForTimeout(450);
+  const state=await page.evaluate(selector=>{const ind=document.querySelector('.ptr-ind');return{picker:document.querySelectorAll(selector).length,opacity:ind?.style.opacity||'',transform:ind?.style.transform||'',spin:!!ind?.classList.contains('spin')};},pickerSelector);
+  if(state.picker!==1||state.opacity||state.transform||state.spin)throw new Error(`${label} 스크롤이 당겨서 새로고침을 시작함: ${JSON.stringify(state)}`);
+}
+
 async function clickTimeOption(page,selector){
   const option=page.locator(selector);
   await option.evaluate(el=>{const list=el.closest('.time-pop-list');if(list)list.scrollTop=Math.max(0,el.offsetTop-(list.clientHeight-el.offsetHeight)/2);});
@@ -61,6 +77,7 @@ async function checkReceipt(browser,profile){
   if(await page.locator(`.date-pop${suffix}`).count()!==1)throw new Error(`영수증 ${label} 달력이 한 개 열리지 않음`);
   await assertFits(page,'.date-pop',`영수증 ${label} 달력`);
   if((await page.locator('.date-pop-backdrop').count())!==(mobile?1:0))throw new Error('영수증 모바일 배경 수 불일치');
+  if(mobile)await assertPullRefreshBlocked(page,'.date-pop','.date-pop',`영수증 ${label} 날짜`);
   if(await page.evaluate(()=>window.__nativeDatePickerCalls)!==0)throw new Error('영수증 네이티브 달력이 호출됨');
   await page.locator('.date-pop-title').click();
   if(await page.locator('.date-pop-choice[data-date-year]').count()!==12)throw new Error('영수증 연도 선택 12개 아님');
@@ -80,6 +97,7 @@ async function checkReceipt(browser,profile){
   if(await page.locator(`.time-pop${timeSuffix}`).count()!==1)throw new Error(`영수증 ${label} 시간 선택기가 한 개 열리지 않음`);
   await assertFits(page,'.time-pop',`영수증 ${label} 시간 선택기`);
   if((await page.locator('.time-pop-backdrop').count())!==(mobile?1:0))throw new Error('영수증 모바일 시간 배경 수 불일치');
+  if(mobile)await assertPullRefreshBlocked(page,'.time-pop-list[aria-label="분"]','.time-pop',`영수증 ${label} 시간`);
   if(await page.evaluate(()=>window.__nativeDatePickerCalls)!==0)throw new Error('영수증 네이티브 시간 다이얼이 호출됨');
   if(await page.locator('.time-pop select').count()!==0)throw new Error('영수증 시간에 네이티브 select가 남아 있음');
   if(await page.locator('[data-time-hour]').count()!==24||await page.locator('[data-time-minute]').count()!==60)throw new Error('영수증 앱 시·분 목록 개수 불일치');
