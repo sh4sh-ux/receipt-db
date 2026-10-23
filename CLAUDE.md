@@ -28,6 +28,7 @@
 ## 버전 관리
 - 단일 상수 `APP_VERSION` (JS 상단)이 진실의 원천. DOM(각 탭 헤더 칩·설정 앱 정보)에 init 시 주입
 - 형식: `v메이저.패치2자리` (예: `v1.02`, `v1.10` … `v1.99` 후 `v2.00`)
+- v4.94: 날짜 입력은 PC·모바일 모두 더치페이와 같은 앱 달력을 사용한다. 모바일에서는 네이티브 `date` 입력에 `pointer-events:none`을 적용하고 라벨/필드 위임 클릭으로 앱 달력만 열어 OS 달력과 이중 표시되지 않게 한다. 같은 입력 재클릭은 닫기다.
 - **릴리스마다 함께 바꾸는 곳**: `APP_VERSION` · index.html 상단 changelog 코멘트 한 줄 · **`CHANGELOG.md` 맨 위 항목** ·
   `sw.js`의 `CACHE_NAME` · `README.md` 첫 줄 버전 → `python3 scripts/check_app.py`로 확인
 - ⚠️ **`sw.js`의 `CACHE_NAME`을 안 올리면 폰이 새 서비스 워커를 설치하지 않는다**(v3.06~v3.96 동안 안 올려 아이폰이 옛 선불권 파일을 계속 썼다 — v3.97).
