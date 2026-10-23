@@ -28,6 +28,7 @@
 ## 버전 관리
 - 단일 상수 `APP_VERSION` (JS 상단)이 진실의 원천. DOM(각 탭 헤더 칩·설정 앱 정보)에 init 시 주입
 - 형식: `v메이저.패치2자리` (예: `v1.02`, `v1.10` … `v1.99` 후 `v2.00`)
+- v4.98: 모바일 날짜·시간 모달이 열려 `body.picker-modal-open`인 동안 앱 자체 당겨서 새로고침을 시작하면 안 된다. `.date-pop/.time-pop`과 각 backdrop도 PTR `BLOCK`에 포함한다.
 - v4.97: 모바일 시간 목록 선택은 스크롤 위치를 강제로 재정렬하거나 옵션에 포커스하지 않는다. 목록은 `-webkit-overflow-scrolling:touch`와 `touch-action:pan-y`를 사용하며, 모바일 날짜·시간 모달 동안 `_pickerLockPage/_pickerUnlockPage`로 배경 페이지 위치를 고정·복원한다.
 - v4.96: 시간의 시·분은 네이티브 `<select>`가 아니라 앱 내부 버튼 목록이다. 선택 중에는 draft만 바꾸고 `완료`에서만 input/change를 발생시킨다. 모바일 날짜·시간 모달을 닫을 때 네이티브 input에 포커스하지 않는다. 날짜의 전역 캡처 클릭은 `.date-pop,.time-pop` 내부 이벤트를 무시해야 한다(같은 `.kv` 안의 시간 목록을 날짜 필드로 오인하지 않도록).
 - v4.95: 시간 입력도 PC·모바일 모두 같은 앱 24시간 선택기를 사용한다. 모바일에서는 `.kv-time-inp`에 `pointer-events:none`을 적용하고 시간 필드가 앱 모달만 열어 OS 다이얼과 이중 표시되지 않게 한다.
