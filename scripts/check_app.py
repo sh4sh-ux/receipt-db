@@ -27,6 +27,12 @@ def main() -> int:
     if version and f"CACHE_NAME=CACHE_PREFIX+'{version}'" not in worker:
         errors.append("서비스 워커 캐시 버전이 APP_VERSION과 다릅니다")
 
+    # v5.03 — 상세 하단의 중복 액션은 제거하되 헤더의 영수증 복제는 유지한다.
+    if 'id="detailTextCopy"' in index:
+        errors.append("영수증 상세 하단에 내용 복사 버튼이 남아 있습니다")
+    if "document.getElementById('detailCopyBtn').onclick=()=>_duplicateReceipt(r);" not in index:
+        errors.append("영수증 상세 헤더의 복사(영수증 복제) 동작이 없습니다")
+
     manifest = json.loads((ROOT / "manifest.webmanifest").read_text(encoding="utf-8"))
     for icon in manifest.get("icons", []):
         path = ROOT / str(icon.get("src", "")).removeprefix("./")
