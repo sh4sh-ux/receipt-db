@@ -131,6 +131,16 @@ async function checkReceipt(browser,profile){
   await openTime();
   await openTime();
   if(await page.locator('.time-pop').count()!==0)throw new Error('영수증 같은 시간 칸 재클릭 닫기 실패');
+  await page.locator('[data-nav="input"]').click();
+  await page.waitForTimeout(80);
+  const scrollBefore=await page.locator('#pasteTa').evaluate(ta=>{const main=ta.closest('.main-body');return{active:document.activeElement===ta,overflow:getComputedStyle(ta).overflowY,textarea:ta.scrollTop,main:main.scrollTop,max:main.scrollHeight-main.clientHeight};});
+  await page.locator('#pasteTa').hover();
+  await page.mouse.wheel(0,500);
+  await page.waitForTimeout(80);
+  const scrollAfter=await page.locator('#pasteTa').evaluate(ta=>({textarea:ta.scrollTop,main:ta.closest('.main-body').scrollTop}));
+  if(scrollBefore.active)throw new Error(`영수증 ${label} 새 화면 진입 시 붙여넣기 칸이 자동 포커스됨`);
+  if(scrollBefore.overflow!=='hidden'||scrollAfter.textarea!==0)throw new Error(`영수증 ${label} 빈 붙여넣기 안내문이 스크롤을 가로챔`);
+  if(scrollBefore.max>0&&scrollAfter.main<=scrollBefore.main)throw new Error(`영수증 ${label} 붙여넣기 칸 위 휠이 화면으로 전달되지 않음`);
   await context.close();
 }
 
