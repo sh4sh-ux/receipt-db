@@ -24,12 +24,15 @@ function startServer(root,port){
   return new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,'127.0.0.1',()=>resolve(server));});
 }
 
-async function openPage(browser,url,mobile){
-  const context=await browser.newContext({
-    viewport:mobile?{width:390,height:844}:{width:1280,height:900},
-    hasTouch:mobile,
-    isMobile:mobile,
-  });
+const profiles=[
+  {label:'PC',mobile:false,viewport:{width:1280,height:900},hasTouch:false,isMobile:false},
+  {label:'안드로이드',mobile:true,viewport:{width:412,height:915},hasTouch:true,isMobile:true,userAgent:'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 Chrome/141.0 Mobile Safari/537.36'},
+  {label:'아이폰',mobile:true,viewport:{width:390,height:844},hasTouch:true,isMobile:true,userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 Version/26.0 Mobile/15E148 Safari/604.1'},
+];
+
+async function openPage(browser,url,profile){
+  const {label,mobile,...options}=profile;
+  const context=await browser.newContext(options);
   await context.addInitScript(()=>{
     window.__nativeDatePickerCalls=0;
     HTMLInputElement.prototype.showPicker=function(){window.__nativeDatePickerCalls++;};
@@ -39,12 +42,24 @@ async function openPage(browser,url,mobile){
   return {context,page};
 }
 
-async function checkReceipt(browser,mobile){
-  const {context,page}=await openPage(browser,receiptUrl,mobile);
+async function assertFits(page,selector,label){
+  const result=await page.locator(selector).evaluate(el=>{const r=el.getBoundingClientRect();return{left:r.left,top:r.top,right:r.right,bottom:r.bottom,vw:innerWidth,vh:innerHeight,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth};});
+  if(result.left<0||result.top<0||result.right>result.vw||result.bottom>result.vh||result.overflow)throw new Error(`${label} 화면 넘침: ${JSON.stringify(result)}`);
+}
+
+async function clickTimeOption(page,selector){
+  const option=page.locator(selector);
+  await option.evaluate(el=>{const list=el.closest('.time-pop-list');if(list)list.scrollTop=Math.max(0,el.offsetTop-(list.clientHeight-el.offsetHeight)/2);});
+  await option.click();
+}
+
+async function checkReceipt(browser,profile){
+  const {mobile,label}=profile,{context,page}=await openPage(browser,receiptUrl,profile);
   const open=()=>page.locator('label.kv-date').dispatchEvent('click');
   await open();
   const suffix=mobile?'.mobile':'';
-  if(await page.locator(`.date-pop${suffix}`).count()!==1)throw new Error(`영수증 ${mobile?'모바일':'PC'} 달력이 한 개 열리지 않음`);
+  if(await page.locator(`.date-pop${suffix}`).count()!==1)throw new Error(`영수증 ${label} 달력이 한 개 열리지 않음`);
+  await assertFits(page,'.date-pop',`영수증 ${label} 달력`);
   if((await page.locator('.date-pop-backdrop').count())!==(mobile?1:0))throw new Error('영수증 모바일 배경 수 불일치');
   if(await page.evaluate(()=>window.__nativeDatePickerCalls)!==0)throw new Error('영수증 네이티브 달력이 호출됨');
   await page.locator('.date-pop-title').click();
@@ -54,31 +69,46 @@ async function checkReceipt(browser,mobile){
   await page.locator('.date-pop-choice[data-date-month="9"]').click();
   await page.locator('.date-pop-day[data-date-value$="-10-15"]').click();
   if(!/-10-15$/.test(await page.locator('#addDate').inputValue()))throw new Error('영수증 날짜 반영 실패');
+  if(mobile&&await page.locator('#addDate').evaluate(inp=>document.activeElement===inp))throw new Error(`영수증 ${label} 날짜 종료 후 네이티브 input에 포커스됨`);
   await open();
   await open();
   if(await page.locator('.date-pop').count()!==0)throw new Error('영수증 같은 칸 재클릭 닫기 실패');
   const openTime=()=>page.locator('label.kv-time').dispatchEvent('click');
   await openTime();
   const timeSuffix=mobile?'.mobile':'';
-  if(await page.locator(`.time-pop${timeSuffix}`).count()!==1)throw new Error(`영수증 ${mobile?'모바일':'PC'} 시간 선택기가 한 개 열리지 않음`);
+  if(await page.locator(`.time-pop${timeSuffix}`).count()!==1)throw new Error(`영수증 ${label} 시간 선택기가 한 개 열리지 않음`);
+  await assertFits(page,'.time-pop',`영수증 ${label} 시간 선택기`);
   if((await page.locator('.time-pop-backdrop').count())!==(mobile?1:0))throw new Error('영수증 모바일 시간 배경 수 불일치');
   if(await page.evaluate(()=>window.__nativeDatePickerCalls)!==0)throw new Error('영수증 네이티브 시간 다이얼이 호출됨');
-  await page.locator('[data-time-hour]').selectOption('20');
-  await page.locator('[data-time-minute]').selectOption('57');
+  if(await page.locator('.time-pop select').count()!==0)throw new Error('영수증 시간에 네이티브 select가 남아 있음');
+  if(await page.locator('[data-time-hour]').count()!==24||await page.locator('[data-time-minute]').count()!==60)throw new Error('영수증 앱 시·분 목록 개수 불일치');
+  const beforeTime=await page.locator('#addTime').inputValue();
+  await clickTimeOption(page,'[data-time-hour="19"]');
+  if(await page.locator('.date-pop').count()!==0||await page.locator('.time-pop').count()!==1)throw new Error('영수증 시간 목록 클릭이 날짜 달력과 충돌함');
+  await clickTimeOption(page,'[data-time-minute="56"]');
+  if(await page.locator('#addTime').inputValue()!==beforeTime)throw new Error('영수증 시간이 완료 전에 반영됨');
+  if(mobile)await page.locator('.time-pop-backdrop').click({position:{x:2,y:2}});
+  else await page.locator('body').dispatchEvent('click');
+  if(await page.locator('.time-pop').count()!==0||await page.locator('#addTime').inputValue()!==beforeTime)throw new Error('영수증 시간 취소가 원래 값을 보존하지 않음');
+  await openTime();
+  await clickTimeOption(page,'[data-time-hour="20"]');
+  await clickTimeOption(page,'[data-time-minute="57"]');
   await page.locator('[data-time-done]').click();
   if(await page.locator('#addTime').inputValue()!=='20:57')throw new Error('영수증 시간 반영 실패');
+  if(mobile&&await page.locator('#addTime').evaluate(inp=>document.activeElement===inp))throw new Error(`영수증 ${label} 시간 종료 후 네이티브 input에 포커스됨`);
   await openTime();
   await openTime();
   if(await page.locator('.time-pop').count()!==0)throw new Error('영수증 같은 시간 칸 재클릭 닫기 실패');
   await context.close();
 }
 
-async function checkDutch(browser,mobile){
-  const {context,page}=await openPage(browser,dutchUrl,mobile);
+async function checkDutch(browser,profile){
+  const {mobile,label}=profile,{context,page}=await openPage(browser,dutchUrl,profile);
   const open=()=>page.locator('#meetingDateInp').evaluate(inp=>inp.closest('.dp-wrap').dispatchEvent(new MouseEvent('click',{bubbles:true})));
   await open();
   const suffix=mobile?'.mobile':'';
-  if(await page.locator(`.dp-pop${suffix}`).count()!==1)throw new Error(`더치페이 ${mobile?'모바일':'PC'} 달력이 한 개 열리지 않음`);
+  if(await page.locator(`.dp-pop${suffix}`).count()!==1)throw new Error(`더치페이 ${label} 달력이 한 개 열리지 않음`);
+  await assertFits(page,'.dp-pop',`더치페이 ${label} 달력`);
   if((await page.locator('.dp-pop-backdrop').count())!==(mobile?1:0))throw new Error('더치페이 모바일 배경 수 불일치');
   if(await page.evaluate(()=>window.__nativeDatePickerCalls)!==0)throw new Error('더치페이 네이티브 달력이 호출됨');
   await page.locator('.dp-pop-title').click();
@@ -98,10 +128,7 @@ async function checkDutch(browser,mobile){
   const servers=await Promise.all([startServer(receiptRoot,4173),startServer(dutchRoot,4174)]);
   const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--disable-crash-reporter','--disable-crashpad','--noerrdialogs']});
   try{
-    await checkReceipt(browser,false);
-    await checkReceipt(browser,true);
-    await checkDutch(browser,false);
-    await checkDutch(browser,true);
-    console.log('OK: 두 앱 날짜 및 영수증 시간 선택기의 PC·모바일 UI와 동작이 동일합니다');
+    for(const profile of profiles){await checkReceipt(browser,profile);await checkDutch(browser,profile);}
+    console.log('OK: PC·안드로이드·아이폰에서 두 앱 날짜 및 영수증 시간 선택기의 UI와 동작이 동일합니다');
   }finally{await browser.close();servers.forEach(server=>server.close());}
 })().catch(error=>{console.error(error.stack||error);process.exit(1);});

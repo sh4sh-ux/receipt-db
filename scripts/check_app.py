@@ -75,6 +75,14 @@ def main() -> int:
         errors.append("모바일 시간이 단일 앱 24시간 선택기 모달이 아닙니다")
     if "if(_timePicker&&_timePicker.inp===inp){_timeClose(true);return;}" not in index:
         errors.append("같은 시간 입력 재클릭 닫기 동작이 없습니다")
+    if '<select class="time-pop-select"' in index or 'class="time-pop-option' not in index:
+        errors.append("시간 시·분이 앱 내부 목록으로 통일되지 않았습니다")
+    if "hourSel.addEventListener('change',commit)" in index or "minuteSel.addEventListener('change',commit)" in index:
+        errors.append("시간이 완료 전에 원본 입력에 반영됩니다")
+    if "if(focus&&!mobile)try{inp.focus({preventScroll:true});}" not in index:
+        errors.append("모바일 모달 종료 후 네이티브 날짜·시간 입력 포커스 방지가 없습니다")
+    if "e.target.closest('.date-pop,.time-pop')" not in index:
+        errors.append("날짜·시간 팝업 내부 클릭 충돌 방지가 없습니다")
     if "try{input.showPicker();}" in index:
         errors.append("날짜 입력에 브라우저 네이티브 showPicker 경로가 남아 있습니다")
 

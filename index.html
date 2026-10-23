@@ -2875,12 +2875,18 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .kv.time-open{position:relative;z-index:45;border-color:var(--blue);}
 .time-pop{position:absolute;z-index:46;top:calc(100% + 8px);left:-1px;right:-1px;padding:14px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:var(--app-shadow);cursor:default;}
 .time-pop.up{top:auto;bottom:calc(100% + 8px);}
-.time-pop-title{font-size:12px;font-weight:700;color:var(--label2);margin-bottom:10px;}
-.time-pop-fields{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:8px;}
-.time-pop-field{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;color:var(--label3);}
-.time-pop-select{width:100%;height:42px;padding:0 24px 0 9px;border:1px solid var(--sep2);border-radius:9px;background:var(--fill2) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239AA0A6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>") right 7px center/11px no-repeat;color:var(--label);font:inherit;font-size:15px;font-weight:650;font-variant-numeric:tabular-nums;appearance:none;-webkit-appearance:none;cursor:pointer;outline:none;}
-.time-pop-select:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg);}
-.time-pop-colon{height:42px;display:grid;place-items:center;color:var(--label2);font-size:16px;font-weight:700;}
+.time-pop-head{display:flex;align-items:center;justify-content:center;min-height:40px;margin:-14px -14px 10px;padding:3px 12px;border-bottom:1px solid var(--sep);}
+.time-pop-title{font-size:13px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
+.time-pop-fields{display:grid;grid-template-columns:1fr auto 1fr;align-items:start;gap:8px;}
+.time-pop-field{display:flex;min-width:0;flex-direction:column;gap:5px;font-size:11px;font-weight:600;color:var(--label3);}
+.time-pop-list{height:190px;overflow-y:auto;overscroll-behavior:contain;padding:3px;border:1px solid var(--sep2);border-radius:9px;background:var(--fill2);scrollbar-width:thin;}
+.time-pop-list::-webkit-scrollbar{width:4px;}
+.time-pop-list::-webkit-scrollbar-thumb{background:var(--sep2);border-radius:4px;}
+.time-pop-option{display:flex;align-items:center;justify-content:center;width:100%;height:38px;border:0;border-radius:7px;background:transparent;color:var(--label);font:inherit;font-size:15px;font-weight:650;font-variant-numeric:tabular-nums;cursor:pointer;}
+.time-pop-option:hover{background:var(--fill);}
+.time-pop-option.on{background:var(--blue);color:#fff;}
+.time-pop-option:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
+.time-pop-colon{align-self:stretch;display:grid;place-items:center;color:var(--label2);font-size:16px;font-weight:700;}
 .time-pop-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:4px;margin-top:12px;}
 .time-pop-btn{height:34px;padding:0 3px;border:0;border-radius:8px;background:transparent;color:var(--label2);font:inherit;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;}
 .time-pop-btn:hover{background:var(--fill);color:var(--label);}
@@ -4070,6 +4076,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v4.96 — 시간의 시·분을 네이티브 select 대신 앱 목록으로 통일. 완료 전 값은 임시 상태이고,
+//          모바일에서 날짜·시간 모달을 닫을 때 네이티브 input에 포커스하지 않는다.
 // v4.95 — 영수증 일자 안의 시간도 PC·모바일 모두 같은 앱 24시간 선택기로 통일.
 //          모바일 OS 시간 다이얼은 열지 않으며, 날짜 모달과 같은 배경·닫기 규칙을 사용.
 // v4.94 — PC·모바일의 모든 날짜 입력을 더치페이와 같은 앱 달력(연도→월→일)으로 통일.
@@ -4599,7 +4607,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.95';
+const APP_VERSION='v4.96';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -12467,8 +12475,8 @@ function _closeAnyCategoryPicker(){
 }
 let _datePicker=null;
 function _dateClose(focus){
-  if(!_datePicker)return;const {pop,backdrop,anchor,inp}=_datePicker;_datePicker=null;pop.remove();backdrop?.remove();anchor?.classList.remove('date-open');
-  if(focus)try{inp.focus({preventScroll:true});}catch(_){}
+  if(!_datePicker)return;const {pop,backdrop,anchor,inp,mobile}=_datePicker;_datePicker=null;pop.remove();backdrop?.remove();anchor?.classList.remove('date-open');
+  if(focus&&!mobile)try{inp.focus({preventScroll:true});}catch(_){}
 }
 function _dateSet(inp,value){
   if(inp.value===value)return;inp.value=value;_kvDateSync(inp);
@@ -12534,7 +12542,7 @@ function _dateOpen(inp){
   (pop.querySelector('.date-pop-day.on')||pop.querySelector('.date-pop-day.today')||pop.querySelector('.date-pop-day'))?.focus({preventScroll:true});
 }
 document.addEventListener('click',e=>{
-  if(_datePicker&&_datePicker.pop.contains(e.target))return;
+  if(e.target&&e.target.closest&&e.target.closest('.date-pop,.time-pop'))return;
   const direct=e.target&&e.target.closest&&e.target.closest('input[type="date"]');
   const holder=e.target&&e.target.closest&&e.target.closest('label,.kv,.lp-range-field');
   const inp=direct||holder?.querySelector('input[type="date"]');
@@ -12548,8 +12556,8 @@ document.addEventListener('keydown',e=>{
 },true);
 let _timePicker=null;
 function _timeClose(focus){
-  if(!_timePicker)return;const {pop,backdrop,kv,inp}=_timePicker;_timePicker=null;pop.remove();backdrop?.remove();kv.classList.remove('time-open');
-  if(focus)try{inp.focus({preventScroll:true});}catch(_){}
+  if(!_timePicker)return;const {pop,backdrop,kv,inp,mobile}=_timePicker;_timePicker=null;pop.remove();backdrop?.remove();kv.classList.remove('time-open');
+  if(focus&&!mobile)try{inp.focus({preventScroll:true});}catch(_){}
 }
 function _timeSet(inp,value){
   if(inp.value===value)return;inp.value=value;_kvTimeSync(inp);
@@ -12561,24 +12569,27 @@ function _timeOpen(inp){
   _timeClose();_dateClose();_kvsClose();_closeAnyCategoryPicker();
   const kv=inp.closest('.kv'),parts=(inp.value||'').split(':'),now=new Date();if(!kv)return;
   const hour=/^\d{2}$/.test(parts[0])?+parts[0]:now.getHours(),minute=/^\d{2}$/.test(parts[1])?+parts[1]:now.getMinutes();
-  const options=(n,selected)=>Array.from({length:n},(_,i)=>`<option value="${String(i).padStart(2,'0')}"${i===selected?' selected':''}>${String(i).padStart(2,'0')}</option>`).join('');
+  const options=(n,selected,kind)=>Array.from({length:n},(_,i)=>{const value=String(i).padStart(2,'0'),on=i===selected;return `<button type="button" class="time-pop-option${on?' on':''}" role="option" aria-selected="${on}" data-time-${kind}="${value}">${value}</button>`;}).join('');
   const pop=document.createElement('div');pop.className='time-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','시간 선택');
-  pop.innerHTML=`<div class="time-pop-title">시간 선택 · 24시간</div><div class="time-pop-fields"><label class="time-pop-field">시<select class="time-pop-select" data-time-hour>${options(24,hour)}</select></label><span class="time-pop-colon" aria-hidden="true">:</span><label class="time-pop-field">분<select class="time-pop-select" data-time-minute>${options(60,minute)}</select></label></div><div class="time-pop-actions"><button type="button" class="time-pop-btn" data-time-now>현재</button><button type="button" class="time-pop-btn" data-time-clear>지우기</button><button type="button" class="time-pop-btn done" data-time-done>완료</button></div>`;
+  pop.innerHTML=`<div class="time-pop-head"><div class="time-pop-title">시간 선택 · 24시간</div></div><div class="time-pop-fields"><div class="time-pop-field"><span>시</span><div class="time-pop-list" role="listbox" aria-label="시">${options(24,hour,'hour')}</div></div><span class="time-pop-colon" aria-hidden="true">:</span><div class="time-pop-field"><span>분</span><div class="time-pop-list" role="listbox" aria-label="분">${options(60,minute,'minute')}</div></div></div><div class="time-pop-actions"><button type="button" class="time-pop-btn" data-time-now>현재</button><button type="button" class="time-pop-btn" data-time-clear>지우기</button><button type="button" class="time-pop-btn done" data-time-done>완료</button></div>`;
   const mobile=!_desktopTimeMq.matches;let backdrop=null;
   if(mobile){backdrop=document.createElement('div');backdrop.className='time-pop-backdrop';document.body.append(backdrop,pop);pop.classList.add('mobile');}
   else kv.appendChild(pop);
   kv.classList.add('time-open');_timePicker={pop,backdrop,kv,inp,mobile};
-  const hourSel=pop.querySelector('[data-time-hour]'),minuteSel=pop.querySelector('[data-time-minute]');
-  const commit=()=>_timeSet(inp,`${hourSel.value}:${minuteSel.value}`);
-  hourSel.addEventListener('change',commit);minuteSel.addEventListener('change',commit);
-  pop.querySelector('[data-time-now]').onclick=()=>{const d=new Date();hourSel.value=String(d.getHours()).padStart(2,'0');minuteSel.value=String(d.getMinutes()).padStart(2,'0');commit();};
+  let draftHour=String(hour).padStart(2,'0'),draftMinute=String(minute).padStart(2,'0');
+  const hourList=pop.querySelector('[aria-label="시"]'),minuteList=pop.querySelector('[aria-label="분"]');
+  const select=(kind,value,focus=false)=>{const list=kind==='hour'?hourList:minuteList,data=kind==='hour'?'timeHour':'timeMinute';if(kind==='hour')draftHour=value;else draftMinute=value;list.querySelectorAll('.time-pop-option').forEach(btn=>{const on=btn.dataset[data]===value;btn.classList.toggle('on',on);btn.setAttribute('aria-selected',String(on));});const on=list.querySelector('.time-pop-option.on');if(on){list.scrollTop=Math.max(0,on.offsetTop-(list.clientHeight-on.offsetHeight)/2);if(focus)on.focus({preventScroll:true});}};
+  const bindList=(list,kind)=>{list.addEventListener('click',e=>{const btn=e.target.closest('.time-pop-option');if(btn)select(kind,kind==='hour'?btn.dataset.timeHour:btn.dataset.timeMinute,true);});list.addEventListener('keydown',e=>{if(e.key!=='ArrowDown'&&e.key!=='ArrowUp')return;const rows=[...list.querySelectorAll('.time-pop-option')],i=rows.indexOf(document.activeElement);if(i<0)return;e.preventDefault();rows[(i+(e.key==='ArrowDown'?1:-1)+rows.length)%rows.length].click();});};
+  bindList(hourList,'hour');bindList(minuteList,'minute');
+  const commit=()=>_timeSet(inp,`${draftHour}:${draftMinute}`);
+  pop.querySelector('[data-time-now]').onclick=()=>{const d=new Date();select('hour',String(d.getHours()).padStart(2,'0'));select('minute',String(d.getMinutes()).padStart(2,'0'),true);};
   pop.querySelector('[data-time-clear]').onclick=()=>{_timeSet(inp,'');_timeClose(true);};
   pop.querySelector('[data-time-done]').onclick=()=>{commit();_timeClose(true);};
   pop.addEventListener('click',e=>e.stopPropagation());
   pop.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();_timeClose(true);}});
   if(!mobile){const sc=kv.closest('.main-body,.mtg-sheet'),sr=sc?sc.getBoundingClientRect():{top:0,bottom:innerHeight},vh=(window.visualViewport&&visualViewport.height)||innerHeight;
     if(pop.getBoundingClientRect().bottom>Math.min(vh,sr.bottom)-8)pop.classList.add('up');}
-  hourSel.focus({preventScroll:true});
+  select('hour',draftHour);select('minute',draftMinute);hourList.querySelector('.time-pop-option.on')?.focus({preventScroll:true});
 }
 document.addEventListener('click',e=>{
   if(_timePicker&&_timePicker.pop.contains(e.target))return;
