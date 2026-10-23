@@ -2847,6 +2847,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .addx-hdr-act .detail-header-btn.primary:disabled{background:var(--fill2);border-color:var(--border);color:var(--text-tertiary);cursor:default;filter:none;}
 @media(min-width:781px){
   #viewInput>.input-row.actions{display:none;} /* 데스크탑은 헤더 [초기화][저장] — 영수증 상세와 같은 자리 */
+  #viewInput .main-body{padding-bottom:56px;} /* v5.02 — 태그 아래까지 스크롤한 뒤에도 패널 바닥과 충분히 떨어뜨린다 */
   .addx-info .detail-info-photo{min-height:220px;}
 }
 @media(max-width:780px){
@@ -4089,6 +4090,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v5.02 — 새 영수증 오른쪽 패널의 태그 아래에 데스크탑 스크롤 여백을 복구.
 // v5.01 — 새 영수증 빈 붙여넣기 칸의 스크롤 가로채기와 동기화 중 목록 위치 초기화를 수정.
 // v5.00 — 새 영수증의 프롬프트 복사를 입력 방식 탭 옆에 묶고 모바일은 전체 너비 버튼으로 통일. 직접 입력에서는 숨김.
 // v4.99 — 상세 하단의 내용 복사를 메타정보 문장 안의 작은 링크에서 독립된 반응형 액션 버튼으로 수정.
@@ -4626,7 +4628,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.01';
+const APP_VERSION='v5.02';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
