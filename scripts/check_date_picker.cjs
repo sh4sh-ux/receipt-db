@@ -141,6 +141,8 @@ async function checkReceipt(browser,profile){
   if(scrollBefore.active)throw new Error(`영수증 ${label} 새 화면 진입 시 붙여넣기 칸이 자동 포커스됨`);
   if(scrollBefore.overflow!=='hidden'||scrollAfter.textarea!==0)throw new Error(`영수증 ${label} 빈 붙여넣기 안내문이 스크롤을 가로챔`);
   if(scrollBefore.max>0&&scrollAfter.main<=scrollBefore.main)throw new Error(`영수증 ${label} 붙여넣기 칸 위 휠이 화면으로 전달되지 않음`);
+  const bottomGap=await page.locator('#tagInp').evaluate(tag=>{const main=tag.closest('.main-body');main.scrollTop=main.scrollHeight;const mr=main.getBoundingClientRect(),tr=tag.getBoundingClientRect();return mr.bottom-tr.bottom;});
+  if((mobile&&bottomGap<10)||(!mobile&&bottomGap<50))throw new Error(`영수증 ${label} 태그 아래 스크롤 여백 부족: ${bottomGap}px`);
   await context.close();
 }
 
