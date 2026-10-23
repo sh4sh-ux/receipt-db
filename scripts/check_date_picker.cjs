@@ -70,6 +70,7 @@ async function checkReceipt(browser,profile){
   await page.locator('.date-pop-day[data-date-value$="-10-15"]').click();
   if(!/-10-15$/.test(await page.locator('#addDate').inputValue()))throw new Error('영수증 날짜 반영 실패');
   if(mobile&&await page.locator('#addDate').evaluate(inp=>document.activeElement===inp))throw new Error(`영수증 ${label} 날짜 종료 후 네이티브 input에 포커스됨`);
+  if(mobile&&await page.locator('body').evaluate(body=>body.style.position==='fixed'))throw new Error(`영수증 ${label} 날짜 종료 후 배경 잠금이 남음`);
   await open();
   await open();
   if(await page.locator('.date-pop').count()!==0)throw new Error('영수증 같은 칸 재클릭 닫기 실패');
@@ -83,6 +84,17 @@ async function checkReceipt(browser,profile){
   if(await page.locator('.time-pop select').count()!==0)throw new Error('영수증 시간에 네이티브 select가 남아 있음');
   if(await page.locator('[data-time-hour]').count()!==24||await page.locator('[data-time-minute]').count()!==60)throw new Error('영수증 앱 시·분 목록 개수 불일치');
   const beforeTime=await page.locator('#addTime').inputValue();
+  if(mobile){
+    if(!await page.locator('body').evaluate(body=>body.style.position==='fixed'))throw new Error(`영수증 ${label} 시간 모달의 배경 페이지가 잠기지 않음`);
+    const minuteList=page.locator('.time-pop-list[aria-label="분"]');
+    await minuteList.evaluate(el=>{el.scrollTop=400;el.dispatchEvent(new Event('scroll'));});
+    await page.waitForTimeout(80);
+    const beforeScroll=await minuteList.evaluate(el=>el.scrollTop);
+    if(Math.abs(beforeScroll-400)>2||await page.locator('.time-pop').count()!==1)throw new Error(`영수증 ${label} 시간 목록 스크롤이 유지되지 않음`);
+    await page.locator('[data-time-minute="12"]').evaluate(el=>el.click());
+    const afterScroll=await minuteList.evaluate(el=>el.scrollTop);
+    if(Math.abs(afterScroll-beforeScroll)>2)throw new Error(`영수증 ${label} 시간 선택 시 목록이 튕김: ${beforeScroll} → ${afterScroll}`);
+  }
   await clickTimeOption(page,'[data-time-hour="19"]');
   if(await page.locator('.date-pop').count()!==0||await page.locator('.time-pop').count()!==1)throw new Error('영수증 시간 목록 클릭이 날짜 달력과 충돌함');
   await clickTimeOption(page,'[data-time-minute="56"]');
@@ -90,12 +102,14 @@ async function checkReceipt(browser,profile){
   if(mobile)await page.locator('.time-pop-backdrop').click({position:{x:2,y:2}});
   else await page.locator('body').dispatchEvent('click');
   if(await page.locator('.time-pop').count()!==0||await page.locator('#addTime').inputValue()!==beforeTime)throw new Error('영수증 시간 취소가 원래 값을 보존하지 않음');
+  if(mobile&&await page.locator('body').evaluate(body=>body.style.position==='fixed'))throw new Error(`영수증 ${label} 시간 취소 후 배경 잠금이 남음`);
   await openTime();
   await clickTimeOption(page,'[data-time-hour="20"]');
   await clickTimeOption(page,'[data-time-minute="57"]');
   await page.locator('[data-time-done]').click();
   if(await page.locator('#addTime').inputValue()!=='20:57')throw new Error('영수증 시간 반영 실패');
   if(mobile&&await page.locator('#addTime').evaluate(inp=>document.activeElement===inp))throw new Error(`영수증 ${label} 시간 종료 후 네이티브 input에 포커스됨`);
+  if(mobile&&await page.locator('body').evaluate(body=>body.style.position==='fixed'))throw new Error(`영수증 ${label} 시간 완료 후 배경 잠금이 남음`);
   await openTime();
   await openTime();
   if(await page.locator('.time-pop').count()!==0)throw new Error('영수증 같은 시간 칸 재클릭 닫기 실패');

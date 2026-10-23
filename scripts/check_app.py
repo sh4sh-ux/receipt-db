@@ -83,6 +83,12 @@ def main() -> int:
         errors.append("모바일 모달 종료 후 네이티브 날짜·시간 입력 포커스 방지가 없습니다")
     if "e.target.closest('.date-pop,.time-pop')" not in index:
         errors.append("날짜·시간 팝업 내부 클릭 충돌 방지가 없습니다")
+    if "-webkit-overflow-scrolling:touch" not in index or "touch-action:pan-y" not in index:
+        errors.append("모바일 시간 목록의 관성·세로 터치 스크롤 규칙이 없습니다")
+    if "function _pickerLockPage()" not in index or "function _pickerUnlockPage()" not in index:
+        errors.append("모바일 선택기 배경 페이지 스크롤 잠금이 없습니다")
+    if "select(kind,kind==='hour'?btn.dataset.timeHour:btn.dataset.timeMinute,{focus:!mobile})" not in index:
+        errors.append("모바일 시간 선택 시 강제 포커스·재정렬 방지가 없습니다")
     if "try{input.showPicker();}" in index:
         errors.append("날짜 입력에 브라우저 네이티브 showPicker 경로가 남아 있습니다")
 
