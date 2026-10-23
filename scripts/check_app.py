@@ -66,11 +66,15 @@ def main() -> int:
     if ".photo-zone>svg{margin:0 auto 6px;}" not in index or ".photo-remove svg{display:block;margin:0;}" not in index:
         errors.append("사진 제거 버튼 SVG 중앙 정렬 보호 규칙이 없습니다")
 
-    # v4.87 — PC는 마우스용 24시간 선택기, 터치는 네이티브 time picker를 사용한다.
+    # v4.95 — PC·모바일 모두 같은 앱 24시간 선택기를 사용한다.
     if "const _desktopPickerMq=window.matchMedia('(hover:hover) and (pointer:fine)')" not in index or "const _desktopTimeMq=_desktopPickerMq;" not in index or "function _timeOpen(inp)" not in index:
         errors.append("데스크톱 시간 선택기가 없습니다")
     if "closest('.kv-time-inp,.kv-date-inp')" in index or "dtEl.addEventListener('focus',openPicker)" in index:
         errors.append("날짜·시간 선택기에 중복 showPicker 호출이 남아 있습니다")
+    if '.kv-time-inp[type="time"]{pointer-events:none;}' not in index or ".time-pop.mobile{position:fixed" not in index or "backdrop.className='time-pop-backdrop'" not in index:
+        errors.append("모바일 시간이 단일 앱 24시간 선택기 모달이 아닙니다")
+    if "if(_timePicker&&_timePicker.inp===inp){_timeClose(true);return;}" not in index:
+        errors.append("같은 시간 입력 재클릭 닫기 동작이 없습니다")
     if "try{input.showPicker();}" in index:
         errors.append("날짜 입력에 브라우저 네이티브 showPicker 경로가 남아 있습니다")
 
