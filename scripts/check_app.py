@@ -33,6 +33,12 @@ def main() -> int:
     if "document.getElementById('detailCopyBtn').onclick=()=>_duplicateReceipt(r);" not in index:
         errors.append("영수증 상세 헤더의 복사(영수증 복제) 동작이 없습니다")
 
+    # v5.04 — 시간 선택기는 달력과 같은 평평한 목록이며 선택 분은 체크로 구분한다.
+    if ".time-pop-list{height:216px" not in index or "border:0;border-radius:0;background:transparent;scrollbar-width:none" not in index:
+        errors.append("시간 선택기의 단일 목록 디자인이 없습니다")
+    if ".time-pop-option[data-time-minute].on::after{content:'✓'" not in index:
+        errors.append("시간 선택기의 선택 분 체크 표시가 없습니다")
+
     manifest = json.loads((ROOT / "manifest.webmanifest").read_text(encoding="utf-8"))
     for icon in manifest.get("icons", []):
         path = ROOT / str(icon.get("src", "")).removeprefix("./")
