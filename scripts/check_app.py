@@ -71,12 +71,16 @@ def main() -> int:
         errors.append("데스크톱 시간 선택기가 없습니다")
     if "closest('.kv-time-inp,.kv-date-inp')" in index or "dtEl.addEventListener('focus',openPicker)" in index:
         errors.append("날짜·시간 선택기에 중복 showPicker 호출이 남아 있습니다")
-    if "const direct=e.target instanceof Element&&e.target.matches('input[type=\"date\"]')?e.target:null;" not in index or "e.preventDefault();\n  try{input.showPicker();}" not in index:
-        errors.append("투명 날짜 input을 여는 단일 showPicker 위임 핸들러가 없습니다")
+    if "try{input.showPicker();}" in index:
+        errors.append("날짜 입력에 브라우저 네이티브 showPicker 경로가 남아 있습니다")
 
     # v4.90 — PC 날짜·시간은 결제수단과 같은 필드 너비이며, 네 종류의 선택창은 서로 겹치지 않는다.
     if "function _dateOpen(inp)" not in index or ".date-pop{position:absolute" not in index:
         errors.append("데스크톱 앱 내부 날짜 선택기가 없습니다")
+    if 'input[type="date"]{pointer-events:none;}' not in index or ".date-pop.mobile{position:fixed" not in index or "backdrop.className='date-pop-backdrop'" not in index:
+        errors.append("모바일 날짜 선택기가 더치페이와 같은 단일 앱 달력 모달이 아닙니다")
+    if "if(_datePicker&&_datePicker.inp===inp){_dateClose(true);return;}" not in index:
+        errors.append("같은 날짜 입력 재클릭 닫기 동작이 없습니다")
     if ".time-pop{position:absolute;z-index:46;top:calc(100% + 8px);left:-1px;right:-1px;" not in index or "width:248px" in index:
         errors.append("시간 선택기 너비가 결제수단 필드 너비와 같지 않습니다")
     if "_kvsClose();_timeClose();_dateClose();_closeCategoryPicker();" not in index or "_timeClose();_dateClose();_kvsClose();_closeAnyCategoryPicker();" not in index:
