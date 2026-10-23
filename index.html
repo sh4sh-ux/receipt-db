@@ -2871,7 +2871,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 @media(max-width:380px){.kv-dt-row{gap:6px;}.kv-time-txt{font-size:12px;}.kv-time.empty>.kv-time-txt{font-size:12px;}}
 @media(max-width:365px){.kv-date-txt{font-size:13px;letter-spacing:-.2px;}}
 .kv-time>.kv-time-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px;cursor:pointer;}
-/* v4.87 — 마우스에서는 브라우저마다 다른 12시간 다이얼 대신 앱 안 24시간 선택기를 쓴다. 터치는 네이티브 다이얼 유지. */
+/* v4.95 — PC·모바일 모두 같은 앱 안 24시간 선택기를 쓴다. */
 .kv.time-open{position:relative;z-index:45;border-color:var(--blue);}
 .time-pop{position:absolute;z-index:46;top:calc(100% + 8px);left:-1px;right:-1px;padding:14px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:var(--app-shadow);cursor:default;}
 .time-pop.up{top:auto;bottom:calc(100% + 8px);}
@@ -2886,7 +2886,12 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .time-pop-btn:hover{background:var(--fill);color:var(--label);}
 .time-pop-btn.done{background:var(--blue);color:#fff;}
 .time-pop-btn.done:hover{filter:brightness(1.05);}
-@media(hover:none),(pointer:coarse){.time-pop{display:none!important;}}
+@media(hover:none),(pointer:coarse){
+  .kv-time-inp[type="time"]{pointer-events:none;}
+  .time-pop.mobile{position:fixed;z-index:651;top:50%;right:16px;bottom:auto;left:16px;width:auto;max-width:420px;margin:0 auto;transform:translateY(-50%);box-sizing:border-box;}
+  .time-pop.mobile.up{top:50%;bottom:auto;}
+  .time-pop-backdrop{position:fixed;z-index:650;inset:0;background:rgba(0,0,0,.42);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
+}
 /* v4.94 — 날짜는 PC·모바일 모두 더치페이와 같은 앱 내부 선택기를 쓴다. */
 .kv.date-open{position:relative;z-index:45;border-color:var(--blue);}
 .date-pop{position:absolute;z-index:46;top:calc(100% + 8px);left:-1px;right:-1px;padding:0 10px 10px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:var(--app-shadow);cursor:default;}
@@ -4065,6 +4070,8 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v4.95 — 영수증 일자 안의 시간도 PC·모바일 모두 같은 앱 24시간 선택기로 통일.
+//          모바일 OS 시간 다이얼은 열지 않으며, 날짜 모달과 같은 배경·닫기 규칙을 사용.
 // v4.94 — PC·모바일의 모든 날짜 입력을 더치페이와 같은 앱 달력(연도→월→일)으로 통일.
 //          모바일 OS 달력은 열지 않으며, 같은 칸 재탭·바깥 탭·Esc로 닫는다.
 // v4.93 — 직접 기간·선불권·대납 등 모든 날짜 입력도 PC에서 같은 앱 달력(연도→월→일)을 사용.
@@ -4592,7 +4599,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v4.94';
+const APP_VERSION='v4.95';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -12541,7 +12548,7 @@ document.addEventListener('keydown',e=>{
 },true);
 let _timePicker=null;
 function _timeClose(focus){
-  if(!_timePicker)return;const {pop,kv,inp}=_timePicker;_timePicker=null;pop.remove();kv.classList.remove('time-open');
+  if(!_timePicker)return;const {pop,backdrop,kv,inp}=_timePicker;_timePicker=null;pop.remove();backdrop?.remove();kv.classList.remove('time-open');
   if(focus)try{inp.focus({preventScroll:true});}catch(_){}
 }
 function _timeSet(inp,value){
@@ -12550,14 +12557,17 @@ function _timeSet(inp,value){
 }
 function _timeOpen(inp){
   if(!inp||inp.disabled||inp.readOnly)return;
-  if(_timePicker&&_timePicker.inp===inp)return;
+  if(_timePicker&&_timePicker.inp===inp){_timeClose(true);return;}
   _timeClose();_dateClose();_kvsClose();_closeAnyCategoryPicker();
   const kv=inp.closest('.kv'),parts=(inp.value||'').split(':'),now=new Date();if(!kv)return;
   const hour=/^\d{2}$/.test(parts[0])?+parts[0]:now.getHours(),minute=/^\d{2}$/.test(parts[1])?+parts[1]:now.getMinutes();
   const options=(n,selected)=>Array.from({length:n},(_,i)=>`<option value="${String(i).padStart(2,'0')}"${i===selected?' selected':''}>${String(i).padStart(2,'0')}</option>`).join('');
   const pop=document.createElement('div');pop.className='time-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','시간 선택');
   pop.innerHTML=`<div class="time-pop-title">시간 선택 · 24시간</div><div class="time-pop-fields"><label class="time-pop-field">시<select class="time-pop-select" data-time-hour>${options(24,hour)}</select></label><span class="time-pop-colon" aria-hidden="true">:</span><label class="time-pop-field">분<select class="time-pop-select" data-time-minute>${options(60,minute)}</select></label></div><div class="time-pop-actions"><button type="button" class="time-pop-btn" data-time-now>현재</button><button type="button" class="time-pop-btn" data-time-clear>지우기</button><button type="button" class="time-pop-btn done" data-time-done>완료</button></div>`;
-  kv.appendChild(pop);kv.classList.add('time-open');_timePicker={pop,kv,inp};
+  const mobile=!_desktopTimeMq.matches;let backdrop=null;
+  if(mobile){backdrop=document.createElement('div');backdrop.className='time-pop-backdrop';document.body.append(backdrop,pop);pop.classList.add('mobile');}
+  else kv.appendChild(pop);
+  kv.classList.add('time-open');_timePicker={pop,backdrop,kv,inp,mobile};
   const hourSel=pop.querySelector('[data-time-hour]'),minuteSel=pop.querySelector('[data-time-minute]');
   const commit=()=>_timeSet(inp,`${hourSel.value}:${minuteSel.value}`);
   hourSel.addEventListener('change',commit);minuteSel.addEventListener('change',commit);
@@ -12566,17 +12576,20 @@ function _timeOpen(inp){
   pop.querySelector('[data-time-done]').onclick=()=>{commit();_timeClose(true);};
   pop.addEventListener('click',e=>e.stopPropagation());
   pop.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();_timeClose(true);}});
-  const sc=kv.closest('.main-body,.mtg-sheet'),sr=sc?sc.getBoundingClientRect():{top:0,bottom:innerHeight},vh=(window.visualViewport&&visualViewport.height)||innerHeight;
-  if(pop.getBoundingClientRect().bottom>Math.min(vh,sr.bottom)-8)pop.classList.add('up');
+  if(!mobile){const sc=kv.closest('.main-body,.mtg-sheet'),sr=sc?sc.getBoundingClientRect():{top:0,bottom:innerHeight},vh=(window.visualViewport&&visualViewport.height)||innerHeight;
+    if(pop.getBoundingClientRect().bottom>Math.min(vh,sr.bottom)-8)pop.classList.add('up');}
   hourSel.focus({preventScroll:true});
 }
 document.addEventListener('click',e=>{
-  const inp=e.target&&e.target.closest&&e.target.closest('.kv-time-inp');
-  if(inp&&_desktopTimeMq.matches){e.preventDefault();_timeOpen(inp);return;}
+  if(_timePicker&&_timePicker.pop.contains(e.target))return;
+  const direct=e.target&&e.target.closest&&e.target.closest('.kv-time-inp');
+  const holder=e.target&&e.target.closest&&e.target.closest('.kv-time');
+  const inp=direct||holder?.querySelector('.kv-time-inp');
+  if(inp){e.preventDefault();_timeOpen(inp);return;}
   if(_timePicker&&!_timePicker.pop.contains(e.target))_timeClose(false);
 },true);
 document.addEventListener('keydown',e=>{
-  const inp=e.target;if(!_desktopTimeMq.matches||!inp?.classList?.contains('kv-time-inp'))return;
+  const inp=e.target;if(!inp?.classList?.contains('kv-time-inp'))return;
   if(e.key==='Enter'||e.key===' '||e.key==='ArrowDown'){e.preventDefault();_timeOpen(inp);}
   else if(e.key==='Escape')_timeClose(true);
 },true);
