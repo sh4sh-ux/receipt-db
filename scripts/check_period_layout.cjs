@@ -39,6 +39,8 @@ async function checkProfile(browser,profile){
     const order=[...document.querySelector('#monthNav').children].map(el=>el.id||el.className);
     return {viewport:innerWidth,pageScrollWidth:root.scrollWidth,nav:{x:nav.x,width:nav.width},order,search:box('#searchInp'),prev:box('#monthPrev'),label:box('#monthLabel'),next:box('#monthNext'),all:box('#monthToday'),select:box('#batchSelectToggle')};
   });
+  const sidebarBoundary=await page.evaluate(()=>{const listEl=document.querySelector('#sideList'),probe=document.createElement('div');probe.className='list-daygroup';probe.innerHTML='<div class="r-card">검사용 마지막 행</div>';listEl.appendChild(probe);const last=probe.firstElementChild,list=listEl.getBoundingClientRect(),foot=document.querySelector('.side-foot').getBoundingClientRect(),footBorder=getComputedStyle(document.querySelector('.side-foot')).borderTopWidth,paddingBottom=getComputedStyle(listEl).paddingBottom,lastBorderBottom=getComputedStyle(last).borderBottomWidth;probe.remove();return{listBottom:list.bottom,footTop:foot.top,footBorder,paddingBottom,lastBorderBottom};});
+  if(!profile.mobile&&(parseFloat(sidebarBoundary.footBorder)!==1||parseFloat(sidebarBoundary.paddingBottom)!==0||parseFloat(sidebarBoundary.lastBorderBottom)!==0||Math.abs(sidebarBoundary.listBottom-sidebarBoundary.footTop)>1))throw new Error(`${profile.label}: 목록 하단 경계 규칙 불일치 ${JSON.stringify(sidebarBoundary)}`);
   const expectedPad=profile.mobile?18:28;
   if(nav.pageScrollWidth>nav.viewport)throw new Error(`${profile.label}: 페이지 가로 넘침 ${JSON.stringify(nav)}`);
   if(nav.label.whiteSpace!=='nowrap'||nav.label.height>24)throw new Error(`${profile.label}: 월 표시가 두 줄 ${JSON.stringify(nav.label)}`);
