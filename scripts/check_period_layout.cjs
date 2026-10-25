@@ -61,6 +61,10 @@ async function checkProfile(browser,profile){
   if(await page.locator('#monthToday').getAttribute('aria-pressed')!=='true')throw new Error(`${profile.label}: 전체 전환 실패`);
   const afterAll=await page.locator('#monthToday').boundingBox();
   if(Math.abs(afterAll.x-segmentX)>1)throw new Error(`${profile.label}: 전체→이번 달 전환 때 버튼 위치 이동`);
+  await page.locator('#monthLabel').dispatchEvent('click');
+  const monthCalendar=await page.evaluate(()=>{const search=document.querySelector('#searchInp').getBoundingClientRect(),calendar=document.querySelector('.date-pop').getBoundingClientRect();return{search:{left:search.left,right:search.right,width:search.width},calendar:{left:calendar.left,right:calendar.right,width:calendar.width}};});
+  if(Math.abs(monthCalendar.search.left-monthCalendar.calendar.left)>1||Math.abs(monthCalendar.search.right-monthCalendar.calendar.right)>1||Math.abs(monthCalendar.search.width-monthCalendar.calendar.width)>1)throw new Error(`${profile.label}: 월 달력과 검색창 양끝 불일치 ${JSON.stringify(monthCalendar)}`);
+  await page.locator('#monthLabel').dispatchEvent('click');
 
   const trend=await page.evaluate(()=>{
     receipts=[
