@@ -34,30 +34,32 @@ async function checkProfile(browser,profile){
 
   const nav=await page.evaluate(()=>{
     const box=selector=>{const el=document.querySelector(selector),r=el.getBoundingClientRect(),s=getComputedStyle(el);return{x:r.x,y:r.y,width:r.width,height:r.height,scrollWidth:el.scrollWidth,clientWidth:el.clientWidth,whiteSpace:s.whiteSpace}};
+    document.querySelector('.side-search').style.display='block';
     const root=document.documentElement,nav=document.querySelector('#monthNav').getBoundingClientRect();
     const order=[...document.querySelector('#monthNav').children].map(el=>el.id||el.className);
-    return {viewport:innerWidth,pageScrollWidth:root.scrollWidth,nav:{x:nav.x,width:nav.width},order,prev:box('#monthPrev'),label:box('#monthLabel'),next:box('#monthNext'),segment:box('.month-nav-seg'),all:box('#monthToday'),select:box('#batchSelectToggle')};
+    return {viewport:innerWidth,pageScrollWidth:root.scrollWidth,nav:{x:nav.x,width:nav.width},order,search:box('#searchInp'),prev:box('#monthPrev'),label:box('#monthLabel'),next:box('#monthNext'),all:box('#monthToday'),select:box('#batchSelectToggle')};
   });
   const expectedPad=profile.mobile?18:28;
   if(nav.pageScrollWidth>nav.viewport)throw new Error(`${profile.label}: 페이지 가로 넘침 ${JSON.stringify(nav)}`);
   if(nav.label.whiteSpace!=='nowrap'||nav.label.height>24)throw new Error(`${profile.label}: 월 표시가 두 줄 ${JSON.stringify(nav.label)}`);
   if(nav.order.join('|')!=='monthPrev|monthLabel|monthNext|month-nav-seg')throw new Error(`${profile.label}: 월 탐색 순서 불일치 ${nav.order.join('|')}`);
-  if(Math.abs(nav.segment.width-126)>1||Math.abs(nav.segment.height-30)>1)throw new Error(`${profile.label}: 전체·선택 세그먼트 크기 불일치 ${JSON.stringify(nav.segment)}`);
+  if(Math.abs(nav.all.height-30)>1||Math.abs(nav.select.height-30)>1)throw new Error(`${profile.label}: 전체·선택 버튼 높이 불일치`);
   if(Math.abs(nav.all.width-nav.select.width)>1)throw new Error(`${profile.label}: 전체·선택 너비 불균형`);
-  if(!(nav.prev.x<nav.label.x&&nav.label.x<nav.next.x&&nav.next.x<nav.segment.x))throw new Error(`${profile.label}: 이전→년월→다음→상태 시각 순서 불일치`);
+  if(!(nav.prev.x<nav.label.x&&nav.label.x<nav.next.x&&nav.next.x<nav.all.x&&nav.all.x<nav.select.x))throw new Error(`${profile.label}: 이전→년월→다음→전체→선택 시각 순서 불일치`);
+  if(Math.abs(nav.prev.x-nav.search.x)>1)throw new Error(`${profile.label}: 이전 화살표와 검색창 왼쪽 불일치 ${JSON.stringify({prev:nav.prev.x,search:nav.search.x})}`);
+  if(Math.abs((nav.select.x+nav.select.width)-(nav.search.x+nav.search.width))>1)throw new Error(`${profile.label}: 선택 버튼과 검색창 오른쪽 불일치 ${JSON.stringify({select:nav.select.x+nav.select.width,search:nav.search.x+nav.search.width})}`);
   if(nav.nav.x+expectedPad-1>nav.prev.x)throw new Error(`${profile.label}: 왼쪽 여백 침범`);
-  if(nav.segment.x+nav.segment.width>nav.nav.x+nav.nav.width-expectedPad+1)throw new Error(`${profile.label}: 오른쪽 여백 침범`);
-  const segmentX=nav.segment.x;
+  const segmentX=nav.all.x,selectRight=nav.select.x+nav.select.width;
   await page.locator('#monthPrev').dispatchEvent('click');
-  const afterMonth=await page.locator('.month-nav-seg').boundingBox();
+  const afterMonth=await page.locator('#monthToday').boundingBox();
   if(Math.abs(afterMonth.x-segmentX)>1)throw new Error(`${profile.label}: 한 자리 월 전환 때 버튼 위치 이동`);
   await page.locator('#batchSelectToggle').dispatchEvent('click');
   if(await page.locator('#batchSelectToggle').getAttribute('aria-pressed')!=='true')throw new Error(`${profile.label}: 선택 전환 실패`);
-  const afterSelect=await page.locator('.month-nav-seg').boundingBox();
-  if(Math.abs(afterSelect.x-segmentX)>1)throw new Error(`${profile.label}: 선택→완료 전환 때 버튼 위치 이동`);
+  const afterSelect=await page.locator('#batchSelectToggle').boundingBox();
+  if(Math.abs(afterSelect.x+afterSelect.width-selectRight)>1)throw new Error(`${profile.label}: 선택→완료 전환 때 버튼 위치 이동`);
   await page.locator('#monthToday').dispatchEvent('click');
   if(await page.locator('#monthToday').getAttribute('aria-pressed')!=='true')throw new Error(`${profile.label}: 전체 전환 실패`);
-  const afterAll=await page.locator('.month-nav-seg').boundingBox();
+  const afterAll=await page.locator('#monthToday').boundingBox();
   if(Math.abs(afterAll.x-segmentX)>1)throw new Error(`${profile.label}: 전체→이번 달 전환 때 버튼 위치 이동`);
 
   const trend=await page.evaluate(()=>{
@@ -76,14 +78,17 @@ async function checkProfile(browser,profile){
       host.innerHTML=_trendSectionHtml();
       const tabs=host.querySelector('.lp-tabs').getBoundingClientRect();
       const graph=host.querySelector('.lp-trend').getBoundingClientRect();
-      result[unit]={tabs:[tabs.width,tabs.height],graph:[graph.width,graph.height]};
+      const legend=host.querySelector('.lp-leg').getBoundingClientRect();
+      result[unit]={tabs:[tabs.width,tabs.height],graph:[graph.width,graph.height],legendTop:legend.top-graph.top,legendBottom:graph.bottom-legend.bottom};
     }
     host.remove();
     return result;
   });
   const tabWidths=Object.values(trend).map(v=>v.tabs[0]),tabHeights=Object.values(trend).map(v=>v.tabs[1]),graphHeights=Object.values(trend).map(v=>v.graph[1]);
+  const legendTops=Object.values(trend).map(v=>v.legendTop),legendBottoms=Object.values(trend).map(v=>v.legendBottom);
   if(!closeEnough(tabWidths)||!closeEnough(tabHeights)||Math.abs(tabWidths[0]-146)>1||Math.abs(tabHeights[0]-34)>1)throw new Error(`${profile.label}: 기간 세그먼트 크기 불일치 ${JSON.stringify(trend)}`);
   if(!closeEnough(graphHeights)||graphHeights[0]<(profile.mobile?235:227))throw new Error(`${profile.label}: 단위별 그래프 박스 높이 불일치 ${JSON.stringify(trend)}`);
+  if(!closeEnough(legendTops)||!closeEnough(legendBottoms))throw new Error(`${profile.label}: 단위별 범례 Y좌표 불일치 ${JSON.stringify(trend)}`);
 
   await context.close();
   return {label:profile.label,nav,trend};
@@ -97,7 +102,7 @@ async function checkProfile(browser,profile){
       {label:'PC 1280px',viewport:{width:1280,height:900},mobile:false},
       {label:'모바일 390px',viewport:{width:390,height:844},mobile:true}
     ])results.push(await checkProfile(browser,profile));
-    for(const item of results)console.log(`${item.label}: 월=${Math.round(item.nav.label.width)}px, 전체·선택=${Math.round(item.nav.segment.width)}×${Math.round(item.nav.segment.height)}px, 그래프 높이(연/월/일)=${Object.values(item.trend).map(v=>Math.round(v.graph[1])).join('/')}px`);
-    console.log('OK: PC·모바일 월 탐색 한 줄·여백과 연간·월별·일별 그래프 박스 높이가 동일합니다');
+    for(const item of results)console.log(`${item.label}: 검색창 양끝=${Math.round(item.nav.search.x)}–${Math.round(item.nav.search.x+item.nav.search.width)}px, 탐색 양끝=${Math.round(item.nav.prev.x)}–${Math.round(item.nav.select.x+item.nav.select.width)}px, 범례 Y(연/월/일)=${Object.values(item.trend).map(v=>Math.round(v.legendTop)).join('/')}px`);
+    console.log('OK: PC·모바일 월 탐색 양끝과 검색창이 일치하고 연간·월별·일별 범례 Y좌표가 동일합니다');
   }finally{await browser.close();server.close();}
 })().catch(error=>{console.error(error);process.exit(1);});

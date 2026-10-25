@@ -1335,7 +1335,7 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lightbox-close{position:absolute;top:16px;right:20px;width:40px;height:40px;border:none;border-radius:20px;background:rgba(255,255,255,.15);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;}
 
 /* ── BUDGET / 가계부 화면 ── */
-.month-nav{display:grid;grid-template-columns:30px 90px 30px 126px;align-items:center;justify-content:center;padding:14px var(--pad-x) 12px;border-bottom:1px solid var(--sep);column-gap:6px;}
+.month-nav{display:grid;grid-template-columns:30px 90px 30px minmax(0,1fr) minmax(0,1fr);align-items:center;padding:14px var(--pad-x) 12px;border-bottom:1px solid var(--sep);column-gap:6px;}
 .month-nav-btn{width:30px;height:30px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);color:var(--label2);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;padding:0;flex-shrink:0;}
 .month-nav-btn:hover{background:var(--fill);color:var(--label);}
 .month-nav-btn:disabled{opacity:.3;cursor:not-allowed;}
@@ -1355,10 +1355,10 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .section-body{overflow:hidden;transition:max-height .25s ease,opacity .2s ease;}
 .section-body.open{max-height:none;opacity:1;} /* v4.23 — 2000px 고정 → 긴 목록(검색 구매 이력 88줄 ≈ 4,200px) 아래가 잘렸다. 펼침·접힘 움직임은 _bindSectionToggles가 실제 높이로 */
 .section-body.closed{max-height:0;opacity:0;pointer-events:none;}
-.month-nav-seg{width:126px;height:30px;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:2px;padding:2px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);box-sizing:border-box;}
-.month-nav-today,.batch-select-toggle{width:100%;height:24px;min-width:0;font-size:10.5px;color:var(--label2);background:transparent;border:0;border-radius:6px;padding:0 6px;font-weight:650;line-height:1;display:flex;align-items:center;justify-content:center;white-space:nowrap;box-shadow:none;}
-.month-nav-today:hover,.batch-select-toggle:hover{background:var(--fill);color:var(--label);}
-.month-nav-today.on,.batch-select-toggle.on{background:var(--blue-bg);color:var(--blue-txt);box-shadow:none;}
+.month-nav-seg{display:contents;}
+.month-nav-today,.batch-select-toggle{width:100%;height:30px;min-width:0;font-size:10.5px;color:var(--label2);background:var(--card);border:1px solid var(--sep2);border-radius:8px;padding:0 4px;font-weight:650;line-height:1;display:flex;align-items:center;justify-content:center;white-space:nowrap;box-shadow:none;}
+.month-nav-today:hover,.batch-select-toggle:hover{border-color:color-mix(in srgb,var(--blue) 45%,var(--sep2));background:var(--fill);color:var(--label);}
+.month-nav-today.on,.batch-select-toggle.on{border-color:color-mix(in srgb,var(--blue) 42%,var(--sep2));background:var(--blue-bg);color:var(--blue-txt);box-shadow:none;}
 .month-nav.context-spacer{display:none;}
 
 /* 인물 검색 시간 필터 */
@@ -1552,13 +1552,13 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-ract .lp-range-apply{border-radius:9px;}
 .lp-pager{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;font-size:12px;color:var(--label2);}
 .lp-pager button:disabled{opacity:.4;cursor:default;}
-.lp-leg{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--label2);}
+.lp-leg{min-height:16px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:auto;font-size:11.5px;color:var(--label2);}
 .lp-leg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;}
 .lp-leg em{font-style:normal;color:var(--label3);}
 .lp-hdv b.lp-hm,.lp-hm{color:var(--blue);}
 /* v3.19 — 전체 내역 지출 추이 차트(Y축 눈금·점선 그리드·다중 X라벨·건수 툴팁). 전용 클래스라 다른 화면 sparkline과 독립 */
-.lp-trend{min-height:227px;box-sizing:border-box;background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:16px 16px 12px;}
-.lp-plot{display:flex;gap:10px;}
+.lp-trend{min-height:227px;box-sizing:border-box;display:flex;flex-direction:column;background:var(--fill2);border:1px solid var(--sep);border-radius:var(--rm);padding:16px 16px 12px;}
+.lp-plot{display:flex;gap:10px;flex:0 0 auto;}
 .lp-yaxis{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;justify-content:space-between;height:176px;text-align:right;font-size:11px;line-height:1;color:var(--label3);font-variant-numeric:tabular-nums;flex:0 0 auto;}
 .lp-canvas-col{flex:1;min-width:0;display:flex;flex-direction:column;}
 .lp-canvas{position:relative;height:140px;} /* v4.57 — 그래프 높이 낮춤(PC 176→140, 폰 146→120) */
@@ -1611,6 +1611,7 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
   .spark-bar[data-day]:hover::after,.spark-bar[data-lbl]:hover::after{font-size:11px;padding:6px 9px;}
   .lp-yaxis,.lp-canvas{height:120px;}
   .lp-trend{min-height:235px;}
+  .lp-leg{min-height:34px;align-content:flex-end;}
   [data-trend] .budget-section-hd{flex-wrap:wrap;row-gap:6px;}
   /* v4.62 — 폰: 요약(날짜·건수 / 총액 / 내 부담)을 두 줄로 쌓아 왼쪽에, [연간|월별|일별]은 같은 높이 오른쪽에(공간 절약) */
   .lp-ctl{flex-wrap:nowrap;align-items:center;}
