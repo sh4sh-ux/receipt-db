@@ -79,16 +79,28 @@ async function checkProfile(browser,profile){
       const tabs=host.querySelector('.lp-tabs').getBoundingClientRect();
       const graph=host.querySelector('.lp-trend').getBoundingClientRect();
       const legend=host.querySelector('.lp-leg').getBoundingClientRect();
-      result[unit]={tabs:[tabs.width,tabs.height],graph:[graph.width,graph.height],legendTop:legend.top-graph.top,legendBottom:graph.bottom-legend.bottom};
+      result[unit]={tabs:[tabs.width,tabs.height],graph:[graph.width,graph.height],legendTop:legend.top-graph.top,legendBottom:graph.bottom-legend.bottom,axisLinks:host.querySelectorAll('.lp-xaxis [data-lpx][role="button"][tabindex="0"]').length,bars:host.querySelectorAll('.lp-col').length};
     }
+    host.innerHTML='<div class="psplit-viewtoggle"><button class="on">개인</button><button>그룹</button></div>';
+    const split=host.querySelector('.psplit-viewtoggle').getBoundingClientRect();result.split=[split.width,split.height];
     host.remove();
     return result;
   });
-  const tabWidths=Object.values(trend).map(v=>v.tabs[0]),tabHeights=Object.values(trend).map(v=>v.tabs[1]),graphHeights=Object.values(trend).map(v=>v.graph[1]);
-  const legendTops=Object.values(trend).map(v=>v.legendTop),legendBottoms=Object.values(trend).map(v=>v.legendBottom);
-  if(!closeEnough(tabWidths)||!closeEnough(tabHeights)||Math.abs(tabWidths[0]-146)>1||Math.abs(tabHeights[0]-34)>1)throw new Error(`${profile.label}: 기간 세그먼트 크기 불일치 ${JSON.stringify(trend)}`);
+  const units=['year','month','day'],tabWidths=units.map(k=>trend[k].tabs[0]),tabHeights=units.map(k=>trend[k].tabs[1]),graphHeights=units.map(k=>trend[k].graph[1]);
+  const legendTops=units.map(k=>trend[k].legendTop),legendBottoms=units.map(k=>trend[k].legendBottom);
+  if(!closeEnough(tabWidths)||!closeEnough(tabHeights)||Math.abs(tabWidths[0]-180)>1||Math.abs(tabHeights[0]-38)>1)throw new Error(`${profile.label}: 기간 세그먼트 크기 불일치 ${JSON.stringify(trend)}`);
+  if(Math.abs(trend.split[0]-180)>1||Math.abs(trend.split[1]-38)>1||Math.abs(trend.split[0]-tabWidths[0])>1||Math.abs(trend.split[1]-tabHeights[0])>1)throw new Error(`${profile.label}: 연/월/일과 개인/그룹 세그먼트 규격 불일치 ${JSON.stringify(trend)}`);
+  for(const unit of ['year','month','day'])if(trend[unit].axisLinks!==trend[unit].bars)throw new Error(`${profile.label}: ${unit} X축 날짜 클릭 대상 누락 ${JSON.stringify(trend[unit])}`);
   if(!closeEnough(graphHeights)||graphHeights[0]<(profile.mobile?235:227))throw new Error(`${profile.label}: 단위별 그래프 박스 높이 불일치 ${JSON.stringify(trend)}`);
   if(!closeEnough(legendTops)||!closeEnough(legendBottoms))throw new Error(`${profile.label}: 단위별 범례 Y좌표 불일치 ${JSON.stringify(trend)}`);
+
+  const axisClick=await page.evaluate(()=>{
+    _trendOv={unit:'day',from:'2026-10-21',to:'2026-10-21',page:null,key:_trendKey()};
+    const body=document.getElementById('detailBody');body.innerHTML=_trendSectionHtml();
+    const x=body.querySelector('[data-lpx="2026-10-21"]');x.click();
+    return {mobile:_isMobileLayout(),picked:_trendPick?.k||'',sheet:!!document.querySelector('body > .mtg-sheet-backdrop')};
+  });
+  if(axisClick.mobile?!axisClick.sheet:axisClick.picked!=='2026-10-21')throw new Error(`${profile.label}: X축 일자 클릭 목록 열기 실패 ${JSON.stringify(axisClick)}`);
 
   await context.close();
   return {label:profile.label,nav,trend};
@@ -102,7 +114,7 @@ async function checkProfile(browser,profile){
       {label:'PC 1280px',viewport:{width:1280,height:900},mobile:false},
       {label:'모바일 390px',viewport:{width:390,height:844},mobile:true}
     ])results.push(await checkProfile(browser,profile));
-    for(const item of results)console.log(`${item.label}: 검색창 양끝=${Math.round(item.nav.search.x)}–${Math.round(item.nav.search.x+item.nav.search.width)}px, 탐색 양끝=${Math.round(item.nav.prev.x)}–${Math.round(item.nav.select.x+item.nav.select.width)}px, 범례 Y(연/월/일)=${Object.values(item.trend).map(v=>Math.round(v.legendTop)).join('/')}px`);
+    for(const item of results)console.log(`${item.label}: 검색창 양끝=${Math.round(item.nav.search.x)}–${Math.round(item.nav.search.x+item.nav.search.width)}px, 탐색 양끝=${Math.round(item.nav.prev.x)}–${Math.round(item.nav.select.x+item.nav.select.width)}px, 세그먼트=${Math.round(item.trend.year.tabs[0])}×${Math.round(item.trend.year.tabs[1])}px, 범례 Y(연/월/일)=${['year','month','day'].map(k=>Math.round(item.trend[k].legendTop)).join('/')}px`);
     console.log('OK: PC·모바일 월 탐색 양끝과 검색창이 일치하고 연간·월별·일별 범례 Y좌표가 동일합니다');
   }finally{await browser.close();server.close();}
 })().catch(error=>{console.error(error);process.exit(1);});

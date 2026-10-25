@@ -71,6 +71,16 @@ async function clickTimeOption(page,selector){
 
 async function checkReceipt(browser,profile){
   const {mobile,label}=profile,{context,page}=await openPage(browser,receiptUrl,profile);
+  await page.locator('#monthLabel').dispatchEvent('click');
+  if(await page.locator('.date-pop').count()!==1)throw new Error(`영수증 ${label} 월 레이블 달력이 열리지 않음`);
+  await assertFits(page,'.date-pop',`영수증 ${label} 월 레이블 달력`);
+  if((await page.locator('.date-pop-backdrop').count())!==(mobile?1:0))throw new Error(`영수증 ${label} 월 레이블 배경 수 불일치`);
+  await page.locator('[data-date-prev]').click();
+  await page.locator('.date-pop-day[data-date-value$="-09-15"]').click();
+  if(!/2026년 9월/.test(await page.locator('#monthLabelText').textContent()))throw new Error(`영수증 ${label} 월 레이블 달력 선택 반영 실패`);
+  await page.locator('#monthLabel').dispatchEvent('click');
+  await page.locator('#monthLabel').dispatchEvent('click');
+  if(await page.locator('.date-pop').count()!==0)throw new Error(`영수증 ${label} 월 레이블 재클릭 닫기 실패`);
   const open=()=>page.locator('label.kv-date').dispatchEvent('click');
   await open();
   const suffix=mobile?'.mobile':'';

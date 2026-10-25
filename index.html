@@ -740,8 +740,8 @@ svg{display:block;flex-shrink:0;}
   .psplit-row.grouprow .psplit-gmem{white-space:normal;}
 }
 /* v3.74 — 개인/그룹 보기 전환 토글(compact segmented, 새 색 없음) */
-.psplit-viewtoggle{display:flex;gap:2px;align-self:flex-end;margin:2px 4px 8px auto;padding:2px;background:var(--fill);border-radius:8px;width:fit-content;}
-.psplit-viewtoggle button{font:inherit;font-size:12px;font-weight:600;color:var(--label2);background:none;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;transition:background .12s,color .12s;}
+.psplit-viewtoggle{width:180px;height:38px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px;align-self:flex-end;margin:2px 4px 8px auto;padding:3px;background:var(--fill);border-radius:10px;box-sizing:border-box;}
+.psplit-viewtoggle button{width:100%;height:32px;min-width:0;font:inherit;font-size:12px;font-weight:600;color:var(--label2);background:none;border:none;padding:0 12px;border-radius:8px;cursor:pointer;transition:background .12s,color .12s;}
 .psplit-viewtoggle button.on{background:var(--card);color:var(--blue);box-shadow:0 1px 2px rgba(0,0,0,.06);}
 @media(hover:hover){.psplit-viewtoggle button:not(.on):hover{color:var(--label);}}
 /* v3.74 — 그룹 row: 이름 + 작은 구성원 secondary(큰 badge/카드 없음, Flat 유지) */
@@ -1340,6 +1340,8 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .month-nav-btn:hover{background:var(--fill);color:var(--label);}
 .month-nav-btn:disabled{opacity:.3;cursor:not-allowed;}
 .month-nav-label{width:90px;min-width:0;font-size:14px;font-weight:700;color:var(--label);letter-spacing:-.2px;cursor:pointer;border-radius:6px;padding:3px 4px;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .12s;white-space:nowrap;}
+.month-nav-label{position:relative;}
+.month-nav-date-input{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;opacity:0;pointer-events:none;}
 .month-nav-label:hover{background:var(--fill);}
 .month-nav-label.has-sel{color:var(--blue-txt);}
 .back-to-summary{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:var(--label3);background:transparent;border:none;padding:0;cursor:pointer;margin-bottom:4px;border-radius:4px;line-height:1.4;}
@@ -1514,6 +1516,8 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-bars.scrub .lp-bar.has{opacity:1;}
 .lp-xaxis.per{gap:3px;justify-content:stretch;}
 .lp-xaxis.per span{flex:1;min-width:0;text-align:center;font-size:11px;white-space:nowrap;overflow:visible;}
+.lp-xaxis.per span[data-lpx]{cursor:pointer;border-radius:6px;padding:3px 0;margin:-3px 0;transition:background .12s,color .12s;}
+.lp-xaxis.per span[data-lpx]:hover,.lp-xaxis.per span[data-lpx]:focus-visible{background:var(--card);color:var(--blue);outline:none;}
 .lp-ulrow{display:flex;gap:3px;margin-top:6px;height:2px;}
 .lp-ulrow span{flex:1;min-width:0;border-radius:1px;background:transparent;}
 .lp-ulrow span{position:relative;}
@@ -1533,8 +1537,8 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 @media(min-width:781px){.lp-ctl .lp-tab{padding:5px 8px;font-size:12px;}.lp-hdv{gap:6px;}.lp-hdv .lp-h1{font-size:11px;}.lp-hdv b{font-size:12.5px;}.lp-hdv u{margin-left:0;}} /* v4.61 — 기간 버튼 자리에 짚은 칸의 날짜·금액(기간 선택은 위쪽 헤더 한 곳) */
 .lp-rangebtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--sep2);border-radius:var(--rs);background:var(--card);color:var(--label);font:inherit;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;cursor:pointer;}
 .lp-rangebtn svg{color:var(--label3);flex:none;}
-.lp-tabs{width:146px;height:34px;display:inline-grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;padding:3px;border-radius:10px;background:var(--fill);box-sizing:border-box;}
-.lp-tab{width:100%;height:28px;min-width:0;border:0;background:none;padding:0;border-radius:8px;font:inherit;font-size:12.5px;font-weight:600;color:var(--label2);cursor:pointer;}
+.lp-tabs{width:180px;height:38px;display:inline-grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;padding:3px;border-radius:10px;background:var(--fill);box-sizing:border-box;}
+.lp-tab{width:100%;height:32px;min-width:0;border:0;background:none;padding:0;border-radius:8px;font:inherit;font-size:12.5px;font-weight:600;color:var(--label2);cursor:pointer;}
 .lp-tab.on{background:var(--card);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.14);}
 .lp-rf{margin:0 0 10px;padding:12px;border:1px solid var(--sep);border-radius:var(--rm);background:var(--card);}
 .lp-rf[hidden]{display:none;}
@@ -3032,7 +3036,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 
       <div class="month-nav" id="monthNav">
         <button class="month-nav-btn" id="monthPrev" aria-label="이전 달">‹</button>
-        <div class="month-nav-label" id="monthLabel">—</div>
+        <div class="month-nav-label" id="monthLabel" role="button" tabindex="0" aria-label="날짜 선택"><span id="monthLabelText">—</span><input class="month-nav-date-input" id="monthNavDate" type="date" tabindex="-1" aria-hidden="true"></div>
         <button class="month-nav-btn" id="monthNext" aria-label="다음 달">›</button>
         <div class="month-nav-seg" role="group" aria-label="목록 범위와 선택">
           <button class="month-nav-today" id="monthToday" aria-pressed="false">전체</button>
@@ -4093,6 +4097,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v5.11 — 월 레이블에 공통 달력을 연결하고 추이/분담 세그먼트를 180×38로 통일하며 X축 날짜 클릭 목록을 지원.
 // v5.10 — 월 탐색을 이전→년월→다음→전체·선택 순으로 재배치하고 모든 컨트롤을 같은 높이·모서리로 통일.
 // v5.09 — 월·상태 문구가 바뀌어도 전체(이번 달)·선택(완료) 버튼의 위치가 움직이지 않도록 고정.
 // v5.08 — 월 탐색의 전체·선택을 넓은 세그먼트로 통합하고 추이 그래프 박스 높이를 기간 단위별로 고정.
@@ -4639,7 +4644,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.10';
+const APP_VERSION='v5.11';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -6662,10 +6667,10 @@ function renderSide(){
   if(_personMode){_renderPersonSide();return;} // v3.78 — 같은 패널 grammar에 사람 목록
   if(_activeTabName()==='prepaid'&&typeof renderPrepaidSide==='function'){renderPrepaidSide();return;} // v3.91 — 선불권 목록
   // 월 네비 라벨 갱신 — 영수증 선택 중이면 파란색 힌트 표시
-  const monthLabelEl=document.getElementById('monthLabel');
+  const monthLabelEl=document.getElementById('monthLabel'),monthLabelTextEl=document.getElementById('monthLabelText');
   if(monthLabelEl){
-    monthLabelEl.textContent=_sideAllMonths?'전체 내역':(_trendPickOn()&&_trendPick.from)?(_trendPick.unit==='year'?_trendPick.k+'년':ymLabel(_trendPick.from.slice(0,7))):ymLabel(viewMonth); // v4.65 — 그래프에서 고른 날짜의 달을 보여준다
-    monthLabelEl.title=selectedId?'클릭하면 가계부 요약으로 돌아가요':'';
+    if(monthLabelTextEl)monthLabelTextEl.textContent=_sideAllMonths?'전체 내역':(_trendPickOn()&&_trendPick.from)?(_trendPick.unit==='year'?_trendPick.k+'년':ymLabel(_trendPick.from.slice(0,7))):ymLabel(viewMonth); // v4.65 — 그래프에서 고른 날짜의 달을 보여준다
+    monthLabelEl.title='날짜 선택';
     monthLabelEl.classList.toggle('has-sel',!!selectedId);
   }
   const monthTodayEl=document.getElementById('monthToday');
@@ -7106,9 +7111,19 @@ document.getElementById('monthToday').addEventListener('click',()=>{
   if(searchQuery){searchQuery='';document.getElementById('searchInp').value='';_updateSearchClear();}
   renderSide();renderDetail();
 });
-// 월 레이블 클릭 → 영수증 선택 해제, 가계부 요약으로 복귀
-document.getElementById('monthLabel').addEventListener('click',()=>{
+// 월 레이블 클릭 → 공통 앱 달력. 고른 날짜의 달로 목록·요약을 이동한다.
+const monthLabel=document.getElementById('monthLabel'),monthNavDate=document.getElementById('monthNavDate');
+monthLabel.addEventListener('click',()=>{
   if(selectedId){selectedId=null;renderSide();renderDetail();}
+  monthNavDate.value=`${viewMonth}-01`;
+  _dateOpen(monthNavDate);
+});
+monthLabel.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '||e.key==='ArrowDown'){e.preventDefault();monthLabel.click();}});
+monthNavDate.addEventListener('change',()=>{
+  const ym=String(monthNavDate.value||'').slice(0,7);if(!/^\d{4}-\d{2}$/.test(ym))return;
+  _sideAllMonths=false;viewMonth=ym;selectedId=null;_trendPick=null;_monthCatFilter=null;_ledgerTimeFilter={type:'month'};
+  if(searchQuery){searchQuery='';document.getElementById('searchInp').value='';_updateSearchClear();}
+  renderSide();renderDetail();setTimeout(()=>monthLabel.focus({preventScroll:true}),0);
 });
 
 // ════════════════════════════════════════════════════════════════
@@ -10700,7 +10715,7 @@ function _trendSectionHtml(){
           <div class="lp-canvas">
             <div class="lp-bars" data-def="${def}" data-def0="${def0}" data-sum="${escapeHtml(sumHtml)}">${bars.map((b,i)=>{const has=b.t>0||b.m>0;const inner=b.t>0?Math.min(100,Math.max(0,b.m/b.t*100)):0;return `<div class="lp-col${has?' has':''}${i===def?' on def':''}" data-k="${escapeHtml(b.key)}" data-l="${escapeHtml(b.lbl)}" data-a="${b.t}" data-m="${b.m}" data-c="${b.cnt}"><div class="lp-bar${has?' has':''}" style="height:${h(b.t)}%;"><i style="height:${inner}%"></i></div></div>`;}).join('')}</div>
           </div>
-          ${perBar?`<div class="lp-xaxis per">${bars.map(b=>`<span>${escapeHtml(barLbl(b))}</span>`).join('')}</div>`:`<div class="lp-xaxis">${_pickAxis(bars).map(a=>`<span>${escapeHtml(a)}</span>`).join('')}</div>`}
+          ${perBar?`<div class="lp-xaxis per">${bars.map(b=>`<span data-lpx="${escapeHtml(b.key)}" data-lpl="${escapeHtml(b.lbl)}" role="button" tabindex="0" aria-label="${escapeHtml(b.lbl)} 영수증 보기">${escapeHtml(barLbl(b))}</span>`).join('')}</div>`:`<div class="lp-xaxis">${_pickAxis(bars).map(a=>`<span>${escapeHtml(a)}</span>`).join('')}</div>`}
           <div class="lp-ulrow">${bars.map((b,i)=>`<span class="${i===def?'on':''}"></span>`).join('')}</div>
         </div></div>
       </div>
@@ -11632,6 +11647,15 @@ async function renderDetail(){
         renderSide();_lpPickSync();return;
       }
     });
+    // v5.11 — 막대가 아니라 X축의 연·월·일 글자를 눌러도 해당 기간 영수증 목록을 연다.
+    body.addEventListener('click',e=>{
+      const x=e.target.closest&&e.target.closest('[data-lpx]');if(!x||!body.contains(x))return;
+      e.preventDefault();const sec=x.closest('[data-trend]'),unit=sec?.querySelector('.lp-tab.on')?.dataset.lpunit,k=x.dataset.lpx,label=x.dataset.lpl||k;
+      if(!unit||!k)return;
+      if(_isMobileLayout())_trendPickSheet(unit,k,label);
+      else{if(_trendPickOn()&&_trendPick.unit===unit&&_trendPick.k===k)_trendPick=null;else _trendPickSet(unit,k,label);renderSide();_lpPickSync();}
+    });
+    body.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')){const x=e.target.closest&&e.target.closest('[data-lpx]');if(x&&body.contains(x)){e.preventDefault();x.click();}}});
     // v4.52 — 폰: 그래프 아래 '영수증 N건 보기 ›' → 내역 탭에서 그 기간 목록(✕로 풀림)
     body.addEventListener('click',e=>{
       const g=e.target.closest&&e.target.closest('[data-lpgo]');if(!g||!body.contains(g))return;
@@ -12594,6 +12618,7 @@ function _dateOpen(inp){
 }
 document.addEventListener('click',e=>{
   if(e.target&&e.target.closest&&e.target.closest('.date-pop,.time-pop'))return;
+  if(e.target&&e.target.closest&&e.target.closest('#monthLabel'))return; // 월 레이블 자체가 같은 달력의 열기·재클릭 닫기를 처리
   const direct=e.target&&e.target.closest&&e.target.closest('input[type="date"]');
   const holder=e.target&&e.target.closest&&e.target.closest('label,.kv,.lp-range-field');
   const inp=direct||holder?.querySelector('input[type="date"]');
