@@ -35,15 +35,17 @@ async function checkProfile(browser,profile){
   const nav=await page.evaluate(()=>{
     const box=selector=>{const el=document.querySelector(selector),r=el.getBoundingClientRect(),s=getComputedStyle(el);return{x:r.x,y:r.y,width:r.width,height:r.height,scrollWidth:el.scrollWidth,clientWidth:el.clientWidth,whiteSpace:s.whiteSpace}};
     const root=document.documentElement,nav=document.querySelector('#monthNav').getBoundingClientRect();
-    return {viewport:innerWidth,pageScrollWidth:root.scrollWidth,nav:{x:nav.x,width:nav.width},label:box('#monthLabel'),segment:box('.month-nav-seg'),all:box('#monthToday'),select:box('#batchSelectToggle')};
+    const order=[...document.querySelector('#monthNav').children].map(el=>el.id||el.className);
+    return {viewport:innerWidth,pageScrollWidth:root.scrollWidth,nav:{x:nav.x,width:nav.width},order,prev:box('#monthPrev'),label:box('#monthLabel'),next:box('#monthNext'),segment:box('.month-nav-seg'),all:box('#monthToday'),select:box('#batchSelectToggle')};
   });
   const expectedPad=profile.mobile?18:28;
   if(nav.pageScrollWidth>nav.viewport)throw new Error(`${profile.label}: 페이지 가로 넘침 ${JSON.stringify(nav)}`);
   if(nav.label.whiteSpace!=='nowrap'||nav.label.height>24)throw new Error(`${profile.label}: 월 표시가 두 줄 ${JSON.stringify(nav.label)}`);
-  if(Math.abs(nav.segment.width-126)>1||Math.abs(nav.segment.height-34)>1)throw new Error(`${profile.label}: 전체·선택 세그먼트 크기 불일치 ${JSON.stringify(nav.segment)}`);
+  if(nav.order.join('|')!=='monthPrev|monthLabel|monthNext|month-nav-seg')throw new Error(`${profile.label}: 월 탐색 순서 불일치 ${nav.order.join('|')}`);
+  if(Math.abs(nav.segment.width-126)>1||Math.abs(nav.segment.height-30)>1)throw new Error(`${profile.label}: 전체·선택 세그먼트 크기 불일치 ${JSON.stringify(nav.segment)}`);
   if(Math.abs(nav.all.width-nav.select.width)>1)throw new Error(`${profile.label}: 전체·선택 너비 불균형`);
-  if(nav.label.x+nav.label.width>nav.segment.x)throw new Error(`${profile.label}: 월 표시와 세그먼트 겹침`);
-  if(nav.nav.x+expectedPad-1>nav.label.x)throw new Error(`${profile.label}: 왼쪽 여백 침범`);
+  if(!(nav.prev.x<nav.label.x&&nav.label.x<nav.next.x&&nav.next.x<nav.segment.x))throw new Error(`${profile.label}: 이전→년월→다음→상태 시각 순서 불일치`);
+  if(nav.nav.x+expectedPad-1>nav.prev.x)throw new Error(`${profile.label}: 왼쪽 여백 침범`);
   if(nav.segment.x+nav.segment.width>nav.nav.x+nav.nav.width-expectedPad+1)throw new Error(`${profile.label}: 오른쪽 여백 침범`);
   const segmentX=nav.segment.x;
   await page.locator('#monthPrev').dispatchEvent('click');

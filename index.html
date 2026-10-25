@@ -1335,11 +1335,10 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lightbox-close{position:absolute;top:16px;right:20px;width:40px;height:40px;border:none;border-radius:20px;background:rgba(255,255,255,.15);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;}
 
 /* ── BUDGET / 가계부 화면 ── */
-.month-nav{display:grid;grid-template-columns:30px minmax(0,1fr) 30px;align-items:center;padding:14px var(--pad-x) 12px;border-bottom:1px solid var(--sep);column-gap:10px;}
+.month-nav{display:grid;grid-template-columns:30px 90px 30px 126px;align-items:center;justify-content:center;padding:14px var(--pad-x) 12px;border-bottom:1px solid var(--sep);column-gap:6px;}
 .month-nav-btn{width:30px;height:30px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);color:var(--label2);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;padding:0;flex-shrink:0;}
 .month-nav-btn:hover{background:var(--fill);color:var(--label);}
 .month-nav-btn:disabled{opacity:.3;cursor:not-allowed;}
-.month-nav-center{min-width:0;display:grid;grid-template-columns:90px 126px;align-items:center;justify-content:center;gap:8px;height:34px;}
 .month-nav-label{width:90px;min-width:0;font-size:14px;font-weight:700;color:var(--label);letter-spacing:-.2px;cursor:pointer;border-radius:6px;padding:3px 4px;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .12s;white-space:nowrap;}
 .month-nav-label:hover{background:var(--fill);}
 .month-nav-label.has-sel{color:var(--blue-txt);}
@@ -1356,10 +1355,10 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .section-body{overflow:hidden;transition:max-height .25s ease,opacity .2s ease;}
 .section-body.open{max-height:none;opacity:1;} /* v4.23 — 2000px 고정 → 긴 목록(검색 구매 이력 88줄 ≈ 4,200px) 아래가 잘렸다. 펼침·접힘 움직임은 _bindSectionToggles가 실제 높이로 */
 .section-body.closed{max-height:0;opacity:0;pointer-events:none;}
-.month-nav-seg{width:126px;height:34px;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:2px;padding:3px;border-radius:11px;background:var(--fill);flex:0 0 126px;box-sizing:border-box;}
-.month-nav-today,.batch-select-toggle{width:100%;height:28px;min-width:0;font-size:10.5px;color:var(--label2);background:transparent;border:0;border-radius:8px;padding:0 6px;font-weight:650;line-height:1;display:flex;align-items:center;justify-content:center;white-space:nowrap;box-shadow:none;}
-.month-nav-today:hover,.batch-select-toggle:hover{background:color-mix(in srgb,var(--card) 70%,transparent);color:var(--label);}
-.month-nav-today.on,.batch-select-toggle.on{background:var(--card);color:var(--blue-txt);box-shadow:0 1px 4px rgba(0,0,0,.13);}
+.month-nav-seg{width:126px;height:30px;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:2px;padding:2px;border:1px solid var(--sep2);border-radius:8px;background:var(--card);box-sizing:border-box;}
+.month-nav-today,.batch-select-toggle{width:100%;height:24px;min-width:0;font-size:10.5px;color:var(--label2);background:transparent;border:0;border-radius:6px;padding:0 6px;font-weight:650;line-height:1;display:flex;align-items:center;justify-content:center;white-space:nowrap;box-shadow:none;}
+.month-nav-today:hover,.batch-select-toggle:hover{background:var(--fill);color:var(--label);}
+.month-nav-today.on,.batch-select-toggle.on{background:var(--blue-bg);color:var(--blue-txt);box-shadow:none;}
 .month-nav.context-spacer{display:none;}
 
 /* 인물 검색 시간 필터 */
@@ -3032,14 +3031,12 @@ body.picker-modal-open{overscroll-behavior:none;}
 
       <div class="month-nav" id="monthNav">
         <button class="month-nav-btn" id="monthPrev" aria-label="이전 달">‹</button>
-        <div class="month-nav-center">
-          <div class="month-nav-label" id="monthLabel">—</div>
-          <div class="month-nav-seg" role="group" aria-label="목록 범위와 선택">
-            <button class="month-nav-today" id="monthToday" aria-pressed="false">전체</button>
-            <button class="batch-select-toggle" id="batchSelectToggle" type="button" aria-pressed="false">선택</button>
-          </div>
-        </div>
+        <div class="month-nav-label" id="monthLabel">—</div>
         <button class="month-nav-btn" id="monthNext" aria-label="다음 달">›</button>
+        <div class="month-nav-seg" role="group" aria-label="목록 범위와 선택">
+          <button class="month-nav-today" id="monthToday" aria-pressed="false">전체</button>
+          <button class="batch-select-toggle" id="batchSelectToggle" type="button" aria-pressed="false">선택</button>
+        </div>
       </div>
       <!-- v3.78 — 사람 모드 범위 행. month-nav와 같은 박스(높이·divider)라 좌/우 헤더 구분선 정렬이 그대로 유지된다. -->
       <div class="month-nav person-scope" id="personScope" role="group" aria-label="사람 필터">
@@ -4095,6 +4092,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v5.10 — 월 탐색을 이전→년월→다음→전체·선택 순으로 재배치하고 모든 컨트롤을 같은 높이·모서리로 통일.
 // v5.09 — 월·상태 문구가 바뀌어도 전체(이번 달)·선택(완료) 버튼의 위치가 움직이지 않도록 고정.
 // v5.08 — 월 탐색의 전체·선택을 넓은 세그먼트로 통합하고 추이 그래프 박스 높이를 기간 단위별로 고정.
 // v5.07 — 시간 선택기의 시·분 숫자를 기본 400·선택 600으로 가볍게 조정.
@@ -4640,7 +4638,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.09';
+const APP_VERSION='v5.10';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
