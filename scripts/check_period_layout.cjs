@@ -79,10 +79,10 @@ async function checkProfile(browser,profile){
       const tabs=host.querySelector('.lp-tabs').getBoundingClientRect();
       const graph=host.querySelector('.lp-trend').getBoundingClientRect();
       const legend=host.querySelector('.lp-leg').getBoundingClientRect();
-      result[unit]={tabs:[tabs.width,tabs.height],graph:[graph.width,graph.height],legendTop:legend.top-graph.top,legendBottom:graph.bottom-legend.bottom,axisLinks:host.querySelectorAll('.lp-xaxis [data-lpx][role="button"][tabindex="0"]').length,bars:host.querySelectorAll('.lp-col').length};
+      result[unit]={tabs:[tabs.width,tabs.height],graph:[graph.width,graph.height],legendTop:legend.top-graph.top,legendBottom:graph.bottom-legend.bottom,axisLinks:host.querySelectorAll('.lp-xaxis [data-lpx][role="button"][tabindex="0"]').length,bars:host.querySelectorAll('.lp-col').length,activeColor:getComputedStyle(host.querySelector('.lp-tab.on')).color};
     }
     host.innerHTML='<div class="psplit-viewtoggle"><button class="on">개인</button><button>그룹</button></div>';
-    const split=host.querySelector('.psplit-viewtoggle').getBoundingClientRect();result.split=[split.width,split.height];
+    const split=host.querySelector('.psplit-viewtoggle').getBoundingClientRect();result.split=[split.width,split.height];result.splitActiveColor=getComputedStyle(host.querySelector('.psplit-viewtoggle button.on')).color;
     host.remove();
     return result;
   });
@@ -90,6 +90,7 @@ async function checkProfile(browser,profile){
   const legendTops=units.map(k=>trend[k].legendTop),legendBottoms=units.map(k=>trend[k].legendBottom);
   if(!closeEnough(tabWidths)||!closeEnough(tabHeights)||Math.abs(tabWidths[0]-180)>1||Math.abs(tabHeights[0]-38)>1)throw new Error(`${profile.label}: 기간 세그먼트 크기 불일치 ${JSON.stringify(trend)}`);
   if(Math.abs(trend.split[0]-180)>1||Math.abs(trend.split[1]-38)>1||Math.abs(trend.split[0]-tabWidths[0])>1||Math.abs(trend.split[1]-tabHeights[0])>1)throw new Error(`${profile.label}: 연/월/일과 개인/그룹 세그먼트 규격 불일치 ${JSON.stringify(trend)}`);
+  for(const unit of units)if(trend[unit].activeColor!==trend.splitActiveColor)throw new Error(`${profile.label}: 선택 탭 파란색 불일치 ${JSON.stringify({unit,trend:trend[unit].activeColor,people:trend.splitActiveColor})}`);
   for(const unit of ['year','month','day'])if(trend[unit].axisLinks!==trend[unit].bars)throw new Error(`${profile.label}: ${unit} X축 날짜 클릭 대상 누락 ${JSON.stringify(trend[unit])}`);
   if(!closeEnough(graphHeights)||graphHeights[0]<(profile.mobile?235:227))throw new Error(`${profile.label}: 단위별 그래프 박스 높이 불일치 ${JSON.stringify(trend)}`);
   if(!closeEnough(legendTops)||!closeEnough(legendBottoms))throw new Error(`${profile.label}: 단위별 범례 Y좌표 불일치 ${JSON.stringify(trend)}`);
@@ -101,6 +102,20 @@ async function checkProfile(browser,profile){
     return {mobile:_isMobileLayout(),picked:_trendPick?.k||'',sheet:!!document.querySelector('body > .mtg-sheet-backdrop')};
   });
   if(axisClick.mobile?!axisClick.sheet:axisClick.picked!=='2026-10-21')throw new Error(`${profile.label}: X축 일자 클릭 목록 열기 실패 ${JSON.stringify(axisClick)}`);
+
+  const promptCopies=await page.evaluate(()=>({
+    treat:_promptCopyText({total:22000,paidBy:'조상현',treat:true,participants:['조상현','장승욱'],items:[
+      {name:'왕노가리',quantity:2,unitPrice:3000,amount:6000},
+      {name:'왕쥐포',quantity:1,unitPrice:3000,amount:3000}
+    ]}),
+    dutch:_promptCopyText({total:114000,paidBy:'조상현',treat:false,participants:['조상현','이정환','박지연'],items:[
+      {name:'동인동 매운소갈비찜 세트',quantity:1,unitPrice:89000,amount:89000},
+      {name:'-SET 동인동 매운소갈비찜',quantity:1,unitPrice:0,amount:0}
+    ]})
+  }));
+  const expectedTreat='총 22,000원 [조상현 결제]\n왕노가리 | 2 | 3,000 | 6,000\n왕쥐포 | 1 | 3,000 | 3,000';
+  const expectedDutch='총 114,000원 [조상현 결제 / 더치페이]\n동인동 매운소갈비찜 세트 | 1 | 89,000 | 89,000\n-SET 동인동 매운소갈비찜 | 1 | 0 | 증정품';
+  if(promptCopies.treat!==expectedTreat||promptCopies.dutch!==expectedDutch)throw new Error(`${profile.label}: 프롬프트 복사 형식 불일치 ${JSON.stringify(promptCopies)}`);
 
   await context.close();
   return {label:profile.label,nav,trend};

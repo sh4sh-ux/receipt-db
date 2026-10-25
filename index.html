@@ -1539,7 +1539,7 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .lp-rangebtn svg{color:var(--label3);flex:none;}
 .lp-tabs{width:180px;height:38px;display:inline-grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;padding:3px;border-radius:10px;background:var(--fill);box-sizing:border-box;}
 .lp-tab{width:100%;height:32px;min-width:0;border:0;background:none;padding:0;border-radius:8px;font:inherit;font-size:12.5px;font-weight:600;color:var(--label2);cursor:pointer;}
-.lp-tab.on{background:var(--card);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.14);}
+.lp-tab.on{background:var(--card);color:var(--blue);box-shadow:0 1px 3px rgba(0,0,0,.14);}
 .lp-rf{margin:0 0 10px;padding:12px;border:1px solid var(--sep);border-radius:var(--rm);background:var(--card);}
 .lp-rf[hidden]{display:none;}
 .lp-rq{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
@@ -4097,7 +4097,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
-// v5.11 — 월 레이블에 공통 달력을 연결하고 추이/분담 세그먼트를 180×38로 통일하며 X축 날짜 클릭 목록을 지원.
+// v5.12 — 추이 선택 탭을 파란색으로 통일하고 상세 프롬프트 복사에 결제자·한턱/더치페이 구분을 추가.
 // v5.10 — 월 탐색을 이전→년월→다음→전체·선택 순으로 재배치하고 모든 컨트롤을 같은 높이·모서리로 통일.
 // v5.09 — 월·상태 문구가 바뀌어도 전체(이번 달)·선택(완료) 버튼의 위치가 움직이지 않도록 고정.
 // v5.08 — 월 탐색의 전체·선택을 넓은 세그먼트로 통합하고 추이 그래프 박스 높이를 기간 단위별로 고정.
@@ -4644,7 +4644,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.11';
+const APP_VERSION='v5.12';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -12250,8 +12250,7 @@ async function renderDetail(){
 
   document.getElementById('copyPromptBtn').addEventListener('click',()=>{
     _syncDetailFromInputs(r);
-    const lines=(r.items||[]).map(it=>`${it.name||''} | ${it.quantity||0} | ${_fmtN(it.unitPrice||0)} | ${(it.amount||0)===0?'증정품':_fmtN(it.amount)}`);
-    const text=lines.join('\n');
+    const text=_promptCopyText(r);
     navigator.clipboard.writeText(text)
       .then(()=>toast('프롬프트 복사됐어요',{type:'success'}))
       .catch(()=>toast('복사 실패',{type:'error'}));
@@ -12439,6 +12438,19 @@ function _receiptCopyText(r){
   if(pm)head.push(`결제수단: ${pm}`);
   const lines=(r.items||[]).map(it=>`${String(it.name||'').replace(/\|/g,'/')} | ${it.quantity||0} | ${fmtMoney(it.unitPrice||0)} | ${(it.amount||0)===0?'증정품':fmtMoney(it.amount)}`);
   return head.join('\n')+'\n\n품목명 | 수량 | 단가 | 금액\n\n'+lines.join('\n');
+}
+// v5.12 — 상세의 프롬프트 복사는 결제 요약을 첫 줄에 붙이고 실제 분담 대상이 2명 이상일 때만 더치페이를 표시한다.
+// 한턱은 참석자가 여러 명이어도 결제자가 전액 부담하므로 더치페이 표기를 붙이지 않는다.
+function _promptCopyText(r){
+  const payer=String(r.paidBy||'').trim();
+  const participants=[...new Set((r.participants||[]).map(name=>String(name||'').trim()).filter(Boolean))];
+  const excluded=new Set((r.splitExclude||[]).map(name=>String(name||'').trim()).filter(Boolean));
+  const splitMembers=participants.filter(name=>!excluded.has(name));
+  const isDutchPay=r.treat!==true&&splitMembers.length>=2;
+  const paymentLabel=payer?`${payer} 결제`:'결제자 미정';
+  const header=`총 ${fmtMoney(r.total||0)}원 [${paymentLabel}${isDutchPay?' / 더치페이':''}]`;
+  const lines=(r.items||[]).map(it=>`${String(it.name||'').replace(/\|/g,'/')} | ${it.quantity||0} | ${fmtMoney(it.unitPrice||0)} | ${(it.amount||0)===0?'증정품':fmtMoney(it.amount)}`);
+  return [header,...lines].join('\n');
 }
 // v4.85 — [복사] = 새 영수증으로 복사(사용자: 복사 뒤 고쳤더니 원본이 바뀌었다 — 전엔 글로 클립보드에만 복사했다).
 //   같은 내용으로 새 ID의 영수증을 만들어 바로 연다. 사진·완료 파일(scanPath)·스캔 해시·만남·선불권·구독 연결은 넘기지 않는다
