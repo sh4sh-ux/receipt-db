@@ -45,10 +45,18 @@ async function checkProfile(browser,profile){
   if(nav.label.x+nav.label.width>nav.segment.x)throw new Error(`${profile.label}: 월 표시와 세그먼트 겹침`);
   if(nav.nav.x+expectedPad-1>nav.label.x)throw new Error(`${profile.label}: 왼쪽 여백 침범`);
   if(nav.segment.x+nav.segment.width>nav.nav.x+nav.nav.width-expectedPad+1)throw new Error(`${profile.label}: 오른쪽 여백 침범`);
+  const segmentX=nav.segment.x;
+  await page.locator('#monthPrev').dispatchEvent('click');
+  const afterMonth=await page.locator('.month-nav-seg').boundingBox();
+  if(Math.abs(afterMonth.x-segmentX)>1)throw new Error(`${profile.label}: 한 자리 월 전환 때 버튼 위치 이동`);
   await page.locator('#batchSelectToggle').dispatchEvent('click');
   if(await page.locator('#batchSelectToggle').getAttribute('aria-pressed')!=='true')throw new Error(`${profile.label}: 선택 전환 실패`);
+  const afterSelect=await page.locator('.month-nav-seg').boundingBox();
+  if(Math.abs(afterSelect.x-segmentX)>1)throw new Error(`${profile.label}: 선택→완료 전환 때 버튼 위치 이동`);
   await page.locator('#monthToday').dispatchEvent('click');
   if(await page.locator('#monthToday').getAttribute('aria-pressed')!=='true')throw new Error(`${profile.label}: 전체 전환 실패`);
+  const afterAll=await page.locator('.month-nav-seg').boundingBox();
+  if(Math.abs(afterAll.x-segmentX)>1)throw new Error(`${profile.label}: 전체→이번 달 전환 때 버튼 위치 이동`);
 
   const trend=await page.evaluate(()=>{
     receipts=[
