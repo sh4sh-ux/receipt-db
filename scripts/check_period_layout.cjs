@@ -35,6 +35,8 @@ async function checkProfile(browser,profile){
   const nav=await page.evaluate(()=>{
     const box=selector=>{const el=document.querySelector(selector),r=el.getBoundingClientRect(),s=getComputedStyle(el);return{x:r.x,y:r.y,width:r.width,height:r.height,scrollWidth:el.scrollWidth,clientWidth:el.clientWidth,whiteSpace:s.whiteSpace}};
     document.querySelector('.side-search').style.display='block';
+    document.querySelector('#monthNav').classList.remove('context-spacer');
+    document.querySelector('#monthNav').style.display='grid';
     const root=document.documentElement,nav=document.querySelector('#monthNav').getBoundingClientRect();
     const order=[...document.querySelector('#monthNav').children].map(el=>el.id||el.className);
     return {viewport:innerWidth,pageScrollWidth:root.scrollWidth,nav:{x:nav.x,width:nav.width},order,search:box('#searchInp'),prev:box('#monthPrev'),label:box('#monthLabel'),next:box('#monthNext'),all:box('#monthToday'),select:box('#batchSelectToggle')};
@@ -44,6 +46,9 @@ async function checkProfile(browser,profile){
   const expectedPad=profile.mobile?18:28;
   if(nav.pageScrollWidth>nav.viewport)throw new Error(`${profile.label}: 페이지 가로 넘침 ${JSON.stringify(nav)}`);
   if(nav.label.whiteSpace!=='nowrap'||nav.label.height>24)throw new Error(`${profile.label}: 월 표시가 두 줄 ${JSON.stringify(nav.label)}`);
+  const expectedMonthWidth=profile.mobile?112:90,expectedMonthGap=profile.mobile?8:6;
+  if(Math.abs(nav.prev.width-30)>1||Math.abs(nav.label.width-expectedMonthWidth)>1||Math.abs(nav.next.width-30)>1)throw new Error(`${profile.label}: 화살표·년월 너비 비율 불일치 ${JSON.stringify(nav)}`);
+  if(Math.abs(nav.label.x-(nav.prev.x+nav.prev.width)-expectedMonthGap)>1||Math.abs(nav.next.x-(nav.label.x+nav.label.width)-expectedMonthGap)>1)throw new Error(`${profile.label}: 화살표·년월 간격 불일치 ${JSON.stringify(nav)}`);
   if(nav.order.join('|')!=='monthPrev|monthLabel|monthNext|month-nav-seg')throw new Error(`${profile.label}: 월 탐색 순서 불일치 ${nav.order.join('|')}`);
   if(Math.abs(nav.all.height-30)>1||Math.abs(nav.select.height-30)>1)throw new Error(`${profile.label}: 전체·선택 버튼 높이 불일치`);
   if(Math.abs(nav.all.width-nav.select.width)>1)throw new Error(`${profile.label}: 전체·선택 너비 불균형`);
@@ -133,7 +138,9 @@ async function checkProfile(browser,profile){
     const results=[];
     for(const profile of [
       {label:'PC 1280px',viewport:{width:1280,height:900},mobile:false},
-      {label:'모바일 390px',viewport:{width:390,height:844},mobile:true}
+      {label:'모바일 375px',viewport:{width:375,height:812},mobile:true},
+      {label:'모바일 390px',viewport:{width:390,height:844},mobile:true},
+      {label:'모바일 412px',viewport:{width:412,height:915},mobile:true}
     ])results.push(await checkProfile(browser,profile));
     for(const item of results)console.log(`${item.label}: 검색창 양끝=${Math.round(item.nav.search.x)}–${Math.round(item.nav.search.x+item.nav.search.width)}px, 탐색 양끝=${Math.round(item.nav.prev.x)}–${Math.round(item.nav.select.x+item.nav.select.width)}px, 세그먼트=${Math.round(item.trend.year.tabs[0])}×${Math.round(item.trend.year.tabs[1])}px, 범례 Y(연/월/일)=${['year','month','day'].map(k=>Math.round(item.trend[k].legendTop)).join('/')}px`);
     console.log('OK: PC·모바일 월 탐색 양끝과 검색창이 일치하고 연간·월별·일별 범례 Y좌표가 동일합니다');
