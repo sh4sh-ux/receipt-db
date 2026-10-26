@@ -4099,6 +4099,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v5.16 — 목록 월 달력에서 고른 날짜를 해당 하루의 영수증 목록 필터에 연결. 필터 전에는 1일 선택 표시 없음.
 // v5.15 — 모바일 월 탐색의 년월 폭과 간격을 넓혀 데스크톱과 비슷한 화살표·년월 비율로 조정.
 // v5.10 — 월 탐색을 이전→년월→다음→전체·선택 순으로 재배치하고 모든 컨트롤을 같은 높이·모서리로 통일.
 // v5.09 — 월·상태 문구가 바뀌어도 전체(이번 달)·선택(완료) 버튼의 위치가 움직이지 않도록 고정.
@@ -4646,7 +4647,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.15';
+const APP_VERSION='v5.16';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -7117,13 +7118,24 @@ document.getElementById('monthToday').addEventListener('click',()=>{
 const monthLabel=document.getElementById('monthLabel'),monthNavDate=document.getElementById('monthNavDate');
 monthLabel.addEventListener('click',()=>{
   if(selectedId){selectedId=null;renderSide();renderDetail();}
-  monthNavDate.value=`${viewMonth}-01`;
+  // 월 이동용 달력이지만, 일자를 고르면 그 하루의 내역을 보여준다.
+  // 필터가 없을 때 1일이 선택된 것처럼 보이지 않도록 값과 표시 월을 분리한다.
+  monthNavDate.value=_trendPickOn()&&_trendPick.unit==='day'?_trendPick.from:'';
+  monthNavDate.dataset.pickerMonth=viewMonth;
   _dateOpen(monthNavDate);
 });
 monthLabel.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '||e.key==='ArrowDown'){e.preventDefault();monthLabel.click();}});
 monthNavDate.addEventListener('change',()=>{
-  const ym=String(monthNavDate.value||'').slice(0,7);if(!/^\d{4}-\d{2}$/.test(ym))return;
+  const picked=String(monthNavDate.value||'');
+  if(!picked){
+    _trendPick=null;selectedId=null;
+    renderSide();renderDetail();setTimeout(()=>monthLabel.focus({preventScroll:true}),0);
+    return;
+  }
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(picked))return;
+  const ym=picked.slice(0,7);
   _sideAllMonths=false;viewMonth=ym;selectedId=null;_trendPick=null;_monthCatFilter=null;_ledgerTimeFilter={type:'month'};
+  _trendPickSet('day',picked,_fmtDayHd(picked));
   if(searchQuery){searchQuery='';document.getElementById('searchInp').value='';_updateSearchClear();}
   renderSide();renderDetail();setTimeout(()=>monthLabel.focus({preventScroll:true}),0);
 });
@@ -12577,8 +12589,8 @@ function _dateOpen(inp){
   if(_datePicker&&_datePicker.inp===inp){_dateClose(true);return;}
   _dateClose();_timeClose();_kvsClose();_closeAnyCategoryPicker();
   const anchor=inp.closest('.kv'),portal=!anchor;
-  const now=new Date(),match=String(inp.value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  const picked=match?new Date(+match[1],+match[2]-1,+match[3]):now;
+  const now=new Date(),match=String(inp.value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/),pageMatch=String(inp.dataset.pickerMonth||'').match(/^(\d{4})-(\d{2})$/);
+  const picked=match?new Date(+match[1],+match[2]-1,+match[3]):pageMatch?new Date(+pageMatch[1],+pageMatch[2]-1,1):now;
   const state={year:picked.getFullYear(),month:picked.getMonth(),mode:'day',yearStart:picked.getFullYear()-5};
   const pop=document.createElement('div');pop.className='date-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','일자 선택');
   pop.innerHTML=`<div class="date-pop-head"><button class="date-pop-nav" type="button" data-date-prev aria-label="이전 달">‹</button><button class="date-pop-title" type="button" aria-live="polite" aria-label="연도와 월 선택"></button><button class="date-pop-nav" type="button" data-date-next aria-label="다음 달">›</button></div><div class="date-pop-week" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="date-pop-days"></div><div class="date-pop-select" hidden></div><div class="date-pop-actions"><button class="date-pop-btn" type="button" data-date-clear>지우기</button><button class="date-pop-btn today" type="button" data-date-today>오늘</button></div>`;
