@@ -28,6 +28,7 @@
 ## 버전 관리
 - 단일 상수 `APP_VERSION` (JS 상단)이 진실의 원천. DOM(각 탭 헤더 칩·설정 앱 정보)에 init 시 주입
 - 형식: `v메이저.패치2자리` (예: `v1.02`, `v1.10` … `v1.99` 후 `v2.00`)
+- v5.20: 모바일 상세 품목 표의 마지막 동작 열은 48px를 확보한다. 순서 이동 핸들(22px)과 삭제 버튼(20px)이 금액 입력칸을 침범하지 않아야 하며 `check_detail_item_reorder.cjs`가 실제 경계의 비겹침을 검사한다.
 - v5.19: 상세 품목 순서 변경은 `.item-drag-handle`과 `_bindDetailItemReorder`가 담당한다. 포인터 드래그와 키보드 `ArrowUp/ArrowDown` 모두 DOM 순서와 `r.items` 순서를 함께 바꾸고 `_detailSetDirty(true)`만 호출하며, 실제 DB 저장은 기존 상단 `저장` 엔진을 사용한다.
 - v5.18: 상세 품목 편집 중 `_liveUpdateDetailTotal`과 `_refreshDetailAmountAudit`은 `#dTotalAmt`뿐 아니라 `.det-hd-amt`와 `#mainSub`도 같은 draft 금액으로 갱신한다. 저장 전 기존 총액과 편집 합계가 한 화면에 동시에 보이면 안 된다.
 - v5.17: 영수증 복사본과 사용자가 사진을 삭제한 기록은 `photoDetached:true`로 표시한다. `imageId`가 없고 이 플래그가 있으면 `_ensureReceiptImgUrl`·`_receiptRecoveryImageId`·완료 JPG 복구가 사진을 다시 연결하면 안 된다. 새 사진을 직접 추가할 때만 플래그를 제거한다.
