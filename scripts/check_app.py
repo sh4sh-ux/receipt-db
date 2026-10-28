@@ -40,6 +40,8 @@ def main() -> int:
         errors.append("새 사진을 직접 추가할 때 사진 분리 상태가 해제되지 않습니다")
     if "function _updateDetailDraftTotalDisplay(total)" not in index or "_updateDetailDraftTotalDisplay(sum);" not in index or "_updateDetailDraftTotalDisplay(draft.total);" not in index:
         errors.append("상세 편집 중 헤더·카드·합계 금액 동기화가 없습니다")
+    if "class=\"item-drag-handle\"" not in index or "function _bindDetailItemReorder(r,tbl)" not in index or "_bindDetailItemReorder(r,tbl);" not in index:
+        errors.append("상세 품목의 드래그·키보드 순서 변경 기능이 없습니다")
 
     # v5.04 — 시간 선택기는 달력과 같은 평평한 목록이며 선택 분은 체크로 구분한다.
     if ".time-pop-list{height:216px" not in index or "border:0;border-radius:0;background:transparent;scrollbar-width:none" not in index:
