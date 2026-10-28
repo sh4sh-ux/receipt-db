@@ -26,6 +26,10 @@ def main() -> int:
         errors.append("README 버전이 APP_VERSION과 다릅니다")
     if version and f"CACHE_NAME=CACHE_PREFIX+'{version}'" not in worker:
         errors.append("서비스 워커 캐시 버전이 APP_VERSION과 다릅니다")
+    if "register('./sw.js',{updateViaCache:'none'})" not in index or "navigator.serviceWorker.addEventListener('controllerchange'" not in index:
+        errors.append("아이폰 PWA의 서비스워커 즉시 갱신 경로가 없습니다")
+    if "addEventListener('pageshow',_checkAppUpdate);" not in index or "document.visibilityState==='visible'" not in index:
+        errors.append("앱 복귀 시 최신 버전 확인이 없습니다")
 
     # v5.03 — 상세 하단의 중복 액션은 제거하되 헤더의 영수증 복제는 유지한다.
     if 'id="detailTextCopy"' in index:

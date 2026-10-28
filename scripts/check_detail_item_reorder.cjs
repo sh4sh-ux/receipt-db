@@ -40,15 +40,16 @@ async function saveAndRead(page){
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,'127.0.0.1',resolve);});
   const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--disable-crash-reporter','--disable-crashpad','--noerrdialogs']});
   try{
-    const pc=await browser.newPage({viewport:{width:1280,height:900}});await seed(pc);
+    const pcContext=await browser.newContext({viewport:{width:1280,height:900},serviceWorkers:'block'});
+    const pc=await pcContext.newPage();await seed(pc);
     const firstHandle=pc.locator('.item-drag-handle').first();await firstHandle.focus();await firstHandle.press('ArrowDown');
     const pcOrder=await names(pc);
     if(pcOrder.join('|')!=='둘째 품목|첫 품목|셋째 품목')throw new Error(`PC 키보드 순서 변경 실패: ${pcOrder.join('|')}`);
     const pcSaved=await saveAndRead(pc);
     if(pcSaved.join('|')!==pcOrder.join('|'))throw new Error(`PC 저장 순서 불일치: ${pcSaved.join('|')}`);
-    await pc.close();
+    await pcContext.close();
 
-    const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 Version/26.0 Mobile/15E148 Safari/604.1'});
+    const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,serviceWorkers:'block',userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 Version/26.0 Mobile/15E148 Safari/604.1'});
     const mobile=await context.newPage();await seed(mobile);
     const noOverlap=await mobile.locator('#itemsTable tr[data-idx]').first().evaluate(row=>{
       const handle=row.querySelector('.item-drag-handle').getBoundingClientRect();

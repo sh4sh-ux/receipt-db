@@ -57,9 +57,21 @@
 })();
 
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
-// 버전별 앱 셸 캐시로 되돌아간다. Dropbox API 요청은 서비스 워커가 가로채지 않는다.
+// 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('service worker:',e)));
+  let _swRegistration=null,_swReloading=false;
+  const _checkAppUpdate=async()=>{
+    try{
+      _swRegistration=_swRegistration||await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});
+      await _swRegistration.update();
+    }catch(e){console.warn('service worker:',e);}
+  };
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(_swReloading)return;_swReloading=true;location.reload();
+  });
+  addEventListener('load',_checkAppUpdate);
+  addEventListener('pageshow',_checkAppUpdate);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')_checkAppUpdate();});
 }
 </script>
 <style>
@@ -4137,6 +4149,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v5.26 — 아이폰 PWA가 다시 보일 때 최신 서비스워커를 확인하고 활성화 즉시 한 번 자동 갱신.
 // v5.25 — 상세 품목 순서 손잡이를 품목명 왼쪽의 세로 점 3개로 옮기고 오른쪽에는 삭제만 유지.
 // v5.24 — 선택 영수증 전송 시 연결 화면을 즉시 열고 Dropbox 업로드 완료 직후 더치페이로 이어지도록 수정.
 // v5.23 — 모바일 헤더 눈썹·버전의 저대비 색을 label2로 올리고 불투명도·필터를 고정해 아이폰에서도 선명하게 표시.
@@ -4694,7 +4707,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.25';
+const APP_VERSION='v5.26';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
