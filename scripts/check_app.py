@@ -32,6 +32,8 @@ def main() -> int:
         errors.append("앱 복귀 시 최신 버전 확인이 없습니다")
     if "client.navigate(url.href)" not in worker or "cache:'no-store'" not in worker or "Promise.allSettled" not in worker:
         errors.append("구버전 화면 강제 갱신·문서 캐시 우회·부가 캐시 실패 격리가 없습니다")
+    if "text-shadow:none;\n    -webkit-font-smoothing:auto;" not in index:
+        errors.append("모바일 헤더 글자의 강제 antialiased 해제 규칙이 없습니다")
 
     # v5.03 — 상세 하단의 중복 액션은 제거하되 헤더의 영수증 복제는 유지한다.
     if 'id="detailTextCopy"' in index:
