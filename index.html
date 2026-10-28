@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.29';
+  const _swVersion='v5.30';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -3029,6 +3029,10 @@ body.picker-modal-open{overscroll-behavior:none;}
     backdrop-filter:none;
     -webkit-backdrop-filter:none;
   }
+  /* v5.30 — 통계 외 모든 탭 헤더도 통계처럼 position:sticky(top:0)로 맨 위에 고정.
+     실기기 확인: 헤더가 sticky인 통계만 선명하고 static인 내역·사람·멤버십·추가·설정은 모두 뿌옇다.
+     맨 위에 고정 헤더가 없으면 iOS가 화면 맨 위 가장자리의 본문(눈썹)을 흐리게 처리하는 것으로 본다. 레이아웃은 그대로. */
+  .side-top,.view>.main-top{position:sticky;top:0;z-index:70;}
   .side-top .app-eye,.main-top .main-eye,.side-top .app-version,.main-top .app-version{
     color:var(--label2);
     opacity:1;
@@ -4166,6 +4170,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v5.30 — 모바일 모든 탭 헤더를 통계처럼 position:sticky로(통계만 선명하던 원인 대응).
 // v5.29 — 모바일 내역·사람·멤버십 헤더(.side-top)의 흰 불투명 배경을 되돌림(상태바 아래 경계·눈썹 번짐 대응).
 // v5.28 — 모바일 헤더의 기존 색·크기·굵기는 유지하고 눈썹·버전 글자의 강제 antialiased만 해제.
 // v5.27 — 워커 URL도 버전화하고, 새 워커가 활성화되면 워커 쪽에서 열린 구버전 화면까지 최신 문서로 전환.
@@ -4726,7 +4731,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.29';
+const APP_VERSION='v5.30';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
