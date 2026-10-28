@@ -4,6 +4,9 @@ const path = require('path');
 const { chromium } = require('playwright');
 
 const root = path.resolve(__dirname, '..');
+const indexSource = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const expectedVersion = indexSource.match(/const APP_VERSION='(v[0-9.]+)'/)?.[1];
+if (!expectedVersion) throw new Error('APP_VERSION not found');
 const mime = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
@@ -31,13 +34,13 @@ async function main() {
     args: ['--disable-crash-reporter', '--disable-crashpad', '--noerrdialogs']
   });
   try {
-    const context = await browser.newContext({ serviceWorkers: 'allow' });
+    const context = await browser.newContext({ serviceWorkers: 'allow', viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
     page.on('console', message => console.log(`browser:${message.type()}: ${message.text()}`));
     page.on('pageerror', error => console.log(`browser:pageerror: ${error.message}`));
     await page.goto('http://127.0.0.1:4180/', { waitUntil: 'domcontentloaded' });
     try {
-      await page.waitForURL(url => url.searchParams.get('__app_v') === 'v5.27', { timeout: 15000 });
+      await page.waitForURL(url => url.searchParams.get('__app_v') === expectedVersion, { timeout: 15000 });
     } catch (error) {
       const state = await page.evaluate(async () => {
         const regs = await navigator.serviceWorker.getRegistrations();
@@ -45,15 +48,22 @@ async function main() {
       });
       throw new Error(`${error.message}; state=${JSON.stringify(state)}`);
     }
-    await page.waitForFunction(() => document.querySelector('#appVersion')?.textContent === 'v5.27');
+    await page.waitForFunction(version => document.querySelector('#appVersion')?.textContent === version, expectedVersion);
     const registration = await page.evaluate(async () => {
       const r = await navigator.serviceWorker.ready;
       return { controlled: !!navigator.serviceWorker.controller, script: r.active?.scriptURL || '' };
     });
-    if (!registration.controlled || !registration.script.includes('v=v5.27')) {
+    if (!registration.controlled || !registration.script.includes(`v=${expectedVersion}`)) {
       throw new Error(`unexpected registration: ${JSON.stringify(registration)}`);
     }
-    console.log('OK: 새 서비스워커가 열린 화면을 v5.27 문서로 자동 전환합니다');
+    const headerStyles = await page.locator('.side-top .app-eye,.main-top .main-eye,.side-top .app-version,.main-top .app-version').evaluateAll(elements => elements.map(element => {
+      const style = getComputedStyle(element);
+      return { text: element.textContent.trim(), color: style.color, size: style.fontSize, weight: style.fontWeight, smoothing: style.webkitFontSmoothing };
+    }));
+    const unclear = headerStyles.filter(style => style.color !== 'rgb(17, 17, 17)' || style.size !== '11px' || style.weight !== '700' || style.smoothing !== 'auto');
+    if (unclear.length) throw new Error(`모바일 헤더 선명도 불일치: ${JSON.stringify(unclear)}`);
+    console.log(`OK: 새 서비스워커가 열린 화면을 ${expectedVersion} 문서로 자동 전환합니다`);
+    console.log(`OK: 모바일 ${headerStyles.length}개 헤더 눈썹·버전이 검정 11px/700으로 동일합니다`);
     await context.close();
   } finally {
     await browser.close();
