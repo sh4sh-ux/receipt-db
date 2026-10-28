@@ -37,7 +37,7 @@ async function main() {
     page.on('pageerror', error => console.log(`browser:pageerror: ${error.message}`));
     await page.goto('http://127.0.0.1:4180/', { waitUntil: 'domcontentloaded' });
     try {
-    await page.waitForURL(url => url.searchParams.get('__app_v') === 'v5.31', { timeout: 15000 });
+    await page.waitForURL(url => url.searchParams.get('__app_v') === 'v5.32', { timeout: 15000 });
     } catch (error) {
       const state = await page.evaluate(async () => {
         const regs = await navigator.serviceWorker.getRegistrations();
@@ -45,12 +45,12 @@ async function main() {
       });
       throw new Error(`${error.message}; state=${JSON.stringify(state)}`);
     }
-    await page.waitForFunction(() => document.querySelector('#appVersion')?.textContent === 'v5.31');
+    await page.waitForFunction(() => document.querySelector('#appVersion')?.textContent === 'v5.32');
     const registration = await page.evaluate(async () => {
       const r = await navigator.serviceWorker.ready;
       return { controlled: !!navigator.serviceWorker.controller, script: r.active?.scriptURL || '' };
     });
-    if (!registration.controlled || !registration.script.includes('v=v5.31')) {
+    if (!registration.controlled || !registration.script.includes('v=v5.32')) {
       throw new Error(`unexpected registration: ${JSON.stringify(registration)}`);
     }
     const clarity = await page.evaluate(() => {
@@ -66,7 +66,7 @@ async function main() {
       && clarity.eye.smoothing === 'auto' && clarity.version.smoothing === 'auto'
       && clarity.background === 'rgb(255, 255, 255)' && clarity.backdrop === 'none';
     if (!expected) throw new Error(`모바일 헤더 기존 디자인 보존/흐림 해제 불일치: ${JSON.stringify(clarity)}`);
-    console.log('OK: 새 서비스워커가 열린 화면을 v5.31 문서로 자동 전환합니다');
+    console.log('OK: 새 서비스워커가 열린 화면을 v5.32 문서로 자동 전환합니다');
     console.log('OK: 모바일 헤더의 기존 색·크기·굵기·흰 배경을 유지하고 글자 흐림만 해제했습니다');
     await context.close();
   } finally {
