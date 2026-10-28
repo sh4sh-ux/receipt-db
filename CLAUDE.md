@@ -28,11 +28,13 @@
 ## 버전 관리
 - 단일 상수 `APP_VERSION` (JS 상단)이 진실의 원천. DOM(각 탭 헤더 칩·설정 앱 정보)에 init 시 주입
 - 형식: `v메이저.패치2자리` (예: `v1.02`, `v1.10` … `v1.99` 후 `v2.00`)
+- v5.33: 폰 상세 품목은 평소 ⋮ 손잡이 칸이 없고 `[⇅ 순서]`(`#reorderItemBtn`, `_bindItemReorderMode`)를 켜야 `.item-drag-handle`이 보인다(PC는 손잡이 상시·버튼 없음). 합계 입력칸 오른쪽 끝은 금액 열과 같다(`.detail-total-cell` 오른쪽 여백 4px).
+- v5.30~v5.32 **(헤더 번짐 — 실기기로 확인된 원인)**: 아이폰은 **맨 위에 고정된(sticky/fixed) 불투명 헤더가 없으면** 상태바 아래 본문(눈썹)을 흐리게 처리한다. 모바일은 모든 탭 헤더(`.side-top`, `.view>.main-top`)를 `position:sticky;top:0;z-index:70`으로, `.side-top` 배경은 옆 목록과 같은 **불투명** `var(--left-bg)`로 둔다(투명 sticky는 소용없었다). 눈썹·버전 글자색은 헤더 규칙대로 `--label3`(v5.23의 `--label2`는 원인과 무관해 v5.32에서 되돌림). 아래 v5.22·v5.23 서술 중 `.side-top`의 `var(--card)`·`--label2`는 이 줄이 대체한다. 새 탭 헤더를 만들면 sticky·불투명으로 둘 것.
 - v5.26: 서비스워커는 `updateViaCache:'none'`으로 등록하고 load·pageshow·visible 복귀마다 `registration.update()`를 호출한다. `controllerchange`가 발생하면 페이지 인스턴스당 한 번만 자동 reload해 열린 PWA가 이전 버전 화면에 머물지 않게 한다.
 - v5.25: 상세 품목 순서 손잡이 `.item-drag-handle`은 품목명 입력 왼쪽에 세로 점 3개로 표시한다. 마지막 동작 열에는 삭제 버튼만 두며, 드래그·터치·키보드 이동과 저장 동작은 그대로 유지한다.
 - v5.24: `sendReceiptsToDutchPay`는 Dropbox 연결 여부와 관계없이 사용자 제스처 안에서 `_openDutchPayHandoff()`로 연결 화면을 즉시 열고, 봉투 업로드 성공 직후 `_finishDutchPayHandoff()`로 해당 창을 더치페이 URL에 연결한다. 실패 시 빈 연결창은 반드시 닫는다.
-- v5.23: 모바일 헤더의 `.app-eye`·`.main-eye`·`.app-version`은 `--label2`, `opacity:1`, `filter:none`을 사용한다. `--label3`의 낮은 대비로 아이폰에서 `RECEIPT DB · 버전`이 뿌옇게 보이면 안 된다.
-- v5.22: 모바일 `.side-top`·`.main-top`·`#viewList>.main-top`은 불투명 `var(--card)` 배경과 `backdrop-filter:none`을 사용한다. 탭에 따라 반투명 블러가 다시 생겨 헤더 글자가 뿌옇게 보이면 안 된다.
+- v5.23(→ v5.32에서 글자색 `--label3`로 되돌림): 모바일 헤더의 `.app-eye`·`.main-eye`·`.app-version`은 `opacity:1`, `filter:none`을 쓴다.
+- v5.22(→ `.side-top` 배경은 v5.31에서 `var(--left-bg)`): 모바일 `.main-top`·`#viewList>.main-top`은 불투명 `var(--card)` 배경과 `backdrop-filter:none`을 사용한다. 탭에 따라 반투명 블러가 다시 생겨 헤더 글자가 뿌옇게 보이면 안 된다.
 - v5.21: 모바일 통계 헤더도 다른 탭처럼 `Receipt DB + 버전 → 탭 이름(통계) → 조작 행(기간)` 순서다. 기간명은 제목이 아니라 조작 버튼에만 표시하고, `#viewList.ledger-summary`의 헤더 하단선은 내역 탭의 `monthNav` 하단선과 같은 Y좌표를 유지한다.
 - v5.20: 모바일 상세 품목 표의 마지막 동작 열은 48px를 확보한다. 순서 이동 핸들(22px)과 삭제 버튼(20px)이 금액 입력칸을 침범하지 않아야 하며 `check_detail_item_reorder.cjs`가 실제 경계의 비겹침을 검사한다.
 - v5.19: 상세 품목 순서 변경은 `.item-drag-handle`과 `_bindDetailItemReorder`가 담당한다. 포인터 드래그와 키보드 `ArrowUp/ArrowDown` 모두 DOM 순서와 `r.items` 순서를 함께 바꾸고 `_detailSetDirty(true)`만 호출하며, 실제 DB 저장은 기존 상단 `저장` 엔진을 사용한다.

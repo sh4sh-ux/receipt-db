@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.32';
+  const _swVersion='v5.33';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -698,6 +698,7 @@ svg{display:block;flex-shrink:0;}
 .items-table .item-del{border:none;background:transparent;color:var(--label3);font-size:16px;padding:0 4px;line-height:1;}
 .items-table .item-del:hover{color:var(--red);}
 .items-table .detail-item-name-cell{padding-left:2px;}
+.item-reorder-btn{display:none;}   /* v5.33 — 순서 모드 버튼은 폰에서만 */
 .items-table .detail-item-name-wrap{display:flex;align-items:center;gap:2px;min-width:0;}
 .items-table .detail-item-name-wrap .item-name-inp{flex:1 1 auto;min-width:0;}
 .detail-items-panel .items-table th:first-child{padding-left:32px;}
@@ -1901,6 +1902,12 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 /* 확인창 아래 여백은 부모 안쪽 패딩으로 확보해 회색 배경이 확실히 보이게 한다. */
 .detail-items-panel .alert{margin:5px 14px 0!important;}
 @media(max-width:780px){
+  /* v5.33 — 폰 품목 순서 바꾸기: 평소엔 ⋮ 손잡이 칸을 없애 품목명을 왼쪽 끝에서 시작(이름 칸 넓게), [⇅ 순서]를 켜면 손잡이가 나타난다. */
+  .item-reorder-btn{display:inline-flex;align-items:center;}
+  .item-reorder-btn.on{background:var(--blue-bg)!important;border-color:var(--blue)!important;color:var(--blue-txt)!important;font-weight:650!important;}
+  .detail-items-panel .items-table:not(.item-reorder-on) .item-drag-handle{display:none;}
+  .detail-items-panel .items-table:not(.item-reorder-on) th:first-child{padding-left:2px;}
+  .detail-items-panel .items-table .detail-total-cell{padding-right:4px;}   /* 합계 오른쪽 끝을 금액 열(입력칸 오른쪽 끝)과 맞춘다 */
   .det-hd-people{flex-wrap:nowrap;overflow:hidden;white-space:nowrap;transform:translateY(-4px);}
   .det-hd-person{flex:0 0 auto;}
   .det-hd-person-break{display:none;}
@@ -4170,6 +4177,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v5.33 — 폰 품목 순서 모드([⇅ 순서])·합계 오른쪽 끝을 금액 열에 맞춤.
 // v5.32 — 모바일 눈썹·버전 글자색을 --label3로 되돌림(v5.23의 --label2 해제).
 // v5.31 — 내역·사람·멤버십 헤더(.side-top)를 불투명 배경(옆 목록과 같은 색)으로: 투명 sticky는 번짐 그대로.
 // v5.30 — 모바일 모든 탭 헤더를 통계처럼 position:sticky로(통계만 선명하던 원인 대응).
@@ -4733,7 +4741,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.32';
+const APP_VERSION='v5.33';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -12188,6 +12196,7 @@ async function renderDetail(){
       <div class="detail-items-panel${_detailItemsExpanded?'':' closed'}" id="detailItemsPanel">
         <div class="detail-items-tools">
           <button class="ghost-mini" id="copyPromptBtn">프롬프트 복사</button>
+          <button class="ghost-mini item-reorder-btn" id="reorderItemBtn" type="button" aria-pressed="false">⇅ 순서</button>
           <button class="ghost-mini" id="addItemBtn">+ 추가</button>
         </div>
         <table class="items-table" id="itemsTable">
@@ -13183,6 +13192,16 @@ function _bindDetailItemTableEvents(r){
     _dTotalInp.addEventListener('input',()=>{_liveCommaFmt(_dTotalInp);_detailSetDirty(true);_refreshDetailAmountAudit(r);});
   }
   _bindDetailItemReorder(r,tbl);
+  _bindItemReorderMode(r,tbl);
+}
+// v5.33 — 폰 [⇅ 순서] 모드: 켜면 ⋮ 손잡이가 보이고(끌기는 기존 _bindDetailItemReorder), 다른 영수증으로 옮기면 꺼진다.
+let _itemReorderOn=false,_itemReorderFor='';
+function _bindItemReorderMode(r,tbl){
+  const btn=document.getElementById('reorderItemBtn');if(!btn||!tbl)return;
+  if(_itemReorderFor!==r.id){_itemReorderOn=false;_itemReorderFor=r.id;}
+  const paint=()=>{tbl.classList.toggle('item-reorder-on',_itemReorderOn);btn.classList.toggle('on',_itemReorderOn);btn.setAttribute('aria-pressed',String(_itemReorderOn));btn.textContent=_itemReorderOn?'순서 완료':'⇅ 순서';};
+  btn.addEventListener('click',()=>{_itemReorderOn=!_itemReorderOn;paint();});
+  paint();
 }
 // ── DELETE ──
 document.getElementById('detailDeleteBtn').addEventListener('click',async()=>{
