@@ -24,12 +24,14 @@ def main() -> int:
         errors.append("APP_VERSION을 찾지 못했습니다")
     if version and f"· {version}" not in readme:
         errors.append("README 버전이 APP_VERSION과 다릅니다")
-    if version and f"CACHE_NAME=CACHE_PREFIX+'{version}'" not in worker:
+    if version and not (f"CACHE_NAME=CACHE_PREFIX+'{version}'" in worker or (f"const APP_VERSION='{version}'" in worker and "CACHE_NAME=CACHE_PREFIX+APP_VERSION" in worker)):
         errors.append("서비스 워커 캐시 버전이 APP_VERSION과 다릅니다")
-    if "register('./sw.js',{updateViaCache:'none'})" not in index or "navigator.serviceWorker.addEventListener('controllerchange'" not in index:
+    if "navigator.serviceWorker.register(`./sw.js?v=${encodeURIComponent(_swVersion)}`,{updateViaCache:'none'})" not in index or "navigator.serviceWorker.addEventListener('controllerchange'" not in index or "url.searchParams.set('__app_v',_swVersion)" not in index:
         errors.append("아이폰 PWA의 서비스워커 즉시 갱신 경로가 없습니다")
     if "addEventListener('pageshow',_checkAppUpdate);" not in index or "document.visibilityState==='visible'" not in index:
         errors.append("앱 복귀 시 최신 버전 확인이 없습니다")
+    if "client.navigate(url.href)" not in worker or "cache:'no-store'" not in worker or "Promise.allSettled" not in worker:
+        errors.append("구버전 화면 강제 갱신·문서 캐시 우회·부가 캐시 실패 격리가 없습니다")
 
     # v5.03 — 상세 하단의 중복 액션은 제거하되 헤더의 영수증 복제는 유지한다.
     if 'id="detailTextCopy"' in index:
