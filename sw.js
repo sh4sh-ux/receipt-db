@@ -1,6 +1,7 @@
 const CACHE_PREFIX='receipt-db-shell-';
 // ⚠️ APP_VERSION과 같이 올릴 것(scripts/check_app.py가 확인). 이 파일 내용이 바뀌어야 폰이 새 서비스 워커를 설치한다.
-const CACHE_NAME=CACHE_PREFIX+'v5.26';
+const APP_VERSION='v5.27';
+const CACHE_NAME=CACHE_PREFIX+APP_VERSION;
 const SHELL=[
   './prepaid.js',
   './prepaid.css',
@@ -32,19 +33,32 @@ const SHELL=[
 
 self.addEventListener('install',event=>{
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache=>cache.addAll(SHELL))
-      .then(()=>self.skipWaiting())
+    caches.open(CACHE_NAME).then(async cache=>{
+      // 문서만 업데이트의 필수 조건으로 둔다. 아이콘 등 부가 파일 하나의 일시적 실패가
+      // 새 워커 전체의 설치를 취소해 구버전에 고정시키지 않도록 각각 독립적으로 저장한다.
+      await cache.add(new Request('./index.html',{cache:'reload'}));
+      await Promise.allSettled(SHELL
+        .filter(path=>path!=='./index.html')
+        .map(path=>cache.add(new Request(path,{cache:'reload'}))));
+      await self.skipWaiting();
+    })
   );
 });
 
 self.addEventListener('activate',event=>{
   event.waitUntil(
-    caches.keys()
-      .then(keys=>Promise.all(keys
+    caches.keys().then(keys=>Promise.all(keys
         .filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE_NAME)
         .map(key=>caches.delete(key))))
       .then(()=>self.clients.claim())
+      .then(()=>self.clients.matchAll({type:'window',includeUncontrolled:true}))
+      .then(clients=>Promise.all(clients.map(client=>{
+        // v5.25처럼 controllerchange 수신기가 없는 열린 문서도 새 워커가 직접 갱신한다.
+        const url=new URL(client.url);
+        if(url.origin!==self.location.origin||url.searchParams.get('__app_v')===APP_VERSION)return;
+        url.searchParams.set('__app_v',APP_VERSION);
+        return client.navigate(url.href);
+      })))
   );
 });
 
@@ -55,8 +69,10 @@ self.addEventListener('activate',event=>{
 async function networkFirst(request,key){
   const cache=await caches.open(CACHE_NAME);
   try{
-    // 탐색 요청은 RequestInit을 붙일 수 없어 그대로, 파일은 HTTP 캐시도 재확인(no-cache)
-    const response=request.mode==='navigate'?await fetch(request):await fetch(request.url,{cache:'no-cache'});
+    // iOS 홈 화면 앱이 오래된 index.html HTTP 캐시를 돌려주지 못하도록 문서는 완전히 우회한다.
+    const response=request.mode==='navigate'
+      ?await fetch(new Request(request,{cache:'no-store'}))
+      :await fetch(request.url,{cache:'no-cache'});
     if(response&&response.ok)await cache.put(key||request,response.clone());
     return response;
   }catch(error){
