@@ -28,6 +28,7 @@
 ## 버전 관리
 - 단일 상수 `APP_VERSION` (JS 상단)이 진실의 원천. DOM(각 탭 헤더 칩·설정 앱 정보)에 init 시 주입
 - 형식: `v메이저.패치2자리` (예: `v1.02`, `v1.10` … `v1.99` 후 `v2.00`)
+- v5.18: 상세 품목 편집 중 `_liveUpdateDetailTotal`과 `_refreshDetailAmountAudit`은 `#dTotalAmt`뿐 아니라 `.det-hd-amt`와 `#mainSub`도 같은 draft 금액으로 갱신한다. 저장 전 기존 총액과 편집 합계가 한 화면에 동시에 보이면 안 된다.
 - v5.17: 영수증 복사본과 사용자가 사진을 삭제한 기록은 `photoDetached:true`로 표시한다. `imageId`가 없고 이 플래그가 있으면 `_ensureReceiptImgUrl`·`_receiptRecoveryImageId`·완료 JPG 복구가 사진을 다시 연결하면 안 된다. 새 사진을 직접 추가할 때만 플래그를 제거한다.
 - v5.16: 목록 월 달력은 날짜 선택 시 `_trendPick`의 하루 범위(`from===to`)로 왼쪽 목록만 필터링한다. 월 통계는 유지하고, 선택 전에는 숨은 `monthNavDate` 값을 비워 1일이 선택된 것처럼 표시하지 않는다.
 - v5.15: 모바일 `.month-nav`는 `30px 112px 30px 1fr 1fr`, gap 8px이다. 화살표는 PC와 같은 30px이고 년월 영역만 넓혀 답답함을 줄이며 전체·선택은 남은 폭을 동일하게 나눈다.

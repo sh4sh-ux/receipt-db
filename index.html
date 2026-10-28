@@ -4099,6 +4099,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v5.18 — 상세 품목 편집 중 오른쪽 헤더·카드 금액을 현재 합계와 즉시 동기화.
 // v5.17 — 영수증 복사본은 사진 자동 복구에서 제외해 원본 완료 사진이 다시 연결되지 않도록 수정.
 // v5.16 — 목록 월 달력에서 고른 날짜를 해당 하루의 영수증 목록 필터에 연결. 필터 전에는 1일 선택 표시 없음.
 // v5.15 — 모바일 월 탐색의 년월 폭과 간격을 넓혀 데스크톱과 비슷한 화살표·년월 비율로 조정.
@@ -4648,7 +4649,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.17';
+const APP_VERSION='v5.18';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -12876,11 +12877,21 @@ function _syncDetailFromInputs(r){
     });
   });
 }
+function _updateDetailDraftTotalDisplay(total){
+  const amount=Number(total)||0;
+  const amountText=`${fmtMoney(amount)}원`;
+  const cardAmount=document.querySelector('#detailBody .det-hd-amt');
+  if(cardAmount)cardAmount.textContent=amountText;
+  const selected=receipts.find(x=>x.id===selectedId);
+  const sub=document.getElementById('mainSub');
+  if(selected&&sub)sub.textContent=`${fmtDateKor(selected.date)}${selected.time?' '+selected.time:''} · ${amountText}`;
+}
 function _liveUpdateDetailTotal(){
   let sum=0;
   document.querySelectorAll('#itemsTable tbody tr[data-idx] input[data-f="amount"]').forEach(inp=>{sum+=_parseN(inp.value);});
   const dTotalInp=document.getElementById('dTotalAmt');
   if(dTotalInp){dTotalInp.value=_fmtN(sum);dTotalInp.style.color=sum<0?'var(--red)':'';}
+  _updateDetailDraftTotalDisplay(sum);
 }
 function _refreshDetailAmountAudit(r){
   const wrap=document.getElementById('detailAmountAudit');
@@ -12888,6 +12899,7 @@ function _refreshDetailAmountAudit(r){
   _syncDetailFromInputs(r);
   const totalInp=document.getElementById('dTotalAmt');
   const draft={...r,total:totalInp?_parseN(totalInp.value):(r.total||0)};
+  _updateDetailDraftTotalDisplay(draft.total);
   const audit=getAmountAudit(draft);
   wrap.innerHTML=amountAuditAlertHtml(draft);
   const mismatchIndexes=new Set(audit.rowMismatches.map(m=>m.index));
