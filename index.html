@@ -2886,6 +2886,14 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .side-top .side-title-row,.side-top .side-title-row>.app-title{margin-bottom:0;}
   .month-nav{height:auto;min-height:46px;padding-top:7px;padding-bottom:7px;grid-template-columns:30px 112px 30px minmax(0,1fr) minmax(0,1fr);column-gap:8px;}
   .month-nav-label{width:112px;}
+  /* 통계도 다른 탭과 같은 헤더 문법: 눈썹 → 탭 이름 → 조작 행.
+     기간을 제목 옆에 끼우지 않고 내역의 월 탐색처럼 다음 줄에 둔다. */
+  #viewList.ledger-summary>.main-top{padding-bottom:7px;}
+  #viewList.ledger-summary .main-title-row{display:grid;grid-template-columns:minmax(0,1fr);gap:7px;}
+  #viewList.ledger-summary .ledger-period-slot{width:100%;margin:0;align-self:auto;}
+  #viewList.ledger-summary .ledger-period-slot .ledger-period{width:100%;}
+  #viewList.ledger-summary .lp-trigger{width:100%;height:30px;max-width:none;justify-content:center;padding:0 12px;font-size:12.5px;border-radius:8px;}
+  #viewList.ledger-summary .main-sub{display:none;}
 }
 /* ══ v4.00 선택 순서 번호 · 일자 칸의 시간 ══ */
 .r-card-no{font-size:11.5px;font-weight:700;line-height:1;color:#fff;font-variant-numeric:tabular-nums;}
@@ -4111,6 +4119,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v5.21 — 모바일 통계 헤더를 눈썹→탭 이름→기간 조작 행으로 통일하고 내역 헤더와 같은 높이로 맞춤.
 // v5.20 — 모바일 상세 품목 표의 이동·삭제 열을 확보해 금액 숫자와 겹치지 않게 수정.
 // v5.19 — 상세 품목 표에 드래그·터치·키보드 순서 변경 핸들을 추가하고 저장 순서를 유지.
 // v5.18 — 상세 품목 편집 중 오른쪽 헤더·카드 금액을 현재 합계와 즉시 동기화.
@@ -4663,7 +4672,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.20';
+const APP_VERSION='v5.21';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -11753,7 +11762,9 @@ async function renderDetail(){
   document.querySelectorAll('body > #lpBackdrop, body > #lpRangePop').forEach(n=>n.remove());
   // v3.73 — 기간 시트가 _lpClosePop 이외 경로(백그라운드 재렌더 등)로 제거되면 stale _lpOvId를 정리(재열기 차단·유령 stack 방지).
   if(_lpOvId){_ovForget(_lpOvId);_lpOvId=null;}
-  body.classList.toggle('stats-redesign',!selectedId&&!searchQuery&&!_personMode);
+  const _ledgerSummary=!selectedId&&!searchQuery&&!_personMode;
+  body.classList.toggle('stats-redesign',_ledgerSummary);
+  document.getElementById('viewList')?.classList.toggle('ledger-summary',_ledgerSummary);
   body.classList.remove('mob-compact');
   // v3.17 — 기간 컨트롤은 헤더 슬롯(제목 행 우측)에 렌더. 기본은 비워두고 가계부 분기에서만 채운다.
   const periodSlot=document.getElementById('ledgerPeriodSlot');
@@ -11909,7 +11920,7 @@ async function renderDetail(){
       const _ltype=_ledgerTimeFilter.type;
       const _lrecs=_statsPeriodReceipts();
       eye.textContent='Receipt DB';
-      title.textContent=_ltype==='all'?'전체 내역':_ltype==='range'?'기간 내역':_ltype==='year'?`${_ledgerTimeFilter.value}년 내역`:ymLabel(viewMonth);
+      title.textContent=_isMobileLayout()?'통계':(_ltype==='all'?'전체 내역':_ltype==='range'?'기간 내역':_ltype==='year'?`${_ledgerTimeFilter.value}년 내역`:ymLabel(viewMonth));
       sub.textContent=_lrecs.length?`${_lrecs.length}건 · ${_ledgerPeriodLabel()}`:'영수증 없음';
       // v3.19 — 기간 컨트롤을 데스크톱·모바일 모두 제목 행 우측 헤더 슬롯에 둔다(요청).
       const _useSlot=!!periodSlot;

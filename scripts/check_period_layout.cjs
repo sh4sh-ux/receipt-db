@@ -73,6 +73,26 @@ async function checkProfile(browser,profile){
   if(Math.abs(monthCalendar.search.left-monthCalendar.calendar.left)>1||Math.abs(monthCalendar.search.right-monthCalendar.calendar.right)>1||Math.abs(monthCalendar.search.width-monthCalendar.calendar.width)>1)throw new Error(`${profile.label}: 월 달력과 검색창 양끝 불일치 ${JSON.stringify(monthCalendar)}`);
   await page.locator('#monthLabel').dispatchEvent('click');
 
+  let mobileHeader=null;
+  if(profile.mobile){
+    await page.evaluate(()=>{
+      receipts=[{id:'header-layout',date:'2026-10-21',time:'12:00',store:'헤더 검사',total:10000,items:[],participants:['나'],paidBy:'나',category:'기타'}];
+      viewMonth='2026-10';_ledgerTimeFilter={type:'month'};renderSide();renderDetail();
+      document.getElementById('navLedgerBtn').click();
+    });
+    await page.waitForSelector('#viewList.ledger-summary #lpTrigger');
+    const statsHeader=await page.evaluate(()=>{
+      const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return{top:r.top,bottom:r.bottom,left:r.left,right:r.right};};
+      return{bottom:rect('#viewList.ledger-summary>.main-top').bottom,title:document.getElementById('mainTitle').textContent, titleBox:rect('#mainTitle'),controlBox:rect('#lpTrigger')};
+    });
+    await page.locator('.nav-btn[data-nav="list"]').dispatchEvent('click');
+    const listHeader=await page.evaluate(()=>({bottom:document.getElementById('monthNav').getBoundingClientRect().bottom,title:document.querySelector('.side-title.app-title').textContent}));
+    if(statsHeader.title!=='통계')throw new Error(`${profile.label}: 통계 헤더 제목 불일치 ${JSON.stringify(statsHeader)}`);
+    if(statsHeader.controlBox.top<statsHeader.titleBox.bottom)throw new Error(`${profile.label}: 통계 제목과 기간 조작 행 겹침 ${JSON.stringify(statsHeader)}`);
+    if(Math.abs(statsHeader.bottom-listHeader.bottom)>1)throw new Error(`${profile.label}: 통계·내역 헤더 하단선 높이 불일치 ${JSON.stringify({statsHeader,listHeader})}`);
+    mobileHeader={statsHeader,listHeader};
+  }
+
   const trend=await page.evaluate(()=>{
     receipts=[
       {id:'layout-a',date:'2024-01-03',total:10000,payer:'나',participants:['나'],category:'식비'},
@@ -129,7 +149,7 @@ async function checkProfile(browser,profile){
   if(promptCopies.treat!==expectedTreat||promptCopies.dutch!==expectedDutch)throw new Error(`${profile.label}: 프롬프트 복사 형식 불일치 ${JSON.stringify(promptCopies)}`);
 
   await context.close();
-  return {label:profile.label,nav,trend};
+  return {label:profile.label,nav,trend,mobileHeader};
 }
 
 (async()=>{
