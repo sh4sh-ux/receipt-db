@@ -51,6 +51,7 @@ async function saveAndRead(page){
 
     const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,serviceWorkers:'block',userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 Version/26.0 Mobile/15E148 Safari/604.1'});
     const mobile=await context.newPage();await seed(mobile);
+    await mobile.locator('#reorderItemBtn').click(); // v5.33 — 폰은 [⇅ 순서]를 켜야 손잡이가 보인다
     const noOverlap=await mobile.locator('#itemsTable tr[data-idx]').first().evaluate(row=>{
       const handle=row.querySelector('.item-drag-handle').getBoundingClientRect();
       const name=row.querySelector('input[data-f="name"]').getBoundingClientRect();
