@@ -657,7 +657,7 @@ svg{display:block;flex-shrink:0;}
 .items-table th:nth-child(2){width:52px;text-align:right;}
 .items-table th:nth-child(3){width:108px;text-align:right;}
 .items-table th:nth-child(4){width:108px;text-align:right;}
-.items-table th:nth-child(5){width:58px;}
+.items-table th:nth-child(5){width:26px;}
 .items-table td{padding:9px 6px;border-bottom:1px solid var(--sep);font-size:13px;vertical-align:top;}
 .items-table td:nth-child(2),.items-table td:nth-child(3),.items-table td:nth-child(4){text-align:right;white-space:nowrap;}
 .items-table td:nth-child(5){text-align:right;white-space:nowrap;}
@@ -670,15 +670,19 @@ svg{display:block;flex-shrink:0;}
   .items-table th:nth-child(2){width:40px;}
   .items-table th:nth-child(3){width:76px;}
   .items-table th:nth-child(4){width:80px;}
-  .items-table th:nth-child(5){width:50px;}
+  .items-table th:nth-child(5){width:24px;}
   .items-table .item-num-inp{font-size:11px;padding:4px 5px;}
   .items-table .item-num-inp#dTotalAmt{font-size:11px!important;}
 }
 .items-table .item-del{border:none;background:transparent;color:var(--label3);font-size:16px;padding:0 4px;line-height:1;}
 .items-table .item-del:hover{color:var(--red);}
-.items-table .detail-item-actions{display:flex;align-items:center;justify-content:flex-end;gap:2px;padding-left:2px;padding-right:2px;}
-.items-table .item-drag-handle{display:grid;place-items:center;width:24px;height:28px;padding:0;border:0;background:transparent;color:var(--label3);cursor:grab;touch-action:none;border-radius:6px;}
-.items-table .item-drag-handle svg{display:block;width:15px;height:15px;pointer-events:none;}
+.items-table .detail-item-name-cell{padding-left:2px;}
+.items-table .detail-item-name-wrap{display:flex;align-items:center;gap:2px;min-width:0;}
+.items-table .detail-item-name-wrap .item-name-inp{flex:1 1 auto;min-width:0;}
+.detail-items-panel .items-table th:first-child{padding-left:32px;}
+.items-table .detail-item-actions{display:flex;align-items:center;justify-content:flex-end;padding-left:0;padding-right:2px;}
+.items-table .item-drag-handle{display:grid;place-items:center;width:24px;height:28px;flex:0 0 24px;padding:0;border:0;background:transparent;color:var(--label3);cursor:grab;touch-action:none;border-radius:6px;}
+.items-table .item-drag-handle svg{display:block;width:16px;height:18px;pointer-events:none;}
 .items-table .item-drag-handle:hover,.items-table .item-drag-handle:focus-visible{color:var(--blue);background:var(--blue-bg);outline:none;}
 .items-table tbody.item-reordering tr[data-idx]:not(.item-dragging){transition:transform .12s ease;}
 .items-table tr.item-dragging{position:relative;z-index:2;background:var(--card);box-shadow:0 4px 14px rgba(0,0,0,.12);}
@@ -1885,15 +1889,15 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .det-hd-amt{font-size:16px;}
   .detail-items-panel .items-table th,
   .detail-items-panel .items-table td{padding:7px 4px;}
-  /* 모바일에서는 열 제목과 합계를 실제 품목명 텍스트 시작선에 맞춘다. */
-  .detail-items-panel .items-table th:first-child,
+  /* 모바일에서는 열 제목을 세로 점 손잡이 다음의 실제 품목명 시작선에 맞춘다. */
+  .detail-items-panel .items-table th:first-child{padding-left:29px;}
   .detail-items-panel .items-table tr.total-row td:first-child{padding-left:3px;}
   .detail-items-panel .items-table th:nth-child(2){width:34px;}
   .detail-items-panel .items-table th:nth-child(3){width:76px;}
   .detail-items-panel .items-table th:nth-child(4){width:80px;}
-  /* 이동 핸들과 삭제 버튼이 금액 입력칸을 침범하지 않게 동작 열을 확보한다. */
-  .detail-items-panel .items-table th:nth-child(5){width:48px;}
-  .detail-items-panel .items-table .detail-item-actions{gap:2px;padding-left:1px;padding-right:1px;overflow:hidden;}
+  /* 이동 핸들은 품목명 왼쪽, 오른쪽 동작 열에는 삭제만 둔다. */
+  .detail-items-panel .items-table th:nth-child(5){width:22px;}
+  .detail-items-panel .items-table .detail-item-actions{padding-left:0;padding-right:1px;overflow:hidden;}
   .detail-items-panel .items-table .item-drag-handle{width:22px;height:28px;flex:0 0 22px;}
   .detail-items-panel .items-table .item-del{width:20px;padding:0;flex:0 0 20px;}
   .detail-items-panel .items-table .item-name-inp,
@@ -4133,6 +4137,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v5.25 — 상세 품목 순서 손잡이를 품목명 왼쪽의 세로 점 3개로 옮기고 오른쪽에는 삭제만 유지.
 // v5.24 — 선택 영수증 전송 시 연결 화면을 즉시 열고 Dropbox 업로드 완료 직후 더치페이로 이어지도록 수정.
 // v5.23 — 모바일 헤더 눈썹·버전의 저대비 색을 label2로 올리고 불투명도·필터를 고정해 아이폰에서도 선명하게 표시.
 // v5.22 — 모바일 헤더의 반투명 배경과 backdrop blur를 제거해 모든 탭을 선명한 불투명 표면으로 통일.
@@ -4689,7 +4694,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.24';
+const APP_VERSION='v5.25';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -12150,11 +12155,11 @@ async function renderDetail(){
           <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
           <tbody>
             ${(r.items||[]).map((it,idx)=>{const _ca=(it.quantity||0)!==0&&(it.unitPrice||0)!==0?Math.round((it.quantity||0)*(it.unitPrice||0)):null;const _m=_ca!==null&&_ca!==(it.amount||0);return`<tr data-idx="${idx}"${detailMismatchIndexes.has(idx)?' class="amount-mismatch"':''}>
-              <td><input class="item-name-inp" data-f="name" value="${escapeHtml(it.name)}"/></td>
+              <td class="detail-item-name-cell"><div class="detail-item-name-wrap"><button class="item-drag-handle" type="button" aria-label="${escapeHtml(it.name||'품목')} 순서 이동 — 드래그 또는 위·아래 화살표" title="잡아서 순서 변경"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg></button><input class="item-name-inp" data-f="name" value="${escapeHtml(it.name)}"/></div></td>
               <td><input class="item-num-inp" data-f="quantity" type="text" inputmode="numeric" maxlength="3" value="${it.quantity||0}"/></td>
               <td><input class="item-num-inp" data-f="unitPrice" type="text" inputmode="numeric" value="${_fmtN(it.unitPrice||0)}"/></td>
               <td><input class="item-num-inp" data-f="amount" type="text" inputmode="numeric" value="${_fmtN(it.amount||0)}" style="${(it.amount||0)<0?'color:var(--red);':''}" ${_m?'data-manual="1"':''}></td>
-              <td class="detail-item-actions"><button class="item-drag-handle" type="button" aria-label="${escapeHtml(it.name||'품목')} 순서 이동 — 드래그 또는 위·아래 화살표" title="드래그해서 순서 변경"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 7h8M8 12h8M8 17h8"/></svg></button><button class="item-del" type="button" data-del="${idx}" title="삭제" aria-label="${escapeHtml(it.name||'품목')} 삭제">×</button></td>
+              <td class="detail-item-actions"><button class="item-del" type="button" data-del="${idx}" title="삭제" aria-label="${escapeHtml(it.name||'품목')} 삭제">×</button></td>
             </tr>`;}).join('')}
             <tr class="total-row"><td>합계</td><td></td><td colspan="2" class="detail-total-cell"><input id="dTotalAmt" class="item-num-inp" type="text" inputmode="numeric" value="${_fmtN(r.total||0)}" style="font-weight:700;font-size:14px;text-align:right;${(r.total||0)<0?'color:var(--red);':''}"/></td><td></td></tr>
           </tbody>

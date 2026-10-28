@@ -51,11 +51,13 @@ async function saveAndRead(page){
     const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 Version/26.0 Mobile/15E148 Safari/604.1'});
     const mobile=await context.newPage();await seed(mobile);
     const noOverlap=await mobile.locator('#itemsTable tr[data-idx]').first().evaluate(row=>{
+      const handle=row.querySelector('.item-drag-handle').getBoundingClientRect();
+      const name=row.querySelector('input[data-f="name"]').getBoundingClientRect();
       const amount=row.querySelector('input[data-f="amount"]').getBoundingClientRect();
       const actions=row.querySelector('.detail-item-actions').getBoundingClientRect();
-      return {ok:amount.right<=actions.left+.5,amountRight:amount.right,actionsLeft:actions.left};
+      return {ok:handle.right<=name.left+.5&&amount.right<=actions.left+.5,handleRight:handle.right,nameLeft:name.left,amountRight:amount.right,actionsLeft:actions.left,actionButtons:row.querySelectorAll('.detail-item-actions button').length};
     });
-    if(!noOverlap.ok)throw new Error(`모바일 금액과 순서·삭제 버튼 겹침: amountRight=${noOverlap.amountRight}, actionsLeft=${noOverlap.actionsLeft}`);
+    if(!noOverlap.ok||noOverlap.actionButtons!==1)throw new Error(`모바일 세로 점·품목명·금액·삭제 배치 불일치: ${JSON.stringify(noOverlap)}`);
     const handles=mobile.locator('.item-drag-handle'),from=await handles.first().boundingBox(),to=await handles.nth(2).boundingBox();
     if(!from||!to)throw new Error('모바일 드래그 핸들 위치를 찾지 못함');
     await mobile.mouse.move(from.x+from.width/2,from.y+from.height/2);await mobile.mouse.down();
