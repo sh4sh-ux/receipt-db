@@ -83,16 +83,18 @@ async function checkProfile(browser,profile){
     await page.waitForSelector('#viewList.ledger-summary #lpTrigger');
     const statsHeader=await page.evaluate(()=>{
       const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return{top:r.top,bottom:r.bottom,left:r.left,right:r.right};};
-      const style=getComputedStyle(document.querySelector('#viewList.ledger-summary>.main-top'));
-      return{bottom:rect('#viewList.ledger-summary>.main-top').bottom,title:document.getElementById('mainTitle').textContent,titleBox:rect('#mainTitle'),controlBox:rect('#lpTrigger'),backdrop:style.backdropFilter||style.webkitBackdropFilter,background:style.backgroundColor};
+      const style=getComputedStyle(document.querySelector('#viewList.ledger-summary>.main-top')),eye=getComputedStyle(document.querySelector('#viewList.ledger-summary .main-eye'));
+      const probe=document.createElement('span');probe.style.color='var(--label2)';document.body.appendChild(probe);const expectedEyeColor=getComputedStyle(probe).color;probe.remove();
+      return{bottom:rect('#viewList.ledger-summary>.main-top').bottom,title:document.getElementById('mainTitle').textContent,titleBox:rect('#mainTitle'),controlBox:rect('#lpTrigger'),backdrop:style.backdropFilter||style.webkitBackdropFilter,background:style.backgroundColor,eyeColor:eye.color,eyeOpacity:eye.opacity,eyeFilter:eye.filter,expectedEyeColor};
     });
     await page.locator('.nav-btn[data-nav="list"]').dispatchEvent('click');
-    const listHeader=await page.evaluate(()=>{const el=document.querySelector('.side-top'),style=getComputedStyle(el);return{bottom:document.getElementById('monthNav').getBoundingClientRect().bottom,title:document.querySelector('.side-title.app-title').textContent,backdrop:style.backdropFilter||style.webkitBackdropFilter,background:style.backgroundColor};});
+    const listHeader=await page.evaluate(()=>{const el=document.querySelector('.side-top'),style=getComputedStyle(el),eye=getComputedStyle(el.querySelector('.app-eye')),version=getComputedStyle(el.querySelector('.app-version'));const probe=document.createElement('span');probe.style.color='var(--label2)';document.body.appendChild(probe);const expectedEyeColor=getComputedStyle(probe).color;probe.remove();return{bottom:document.getElementById('monthNav').getBoundingClientRect().bottom,title:document.querySelector('.side-title.app-title').textContent,backdrop:style.backdropFilter||style.webkitBackdropFilter,background:style.backgroundColor,eyeColor:eye.color,versionColor:version.color,eyeOpacity:eye.opacity,eyeFilter:eye.filter,expectedEyeColor};});
     if(statsHeader.title!=='통계')throw new Error(`${profile.label}: 통계 헤더 제목 불일치 ${JSON.stringify(statsHeader)}`);
     if(statsHeader.controlBox.top<statsHeader.titleBox.bottom)throw new Error(`${profile.label}: 통계 제목과 기간 조작 행 겹침 ${JSON.stringify(statsHeader)}`);
     if(Math.abs(statsHeader.bottom-listHeader.bottom)>1)throw new Error(`${profile.label}: 통계·내역 헤더 하단선 높이 불일치 ${JSON.stringify({statsHeader,listHeader})}`);
     if(statsHeader.backdrop!=='none'||listHeader.backdrop!=='none')throw new Error(`${profile.label}: 모바일 헤더 블러가 남아 있음 ${JSON.stringify({statsHeader,listHeader})}`);
     if(/rgba\([^)]*,\s*0(?:\.|\))/.test(statsHeader.background)||/rgba\([^)]*,\s*0(?:\.|\))/.test(listHeader.background))throw new Error(`${profile.label}: 모바일 헤더 배경이 투명함 ${JSON.stringify({statsHeader,listHeader})}`);
+    if(statsHeader.eyeColor!==statsHeader.expectedEyeColor||listHeader.eyeColor!==listHeader.expectedEyeColor||listHeader.versionColor!==listHeader.expectedEyeColor||statsHeader.eyeOpacity!=='1'||listHeader.eyeOpacity!=='1'||statsHeader.eyeFilter!=='none'||listHeader.eyeFilter!=='none')throw new Error(`${profile.label}: 모바일 헤더 눈썹·버전이 선명한 공통 스타일이 아님 ${JSON.stringify({statsHeader,listHeader})}`);
     mobileHeader={statsHeader,listHeader};
   }
 
