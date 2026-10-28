@@ -128,6 +128,12 @@ def main() -> int:
     if "_kvsClose();_timeClose();_dateClose();_closeCategoryPicker();" not in index or "_timeClose();_dateClose();_kvsClose();_closeAnyCategoryPicker();" not in index:
         errors.append("결제수단·카테고리·날짜·시간 선택창 상호 닫힘 규칙이 없습니다")
 
+    # v5.24 — 연결 화면은 사용자 제스처 안에서 즉시 열고 Dropbox 완료 후 같은 창으로 이어진다.
+    if "function _openDutchPayHandoff()" not in index or "handoffWin=_openDutchPayHandoff();" not in index:
+        errors.append("더치페이 즉시 연결 화면이 없습니다")
+    if "_finishDutchPayHandoff(handoffWin,dutchUrl);" not in index or "_cancelDutchPayHandoff(handoffWin);" not in index:
+        errors.append("더치페이 전송 성공·실패 후 연결창 처리가 없습니다")
+
     # v4.89 — 더치페이 전송은 즉시 피드백하고, 평소 Dropbox 폴더 확인 왕복과 작은 JPEG 재압축을 피한다.
     if "let _dutchPaySending=false;" not in index or "send.textContent=_dutchPaySending?'보내는 중…':'더치페이로 보내기';" not in index:
         errors.append("더치페이 전송 중 표시·중복 전송 방지가 없습니다")

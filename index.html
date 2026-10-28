@@ -4133,6 +4133,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v5.24 — 선택 영수증 전송 시 연결 화면을 즉시 열고 Dropbox 업로드 완료 직후 더치페이로 이어지도록 수정.
 // v5.23 — 모바일 헤더 눈썹·버전의 저대비 색을 label2로 올리고 불투명도·필터를 고정해 아이폰에서도 선명하게 표시.
 // v5.22 — 모바일 헤더의 반투명 배경과 backdrop blur를 제거해 모든 탭을 선명한 불투명 표면으로 통일.
 // v5.21 — 모바일 통계 헤더를 눈썹→탭 이름→기간 조작 행으로 통일하고 내역 헤더와 같은 높이로 맞춤.
@@ -4688,7 +4689,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.23';
+const APP_VERSION='v5.24';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -5180,6 +5181,16 @@ async function _sendEnvelopeViaDropbox(env){
     return resp.ok;
   }catch(e){return false;}
 }
+function _openDutchPayHandoff(){
+  const win=window.open('','_blank');
+  if(win){try{win.document.write('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>더치페이</title><body style="margin:0;display:grid;place-items:center;min-height:100vh;font:15px -apple-system,BlinkMacSystemFont,sans-serif;color:#555;background:#fff"><div style="text-align:center"><b style="display:block;margin-bottom:9px;color:#111">더치페이로 연결 중…</b>선택한 영수증을 안전하게 전달하고 있어요.</div></body>');}catch(_){}}
+  return win;
+}
+function _finishDutchPayHandoff(win,url){
+  if(win&&!win.closed){try{win.location.replace(url);return;}catch(_){try{win.location.href=url;return;}catch(__){}}}
+  window.location.href=url;
+}
+function _cancelDutchPayHandoff(win){if(win&&!win.closed)try{win.close();}catch(_){}}
 let _dutchPaySending=false;
 async function sendReceiptsToDutchPay(records,{single=false}={}){
   if(_dutchPaySending){toast('이미 더치페이로 보내고 있어요');return false;}
@@ -5217,13 +5228,14 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
   _dutchPaySending=true;
   _updateBatchExportUi();
   const progress=toast('더치페이 전송을 준비하고 있어요…',{duration:60000});
+  let handoffWin=null;
   try{
     const batchId=`rb_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
     const dutchUrl=`/dutch-pay/?from=receipt-db&batch=${encodeURIComponent(batchId)}`;
-    // 팝업 차단 방지: 사용자 제스처 안에서 창을 먼저 열고, 이미지 처리 후 채운다
+    // Dropbox 여부와 관계없이 사용자 제스처 안에서 연결 화면을 즉시 연다.
+    // 사진 준비·업로드가 끝난 뒤 창을 열면 멈춘 것으로 느껴지고 iOS는 팝업을 차단할 수 있다.
     const useDbx=dbxIsConnected();   // v4.64 — Dropbox 연결돼 있으면 파일로 전달(홈 화면 앱끼리·폰↔PC), 아니면 옛 방식
-    const win=useDbx?null:window.open('','_blank');
-    if(win){try{win.document.write('<!doctype html><meta charset="utf-8"><title>더치페이</title><body style="font:15px -apple-system,BlinkMacSystemFont,sans-serif;color:#555;padding:44px 24px;text-align:center">영수증을 더치페이로 보내는 중…</body>');}catch(_){}}
+    handoffWin=_openDutchPayHandoff();
     // 팝업은 사용자 제스처 안에서 먼저 확보하고, 진행 UI를 한 프레임 그린 뒤 사진 처리를 시작한다.
     await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
     // 각 영수증 사진을 압축해 함께 전송 → 더치페이에서 자동 첨부
@@ -5248,8 +5260,10 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
       progress.update('Dropbox로 보내고 있어요…');
       const env={version:1,batchId,createdAt:now,entries};
       const ok=await _sendEnvelopeViaDropbox(env);
-      if(!ok){toast('더치페이로 보내지 못했어요 — Dropbox 연결을 확인하고 다시 시도해주세요',{type:'error',duration:5200});return false;}
+      if(!ok){_cancelDutchPayHandoff(handoffWin);toast('더치페이로 보내지 못했어요 — Dropbox 연결을 확인하고 다시 시도해주세요',{type:'error',duration:5200});return false;}
       if(getMyName())localStorage.setItem(DUTCH_PAY_NAME_KEY,getMyName());
+      progress.update('더치페이를 열고 있어요…');
+      _finishDutchPayHandoff(handoffWin,dutchUrl);
       toast(single?'더치페이로 보냈어요 — 더치페이를 열면 들어가요':`영수증 ${sourceRecords.length}건을 더치페이로 보냈어요 — 더치페이를 열면 들어가요`,{type:'success',duration:4200});
       return true;
     }
@@ -5261,11 +5275,12 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
     // 이미지 포함본이 용량 초과면 이미지 없이 폴백(기존 동작)
     try{writeEnvelope(true);}catch(quota){writeEnvelope(false);}
     if(getMyName())localStorage.setItem(DUTCH_PAY_NAME_KEY,getMyName());
-    if(win){win.location.href=dutchUrl;}else{window.open(dutchUrl,'_blank','noopener');}
+    _finishDutchPayHandoff(handoffWin,dutchUrl);
     if(single)toast('더치페이로 영수증을 보냈어요',{type:'success'});
     else toast(`더치페이로 영수증 ${sourceRecords.length}건을 한 번에 보냈어요`,{type:'success'});
     return true;
   }catch(e){
+    _cancelDutchPayHandoff(handoffWin);
     toast('더치페이 연결에 실패했어요. 더치페이 데이터 백업 후 다시 시도해주세요',{type:'error'});
     return false;
   }finally{
