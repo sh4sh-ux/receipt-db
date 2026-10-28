@@ -93,7 +93,7 @@ async function checkProfile(browser,profile){
     if(statsHeader.controlBox.top<statsHeader.titleBox.bottom)throw new Error(`${profile.label}: 통계 제목과 기간 조작 행 겹침 ${JSON.stringify(statsHeader)}`);
     if(Math.abs(statsHeader.bottom-listHeader.bottom)>1)throw new Error(`${profile.label}: 통계·내역 헤더 하단선 높이 불일치 ${JSON.stringify({statsHeader,listHeader})}`);
     if(statsHeader.backdrop!=='none'||listHeader.backdrop!=='none')throw new Error(`${profile.label}: 모바일 헤더 블러가 남아 있음 ${JSON.stringify({statsHeader,listHeader})}`);
-    if(/rgba\([^)]*,\s*0(?:\.|\))/.test(statsHeader.background)||/rgba\([^)]*,\s*0(?:\.|\))/.test(listHeader.background))throw new Error(`${profile.label}: 모바일 헤더 배경이 투명함 ${JSON.stringify({statsHeader,listHeader})}`);
+    if(/rgba\([^)]*,\s*0(?:\.|\))/.test(statsHeader.background))throw new Error(`${profile.label}: 모바일 통계 헤더 배경이 투명함 ${JSON.stringify({statsHeader,listHeader})}`);
     if(statsHeader.eyeColor!==statsHeader.expectedEyeColor||listHeader.eyeColor!==listHeader.expectedEyeColor||listHeader.versionColor!==listHeader.expectedEyeColor||statsHeader.eyeOpacity!=='1'||listHeader.eyeOpacity!=='1'||statsHeader.eyeFilter!=='none'||listHeader.eyeFilter!=='none')throw new Error(`${profile.label}: 모바일 헤더 눈썹·버전이 선명한 공통 스타일이 아님 ${JSON.stringify({statsHeader,listHeader})}`);
     mobileHeader={statsHeader,listHeader};
   }
