@@ -28,6 +28,7 @@
 ## 버전 관리
 - 단일 상수 `APP_VERSION` (JS 상단)이 진실의 원천. DOM(각 탭 헤더 칩·설정 앱 정보)에 init 시 주입
 - 형식: `v메이저.패치2자리` (예: `v1.02`, `v1.10` … `v1.99` 후 `v2.00`)
+- v5.26: 서비스워커는 `updateViaCache:'none'`으로 등록하고 load·pageshow·visible 복귀마다 `registration.update()`를 호출한다. `controllerchange`가 발생하면 페이지 인스턴스당 한 번만 자동 reload해 열린 PWA가 이전 버전 화면에 머물지 않게 한다.
 - v5.25: 상세 품목 순서 손잡이 `.item-drag-handle`은 품목명 입력 왼쪽에 세로 점 3개로 표시한다. 마지막 동작 열에는 삭제 버튼만 두며, 드래그·터치·키보드 이동과 저장 동작은 그대로 유지한다.
 - v5.24: `sendReceiptsToDutchPay`는 Dropbox 연결 여부와 관계없이 사용자 제스처 안에서 `_openDutchPayHandoff()`로 연결 화면을 즉시 열고, 봉투 업로드 성공 직후 `_finishDutchPayHandoff()`로 해당 창을 더치페이 URL에 연결한다. 실패 시 빈 연결창은 반드시 닫는다.
 - v5.23: 모바일 헤더의 `.app-eye`·`.main-eye`·`.app-version`은 `--label2`, `opacity:1`, `filter:none`을 사용한다. `--label3`의 낮은 대비로 아이폰에서 `RECEIPT DB · 버전`이 뿌옇게 보이면 안 된다.
