@@ -32,6 +32,12 @@ def main() -> int:
         errors.append("영수증 상세 하단에 내용 복사 버튼이 남아 있습니다")
     if "document.getElementById('detailCopyBtn').onclick=()=>_duplicateReceipt(r);" not in index:
         errors.append("영수증 상세 헤더의 복사(영수증 복제) 동작이 없습니다")
+    if "c.photoDetached=true;" not in index or "if(receipt.photoDetached===true)return null;" not in index:
+        errors.append("영수증 복사본의 사진 자동 복구 차단이 없습니다")
+    if "if(receipt.photoDetached===true)return '';" not in index or "rec.photoDetached===true)return null" not in index:
+        errors.append("사진 분리 기록의 완료본·백그라운드 복구 차단이 없습니다")
+    if "delete receipt.photoDetached;" not in index:
+        errors.append("새 사진을 직접 추가할 때 사진 분리 상태가 해제되지 않습니다")
 
     # v5.04 — 시간 선택기는 달력과 같은 평평한 목록이며 선택 분은 체크로 구분한다.
     if ".time-pop-list{height:216px" not in index or "border:0;border-radius:0;background:transparent;scrollbar-width:none" not in index:
