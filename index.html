@@ -1891,7 +1891,11 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .detail-items-panel .items-table th:nth-child(2){width:34px;}
   .detail-items-panel .items-table th:nth-child(3){width:76px;}
   .detail-items-panel .items-table th:nth-child(4){width:80px;}
-  .detail-items-panel .items-table th:nth-child(5){width:20px;}
+  /* 이동 핸들과 삭제 버튼이 금액 입력칸을 침범하지 않게 동작 열을 확보한다. */
+  .detail-items-panel .items-table th:nth-child(5){width:48px;}
+  .detail-items-panel .items-table .detail-item-actions{gap:2px;padding-left:1px;padding-right:1px;overflow:hidden;}
+  .detail-items-panel .items-table .item-drag-handle{width:22px;height:28px;flex:0 0 22px;}
+  .detail-items-panel .items-table .item-del{width:20px;padding:0;flex:0 0 20px;}
   .detail-items-panel .items-table .item-name-inp,
   .detail-items-panel .items-table .item-num-inp{padding:4px 2px;font-size:11px;}
   .detail-header-btn{padding:0 9px;}
@@ -4107,6 +4111,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v5.20 — 모바일 상세 품목 표의 이동·삭제 열을 확보해 금액 숫자와 겹치지 않게 수정.
 // v5.19 — 상세 품목 표에 드래그·터치·키보드 순서 변경 핸들을 추가하고 저장 순서를 유지.
 // v5.18 — 상세 품목 편집 중 오른쪽 헤더·카드 금액을 현재 합계와 즉시 동기화.
 // v5.17 — 영수증 복사본은 사진 자동 복구에서 제외해 원본 완료 사진이 다시 연결되지 않도록 수정.
@@ -4658,7 +4663,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.19';
+const APP_VERSION='v5.20';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
