@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.37';
+  const _swVersion='v5.38';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -1372,11 +1372,17 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .theme-choice.on{border-color:var(--blue);background:var(--blue-bg);color:var(--blue-txt);}
 @media(max-width:420px){.theme-choice-row{grid-template-columns:1fr;}.theme-choice{min-height:52px;flex-direction:row;}}
 
-/* ── PHOTO LIGHTBOX ── */
-.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;}
+/* ── PHOTO LIGHTBOX (v5.38 — 확대 보기: 두 손가락·더블탭·휠·+/− 버튼) ── */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:320;align-items:center;justify-content:center;padding:12px;cursor:zoom-in;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
 .lightbox.open{display:flex;}
-.lightbox img{max-width:100%;max-height:100%;}
-.lightbox-close{position:absolute;top:16px;right:20px;width:40px;height:40px;border:none;border-radius:20px;background:rgba(255,255,255,.15);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;}
+.lightbox.zoomed{cursor:grab;}
+.lightbox img{position:relative;z-index:1;max-width:100%;max-height:100%;transform-origin:50% 50%;-webkit-user-drag:none;user-select:none;-webkit-user-select:none;touch-action:none;}
+.lightbox-close,.lightbox-zoom{z-index:2;}   /* 확대한 사진(transform)이 ✕·확대 버튼을 덮지 않게 */
+.lightbox-zoom{position:absolute;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:rgba(28,28,30,.78);box-shadow:0 0 0 1px rgba(255,255,255,.28);}   /* 흰 영수증이 화면을 채워도 보이게 어두운 바탕 */
+.lightbox-zoom button{min-width:44px;height:40px;border:0;border-radius:999px;background:transparent;color:#fff;font:inherit;font-size:20px;font-weight:500;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.lightbox-zoom button#lbReset{min-width:60px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;}
+.lightbox-zoom button:active{background:rgba(255,255,255,.18);}
+.lightbox-close{position:absolute;top:16px;right:20px;width:40px;height:40px;border:none;border-radius:20px;background:rgba(28,28,30,.78);box-shadow:0 0 0 1px rgba(255,255,255,.28);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;}
 
 /* ── BUDGET / 가계부 화면 ── */
 .month-nav{display:grid;grid-template-columns:30px 90px 30px minmax(0,1fr) minmax(0,1fr);align-items:center;padding:14px var(--pad-x) 12px;border-bottom:1px solid var(--sep);column-gap:6px;}
@@ -3743,8 +3749,13 @@ body.picker-modal-open{overscroll-behavior:none;}
 
 <!-- Photo lightbox -->
 <div class="lightbox" id="lightbox">
-  <button class="lightbox-close" id="lightboxClose">✕</button>
-  <img id="lightboxImg" alt=""/>
+  <button class="lightbox-close" id="lightboxClose" type="button" aria-label="닫기">✕</button>
+  <img id="lightboxImg" alt="" draggable="false"/>
+  <div class="lightbox-zoom" id="lightboxZoom" role="group" aria-label="확대·축소">
+    <button type="button" id="lbOut" aria-label="축소">−</button>
+    <button type="button" id="lbReset" aria-label="원래 크기로">100%</button>
+    <button type="button" id="lbIn" aria-label="확대">+</button>
+  </div>
 </div>
 
 <!-- v3.51 — 모바일 상세 저장 바: 수정이 있을 때만 하단 nav 위에 표시(데스크탑은 헤더에 저장 버튼이 있어 숨김) -->
@@ -4187,6 +4198,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v5.38 — 영수증 사진 확대 뷰어(핀치·더블탭·휠·+/−·끌어 이동).
 // v5.37 — 호출처 없는 함수 9개(약 120줄) 정리.
 // v5.36 — 새 버전 자동 새로고침은 입력·미저장 내용이 있으면 미룬다(붙여넣은 글 소실 방지).
 // v5.35 — 오늘 날짜 기본값을 UTC가 아닌 한국(로컬) 날짜로(새벽 0~9시 어제 날짜 버그).
@@ -4755,7 +4767,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.37';
+const APP_VERSION='v5.38';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -13153,10 +13165,90 @@ document.getElementById('detailDeleteBtn').addEventListener('click',async()=>{
 // ── LIGHTBOX ──
 const lightbox=document.getElementById('lightbox');
 const lightboxImg=document.getElementById('lightboxImg');
-function openLightbox(url){if(!url)return;lightboxImg.src=url;lightbox.classList.add('open');}
-function closeLightbox(){lightbox.classList.remove('open');lightboxImg.src='';}
-lightbox.addEventListener('click',closeLightbox);
+// v5.38 — 영수증 사진 확대: 두 손가락 핀치·더블탭(1배↔2.5배)·마우스 휠/트랙패드·+/− 버튼. 확대하면 끌어서 이동, 이미지 밖(검은 배경)을 누르면 닫기.
+//         앱은 user-scalable=no라 브라우저 확대가 막혀 있어(입력칸 자동 확대 방지) 이 뷰어가 사진 확대를 맡는다. 뒤로가기(스와이프)로도 닫히게 _ovPush에 올린다.
+const _LB_MAX=6;
+let _lb={s:1,x:0,y:0,ov:null};
+const _lbPtrs=new Map();let _lbPinch=null,_lbMoved=false,_lbDown=null,_lbLastTap=0,_lbLastX=0,_lbLastY=0;
+function _lbApply(){
+  lightboxImg.style.transform=(_lb.s>1.001||_lb.x||_lb.y)?`translate(${_lb.x}px,${_lb.y}px) scale(${_lb.s})`:'';
+  const r=document.getElementById('lbReset');if(r)r.textContent=Math.round(_lb.s*100)+'%';
+  lightbox.classList.toggle('zoomed',_lb.s>1.01);
+}
+function _lbClamp(){   // 확대한 사진이 화면 밖으로 완전히 나가지 않게(작으면 가운데)
+  const vw=lightbox.clientWidth,vh=lightbox.clientHeight;
+  const w=lightboxImg.offsetWidth*_lb.s,h=lightboxImg.offsetHeight*_lb.s;
+  const mx=Math.max(0,(w-vw)/2),my=Math.max(0,(h-vh)/2);
+  _lb.x=Math.min(mx,Math.max(-mx,_lb.x));_lb.y=Math.min(my,Math.max(-my,_lb.y));
+}
+function _lbZoomAt(ns,px,py){   // (px,py) 화면 좌표 아래의 사진 점이 그대로 있게 배율만 바꾼다
+  ns=Math.min(_LB_MAX,Math.max(1,ns));
+  const r=lightbox.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  const dx=(px-cx-_lb.x)/_lb.s,dy=(py-cy-_lb.y)/_lb.s;
+  _lb.x=px-cx-dx*ns;_lb.y=py-cy-dy*ns;_lb.s=ns;
+  if(ns<=1.001){_lb.s=1;_lb.x=0;_lb.y=0;}
+  _lbClamp();_lbApply();
+}
+function _lbCenterZoom(f){const r=lightbox.getBoundingClientRect();_lbZoomAt(f===0?1:_lb.s*f,r.left+r.width/2,r.top+r.height/2);}
+function _lbTeardown(){
+  lightbox.classList.remove('open','zoomed');lightboxImg.src='';lightboxImg.style.transform='';
+  _lbPtrs.clear();_lbPinch=null;_lb={s:1,x:0,y:0,ov:null};
+}
+function openLightbox(url){
+  if(!url)return;
+  _lbPtrs.clear();_lbPinch=null;_lb={s:1,x:0,y:0,ov:null};
+  lightboxImg.src=url;lightbox.classList.add('open');_lbApply();
+  _lb.ov=_ovPush(_lbTeardown,lightbox);
+}
+function closeLightbox(){
+  if(!lightbox.classList.contains('open'))return;
+  _ovDismissById(_lb.ov,null,_lbTeardown);
+}
+lightbox.addEventListener('pointerdown',e=>{
+  if(e.target.closest('.lightbox-close,.lightbox-zoom'))return;
+  try{lightbox.setPointerCapture(e.pointerId);}catch(_){}
+  _lbPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(_lbPtrs.size===1){_lbMoved=false;_lbDown={x:e.clientX,y:e.clientY,onImg:e.target===lightboxImg};}
+  if(_lbPtrs.size===2){
+    const [a,b]=[..._lbPtrs.values()];
+    _lbPinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,s:_lb.s,mx:(a.x+b.x)/2,my:(a.y+b.y)/2};_lbMoved=true;
+  }
+});
+lightbox.addEventListener('pointermove',e=>{
+  const p=_lbPtrs.get(e.pointerId);if(!p)return;
+  const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+  if(_lbPtrs.size>=2&&_lbPinch){
+    const [a,b]=[..._lbPtrs.values()],d=Math.hypot(a.x-b.x,a.y-b.y),mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    _lbZoomAt(_lbPinch.s*d/_lbPinch.d,_lbPinch.mx,_lbPinch.my);   // 이전 가운데 점 기준으로 배율, 그다음 가운데 점이 움직인 만큼 이동
+    _lb.x+=mx-_lbPinch.mx;_lb.y+=my-_lbPinch.my;_lbClamp();_lbApply();
+    _lbPinch.mx=mx;_lbPinch.my=my;_lbMoved=true;return;
+  }
+  if(_lbDown&&Math.abs(e.clientX-_lbDown.x)+Math.abs(e.clientY-_lbDown.y)>6)_lbMoved=true;
+  if(_lb.s>1.01&&_lbPtrs.size===1){_lb.x+=dx;_lb.y+=dy;_lbClamp();_lbApply();}
+});
+const _lbEnd=e=>{
+  if(!_lbPtrs.delete(e.pointerId))return;
+  if(_lbPtrs.size<2)_lbPinch=null;
+  if(_lbPtrs.size===1){const q=[..._lbPtrs.values()][0];_lbDown={x:q.x,y:q.y,onImg:true};}   // 핀치 뒤 남은 손가락은 이동용(탭으로 치지 않는다)
+  if(_lbPtrs.size>0||e.type!=='pointerup'||_lbMoved||!_lbDown)return;
+  if(!_lbDown.onImg&&_lb.s<=1.01){closeLightbox();return;}   // 이미지 밖 배경을 한 번 누르면 닫기(확대 중엔 닫지 않음)
+  const now=Date.now();
+  if(now-_lbLastTap<300&&Math.hypot(e.clientX-_lbLastX,e.clientY-_lbLastY)<30){_lbLastTap=0;_lbZoomAt(_lb.s>1.01?1:2.5,e.clientX,e.clientY);return;}   // 더블탭
+  _lbLastTap=now;_lbLastX=e.clientX;_lbLastY=e.clientY;
+};
+lightbox.addEventListener('pointerup',_lbEnd);lightbox.addEventListener('pointercancel',_lbEnd);
+lightbox.addEventListener('wheel',e=>{e.preventDefault();_lbZoomAt(_lb.s*Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0018)),e.clientX,e.clientY);},{passive:false});
 document.getElementById('lightboxClose').addEventListener('click',e=>{e.stopPropagation();closeLightbox();});
+document.getElementById('lbIn').addEventListener('click',e=>{e.stopPropagation();_lbCenterZoom(1.5);});
+document.getElementById('lbOut').addEventListener('click',e=>{e.stopPropagation();_lbCenterZoom(1/1.5);});
+document.getElementById('lbReset').addEventListener('click',e=>{e.stopPropagation();_lbCenterZoom(0);});
+document.addEventListener('keydown',e=>{
+  if(!lightbox.classList.contains('open'))return;
+  if(e.key==='Escape'){closeLightbox();}
+  else if(e.key==='+'||e.key==='='){_lbCenterZoom(1.5);}
+  else if(e.key==='-'||e.key==='_'){_lbCenterZoom(1/1.5);}
+  else if(e.key==='0'){_lbCenterZoom(0);}
+});
 
 // ════════════════════════════════════════════════════════════════
 // EXPORT / IMPORT
@@ -16387,7 +16479,7 @@ function _dbxBindEvents(){
 (()=>{
   if(!('ontouchstart' in window))return;
   // v3.72 — 오버레이가 열려 있으면 당겨서 새로고침(→location.reload) 금지. 최근 추가된 오버레이도 포함.
-  const BLOCK='.modal-overlay,.modal-card,.cat-picker-popover:not([hidden]),.kvs-pop,.mtg-sheet-backdrop,.org-backdrop,.rg-ov,.lp-pop-backdrop,.review-backdrop,.date-pop-backdrop,.time-pop-backdrop,.date-pop.mobile,.time-pop.mobile';
+  const BLOCK='.lightbox.open,.modal-overlay,.modal-card,.cat-picker-popover:not([hidden]),.kvs-pop,.mtg-sheet-backdrop,.org-backdrop,.rg-ov,.lp-pop-backdrop,.review-backdrop,.date-pop-backdrop,.time-pop-backdrop,.date-pop.mobile,.time-pop.mobile';
   const TH=70,MAX=104,EDGE=28;
   let y0=0,x0=0,pulling=false,dist=0,busy=false,axisLock=false;
 
