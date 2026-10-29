@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.38';
+  const _swVersion='v5.39';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -876,6 +876,17 @@ svg{display:block;flex-shrink:0;}
 .rg-save{padding:10px 18px;background:var(--blue);color:#fff;border:none;border-radius:var(--rm);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;}
 .rg-cancel{padding:10px 14px;background:var(--fill2);color:var(--label2);border:none;border-radius:var(--rm);font-size:14px;font-family:inherit;cursor:pointer;}
 .rg-del{padding:10px 12px;background:none;color:var(--red);border:1px solid var(--sep2);border-radius:var(--rm);font-size:13px;font-family:inherit;cursor:pointer;}
+.srch-gross{display:block;white-space:nowrap;font-size:11px;font-weight:400;color:var(--label3);text-decoration:line-through;}
+.srch-disc-tag{white-space:nowrap;margin-left:6px;padding:0 6px;height:18px;border:1px solid var(--blue);border-radius:9px;background:var(--blue-bg);color:var(--blue-txt);font:inherit;font-size:10.5px;font-weight:600;cursor:pointer;vertical-align:1px;}
+.srch-naver{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:4px;border-radius:50%;color:var(--label3);vertical-align:-5px;}
+.srch-naver:hover{color:var(--blue);background:var(--fill);}
+.srch-disc-row td{background:var(--fill);}
+.srch-disc-row[hidden]{display:none;}
+.srch-disc-box{max-width:360px;margin-left:auto;font-size:12.5px;}
+.srch-disc-box>div{display:flex;justify-content:space-between;gap:12px;padding:3px 0;}
+.srch-disc-box span{color:var(--label2);}
+.srch-disc-sum{border-top:1px solid var(--sep);margin-top:3px;padding-top:6px!important;font-weight:700;}
+.srch-disc-box p{margin:4px 0 0;font-size:11px;color:var(--label3);}
 .srch-row{cursor:pointer;transition:background .1s;}
 .srch-row:hover{background:var(--fill);}
 .srch-row:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;background:var(--blue-bg);}
@@ -4767,7 +4778,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.38';
+const APP_VERSION='v5.39';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -8748,6 +8759,25 @@ async function selectReceipt(id){
   // (구) 상세 패널로 문서 스크롤 — 위와 같은 이유로 제거.
 }
 
+// v5.39 — 영수증 안의 할인 줄(음수 금액)을 금액 비율대로 양수 품목에 나눠 '실구매 금액'을 계산한다(저장 데이터는 그대로).
+// 반환: items와 같은 순서의 {net,gross,disc,est}. 0원 아래로 내려가지 않고, 넘치는 몫은 다른 품목이 나눠 가진다.
+function _netItemAmounts(r){
+  const items=r.items||[],out=items.map(it=>({net:it.amount||0,gross:it.amount||0,disc:0,est:false}));
+  const pos=[];let pool=0;const lines=[];
+  items.forEach((it,i)=>{const a=it.amount||0;if(a>0)pos.push(i);else if(a<0){pool+=-a;lines.push({name:it.name||'할인',amount:a});}});
+  if(!pos.length||!pool)return {rows:out,lines:[],pool:0};
+  let left=Math.min(pool,pos.reduce((s,i)=>s+out[i].gross,0));const total=left;
+  let open=pos.slice();
+  for(let k=0;k<5&&left>0&&open.length;k++){
+    const base=open.reduce((s,i)=>s+(out[i].gross-out[i].disc),0);if(base<=0)break;
+    let used=0;const next=[];
+    open.forEach(i=>{const room=out[i].gross-out[i].disc;const share=Math.min(room,Math.floor(left*room/base));out[i].disc+=share;used+=share;if(out[i].gross-out[i].disc>0)next.push(i);});
+    left-=used;open=next;
+    if(left>0&&left<open.length+1){for(const i of open){if(left<=0)break;if(out[i].gross-out[i].disc>0){out[i].disc+=1;left-=1;}}}
+  }
+  pos.forEach(i=>{out[i].net=out[i].gross-out[i].disc;out[i].est=pos.length>1;});
+  return {rows:out,lines,pool:total};
+}
 // ── 검색 결과 요약 패널 ──
 function renderSearchSummaryHtml(q, filtered){
   if(!filtered.length){
@@ -8763,16 +8793,19 @@ function renderSearchSummaryHtml(q, filtered){
   // 품목명 매칭 이력 수집 (unitPrice도 포함)
   const hitItems=[];
   for(const r of filtered){
-    for(const it of (r.items||[])){
+    const nb=_netItemAmounts(r);
+    (r.items||[]).forEach((it,idx)=>{
       const nameL=(it.name||'').toLowerCase();
       if(terms.some(t=>t&&nameL.includes(t))){
+        const n=nb.rows[idx],qty=it.quantity||1;
+        const disc=n.disc>0?n.disc:0;
         hitItems.push({
-          name:it.name, amount:it.amount||0,
-          quantity:it.quantity||1, unitPrice:it.unitPrice||0,
+          name:it.name, amount:n.net, gross:n.gross, disc, est:n.est, dlines:disc>0?nb.lines:[],
+          quantity:qty, unitPrice:disc>0?Math.round(n.net/qty):(it.unitPrice||0),
           receiptId:r.id, date:r.date, store:r.store, paidBy:r.paidBy
         });
       }
-    }
+    });
   }
 
   let statsHtml='';
@@ -8781,6 +8814,7 @@ function renderSearchSummaryHtml(q, filtered){
     // ── 품목 통계 계산 ──
     const totalQty=hitItems.reduce((s,it)=>s+(it.quantity||1),0);
     const totalSpend=hitItems.reduce((s,it)=>s+Math.max(0,it.amount||0),0);
+    const totalGross=hitItems.reduce((s,it)=>s+Math.max(0,it.gross||0),0);
     // 단가 기준 min/avg/max (unitPrice > 0인 항목만, 없으면 amount 사용)
     const upList=hitItems.filter(it=>it.unitPrice>0).map(it=>it.unitPrice);
     const priceList=upList.length>0 ? upList : hitItems.map(it=>it.amount).filter(a=>a>0);
@@ -8795,9 +8829,9 @@ function renderSearchSummaryHtml(q, filtered){
         <div class="payer-stat-sub">총 ${totalQty}개${avgUnit>0?' · 개당 평균 '+fmtMoney(avgUnit)+'원':''}</div>
       </div>
       <div class="payer-stat total">
-        <div class="payer-stat-lbl">총 지출</div>
+        <div class="payer-stat-lbl">총 지출${totalGross>totalSpend?' (할인 반영)':''}</div>
         <div class="payer-stat-val">${fmtMoney(totalSpend)}<span style="font-size:14px;font-weight:500;margin-left:3px;">원</span></div>
-        <div class="payer-stat-sub">${hitItems.length>0?fmtDateKor([...hitItems].sort((a,b)=>a.date.localeCompare(b.date))[0].date)+' ~ '+fmtDateKor([...hitItems].sort((a,b)=>b.date.localeCompare(a.date))[0].date):''}</div>
+        <div class="payer-stat-sub">${totalGross>totalSpend?'정가 '+fmtMoney(totalGross)+' − 할인 '+fmtMoney(totalGross-totalSpend)+' · ':''}${hitItems.length>0?fmtDateKor([...hitItems].sort((a,b)=>a.date.localeCompare(b.date))[0].date)+' ~ '+fmtDateKor([...hitItems].sort((a,b)=>b.date.localeCompare(a.date))[0].date):''}</div>
       </div>
     </div>`;
 
@@ -8824,11 +8858,11 @@ function renderSearchSummaryHtml(q, filtered){
         <tr class="srch-row" data-id="${escapeHtml(it.receiptId)}" role="button" tabindex="0">
           <td style="white-space:nowrap;">${fmtDateKor(it.date)}</td>
           <td>${escapeHtml(it.store||'')}</td>
-          <td>${escapeHtml(it.name||'')}</td>
+          <td>${escapeHtml(it.name||'')}${it.disc>0?`<button type="button" class="srch-disc-tag" aria-expanded="false">${it.est?'할인 반영(추정)':'할인 반영'}</button>`:''}<a class="srch-naver" href="https://search.shopping.naver.com/search/all?query=${encodeURIComponent(it.name||'')}" target="_blank" rel="noopener noreferrer" title="네이버 쇼핑에서 검색" aria-label="네이버 쇼핑에서 검색"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.7" y2="16.7"/></svg></a></td>
           <td style="text-align:right;">${it.quantity||1}</td>
           ${hasUP?`<td>${it.unitPrice>0?fmtMoney(it.unitPrice)+'원':'—'}</td>`:''}
-          <td class="${it.amount<0?'amt-neg':''}">${fmtMoney(it.amount)}원</td>
-        </tr>`).join('')}
+          <td class="${it.amount<0?'amt-neg':''}">${fmtMoney(it.amount)}원${it.disc>0?`<span class="srch-gross">정가 ${fmtMoney(it.gross)}원</span>`:''}</td>
+        </tr>${it.disc>0?`<tr class="srch-disc-row" hidden><td colspan="${hasUP?6:5}" style="text-align:left;"><div class="srch-disc-box"><div><span>정가</span><b>${fmtMoney(it.gross)}원</b></div>${it.dlines.map(l=>`<div><span>${escapeHtml(l.name)}</span><b class="amt-neg">${fmtMoney(l.amount)}원</b></div>`).join('')}<div class="srch-disc-sum"><span>실구매${it.est?' (추정)':''}</span><b>${fmtMoney(it.amount)}원</b></div>${it.est?'<p>영수증 안의 할인을 품목 금액 비율대로 나눈 추정값이에요.</p>':''}</div></td></tr>`:''}`).join('')}
       </tbody>
     </table>
     </div>`;
@@ -11547,9 +11581,14 @@ function _bindReceiptRows(root){
     };
     row.addEventListener('click',openRow);
     row.addEventListener('keydown',e=>{
+      if(e.target!==row)return;
       if(e.key!=='Enter'&&e.key!==' ')return;
       e.preventDefault();openRow();
     });
+    const tag=row.querySelector('.srch-disc-tag');
+    if(tag)tag.addEventListener('click',e=>{e.stopPropagation();const d=row.nextElementSibling;if(!d||!d.classList.contains('srch-disc-row'))return;d.hidden=!d.hidden;tag.setAttribute('aria-expanded',String(!d.hidden));});
+    const nv=row.querySelector('.srch-naver');
+    if(nv)nv.addEventListener('click',e=>e.stopPropagation());
   });
 }
 
@@ -13165,6 +13204,7 @@ document.getElementById('detailDeleteBtn').addEventListener('click',async()=>{
 // ── LIGHTBOX ──
 const lightbox=document.getElementById('lightbox');
 const lightboxImg=document.getElementById('lightboxImg');
+// v5.39 — 검색 '구매 이력': 영수증의 할인 줄(쿠폰·포인트)을 양수 품목에 금액 비율로 나눠 실구매 금액·총 지출에 반영(`_netItemAmounts`, 저장 데이터 그대로), '할인 반영' 누르면 정가·할인 내역 펼침, 품목 옆 네이버 쇼핑 검색 링크.
 // v5.38 — 영수증 사진 확대: 두 손가락 핀치·더블탭(1배↔2.5배)·마우스 휠/트랙패드·+/− 버튼. 확대하면 끌어서 이동, 이미지 밖(검은 배경)을 누르면 닫기.
 //         앱은 user-scalable=no라 브라우저 확대가 막혀 있어(입력칸 자동 확대 방지) 이 뷰어가 사진 확대를 맡는다. 뒤로가기(스와이프)로도 닫히게 _ovPush에 올린다.
 const _LB_MAX=6;
