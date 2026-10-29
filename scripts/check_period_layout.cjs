@@ -27,7 +27,7 @@ function closeEnough(values,tolerance=1){
 }
 
 async function checkProfile(browser,profile){
-  const context=await browser.newContext({viewport:profile.viewport,isMobile:profile.mobile,hasTouch:profile.mobile});
+  const context=await browser.newContext({viewport:profile.viewport,isMobile:profile.mobile,hasTouch:profile.mobile,serviceWorkers:'block'}); // 서비스워커 자동 새로고침이 검사 중 화면을 지우지 않게
   const page=await context.newPage();
   await page.goto(`http://127.0.0.1:${port}/`,{waitUntil:'domcontentloaded'});
   await page.waitForSelector('#monthNav');
