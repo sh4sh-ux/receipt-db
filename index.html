@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.43';
+  const _swVersion='v5.44';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -876,6 +876,11 @@ svg{display:block;flex-shrink:0;}
 .rg-save{padding:10px 18px;background:var(--blue);color:#fff;border:none;border-radius:var(--rm);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;}
 .rg-cancel{padding:10px 14px;background:var(--fill2);color:var(--label2);border:none;border-radius:var(--rm);font-size:14px;font-family:inherit;cursor:pointer;}
 .rg-del{padding:10px 12px;background:none;color:var(--red);border:1px solid var(--sep2);border-radius:var(--rm);font-size:13px;font-family:inherit;cursor:pointer;}
+.srch-strip{display:none;align-items:center;gap:8px;width:calc(100% - 32px);margin:8px 16px 4px;padding:10px 12px;border:1px solid var(--blue);background:var(--blue-bg);border-radius:12px;color:var(--blue-txt);font:inherit;font-size:12.5px;text-align:left;cursor:pointer;}
+.srch-strip-q{flex:0 1 auto;min-width:0;max-width:38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;}
+.srch-strip-t{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.srch-strip-t b{font-weight:700;}.srch-strip i{font-style:normal;font-size:16px;line-height:1;}
+@media(max-width:780px){.srch-strip:not([hidden]){display:flex;}}
 .srch-gross{display:block;white-space:nowrap;font-size:11px;font-weight:400;color:var(--label3);text-decoration:line-through;}
 .srch-disc-tag{white-space:nowrap;margin-left:6px;padding:0 6px;height:18px;border:1px solid var(--blue);border-radius:9px;background:var(--blue-bg);color:var(--blue-txt);font:inherit;font-size:10.5px;font-weight:600;cursor:pointer;vertical-align:1px;}
 .srch-naver{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:4px;border-radius:50%;color:var(--label3);vertical-align:-5px;}
@@ -3227,6 +3232,7 @@ body.picker-modal-open{overscroll-behavior:none;}
         </label>
       </div>
 
+      <button type="button" class="srch-strip" id="srchStrip" hidden></button>
       <div class="side-list" id="sideList"></div>
 
       <div class="batch-export-bar" id="batchExportBar" aria-live="polite">
@@ -4792,7 +4798,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.43';
+const APP_VERSION='v5.44';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -6861,6 +6867,12 @@ function renderSide(){
     else _scope=(viewMonth===_curYm)?'이번 달':ymLabel(viewMonth);
     _ltInfo.innerHTML=`${escapeHtml(_scope)} <b>${filtered.length}건</b>`+(_tp?`<button type="button" class="lt-x" data-trendclear aria-label="기간 선택 풀기" title="기간 선택 풀기">✕</button>`:'');
   }
+  const _strip=document.getElementById('srchStrip');
+  if(_strip){
+    const sd=(searchQuery&&!_personMode&&_isMobileLayout())?_searchStripData(searchQuery,filtered):null;
+    if(sd){_strip.innerHTML=`<span class="srch-strip-q">${escapeHtml(sd.q)}</span><span class="srch-strip-t">${sd.text}</span><i>›</i>`;_strip.hidden=false;}
+    else{_strip.hidden=true;_strip.innerHTML='';}
+  }
   const _sortSel=document.getElementById('listSortSel');
   if(_sortSel&&_sortSel.value!==_listSort)_sortSel.value=_listSort;
   if(!filtered.length){
@@ -6929,6 +6941,7 @@ document.querySelectorAll('[data-photo-filter]').forEach(btn=>{
   });
 });
 // v3.22 — 목록 정렬 dropdown
+document.getElementById('srchStrip')?.addEventListener('click',()=>{document.getElementById('navLedgerBtn')?.click();}); // v5.44 — 요약 줄 → 검색 결과 요약(통계 화면)
 document.getElementById('listSortSel')?.addEventListener('change',e=>{
   _listSort=e.target.value;
   renderSide();
@@ -8813,19 +8826,8 @@ function _netItemAmounts(r){
   pos.forEach(i=>{out[i].net=out[i].gross-out[i].disc;});
   return {rows:out,lines,skipped,pool:negs.reduce((s,l)=>s+l.amount,0)};
 }
-// ── 검색 결과 요약 패널 ──
-function renderSearchSummaryHtml(q, filtered){
-  if(!filtered.length){
-    return `<div class="budget-empty-state">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <div style="font-weight:600;margin-bottom:4px;">'${escapeHtml(q)}' 검색 결과가 없어요</div>
-      <div style="font-size:12px;color:var(--label3);">다른 검색어를 입력해보세요</div>
-    </div>`;
-  }
-
-  const terms=_getSearchTerms(q);
-
-  // 품목명 매칭 이력 수집 (unitPrice도 포함)
+// v5.44 — 검색어에 맞는 품목 이력(할인 반영 금액 포함). 검색 요약 패널과 폰 목록 위 요약 줄이 같이 쓴다.
+function _collectSearchHits(terms,filtered){
   const hitItems=[];
   for(const r of filtered){
     const nb=_netItemAmounts(r),rHits=[];
@@ -8847,6 +8849,36 @@ function renderSearchSummaryHtml(q, filtered){
     const applied=new Set();rHits.forEach(h=>{if(h.amount>=0)h.dlines.forEach(l=>applied.add(l.name));});
     for(let k=rHits.length-1;k>=0;k--){const h=rHits[k];if(h.amount<0&&applied.has(h.name)){hitItems.splice(hitItems.indexOf(h),1);}}
   }
+  return hitItems;
+}
+// v5.44 — 폰 내역 탭 검색 결과 위 요약 줄({q 구매 N회 · 총 · 평균 단가}). 사람 이름 검색(사람 요약 화면)이면 null.
+function _searchStripData(q,filtered){
+  q=(q||'').trim();const qL=q.toLowerCase();
+  if(!q||!filtered||!filtered.length||q.startsWith('결제자 ')||q.startsWith('참석자 '))return null;
+  if(qL.length>=2&&receipts.some(r=>((r.paidBy||'').trim()&&(r.paidBy||'').toLowerCase().includes(qL))||(r.participants||[]).some(x=>String(x).toLowerCase().includes(qL))))return null;
+  const hits=_collectSearchHits(_getSearchTerms(qL),filtered);
+  if(hits.length){
+    const total=hits.reduce((t,h)=>t+Math.max(0,h.amount||0),0);
+    const up=hits.filter(h=>h.unitPrice>0).map(h=>h.unitPrice),pl=up.length?up:hits.map(h=>h.amount).filter(a=>a>0);
+    const avg=pl.length?Math.round(pl.reduce((t,a)=>t+a,0)/pl.length):0;
+    return {q,text:`구매 <b>${hits.length}회</b> · 총 <b>${fmtMoney(total)}원</b>`+(pl.length>1&&avg>0?` · 평균 <b>${fmtMoney(avg)}원</b>`:'')};
+  }
+  return {q,text:`영수증 <b>${filtered.length}건</b> · 총 <b>${fmtMoney(filtered.reduce((t,r)=>t+(r.total||0),0))}원</b>`};
+}
+// ── 검색 결과 요약 패널 ──
+function renderSearchSummaryHtml(q, filtered){
+  if(!filtered.length){
+    return `<div class="budget-empty-state">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div style="font-weight:600;margin-bottom:4px;">'${escapeHtml(q)}' 검색 결과가 없어요</div>
+      <div style="font-size:12px;color:var(--label3);">다른 검색어를 입력해보세요</div>
+    </div>`;
+  }
+
+  const terms=_getSearchTerms(q);
+
+  // 품목명 매칭 이력 수집 (unitPrice도 포함)
+  const hitItems=_collectSearchHits(terms,filtered);
 
   let statsHtml='';
   let bodyHtml='';
@@ -13258,6 +13290,7 @@ document.getElementById('detailDeleteBtn').addEventListener('click',async()=>{
 // ── LIGHTBOX ──
 const lightbox=document.getElementById('lightbox');
 const lightboxImg=document.getElementById('lightboxImg');
+// v5.44 — 폰 내역 탭 검색 결과 목록 위 요약 줄(#srchStrip: 'q 구매 N회 · 총 · 평균') — 누르면 통계 탭의 검색 결과 요약(navLedgerBtn). 사람 이름 검색이면 숨김, PC는 숨김.
 // v5.43 — 이름에 품목이 있는 할인만 그 품목에 반영, 품목이 여러 개인데 대상을 알 수 없는 줄(리워드 사용 등)은 반영 안 함(펼침에 안내). 구매 품목이 하나뿐이면 전부 반영. 이미 반영된 할인 줄은 이력에서 중복 표시 안 함.
 // v5.42 — 할인 배분: 할인 줄 이름에 품목 이름이 있으면 그 품목에만, 아니면 전체에 비율로(`_netItemAmounts`). 펼침엔 그 품목에 실제 들어간 할인만.
 // v5.41 — 폰 구매 이력 품목명은 한 줄 …, 잘릴 때만 [이름 전체 ▾]로 펼침. 네이버 링크는 쇼핑 전용 주소(접속 제한 화면이 떴다) 대신 통합검색 쇼핑 탭(search.naver.com?ssc=tab.shopping.all).
