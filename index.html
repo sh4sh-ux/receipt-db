@@ -13212,7 +13212,7 @@ function _openGatheringSheet({people=[]}={}){
     save.disabled=!sel.size;
   };
   card.innerHTML=`<div class="mtg-sheet-hd"><div class="mtg-sheet-title">지출 없는 만남</div><button type="button" class="mtg-sheet-x" aria-label="닫기">×</button></div>
-    <div class="gth-lbl" style="margin-top:2px">날짜</div>${_dateTimeKvHtml(_todayYMD(),'')}
+    ${_dateTimeKvHtml(_todayYMD(),'')}
     <div class="gth-lbl">함께한 사람 <span style="font-weight:400">(나는 자동 포함)</span></div>
     <div class="gth-chips" id="gthChips"></div>
     <div class="gth-lbl" id="gthGrpLbl">그룹으로 한 번에</div><div class="gth-chips" id="gthGrps"></div>
