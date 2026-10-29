@@ -884,8 +884,10 @@ svg{display:block;flex-shrink:0;}
 .srch-strip-t{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .srch-strip-t b{font-weight:700;}.srch-strip i{font-style:normal;font-size:16px;line-height:1;}
 @media(max-width:780px){.srch-strip:not([hidden]){display:flex;}}
-.items-table tr.item-hl td{background:color-mix(in srgb,var(--mint) 22%,transparent);}
-.items-table tr.item-hl-sub td{background:color-mix(in srgb,var(--mint) 10%,transparent);}
+/* 행(tr)에 칠한다 — 마지막 동작 칸(.detail-item-actions)이 display:flex라 td 배경은 그 칸만 짧게 끝났다 */
+.items-table tr.item-hl{background:color-mix(in srgb,var(--mint) 22%,transparent);}
+.items-table tr.item-hl-sub{background:color-mix(in srgb,var(--mint) 10%,transparent);}
+.items-table tr.item-hl .detail-item-actions,.items-table tr.item-hl-sub .detail-item-actions{border-bottom-color:transparent;}
 .srch-gross{display:block;white-space:nowrap;font-size:11px;font-weight:400;color:var(--label3);text-decoration:line-through;}
 .srch-disc-tag{white-space:nowrap;margin-left:6px;padding:0 6px;height:18px;border:1px solid var(--blue);border-radius:9px;background:var(--blue-bg);color:var(--blue-txt);font:inherit;font-size:10.5px;font-weight:600;cursor:pointer;vertical-align:1px;}
 .srch-naver{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:4px;border-radius:50%;color:var(--label3);vertical-align:-5px;}
