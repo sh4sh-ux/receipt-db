@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.44';
+  const _swVersion='v5.45';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -112,6 +112,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   --blue-bg:rgba(98,100,238,.15);
   --blue-txt:#7c7ef5;
   --green:#34c97d;
+  --mint:#3DDBB0;
   --green-bg:rgba(52,201,125,.12);
   --green-txt:#34c97d;
   --red:#ff5252;
@@ -160,6 +161,7 @@ html[data-theme="light"]{
   --blue-bg:#EEEFFE;
   --blue-txt:#2636B8;
   --green:#1DAD53;
+  --mint:#1FBF9A;
   --green-bg:#EDFAF3;
   --green-txt:#13823D;
   --red:#E53E3E;
@@ -187,6 +189,7 @@ html[data-theme="dark"]{
   --blue-bg:#1A1E4A;
   --blue-txt:#A5B0FF;
   --green:#30D158;
+  --mint:#3DDBB0;
   --green-bg:#0C2818;
   --green-txt:#32D75A;
   --red:#FF453A;
@@ -881,6 +884,10 @@ svg{display:block;flex-shrink:0;}
 .srch-strip-t{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .srch-strip-t b{font-weight:700;}.srch-strip i{font-style:normal;font-size:16px;line-height:1;}
 @media(max-width:780px){.srch-strip:not([hidden]){display:flex;}}
+/* 행(tr)에 칠한다 — 마지막 동작 칸(.detail-item-actions)이 display:flex라 td 배경은 그 칸만 짧게 끝났다 */
+.items-table tr.item-hl{background:color-mix(in srgb,var(--mint) 22%,transparent);}
+.items-table tr.item-hl-sub{background:color-mix(in srgb,var(--mint) 10%,transparent);}
+.items-table tr.item-hl .detail-item-actions,.items-table tr.item-hl-sub .detail-item-actions{border-bottom-color:transparent;}
 .srch-gross{display:block;white-space:nowrap;font-size:11px;font-weight:400;color:var(--label3);text-decoration:line-through;}
 .srch-disc-tag{white-space:nowrap;margin-left:6px;padding:0 6px;height:18px;border:1px solid var(--blue);border-radius:9px;background:var(--blue-bg);color:var(--blue-txt);font:inherit;font-size:10.5px;font-weight:600;cursor:pointer;vertical-align:1px;}
 .srch-naver{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:4px;border-radius:50%;color:var(--label3);vertical-align:-5px;}
@@ -4798,7 +4805,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.44';
+const APP_VERSION='v5.45';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -8776,6 +8783,8 @@ async function selectReceipt(id){
   clearTimeout(_searchTimer);
   if(!_personMode&&searchInp.value!==searchQuery&&_activeTabName()!=='prepaid'){searchQuery=searchInp.value;_updateSearchClear();}
   selectedId=id;
+  if(_hlScrolledFor!==id)_hlScrolledFor=null;
+  if(_searchHitIdx(receipts.find(x=>x.id===id)).length)_expandedDetailReceiptId=id; // v5.45 — 검색한 품목이 있으면 품목 내역을 펼쳐서 연다
   _mobileListMode='detail';
   // 다른 탭에서 카드 클릭했을 수 있으니 '내역' 탭으로 전환.
   // renderDetail()이 사진을 확인하는 동안에도 이전 통계 본문이 남아 보이지 않도록
@@ -8851,11 +8860,36 @@ function _collectSearchHits(terms,filtered){
   }
   return hitItems;
 }
+// v5.45 — 사람 이름(결제자·참석자) 검색인가? 그러면 품목 요약·품목 표시를 하지 않는다.
+function _searchIsPerson(q){
+  q=(q||'').trim();const qL=q.toLowerCase();
+  if(q.startsWith('결제자 ')||q.startsWith('참석자 '))return true;
+  return qL.length>=2&&receipts.some(r=>((r.paidBy||'').trim()&&(r.paidBy||'').toLowerCase().includes(qL))||(r.participants||[]).some(x=>String(x).toLowerCase().includes(qL)));
+}
+// v5.45 — 검색해서 연 영수증 상세에서 검색어에 걸린 품목 줄(+ 그 품목에 반영된 할인 줄)을 녹색으로 표시하고 처음 한 번 그 줄로 스크롤한다.
+let _hlScrolledFor=null;
+function _searchHitIdx(r){
+  if(!r||!searchQuery||_personMode||_searchIsPerson(searchQuery))return [];
+  const terms=_getSearchTerms(searchQuery.trim().toLowerCase()).filter(Boolean);
+  if(!terms.length)return [];
+  const hit=[];(r.items||[]).forEach((it,i)=>{const nm=(it.name||'').toLowerCase();if((it.amount||0)>=0&&terms.some(t=>nm.includes(t)))hit.push(i);});
+  return hit;
+}
+function _applyItemHighlight(r,tbl){
+  if(!tbl)return;
+  const hit=_searchHitIdx(r);if(!hit.length)return;
+  const items=r.items||[],nb=_netItemAmounts(r),discNames=new Set();
+  hit.forEach(i=>nb.rows[i].parts.forEach(p=>discNames.add(p.name)));
+  const trs=tbl.querySelectorAll('tbody tr[data-idx]');let first=null;
+  trs.forEach(tr=>{const i=+tr.dataset.idx,it=items[i];if(!it)return;
+    if(hit.includes(i)){tr.classList.add('item-hl');if(!first)first=tr;}
+    else if((it.amount||0)<0&&discNames.has(it.name||'할인'))tr.classList.add('item-hl','item-hl-sub');});
+  if(first&&_hlScrolledFor!==r.id){_hlScrolledFor=r.id;requestAnimationFrame(()=>{try{first.scrollIntoView({block:'center'});}catch(e){}});}
+}
 // v5.44 — 폰 내역 탭 검색 결과 위 요약 줄({q 구매 N회 · 총 · 평균 단가}). 사람 이름 검색(사람 요약 화면)이면 null.
 function _searchStripData(q,filtered){
   q=(q||'').trim();const qL=q.toLowerCase();
-  if(!q||!filtered||!filtered.length||q.startsWith('결제자 ')||q.startsWith('참석자 '))return null;
-  if(qL.length>=2&&receipts.some(r=>((r.paidBy||'').trim()&&(r.paidBy||'').toLowerCase().includes(qL))||(r.participants||[]).some(x=>String(x).toLowerCase().includes(qL))))return null;
+  if(!q||!filtered||!filtered.length||_searchIsPerson(q))return null;
   const hits=_collectSearchHits(_getSearchTerms(qL),filtered);
   if(hits.length){
     const total=hits.reduce((t,h)=>t+Math.max(0,h.amount||0),0);
@@ -13240,6 +13274,7 @@ function _bindDetailItemTableEvents(r){
   }
   _bindDetailItemReorder(r,tbl);
   _bindItemReorderMode(r,tbl);
+  _applyItemHighlight(r,tbl);
 }
 // v5.33 — 폰 [⇅ 순서] 모드: 켜면 ⋮ 손잡이가 보이고(끌기는 기존 _bindDetailItemReorder).
 // v5.34 — 모드 중 바꾼 순서는 [순서 완료]를 눌러야 확정(저장 띠가 그때 뜸). 완료 없이 다른 영수증·탭·목록으로 나가면 순서 변경은 취소(무효)된다.
@@ -13290,6 +13325,7 @@ document.getElementById('detailDeleteBtn').addEventListener('click',async()=>{
 // ── LIGHTBOX ──
 const lightbox=document.getElementById('lightbox');
 const lightboxImg=document.getElementById('lightboxImg');
+// v5.45 — 검색해서 연 영수증 상세: 검색어에 걸린 품목 줄(+ 그 품목에 반영된 할인 줄)을 녹색으로 표시(`_applyItemHighlight`, 계속 유지·화면 표시만), 품목 내역을 펼쳐서 열고 처음 한 번 그 줄로 스크롤. 사람 이름 검색이면 표시 안 함.
 // v5.44 — 폰 내역 탭 검색 결과 목록 위 요약 줄(#srchStrip: 'q 구매 N회 · 총 · 평균') — 누르면 통계 탭의 검색 결과 요약(navLedgerBtn). 사람 이름 검색이면 숨김, PC는 숨김.
 // v5.43 — 이름에 품목이 있는 할인만 그 품목에 반영, 품목이 여러 개인데 대상을 알 수 없는 줄(리워드 사용 등)은 반영 안 함(펼침에 안내). 구매 품목이 하나뿐이면 전부 반영. 이미 반영된 할인 줄은 이력에서 중복 표시 안 함.
 // v5.42 — 할인 배분: 할인 줄 이름에 품목 이름이 있으면 그 품목에만, 아니면 전체에 비율로(`_netItemAmounts`). 펼침엔 그 품목에 실제 들어간 할인만.
