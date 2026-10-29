@@ -2733,8 +2733,6 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .psn-mtgc{padding:18px 20px 18px;}
 .psn-mgbtns{display:inline-flex;gap:6px;flex:none;}
 @media(max-width:780px){.psn-mgbtns .psn-mgbtn{padding:0 10px;font-size:12px;}}
-.input-mode-gather{color:var(--blue-txt);}
-.addx-top .input-mode-row{flex-basis:470px;}
 /* v5.48 — 지출 없는 만남 창 */
 .gth-sheet .kv{margin-bottom:8px;}
 .gth-lbl{font-size:11px;font-weight:600;color:var(--label3);margin:12px 0 6px;}
@@ -2915,11 +2913,13 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .addx-top .input-mode-pencil{width:14px;height:14px;flex-basis:14px;}
 .addx-top .prompt-copy{flex:0 0 auto;min-height:40px;white-space:nowrap;margin:0;}
 .addx-top .prompt-copy[hidden]{display:none;}
+.addx-acts{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
 .input-row.preview:has(#previewArea>.empty-state:only-child){display:none;} /* 붙여넣기 전 빈 미리보기 자리(빈 칸 24px)도 없앰 */
 @media(max-width:780px){
   .addx-top{align-items:stretch;flex-direction:column;gap:8px;}
   #viewInput .addx-top .input-mode-row{width:100%;flex-basis:auto;margin-bottom:0;}
-  .addx-top .prompt-copy{width:100%;min-height:44px;}
+  .addx-acts{width:100%;}
+  .addx-top .prompt-copy{flex:1 1 0;width:auto;min-width:0;min-height:44px;}
 }
 #gptModeArea{display:flex;flex-direction:column;gap:14px;}
 .addx-paste .field-ta{height:132px;min-height:132px;}
@@ -3394,12 +3394,17 @@ body.picker-modal-open{overscroll-behavior:none;}
               <svg class="input-mode-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16.5 16.5 3l4.5 4.5L7.5 21 3 21z"/><path d="m14.5 5 4.5 4.5M3 16.5 7.5 21"/><path d="m16.5 3 1.4-1.4a1.4 1.4 0 0 1 2 0l2.5 2.5a1.4 1.4 0 0 1 0 2L21 7.5"/></svg>
               <span>직접 입력</span>
             </button>
-            <button class="input-mode-btn input-mode-gather" id="modeGatherBtn" type="button" title="지출 없이 만난 자리를 기록">지출 없는 만남</button>
           </div>
+              <div class="addx-acts">
               <button class="detail-textcopy prompt-copy" id="promptCopyBtn" type="button" aria-label="AI 영수증 정리 프롬프트 복사">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 프롬프트 복사
               </button>
+              <button class="detail-textcopy prompt-copy gather-btn" id="modeGatherBtn" type="button" aria-label="지출 없이 만난 자리 기록" title="집들이·산책처럼 영수증이 없는 만남 기록">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/><path d="M17 5a3 3 0 0 1 0 6M22 20c0-2.5-1.5-4.5-4-5.4"/></svg>
+                지출 없는 만남
+              </button>
+              </div>
             </div>
             <div id="gptModeArea">
               <div class="addx-paste">
