@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.35';
+  const _swVersion='v5.36';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -68,15 +68,25 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
       await _swRegistration.update();
     }catch(e){console.warn('service worker:',e);}
   };
-  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+  // v5.36 — 새 워커가 켜져도 입력 중이면 강제로 새로고침하지 않는다(붙여넣은 글·수정 중 내용이 사라졌다).
+  //         입력이 끝날 때까지 미루고, '지금 새로고침'을 누르면 바로 갱신한다.
+  let _swWaiting=false;
+  const _reloadToLatest=()=>{
     if(_swReloading)return;_swReloading=true;
-    // 워커의 client.navigate와 단순 reload가 경쟁하지 않게 같은 버전 주소로만 전환한다.
     setTimeout(()=>{
       const url=new URL(location.href);
       if(url.searchParams.get('__app_v')===_swVersion)return;
       url.searchParams.set('__app_v',_swVersion);
       location.replace(url.href);
     },250);
+  };
+  const _busy=()=>{try{return typeof _appUpdateBusy==='function'&&_appUpdateBusy();}catch(e){return false;}};
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(_swReloading||_swWaiting)return;
+    if(!_busy()){_reloadToLatest();return;}
+    _swWaiting=true;
+    try{toast('새 버전이 있어요. 입력을 마치면 자동으로 새로고침돼요',{duration:9000,actionLabel:'지금 새로고침',action:_reloadToLatest});}catch(e){}
+    const t=setInterval(()=>{if(!_busy()){clearInterval(t);_reloadToLatest();}},3000);
   });
   addEventListener('load',_checkAppUpdate);
   addEventListener('pageshow',_checkAppUpdate);
@@ -4177,6 +4187,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   A8 추이:구성 60:40→~65:35(flex 1.5→1.9). A9 plot 150→176(모바일 124→146). A10 툴팁 밝은 흰 카드(.lp-tip:
 //     날짜 12/500 #6B7280·금액 14/700 #111827·건수 12/400 #6B7280). A11 도넛 중심=추이 plot 중심. A12 범례 이름+% 한 쌍.
 //   [B] 검색창 아래 compact toolbar(범위·건수 + 정렬 select). 기본 최신순(기존 동작). 정렬은 표시 직전 복사본만
+// v5.36 — 새 버전 자동 새로고침은 입력·미저장 내용이 있으면 미룬다(붙여넣은 글 소실 방지).
 // v5.35 — 오늘 날짜 기본값을 UTC가 아닌 한국(로컬) 날짜로(새벽 0~9시 어제 날짜 버그).
 // v5.34 — 폰 순서 모드: [순서 완료]에서만 저장 띠, 완료 없이 떠나면 순서 변경 취소.
 // v5.33 — 폰 품목 순서 모드([⇅ 순서])·합계 오른쪽 끝을 금액 열에 맞춤.
@@ -4743,7 +4754,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.35';
+const APP_VERSION='v5.36';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -4823,6 +4834,18 @@ function _getToastContainer(){
     document.body.appendChild(_toastContainer);
   }
   return _toastContainer;
+}
+// v5.36 — 새 버전 자동 새로고침을 미룰지: 입력 중이거나, 저장 전 내용(상세 수정·추가 화면 글/사진·순서 모드)이 있거나, 창이 열려 있으면 true
+function _appUpdateBusy(){
+  const a=document.activeElement;
+  if(a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&!/^(checkbox|radio|button|submit|range|file)$/.test(a.type)))&&String(a.value||'').trim())return true;
+  if(typeof _saveState!=='undefined'&&_saveState==='dirty')return true;
+  if(typeof _itemReorderOn!=='undefined'&&_itemReorderOn)return true;
+  try{
+    if(typeof pasteTa!=='undefined'&&(pasteTa.value.trim()||(typeof pendingPhotoBlob!=='undefined'&&pendingPhotoBlob)))return true;
+    if(typeof _inputMode!=='undefined'&&_inputMode==='direct'&&((document.getElementById('addStore')?.value||'').trim()||(document.getElementById('directTotal')?.value||'').trim()))return true;
+  }catch(e){}
+  return [...document.querySelectorAll('.modal-overlay,.mtg-sheet-backdrop,.date-pop,.time-pop,.cat-picker-popover:not([hidden]),.kvs-pop')].some(el=>el.getClientRects().length>0);
 }
 function toast(msg,opts){
   opts=opts||{};

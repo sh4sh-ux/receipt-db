@@ -30,8 +30,13 @@ def main() -> int:
         errors.append("아이폰 PWA의 서비스워커 즉시 갱신 경로가 없습니다")
     if "addEventListener('pageshow',_checkAppUpdate);" not in index or "document.visibilityState==='visible'" not in index:
         errors.append("앱 복귀 시 최신 버전 확인이 없습니다")
-    if "client.navigate(url.href)" not in worker or "cache:'no-store'" not in worker or "Promise.allSettled" not in worker:
-        errors.append("구버전 화면 강제 갱신·문서 캐시 우회·부가 캐시 실패 격리가 없습니다")
+    # v5.36 — 워커가 열린 화면을 직접 navigate하면 입력 중인 글이 사라진다. 갱신 시점은 페이지가 _appUpdateBusy()로 정한다.
+    if "client.navigate" in worker:
+        errors.append("서비스 워커가 열린 화면을 직접 navigate하면 입력 중인 내용이 사라집니다(v5.36)")
+    if "function _appUpdateBusy()" not in index or "_busy()" not in index:
+        errors.append("새 버전 자동 새로고침의 입력 중 보류(_appUpdateBusy)가 없습니다")
+    if "cache:'no-store'" not in worker or "Promise.allSettled" not in worker:
+        errors.append("문서 캐시 우회·부가 캐시 실패 격리가 없습니다")
     if "text-shadow:none;\n    -webkit-font-smoothing:auto;" not in index:
         errors.append("모바일 헤더 글자의 강제 antialiased 해제 규칙이 없습니다")
 
