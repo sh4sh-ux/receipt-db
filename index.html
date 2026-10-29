@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.47';
+  const _swVersion='v5.48';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -2731,6 +2731,25 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .psn-total{margin-top:14px;border-top:1px solid var(--divider);border-bottom:none;cursor:pointer;}
 .psn-total .psn-trow-l{flex-direction:row;align-items:baseline;gap:8px;flex-wrap:wrap;}
 .psn-mtgc{padding:18px 20px 18px;}
+.psn-mgbtns{display:inline-flex;gap:6px;flex:none;}
+@media(max-width:780px){.psn-mgbtns .psn-mgbtn{padding:0 10px;font-size:12px;}}
+.input-mode-gather{color:var(--blue-txt);}
+.addx-top .input-mode-row{flex-basis:470px;}
+/* v5.48 — 지출 없는 만남 창 */
+.gth-sheet .kv{margin-bottom:8px;}
+.gth-lbl{font-size:11px;font-weight:600;color:var(--label3);margin:12px 0 6px;}
+.gth-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.gth-chip{height:32px;padding:0 12px;border:1px solid var(--sep2);border-radius:16px;background:var(--card);color:var(--label);font:inherit;font-size:13px;font-weight:500;cursor:pointer;}
+.gth-chip.on{border-color:var(--blue);background:var(--blue-bg);color:var(--blue-txt);font-weight:700;}
+.gth-chip.grp{border-style:dashed;color:var(--label2);}
+.gth-chip.more{border-style:dashed;color:var(--label3);}
+.gth-add{display:flex;gap:6px;margin-top:8px;}
+.gth-inp{flex:1;min-width:0;height:38px;border:1px solid var(--sep2);border-radius:var(--rm);background:var(--card);color:var(--label);padding:0 12px;font:inherit;font-size:16px;outline:none;}
+.gth-inp:focus{border-color:var(--blue);}
+.gth-addbtn{height:38px;padding:0 14px;border:1px solid var(--sep2);border-radius:var(--rm);background:var(--fill);color:var(--label2);font:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+.gth-note{margin:10px 2px 14px;font-size:11.5px;color:var(--label3);line-height:1.6;}
+.gth-save{display:block;width:100%;height:46px;border:none;border-radius:var(--rm);background:var(--blue);color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer;}
+.gth-save:disabled{opacity:.42;cursor:not-allowed;}
 .psn-mgbtn{height:32px;padding:0 13px;border-radius:9px;border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);background:var(--blue-bg);color:var(--blue-txt);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;}
 .psn-mtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
 .psn-mtile{background:var(--fill2);border-radius:12px;padding:12px 14px;min-width:0;}
@@ -3374,6 +3393,7 @@ body.picker-modal-open{overscroll-behavior:none;}
               <svg class="input-mode-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16.5 16.5 3l4.5 4.5L7.5 21 3 21z"/><path d="m14.5 5 4.5 4.5M3 16.5 7.5 21"/><path d="m16.5 3 1.4-1.4a1.4 1.4 0 0 1 2 0l2.5 2.5a1.4 1.4 0 0 1 0 2L21 7.5"/></svg>
               <span>직접 입력</span>
             </button>
+            <button class="input-mode-btn input-mode-gather" id="modeGatherBtn" type="button" title="지출 없이 만난 자리를 기록">지출 없는 만남</button>
           </div>
               <button class="detail-textcopy prompt-copy" id="promptCopyBtn" type="button" aria-label="AI 영수증 정리 프롬프트 복사">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -4822,7 +4842,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.47';
+const APP_VERSION='v5.48';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -8740,6 +8760,7 @@ async function _saveDirectEntry(){
 (function _initDirectMode(){
   document.getElementById('modeGptBtn').addEventListener('click',()=>_setInputMode('gpt'));
   document.getElementById('modeDirectBtn').addEventListener('click',()=>_setInputMode('direct'));
+document.getElementById('modeGatherBtn').addEventListener('click',()=>_openGatheringSheet({})); // v5.48 — 모드 전환이 아니라 창 열기
 
   const directTotal=document.getElementById('directTotal');
 
@@ -8907,6 +8928,7 @@ function _searchIsPerson(q){
   if(q.startsWith('결제자 ')||q.startsWith('참석자 '))return true;
   return qL.length>=2&&receipts.some(r=>((r.paidBy||'').trim()&&(r.paidBy||'').toLowerCase().includes(qL))||(r.participants||[]).some(x=>String(x).toLowerCase().includes(qL)));
 }
+// v5.48 — 지출 없는 만남(집들이·산책): 0원 영수증(tags ['모임'], noSpend:true)로 기록. 입구 = 사람 탭 만남 카드 `+ 지출 없는 만남`(그 사람 미리 선택) · 추가 탭 세 번째 버튼. 창 `_openGatheringSheet`(날짜·함께한 사람 칩(자주 만난 순·그룹 칩·직접 추가)·장소). `_photoErrorReason`이 noSpend도 사진 없음에서 뺀다.
 // v5.47 — 내역 선택 바: [만남으로 묶기](묶기만, 2건 이상) + 칩 '만남으로도 묶기'(켜면 [더치페이로 보내기]가 보낸 뒤 같은 만남으로도 묶음, `batchAlsoMtg`에 기억). 보내기가 먼저(더치페이 창은 누름 안에서 열어야 함, v5.24), 묶기는 성공 뒤 `_mtgCreateMeeting`(확인·경고 그대로).
 // v5.46 — 검색 품목 줄을 화면 가운데로 다시 맞춘다(`_centerHighlight`: 사진·펼침으로 높이가 늦게 바뀌어도 0.15·0.45·0.9초 뒤 재조정, 사용자가 손대면 중단, 여러 줄이면 묶음의 가운데).
 // v5.45 — 검색해서 연 영수증 상세에서 검색어에 걸린 품목 줄(+ 그 품목에 반영된 할인 줄)을 녹색으로 표시하고 처음 한 번 그 줄로 스크롤한다.
@@ -10558,7 +10580,7 @@ function _psnLayoutHtml(d){
   const tile=(k,n,label)=>`<div class="psn-mtile"${n?btn(`data-psnd="mtg" data-scope="${k}"`,`만남 ${label} ${n}회 — 목록`):''}><b>${n}</b><span>${label}${n?chev:''}</span></div>`;
   const meet=`<section class="psn-card psn-mtgc" aria-label="만남">`
     +`<div class="psn-balc-hd"><div><div class="psn-hero-title">만남</div><div class="psn-hero-desc">${[cadence,lastTxt].filter(Boolean).join(' · ')||'아직 만남 기록이 없어요'}</div></div>`
-      +`<button type="button" class="psn-mgbtn" id="relMtgConfirmed">만남 관리</button></div>`
+      +`<span class="psn-mgbtns"><button type="button" class="psn-mgbtn" id="relMtgGather" title="지출 없이 만난 자리를 기록">+ 지출 없는 만남</button><button type="button" class="psn-mgbtn" id="relMtgConfirmed">만남 관리</button></span></div>`
     +`<div class="psn-mtiles">${tile('all',ms.count,'전체')}${tile('duo',ms.duo,'단둘이')}${tile('grp',ms.group,'여럿이')}</div>`
     +(topStores.length?`<div class="psn-places"><div class="psn-places-l">자주 간 곳</div><div class="psn-pchips">${topStores.map(([st,n])=>`<button type="button" class="psn-pchip" data-psnd="place" data-store="${escapeHtml(st)}"><span>${escapeHtml(st)}</span><em>${n}</em></button>`).join('')}</div></div>`:'')
     +`</section>`;
@@ -12122,6 +12144,8 @@ async function renderDetail(){
       // v3.59 — 만남 영역 진입: 확정된 만남 → 만남 목록 시트 / 미분류 영수증 → Meeting Organizer(전용 작업 공간).
       const _confBtn=body.querySelector('#relMtgConfirmed');
       if(_confBtn){const go=()=>_personDetailData&&_personDetailData.meetings?_openMeetingsSheet('all'):_mtgConfirmedListOpen();_confBtn.addEventListener('click',go);_confBtn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});}
+      const _gthBtn=body.querySelector('#relMtgGather');
+      if(_gthBtn)_gthBtn.addEventListener('click',()=>_openGatheringSheet({people:[_personDetailData&&_personDetailData.name].filter(Boolean)}));
       const _orgBtn=body.querySelector('#relMtgOrganize');
       if(_orgBtn){const go=()=>_mtgOrganizerOpen();_orgBtn.addEventListener('click',go);_orgBtn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});}
       // v3.62 — 요약 4개 row Drill-down(여럿이/전체 결제/전체 내가 한턱/참석 부담액) → 공통 Person Detail. chevron=navigation.
@@ -13157,6 +13181,71 @@ function _refreshDetailAmountAudit(r){
   });
 }
 // v4.44 — 품목명 수정 창(폰). 저장하면 표의 입력칸 값을 바꾸고 기존 '변경됨' 흐름을 그대로 탄다. 이름의 '|'는 파싱이 깨져 '/'로 바꾼다.
+// v5.48 — 지출 없는 만남(집들이·산책 등): 0원 영수증(tags ['모임'], noSpend:true)으로 기록한다. 사진 없음·확인 필요에서는 빠지고(`_photoErrorReason`),
+//   참석자에 넣은 사람마다 만남 횟수·간격이 그대로 따라온다. 통계 금액은 0원이라 안 바뀐다. 저장은 로컬 → 동기화(`dbxSyncUpload`).
+function _openGatheringSheet({people=[]}={}){
+  const {card,close}=_mtgSheetOpen();
+  card.classList.add('gth-sheet');
+  const me=normalizeName(getMyName());
+  const freq=new Map();
+  for(const r of receipts)for(const n of receiptPeople(r))freq.set(n,(freq.get(n)||0)+1);
+  const names=[...freq.keys()].filter(n=>n&&n!==me).sort((a,b)=>(freq.get(b)-freq.get(a))||a.localeCompare(b,'ko'));
+  const sel=new Set((people||[]).map(normalizeName).filter(n=>n&&n!==me));
+  sel.forEach(n=>{if(!names.includes(n))names.unshift(n);});
+  const LIMIT=12;let showAll=false;
+  const groups=activeRelationGroups().filter(g=>(g.members||[]).length>0);
+  const paint=()=>{
+    const list=showAll?names:names.slice(0,LIMIT);
+    const chips=list.map(n=>`<button type="button" class="gth-chip${sel.has(n)?' on':''}" data-n="${escapeHtml(n)}" aria-pressed="${sel.has(n)}">${escapeHtml(n)}</button>`).join('');
+    const more=(!showAll&&names.length>LIMIT)?`<button type="button" class="gth-chip more" data-more>+ ${names.length-LIMIT}명 더 보기</button>`:'';
+    box.innerHTML=chips+more;
+    grpBox.innerHTML=groups.map(g=>{const ms=(g.members||[]).map(normalizeName).filter(n=>n&&n!==me);const all=ms.length&&ms.every(n=>sel.has(n));return `<button type="button" class="gth-chip grp${all?' on':''}" data-g="${escapeHtml(g.id)}">${escapeHtml(g.name||g.members.join('·'))}</button>`;}).join('');
+    grpLbl.hidden=!groups.length;
+    save.disabled=!sel.size;
+  };
+  card.innerHTML=`<div class="mtg-sheet-hd"><div class="mtg-sheet-title">지출 없는 만남</div><button type="button" class="mtg-sheet-x" aria-label="닫기">×</button></div>
+    <div class="gth-lbl" style="margin-top:2px">날짜</div>${_dateTimeKvHtml(_todayYMD(),'')}
+    <div class="gth-lbl">함께한 사람 <span style="font-weight:400">(나는 자동 포함)</span></div>
+    <div class="gth-chips" id="gthChips"></div>
+    <div class="gth-lbl" id="gthGrpLbl">그룹으로 한 번에</div><div class="gth-chips" id="gthGrps"></div>
+    <div class="gth-add"><input class="gth-inp" id="gthNew" type="text" placeholder="목록에 없는 사람 이름" maxlength="20" autocomplete="off"/><button type="button" class="gth-addbtn" id="gthAddBtn">추가</button></div>
+    <div class="gth-lbl">장소 (선택)</div><input class="gth-inp" id="gthPlace" type="text" placeholder="예: 집들이, 한강 산책" maxlength="40" autocomplete="off" style="width:100%"/>
+    <div class="gth-note">0원 영수증('모임' 태그)으로 저장돼요. 지출 통계·사진 없음·확인 필요에는 잡히지 않고, 만남 횟수에는 들어가요.</div>
+    <button type="button" class="gth-save" id="gthSave" disabled>만남 기록하기</button>`;
+  const box=card.querySelector('#gthChips'),grpBox=card.querySelector('#gthGrps'),grpLbl=card.querySelector('#gthGrpLbl'),save=card.querySelector('#gthSave');
+  card.querySelector('.mtg-sheet-x').onclick=()=>close();
+  box.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    if(b.hasAttribute('data-more')){showAll=true;paint();return;}
+    const n=b.dataset.n;if(!n)return;if(sel.has(n))sel.delete(n);else sel.add(n);paint();});
+  grpBox.addEventListener('click',e=>{const b=e.target.closest('button[data-g]');if(!b)return;
+    const g=groups.find(x=>x.id===b.dataset.g);if(!g)return;
+    const ms=(g.members||[]).map(normalizeName).filter(n=>n&&n!==me);const all=ms.every(n=>sel.has(n));
+    ms.forEach(n=>{if(all)sel.delete(n);else{sel.add(n);if(!names.includes(n))names.unshift(n);}});paint();});
+  const addNew=()=>{const inp=card.querySelector('#gthNew');const n=normalizeName(inp.value);if(!n)return;
+    if(n===me){inp.value='';return;}
+    if(!names.includes(n))names.unshift(n);sel.add(n);inp.value='';paint();};
+  card.querySelector('#gthAddBtn').onclick=addNew;
+  card.querySelector('#gthNew').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();addNew();}});
+  save.onclick=async()=>{
+    if(!sel.size)return;
+    save.disabled=true;save.textContent='저장 중…';
+    try{
+      const date=(card.querySelector('[data-field="date"]').value||_todayYMD());
+      const time=(card.querySelector('[data-field="time"]').value||'');
+      const place=(card.querySelector('#gthPlace').value||'').replace(/\|/g,'/').trim()||'모임';
+      const parts=[...new Set([me,...sel].filter(Boolean))];
+      const now=nowISO();
+      const rec={id:_newId(date),date,time,store:place,category:normalizeCategory('기타'),total:0,items:[],imageId:'',paymentMethod:'other',paymentDetail:'',paidBy:me||'',participants:parts,tags:['모임'],noSpend:true,notes:'',createdAt:now,updatedAt:now};
+      await dbPut('receipts',rec);
+      await loadAll();renderSide();renderDetail();
+      void dbxSyncUpload();
+      close(()=>toast('지출 없는 만남을 기록했어요.',{type:'success'}));
+    }catch(err){
+      save.disabled=false;save.textContent='만남 기록하기';toast('저장하지 못했어요. 다시 시도해 주세요.',{type:'error'});
+    }
+  };
+  paint();
+}
 function _itemNameSheet(inp){
   const {card,close}=_mtgSheetOpen();
   card.classList.add('inm-sheet');
@@ -14446,7 +14535,7 @@ function _rebuildPhotoHashCounts(){
 }
 
 function _photoErrorReason(r){
-  if(r.subId&&!r.imageId)return ''; // v4.29 — 구독 결제 영수증은 종이 영수증이 없다(사진 없음으로 세지 않음)
+  if((r.subId||r.noSpend)&&!r.imageId)return ''; // v5.48 지출 없는 만남도 사진이 없다 · v4.29 — 구독 결제 영수증은 종이 영수증이 없다(사진 없음으로 세지 않음)
   if(!r.imageId){
     const recoveryId=_receiptRecoveryImageId(r);
     if(dbxIsConnected()&&recoveryId&&!_photoRecoveryChecked.has(recoveryId))return '';
