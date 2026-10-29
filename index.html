@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.48';
+  const _swVersion='v5.49';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -3052,15 +3052,16 @@ body.picker-modal-open{overscroll-behavior:none;}
 .time-pop-btn.done:hover{filter:brightness(1.05);}
 @media(hover:none),(pointer:coarse){
   .kv-time-inp[type="time"]{pointer-events:none;}
-  .time-pop.mobile{position:fixed;z-index:651;top:50%;right:16px;bottom:auto;left:16px;width:auto;max-width:420px;margin:0 auto;transform:translateY(-50%);box-sizing:border-box;}
+  .time-pop.mobile{position:fixed;z-index:10001;top:50%;right:16px;bottom:auto;left:16px;width:auto;max-width:420px;margin:0 auto;transform:translateY(-50%);box-sizing:border-box;}
   .time-pop.mobile.up{top:50%;bottom:auto;}
-  .time-pop-backdrop{position:fixed;z-index:650;inset:0;background:rgba(0,0,0,.42);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
+  .time-pop-backdrop{position:fixed;z-index:10000;inset:0;background:rgba(0,0,0,.42);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
 }
 /* v4.94 — 날짜는 PC·모바일 모두 더치페이와 같은 앱 내부 선택기를 쓴다. */
 .kv.date-open{position:relative;z-index:45;border-color:var(--blue);}
+.time-pop.sheet-portal{position:fixed;z-index:10001;right:auto;bottom:auto;}
 .date-pop{position:absolute;z-index:46;top:calc(100% + 8px);left:-1px;right:-1px;padding:0 10px 10px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:var(--app-shadow);cursor:default;}
 .date-pop.up{top:auto;bottom:calc(100% + 8px);}
-.date-pop.portal{position:fixed;z-index:460;right:auto;bottom:auto;box-sizing:border-box;}
+.date-pop.portal{position:fixed;z-index:10001;right:auto;bottom:auto;box-sizing:border-box;}
 .date-pop-head{display:grid;grid-template-columns:34px 1fr 34px;align-items:center;margin:0 -10px 7px;padding:7px 8px;border-bottom:1px solid var(--sep);}
 .date-pop-title{min-height:32px;border:0;border-radius:8px;padding:0 4px;background:none;text-align:center;color:var(--label);font:inherit;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;cursor:pointer;}
 .date-pop-title:hover{background:var(--fill);color:var(--blue);}
@@ -3087,9 +3088,9 @@ body.picker-modal-open{overscroll-behavior:none;}
 @media(hover:none),(pointer:coarse){
   /* 투명 date input이 iOS 기본 달력을 열지 못하게 하고, 바깥 필드가 앱 달력을 연다. */
   input[type="date"]{pointer-events:none;}
-  .date-pop.mobile{position:fixed;z-index:651;top:50%;right:18px;bottom:auto;left:18px;width:auto;max-width:420px;margin:0 auto;transform:translateY(-50%);}
+  .date-pop.mobile{position:fixed;z-index:10001;top:50%;right:18px;bottom:auto;left:18px;width:auto;max-width:420px;margin:0 auto;transform:translateY(-50%);}
   .date-pop.mobile.up{top:50%;bottom:auto;}
-  .date-pop-backdrop{position:fixed;z-index:650;inset:0;background:rgba(0,0,0,.42);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
+  .date-pop-backdrop{position:fixed;z-index:10000;inset:0;background:rgba(0,0,0,.42);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
 }
 
 /* v4.66 — 그래프에서 고른 기간 영수증 시트. 금액은 오른쪽 정렬 */
@@ -4842,7 +4843,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.48';
+const APP_VERSION='v5.49';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -8928,6 +8929,7 @@ function _searchIsPerson(q){
   if(q.startsWith('결제자 ')||q.startsWith('참석자 '))return true;
   return qL.length>=2&&receipts.some(r=>((r.paidBy||'').trim()&&(r.paidBy||'').toLowerCase().includes(qL))||(r.participants||[]).some(x=>String(x).toLowerCase().includes(qL)));
 }
+// v5.49 — 창(.mtg-sheet, z-index 9990) 안에서 연 날짜·시간 선택기가 창 뒤에 깔리던 것 수정: 폰 모달 선택기·배경 z-index 10000/10001, PC는 창 안 날짜칸을 portal(`.date-pop.portal`)·시간칸을 body fixed(`.time-pop.sheet-portal`)로 띄워 창의 스크롤 영역에 잘리지 않게.
 // v5.48 — 지출 없는 만남(집들이·산책): 0원 영수증(tags ['모임'], noSpend:true)로 기록. 입구 = 사람 탭 만남 카드 `+ 지출 없는 만남`(그 사람 미리 선택) · 추가 탭 세 번째 버튼. 창 `_openGatheringSheet`(날짜·함께한 사람 칩(자주 만난 순·그룹 칩·직접 추가)·장소). `_photoErrorReason`이 noSpend도 사진 없음에서 뺀다.
 // v5.47 — 내역 선택 바: [만남으로 묶기](묶기만, 2건 이상) + 칩 '만남으로도 묶기'(켜면 [더치페이로 보내기]가 보낸 뒤 같은 만남으로도 묶음, `batchAlsoMtg`에 기억). 보내기가 먼저(더치페이 창은 누름 안에서 열어야 함, v5.24), 묶기는 성공 뒤 `_mtgCreateMeeting`(확인·경고 그대로).
 // v5.46 — 검색 품목 줄을 화면 가운데로 다시 맞춘다(`_centerHighlight`: 사진·펼침으로 높이가 늦게 바뀌어도 0.15·0.45·0.9초 뒤 재조정, 사용자가 손대면 중단, 여러 줄이면 묶음의 가운데).
@@ -12874,7 +12876,7 @@ function _dateOpen(inp){
   if(!inp||inp.disabled||inp.readOnly)return;
   if(_datePicker&&_datePicker.inp===inp){_dateClose(true);return;}
   _dateClose();_timeClose();_kvsClose();_closeAnyCategoryPicker();
-  const anchor=inp.closest('.kv'),portal=!anchor;
+  const anchor=inp.closest('.kv'),portal=!anchor||!!inp.closest('.mtg-sheet'); // v5.49 — 창(.mtg-sheet) 안 날짜칸은 창 밖(body)에 띄운다(창의 스크롤 영역에 잘리던 것)
   const now=new Date(),match=String(inp.value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/),pageMatch=String(inp.dataset.pickerMonth||'').match(/^(\d{4})-(\d{2})$/);
   const picked=match?new Date(+match[1],+match[2]-1,+match[3]):pageMatch?new Date(+pageMatch[1],+pageMatch[2]-1,1):now;
   const state={year:picked.getFullYear(),month:picked.getMonth(),mode:'day',yearStart:picked.getFullYear()-5};
@@ -12965,6 +12967,12 @@ function _timeOpen(inp){
   pop.innerHTML=`<div class="time-pop-head"><div class="time-pop-title">시간 선택 · 24시간</div></div><div class="time-pop-fields"><div class="time-pop-field"><span>시</span><div class="time-pop-list" role="listbox" aria-label="시">${options(24,hour,'hour')}</div></div><span class="time-pop-colon" aria-hidden="true">:</span><div class="time-pop-field"><span>분</span><div class="time-pop-list" role="listbox" aria-label="분">${options(60,minute,'minute')}</div></div></div><div class="time-pop-actions"><button type="button" class="time-pop-btn" data-time-now>현재</button><button type="button" class="time-pop-btn" data-time-clear>지우기</button><button type="button" class="time-pop-btn done" data-time-done>완료</button></div>`;
   const mobile=!_desktopTimeMq.matches;let backdrop=null;
   if(mobile){backdrop=document.createElement('div');backdrop.className='time-pop-backdrop';document.body.append(backdrop,pop);pop.classList.add('mobile');_pickerLockPage();}
+  else if(kv.closest('.mtg-sheet')){ // v5.49 — 창 안 시간칸: PC에서 창의 overflow에 잘리지 않게 body에 fixed로
+    pop.classList.add('sheet-portal');document.body.appendChild(pop);
+    const r=kv.getBoundingClientRect(),vw=(window.visualViewport&&visualViewport.width)||innerWidth,vh=(window.visualViewport&&visualViewport.height)||innerHeight;
+    const width=Math.min(Math.max(r.width,300),vw-16);pop.style.width=width+'px';pop.style.left=Math.max(8,Math.min(r.left,vw-width-8))+'px';
+    let top=r.bottom+8;if(top+pop.offsetHeight>vh-8)top=r.top-pop.offsetHeight-8;pop.style.top=Math.max(8,top)+'px';
+  }
   else kv.appendChild(pop);
   kv.classList.add('time-open');_timePicker={pop,backdrop,kv,inp,mobile};
   let draftHour=String(hour).padStart(2,'0'),draftMinute=String(minute).padStart(2,'0');
@@ -12978,7 +12986,7 @@ function _timeOpen(inp){
   pop.querySelector('[data-time-done]').onclick=()=>{commit();_timeClose(true);};
   pop.addEventListener('click',e=>e.stopPropagation());
   pop.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();_timeClose(true);}});
-  if(!mobile){const sc=kv.closest('.main-body,.mtg-sheet'),sr=sc?sc.getBoundingClientRect():{top:0,bottom:innerHeight},vh=(window.visualViewport&&visualViewport.height)||innerHeight;
+  if(!mobile&&!pop.classList.contains('sheet-portal')){const sc=kv.closest('.main-body,.mtg-sheet'),sr=sc?sc.getBoundingClientRect():{top:0,bottom:innerHeight},vh=(window.visualViewport&&visualViewport.height)||innerHeight;
     if(pop.getBoundingClientRect().bottom>Math.min(vh,sr.bottom)-8)pop.classList.add('up');}
   select('hour',draftHour,{center:true});select('minute',draftMinute,{center:true});if(!mobile)hourList.querySelector('.time-pop-option.on')?.focus({preventScroll:true});
 }
