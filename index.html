@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.42';
+  const _swVersion='v5.43';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -4792,7 +4792,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.42';
+const APP_VERSION='v5.43';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -8795,7 +8795,7 @@ function _netItemAmounts(r){
   const pos=[],negs=[];
   items.forEach((it,i)=>{const a=it.amount||0;if(a>0)pos.push(i);else if(a<0)negs.push({name:it.name||'할인',amount:-a});});
   const lines=negs.map(l=>({name:l.name,amount:-l.amount}));
-  if(!pos.length||!negs.length)return {rows:out,lines:[],pool:0};
+  if(!pos.length||!negs.length)return {rows:out,lines:[],skipped:[],pool:0};
   const room={};pos.forEach(i=>{room[i]=out[i].gross;});
   const posKeys=pos.map(i=>String(items[i].name||'').toLowerCase().replace(/\s+/g,''));
   const general=[];
@@ -8807,9 +8807,11 @@ function _netItemAmounts(r){
     if(hit.length){const got=give(l,hit,hit.length===1);if(hit.length>1)hit.forEach(i=>{out[i].est=true;});if(got<l.amount)general.push({name:l.name,amount:l.amount-got});}
     else general.push(l);
   });
-  general.forEach(l=>{give(l,pos.filter(i=>room[i]>0),pos.length===1);});
+  // v5.43 — 구매 품목이 하나뿐이면 모든 할인을 그 품목에, 여러 개면 어느 품목 것인지 모르는 줄(리워드 사용 등 결제성 포함)은 반영하지 않는다.
+  const skipped=[];
+  if(pos.length===1)general.forEach(l=>{give(l,pos,true);});else general.forEach(l=>skipped.push({name:l.name,amount:-l.amount}));
   pos.forEach(i=>{out[i].net=out[i].gross-out[i].disc;});
-  return {rows:out,lines,pool:negs.reduce((s,l)=>s+l.amount,0)};
+  return {rows:out,lines,skipped,pool:negs.reduce((s,l)=>s+l.amount,0)};
 }
 // ── 검색 결과 요약 패널 ──
 function renderSearchSummaryHtml(q, filtered){
@@ -8826,7 +8828,7 @@ function renderSearchSummaryHtml(q, filtered){
   // 품목명 매칭 이력 수집 (unitPrice도 포함)
   const hitItems=[];
   for(const r of filtered){
-    const nb=_netItemAmounts(r);
+    const nb=_netItemAmounts(r),rHits=[];
     (r.items||[]).forEach((it,idx)=>{
       const nameL=(it.name||'').toLowerCase();
       if(terms.some(t=>t&&nameL.includes(t))){
@@ -8835,10 +8837,15 @@ function renderSearchSummaryHtml(q, filtered){
         hitItems.push({
           name:it.name, amount:n.net, gross:n.gross, disc, est:n.est, dlines:disc>0?n.parts:[],
           quantity:qty, unitPrice:disc>0?Math.round(n.net/qty):(it.unitPrice||0),
+          skip:disc>0?nb.skipped:[],
           receiptId:r.id, date:r.date, store:r.store, paidBy:r.paidBy
         });
+        rHits.push(hitItems[hitItems.length-1]);
       }
     });
+    // 이미 품목 금액에 반영된 할인 줄은 따로 한 번 더 나오지 않게 뺀다
+    const applied=new Set();rHits.forEach(h=>{if(h.amount>=0)h.dlines.forEach(l=>applied.add(l.name));});
+    for(let k=rHits.length-1;k>=0;k--){const h=rHits[k];if(h.amount<0&&applied.has(h.name)){hitItems.splice(hitItems.indexOf(h),1);}}
   }
 
   let statsHtml='';
@@ -8895,7 +8902,7 @@ function renderSearchSummaryHtml(q, filtered){
           <td style="text-align:right;">${it.quantity||1}</td>
           ${hasUP?`<td>${it.unitPrice>0?fmtMoney(it.unitPrice)+'원':'—'}</td>`:''}
           <td class="${it.amount<0?'amt-neg':''}">${fmtMoney(it.amount)}원${it.disc>0?`<span class="srch-gross">정가 ${fmtMoney(it.gross)}원</span>`:''}</td>
-        </tr>${it.disc>0?`<tr class="srch-disc-row" hidden><td colspan="${hasUP?6:5}" style="text-align:left;"><div class="srch-disc-box"><div><span>정가</span><b>${fmtMoney(it.gross)}원</b></div>${it.dlines.map(l=>`<div><span>${escapeHtml(l.name)}${l.share?' (나눈 몫)':''}</span><b class="amt-neg">${fmtMoney(l.amount)}원</b></div>`).join('')}<div class="srch-disc-sum"><span>실구매${it.est?' (추정)':''}</span><b>${fmtMoney(it.amount)}원</b></div>${it.est?'<p>영수증 안의 할인을 품목 금액 비율대로 나눈 추정값이에요.</p>':''}</div></td></tr>`:''}`).join('')}
+        </tr>${it.disc>0?`<tr class="srch-disc-row" hidden><td colspan="${hasUP?6:5}" style="text-align:left;"><div class="srch-disc-box"><div><span>정가</span><b>${fmtMoney(it.gross)}원</b></div>${it.dlines.map(l=>`<div><span>${escapeHtml(l.name)}${l.share?' (나눈 몫)':''}</span><b class="amt-neg">${fmtMoney(l.amount)}원</b></div>`).join('')}<div class="srch-disc-sum"><span>실구매${it.est?' (추정)':''}</span><b>${fmtMoney(it.amount)}원</b></div>${it.skip&&it.skip.length?`<p>품목을 알 수 없는 할인(${it.skip.map(l=>escapeHtml(l.name)+' '+fmtMoney(l.amount)+'원').join(', ')})은 반영하지 않았어요.</p>`:''}</div></td></tr>`:''}`).join('')}
       </tbody>
     </table>
     <div class="srch-mlist">${sorted.map(it=>`
@@ -8904,7 +8911,7 @@ function renderSearchSummaryHtml(q, filtered){
           <div class="srch-mmeta">${fmtDateKor(it.date)} · ${escapeHtml(it.store||'')} · ${it.quantity||1}개</div>
           <div class="srch-mact"><button type="button" class="srch-more" aria-expanded="false" hidden>이름 전체 ▾</button>${it.disc>0?`<button type="button" class="srch-disc-tag" aria-expanded="false">${it.est?'할인 반영(추정)':'할인 반영'} ▾</button>`:''}<a class="srch-naver" href="https://search.naver.com/search.naver?ssc=tab.shopping.all&query=${encodeURIComponent(it.name||'')}" target="_blank" rel="noopener noreferrer" title="네이버 쇼핑에서 검색" aria-label="네이버 쇼핑에서 검색"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.7" y2="16.7"/></svg></a></div></div>
         <div class="srch-mamt ${it.amount<0?'amt-neg':''}">${fmtMoney(it.amount)}원${it.disc>0?`<span class="srch-gross">${fmtMoney(it.gross)}원</span>`:''}</div>
-      </div>${it.disc>0?`<div class="srch-disc-row srch-disc-div" hidden><div class="srch-disc-box"><div><span>정가</span><b>${fmtMoney(it.gross)}원</b></div>${it.dlines.map(l=>`<div><span>${escapeHtml(l.name)}${l.share?' (나눈 몫)':''}</span><b class="amt-neg">${fmtMoney(l.amount)}원</b></div>`).join('')}<div class="srch-disc-sum"><span>실구매${it.est?' (추정)':''}</span><b>${fmtMoney(it.amount)}원</b></div>${it.est?'<p>영수증 안의 할인을 품목 금액 비율대로 나눈 추정값이에요.</p>':''}</div></div>`:''}`).join('')}
+      </div>${it.disc>0?`<div class="srch-disc-row srch-disc-div" hidden><div class="srch-disc-box"><div><span>정가</span><b>${fmtMoney(it.gross)}원</b></div>${it.dlines.map(l=>`<div><span>${escapeHtml(l.name)}${l.share?' (나눈 몫)':''}</span><b class="amt-neg">${fmtMoney(l.amount)}원</b></div>`).join('')}<div class="srch-disc-sum"><span>실구매${it.est?' (추정)':''}</span><b>${fmtMoney(it.amount)}원</b></div>${it.skip&&it.skip.length?`<p>품목을 알 수 없는 할인(${it.skip.map(l=>escapeHtml(l.name)+' '+fmtMoney(l.amount)+'원').join(', ')})은 반영하지 않았어요.</p>`:''}</div></div>`:''}`).join('')}
     </div>
     </div>`;
   }else{
@@ -13251,6 +13258,7 @@ document.getElementById('detailDeleteBtn').addEventListener('click',async()=>{
 // ── LIGHTBOX ──
 const lightbox=document.getElementById('lightbox');
 const lightboxImg=document.getElementById('lightboxImg');
+// v5.43 — 이름에 품목이 있는 할인만 그 품목에 반영, 품목이 여러 개인데 대상을 알 수 없는 줄(리워드 사용 등)은 반영 안 함(펼침에 안내). 구매 품목이 하나뿐이면 전부 반영. 이미 반영된 할인 줄은 이력에서 중복 표시 안 함.
 // v5.42 — 할인 배분: 할인 줄 이름에 품목 이름이 있으면 그 품목에만, 아니면 전체에 비율로(`_netItemAmounts`). 펼침엔 그 품목에 실제 들어간 할인만.
 // v5.41 — 폰 구매 이력 품목명은 한 줄 …, 잘릴 때만 [이름 전체 ▾]로 펼침. 네이버 링크는 쇼핑 전용 주소(접속 제한 화면이 떴다) 대신 통합검색 쇼핑 탭(search.naver.com?ssc=tab.shopping.all).
 // v5.40 — 폰(≤780px) 검색 구매 이력은 표 대신 두 줄 목록(품목명 최대 2줄 …, 금액 항상 보임 — 사용자 선택 시안 C). PC 표는 그대로.
