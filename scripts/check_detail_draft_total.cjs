@@ -21,13 +21,14 @@ const server=http.createServer((req,res)=>{
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,'127.0.0.1',resolve);});
   const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--disable-crash-reporter','--disable-crashpad','--noerrdialogs']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:900}});
+    const context=await browser.newContext({viewport:{width:1280,height:900},serviceWorkers:'block'}); // 서비스워커가 열린 화면을 강제 새로고침하면 검사 상태가 사라진다
+    const page=await context.newPage();
     await page.goto(`http://127.0.0.1:${port}/`,{waitUntil:'domcontentloaded'});
     await page.evaluate(async()=>{
       await new Promise(resolve=>setTimeout(resolve,80));
       await dbClear('receipts');await dbClear('images');
       const now=nowISO(),receipt={id:'rec_20261006_001_total',date:'2026-10-06',time:'22:13',store:'축제 노래연습장',category:'노래방',total:44000,items:[{name:'노래방 (1시간)',quantity:1,unitPrice:30000,amount:30000},{name:'소주',quantity:2,unitPrice:7000,amount:14000}],participants:['신유철','조상현'],paidBy:'조상현',tags:[],notes:'',createdAt:now,updatedAt:now};
-      await dbPut('receipts',receipt);await loadAll();selectedId=receipt.id;renderSide();await renderDetail();
+      await dbPut('receipts',receipt);await loadAll();selectedId=receipt.id;switchTab('list');renderSide();await renderDetail();
     });
     await page.locator('#detailItemsToggle').dispatchEvent('click');
     const quantity=page.locator('#itemsTable input[data-f="quantity"]').nth(1);

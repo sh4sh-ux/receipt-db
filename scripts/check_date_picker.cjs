@@ -32,7 +32,7 @@ const profiles=[
 
 async function openPage(browser,url,profile){
   const {label,mobile,...options}=profile;
-  const context=await browser.newContext(options);
+  const context=await browser.newContext({...options,serviceWorkers:'block'}); // 서비스워커 자동 새로고침이 검사 중 화면을 지우지 않게
   await context.addInitScript(()=>{
     window.__nativeDatePickerCalls=0;
     HTMLInputElement.prototype.showPicker=function(){window.__nativeDatePickerCalls++;};
@@ -71,6 +71,7 @@ async function clickTimeOption(page,selector){
 
 async function checkReceipt(browser,profile){
   const {mobile,label}=profile,{context,page}=await openPage(browser,receiptUrl,profile);
+  await page.waitForFunction(()=>typeof switchTab==='function'&&typeof receipts!=='undefined');await page.evaluate(()=>{switchTab('list');});await page.waitForTimeout(300);
   await page.locator('#monthLabel').dispatchEvent('click');
   if(await page.locator('.date-pop').count()!==1)throw new Error(`영수증 ${label} 월 레이블 달력이 열리지 않음`);
   await assertFits(page,'.date-pop',`영수증 ${label} 월 레이블 달력`);
@@ -87,6 +88,7 @@ async function checkReceipt(browser,profile){
   if(await page.locator('.date-pop-day.on').getAttribute('data-date-value')!=='2026-10-21')throw new Error(`영수증 ${label} 선택 일자가 달력에 유지되지 않음`);
   await page.locator('#monthLabel').dispatchEvent('click');
   if(await page.locator('.date-pop').count()!==0)throw new Error(`영수증 ${label} 월 레이블 재클릭 닫기 실패`);
+  await page.evaluate(()=>{switchTab('input');});await page.waitForTimeout(300); // 날짜 칸(label.kv-date)은 추가 탭에 있다
   const open=()=>page.locator('label.kv-date').dispatchEvent('click');
   await open();
   const suffix=mobile?'.mobile':'';
@@ -149,6 +151,7 @@ async function checkReceipt(browser,profile){
   if(await page.locator('.time-pop').count()!==0)throw new Error('영수증 같은 시간 칸 재클릭 닫기 실패');
   await page.locator('[data-nav="input"]').click();
   await page.waitForTimeout(80);
+  await page.locator('#pasteTa').evaluate(ta=>{ta.closest('.main-body').scrollTop=0;}); // 앞 단계에서 이미 맨 아래로 내려가 있으면 휠 검사가 헛돈다
   const scrollBefore=await page.locator('#pasteTa').evaluate(ta=>{const main=ta.closest('.main-body');return{active:document.activeElement===ta,overflow:getComputedStyle(ta).overflowY,textarea:ta.scrollTop,main:main.scrollTop,max:main.scrollHeight-main.clientHeight};});
   await page.locator('#pasteTa').hover();
   await page.mouse.wheel(0,500);

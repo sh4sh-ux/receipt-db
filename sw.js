@@ -1,6 +1,6 @@
 const CACHE_PREFIX='receipt-db-shell-';
 // ⚠️ APP_VERSION과 같이 올릴 것(scripts/check_app.py가 확인). 이 파일 내용이 바뀌어야 폰이 새 서비스 워커를 설치한다.
-const APP_VERSION='v5.34';
+const APP_VERSION='v5.38';
 const CACHE_NAME=CACHE_PREFIX+APP_VERSION;
 const SHELL=[
   './prepaid.js',
@@ -51,14 +51,8 @@ self.addEventListener('activate',event=>{
         .filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE_NAME)
         .map(key=>caches.delete(key))))
       .then(()=>self.clients.claim())
-      .then(()=>self.clients.matchAll({type:'window',includeUncontrolled:true}))
-      .then(clients=>Promise.all(clients.map(client=>{
-        // v5.25처럼 controllerchange 수신기가 없는 열린 문서도 새 워커가 직접 갱신한다.
-        const url=new URL(client.url);
-        if(url.origin!==self.location.origin||url.searchParams.get('__app_v')===APP_VERSION)return;
-        url.searchParams.set('__app_v',APP_VERSION);
-        return client.navigate(url.href);
-      })))
+      // v5.36 — 열린 화면을 워커가 직접 navigate하지 않는다. 입력 중인 화면까지 새로고침돼 글이 사라졌다.
+      //          갱신 시점은 페이지가 controllerchange에서 입력 상태를 보고 정한다(_appUpdateBusy).
   );
 });
 

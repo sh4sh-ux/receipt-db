@@ -11,7 +11,7 @@
 - 외부 의존성 없음 — 순수 HTML + CSS + Vanilla JS. 아이콘은 인라인 SVG 위주 + 로컬 PNG 소수 (CDN·외부 폰트 없음)
 
 ## 현재 파일
-- `index.html` — 앱 전체 (HTML/CSS/JS 통합, 약 1MB·1만4천 줄)
+- `index.html` — 앱 전체 (HTML/CSS/JS 통합, 약 1.2MB·1만6천 줄)
 - `prepaid.js` · `prepaid.css` — **멤버십 탭**(v4.29 — 구독 + 선불권, 아래 「멤버십」) · 선불권 화면(계산·저장·화면). v4.25 상세 = 월렛 카드 · 아이콘 버튼 · 월별 내역(잔액·화살표 없음) · 줄을 누르면 기록 창(`ppRecordSheet`: 보기 → 수정/삭제 확인). **수정은 `ppCommitEdit`로 void + 새 기록을 한 트랜잭션**(원본 기록을 고쳐 쓰지 말 것 — 선불권 기록은 추가만 한다), 결제 영수증이 연결된 기록은 수정 불가. 새 클래스는 `ppx-` 접두어(기존 `.pp-*`·`.ppw-*`와 겹치지 않게)
 - `advance.js` · `advance.css` — **대납**(v4.32, 아래 「대납」). 클래스 `advx-` 접두어
 - `sw.js` — 서비스 워커. 모든 셸 파일 network-first(오프라인일 때만 캐시)
@@ -20,7 +20,8 @@
 - `CLAUDE.md` — 이 파일(규칙·함정·현재 상태). **변경 이력은 `CHANGELOG.md`**
 - `icons/` — PWA 아이콘(`icon-192/512.png`, `apple-touch-icon.png`) + 카테고리 `icons/categories/*.svg` 16종
 - `scripts/check_app.py` — 릴리스 검사(버전·README·`CACHE_NAME` 일치, 오프라인 파일·아이콘, **Dropbox 삭제·덮어쓰기 금지 규칙**). **push 전에 실행**
-- `scripts/check_prepaid.cjs` — 선불권 계산 검사
+- `scripts/check_*.cjs` — Playwright·Node 검사(배포 버튼은 `check_app.py`만 돌리므로 **push 전에 직접 돌릴 것**). 크롬 경로는 `CHROMIUM_PATH` 또는 `/usr/bin/chromium`, `NODE_PATH`에 playwright 위치. 서비스워커가 열린 화면을 새로고침하면 검사 상태가 사라지므로 새 검사는 `serviceWorkers:'block'`으로 컨텍스트를 만든다(`check_service_worker_update`만 허용).
+  `check_prepaid`(선불권 계산) · `check_duplicate_photo`(복사본 사진) · `check_detail_item_reorder`(품목 순서) · `check_detail_draft_total`(상세 합계) · `check_period_layout`(월 탐색·범례) · `check_date_picker`(날짜·시간 선택기 — 마지막 단계가 옆 폴더의 더치페이 앱 `../dutch-pay`를 필요로 함) · `check_service_worker_update`(자동 갱신·입력 중 보류) · `check_today_date`(한국 시간 새벽 오늘 날짜)
 - `scripts/receipt_png_to_receipt_db.py` — PNG/JPG 영수증 스크린샷 자동 등록 (맥에서 실행)
 - `scripts/extract_category_svgs.py` — 이전 Illustrator SVG 정리 도구. 확인 적용된 숙박 자산은 덮어쓰지 않도록 제외
 - `.github/workflows/deploy.yml` — **'영수증 배포' 버튼**(workflow_dispatch). 사용자가 GitHub → Actions → 영수증 배포 → Run workflow로 직접 배포한다(검사 후 작업 브랜치를 main에 fast-forward). 일회성 패치 3개는 삭제(v4.57 이후)
@@ -476,6 +477,8 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 정보 상자 드롭다운(결제자·결제수단, 추가·상세)은 앱 안 상자 `_kvsOpen`(v4.35, 카테고리와 같은 모양·폭 = 그 칸). `<select>`는 `pointer-events:none`으로 값·이벤트만 — 칸(.kv)이 누름을 받는다. 새 select 칸도 `.detail-kv-grid .kv` 안이면 저절로 적용. 열리는 방향은 화면이 아니라 **스크롤 영역(.main-body·창) 아래 끝** 기준(v4.37 — 폰 저장 바 뒤로 숨었다). `'__'`로 시작하는 값은 선 아래 특수 항목.
 - 날짜·시간 칸은 직접 그린 글자 + 투명 `date`/`time` input(v4.02). 코드로 value를 넣는 칸은 `_kvHookValue`로 표시를 갱신한다.
 **JS**
+- **'오늘 날짜'는 `_todayYMD()`(로컬)로.** `new Date().toISOString().slice(0,10)`은 UTC라 한국 시간 00:00~09:00에 어제가 된다(v5.35, `check_today_date.cjs`). `nowISO()`(UTC 타임스탬프)는 괜찮다.
+- **새 버전 자동 새로고침은 입력 중이면 미룬다**(v5.36). 서비스워커는 화면을 `navigate`하지 않고, 페이지가 `controllerchange`에서 `_appUpdateBusy()`로 판단한다. 새로 '저장 전 상태'가 생기는 화면은 `_appUpdateBusy`에 넣을 것(앱에 초안 저장이 없어 새로고침하면 사라진다).
 - 같은 이름의 함수를 두 번 선언하면 뒤의 것이 조용히 덮는다(v3.79 — `_setSaveState` 충돌로 추가 화면 저장이 안 켜졌다).
 - `renderDetail`은 동기화 뒤에도 불린다 — 열린 목록 팝업(`.mtg-sheet-backdrop`)을 지우지 말 것(v4.17, 창이 저절로 닫힘).
 - 오버레이(시트·모달·drill-down)는 반드시 `_ovPush`/`_ovDismiss`로 history에 올린다 — 안 하면 iOS 뒤로 스와이프가 밑 화면을 건드리거나 새로고침된다(v3.72~73, 유령 오버레이 v3.90).
@@ -503,9 +506,9 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - **레일 '추가'를 다른 탭에서 누르면 빈 화면**(`_freshAddScreen`) — 붙여넣은 글·직접 입력 칸·사진이 있었으면 비우고 '되돌리기' 알림. 이미 추가 화면에서 다시 눌러도 건드리지 않는다. 사람 화면 '+ 영수증 추가'(`_qcCtxNext`)·`#r=` 링크는 이 경로를 쓰지 않거나 사람만 넘기므로 영향 없음.
 - 문장 속 이름 뒤 조사(이/가·과/와)는 **`_psnJosa(이름,'이','가')`로 붙인다**(받침 기준) — '이'로 고정하지 말 것(v4.40, '어머니이 …').
 
-## 현재 상태 (2026-09-27 기준)
-- **버전 `v4.63`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포).
-- 데이터: 실데이터 백업 기준 영수증 151건(2025-03 ~ 2026-09), 사진 142장, 선불권 사용. 3,000건 가상 데이터에서도 목록 0.01초·검색 0.1초·사람 화면 0.4초(데스크탑).
+## 현재 상태 (2026-10-29 기준)
+- **버전 `v5.37`**. GitHub `sh4sh-ux/receipt-db`(GitHub Pages 배포). v4.64~는 Claude Code 웹 세션, v4.85~v5.28(PR #120~#163)은 Codex가 작업했다 — 두 곳에서 번갈아 작업하므로 **시작할 때 `git fetch` 후 `origin/main`을 기준으로** 브랜치를 맞출 것(브랜치가 낡아 있었다).
+- 데이터: 실데이터 백업 기준(2026-09-27 점검) 영수증 151건(2025-03 ~ 2026-09), 사진 142장, 선불권 사용. 3,000건 가상 데이터에서도 목록 0.01초·검색 0.1초·사람 화면 0.4초(데스크탑).
 
 ### 작업 흐름 (Claude Code 웹 세션)
 - 지정 브랜치에서 작업 → 1280·390(+375 입력 후 저장 버튼) Playwright 검증 → `check_app.py` → 커밋·push.
@@ -526,8 +529,8 @@ v2.32까지는 감시 폴더를 아예 분리해 두었지만(맥=`01_Personal/�
 - 저장공간 영구 보존은 요청만 한다(v4.04) — 허용 여부는 브라우저 몫. Dropbox 미연결 기기는 여전히 그 기기에만 데이터가 있다(빨간 띠 `#connWarn`).
 - 같은 날 영수증 정렬은 `date+time+id` — 시간 없는 옛 영수증이 최신순에서 시간 있는 것보다 위로 간다(v4.00).
 
-## 다음 작업 후보 (2026-09-27 점검)
+## 다음 작업 후보 (2026-10-29 점검)
 - **카테고리 자동 분류 보강**: `CAT_RULES`에 흔한 매장(스타벅스·이디야·투썸·메가커피·빽다방 / GS25·CU·세븐일레븐·이마트24 / 다이소·올리브영 등) 추가, 술집 `바` → `호프`·`펍`·`포차` 등, 학습 사전의 브랜드(첫 단어) 일치(스타벅스 새 지점 → 카페). `#r=` 링크 카테고리 미분류도 이것으로 해결될 가능성이 크다.
 - 같은 날 시간 없는 영수증 정렬(위 「알아둘 것」).
-- `.github/workflows/`의 일회성 패치 3개 삭제.
-- 호출처 없는 함수 정리: `_dbxPathExists`·`_enhanceStats`·`_fmtDayHd`·`_mtgToggleRow`·`_searchMatchReason`·`_splitModeLabel`·`_treatSummarySentence`·`participantBreakdown`(+ `_peopleBlockHtml`·`_bindPeopleUI`).
+- 배포 전 브라우저 검사: 배포 버튼은 `check_app.py`만 돌려 위 `check_*.cjs` 회귀가 배포 전에 안 잡힌다(Actions 분을 쓰고 불안정한 검사가 배포를 막을 수 있어 미룸).
+- `user-scalable=no`는 iOS 입력칸 자동 확대를 막으려는 것이라 유지한다(입력칸을 모두 16px로 키우는 대안은 품목 표 11px 입력 등 디자인이 크게 바뀐다).
