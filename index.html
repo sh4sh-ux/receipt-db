@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.45';
+  const _swVersion='v5.47';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -306,8 +306,18 @@ svg{display:block;flex-shrink:0;}
 .r-card.batch-selected{background:var(--blue-bg);box-shadow:inset 3px 0 0 var(--blue);}
 .r-card.batch-selected .r-card-check{background:var(--blue);border-color:var(--blue);}
 .r-card.batch-selected .r-card-check svg{opacity:1;transform:scale(1);}
-.batch-export-bar{display:none;border-top:1px solid var(--sep);background:color-mix(in srgb,var(--left-bg) 94%,transparent);padding:10px var(--pad-x);align-items:center;gap:9px;box-shadow:0 -8px 24px rgba(0,0,0,.06);z-index:115;}
+.batch-export-bar{display:none;flex-direction:column;border-top:1px solid var(--sep);background:color-mix(in srgb,var(--left-bg) 94%,transparent);padding:10px var(--pad-x);align-items:stretch;gap:8px;box-shadow:0 -8px 24px rgba(0,0,0,.06);z-index:115;}
 .batch-export-bar.on{display:flex;}
+.batch-export-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.batch-export-btns{display:flex;align-items:center;gap:8px;}
+.batch-export-btns .batch-export-send,.batch-export-btns .batch-export-mtg{flex:1;min-width:0;}
+.batch-export-mtg{height:34px;border-radius:9px;padding:0 10px;font-size:11px;font-weight:700;white-space:nowrap;border:1px solid var(--blue);background:var(--blue-bg);color:var(--blue-txt);}
+.batch-export-mtg:disabled{opacity:.42;cursor:not-allowed;}
+.batch-mtg-chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px 0 5px;border:1px solid var(--sep2);border-radius:13px;background:transparent;color:var(--label2);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;}
+.batch-mtg-chip i{display:grid;place-items:center;width:16px;height:16px;border-radius:5px;border:1.5px solid var(--sep2);font-style:normal;font-size:11px;color:transparent;}
+.batch-mtg-chip[aria-checked="true"]{border-color:var(--blue);background:var(--blue-bg);color:var(--blue-txt);}
+.batch-mtg-chip[aria-checked="true"] i{background:var(--blue);border-color:var(--blue);color:#fff;}
+.batch-mtg-chip:disabled{opacity:.42;cursor:not-allowed;}
 .batch-export-summary{flex:1;min-width:0;}
 .batch-export-count{font-size:12px;font-weight:700;color:var(--label);}
 .batch-export-total{font-size:10.5px;color:var(--label3);margin-top:2px;font-variant-numeric:tabular-nums;}
@@ -1809,7 +1819,7 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   /* 토스트는 하단 nav bar(68px) 위로 띄운다. 기본값(bottom:20px)이면 nav bar와 겹쳐
      메시지가 가려진다. batch-export-bar가 떠 있을 때는 그보다 더 위로 올린다. */
   .toast-container{bottom:calc(68px + env(safe-area-inset-bottom,0px) + 12px);}
-  body:has(.batch-export-bar.on) .toast-container{bottom:calc(68px + 56px + env(safe-area-inset-bottom,0px) + 12px);}
+  body:has(.batch-export-bar.on) .toast-container{bottom:calc(68px + 104px + env(safe-area-inset-bottom,0px) + 12px);}
   .icon-nav{position:fixed;z-index:120;top:auto;left:0;right:0;bottom:0;height:calc(68px + env(safe-area-inset-bottom,0px));padding:6px 18px max(6px,env(safe-area-inset-bottom,0px));border-right:none;border-top:1px solid var(--sep);background:var(--bg);background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);flex-direction:row;justify-content:space-around;gap:0;}
   .icon-nav .nav-btn,.icon-nav .nav-btn.tab{width:64px;height:52px;flex:0 0 64px;border-radius:12px;flex-direction:column;gap:3px;}
   .icon-nav .nav-btn svg{width:20px;height:20px;}
@@ -2100,8 +2110,9 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
   .photo-filter-mobile::-webkit-scrollbar{display:none;}
   .photo-filter-chip{height:31px;padding:0 10px;font-size:11.5px;}
   .batch-export-bar{position:fixed;left:0;right:0;bottom:calc(68px + env(safe-area-inset-bottom,0px));padding:10px 18px;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}
-  .batch-export-send{height:38px;font-size:12px;padding:0 14px;}
-  .batch-export-cancel{height:38px;}
+  .batch-export-send,.batch-export-mtg{height:40px;font-size:12px;padding:0 12px;}
+  .batch-export-cancel{height:40px;}
+  .side.batch-select-mode .side-list{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px));}
   .view.on{height:100%;min-height:0;display:flex;flex-direction:column;}
   .main-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
   /* ⚠️ 높이를 height로 '고정'하지 말 것. padding-top이 safe-area에 따라 달라지므로
@@ -3243,12 +3254,18 @@ body.picker-modal-open{overscroll-behavior:none;}
       <div class="side-list" id="sideList"></div>
 
       <div class="batch-export-bar" id="batchExportBar" aria-live="polite">
+        <div class="batch-export-top">
         <div class="batch-export-summary">
           <div class="batch-export-count" id="batchExportCount">0건 선택</div>
           <div class="batch-export-total" id="batchExportTotal">합계 0원</div>
         </div>
-        <button class="batch-export-cancel" id="batchExportCancel" type="button">취소</button>
-        <button class="batch-export-send" id="batchExportSend" type="button" disabled>더치페이로 보내기</button>
+        <button class="batch-mtg-chip" id="batchMtgChip" type="button" role="switch" aria-checked="false" disabled title="더치페이로 보낼 때 같은 만남으로도 묶어요(2건 이상)"><i>✓</i>만남으로도 묶기</button>
+        </div>
+        <div class="batch-export-btns">
+          <button class="batch-export-cancel" id="batchExportCancel" type="button">취소</button>
+          <button class="batch-export-mtg" id="batchMtgBtn" type="button" disabled>만남으로 묶기</button>
+          <button class="batch-export-send" id="batchExportSend" type="button" disabled>더치페이로 보내기</button>
+        </div>
       </div>
 
       <div class="side-foot">
@@ -4805,7 +4822,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.45';
+const APP_VERSION='v5.47';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -6560,6 +6577,8 @@ let _photoFilterPrevAllMonths=false;
 let _listSort='recent'; // recent(최신순) | oldest(오래된순) | amount_desc(금액 높은순) | amount_asc(금액 낮은순) | store(매장명순)
 
 // v4.00 — 누른 순서 = 더치페이로 보내는 순서(Set은 넣은 순서를 기억한다 — 빼고 다시 누르면 맨 뒤)
+// v5.47 — 선택 바: [만남으로 묶기](묶기만) · 칩 '만남으로도 묶기'(켜면 더치페이로 보낸 뒤 같은 만남으로도 묶는다, 마지막 선택 기억).
+let _batchAlsoMeeting=false;try{_batchAlsoMeeting=localStorage.getItem('batchAlsoMtg')==='1';}catch(e){}
 function _batchSelectedInOrder(){return [..._batchSelectedIds].map(id=>receipts.find(r=>r.id===id)).filter(Boolean);}
 function _updateBatchExportUi(){
   const side=document.querySelector('.side');
@@ -6573,6 +6592,11 @@ function _updateBatchExportUi(){
   bar?.classList.toggle('on',_batchSelectMode);
   const count=document.getElementById('batchExportCount');if(count)count.textContent=`${selected.length}건 선택`;
   const totalEl=document.getElementById('batchExportTotal');if(totalEl)totalEl.textContent=selected.length>1?`합계 ${fmtMoney(total)}원 · 누른 순서대로 보내요`:`합계 ${fmtMoney(total)}원`;
+  const mtgBtn=document.getElementById('batchMtgBtn');if(mtgBtn)mtgBtn.disabled=selected.length<2||_dutchPaySending;
+  const mtgChip=document.getElementById('batchMtgChip');if(mtgChip){
+    mtgChip.disabled=selected.length<2||_dutchPaySending;
+    mtgChip.setAttribute('aria-checked',String(_batchAlsoMeeting&&selected.length>=2));
+  }
   const send=document.getElementById('batchExportSend');if(send){
     send.disabled=!selected.length||_dutchPaySending;
     send.classList.toggle('sending',_dutchPaySending);
@@ -7004,7 +7028,24 @@ document.getElementById('batchSelectToggle').addEventListener('click',()=>_setBa
 document.getElementById('batchExportCancel').addEventListener('click',()=>_setBatchSelectMode(false));
 document.getElementById('batchExportSend').addEventListener('click',()=>{
   const selected=_batchSelectedInOrder(); // v4.00 — 누른 순서대로
-  sendReceiptsToDutchPay(selected).then(ok=>{if(ok)_setBatchSelectMode(false);});
+  const alsoMtg=_batchAlsoMeeting&&selected.length>=2;
+  const ids=selected.map(r=>r.id);
+  // 더치페이 창은 사용자 누름 안에서 바로 열어야 해서(v5.24) 보내기가 먼저, 만남 묶기는 보내기가 성공한 뒤에 한다.
+  sendReceiptsToDutchPay(selected).then(async ok=>{
+    if(!ok)return;
+    _setBatchSelectMode(false);
+    if(alsoMtg){const fresh=ids.map(id=>receipts.find(r=>r.id===id)).filter(Boolean);if(fresh.length>=2)await _mtgCreateMeeting(fresh);}
+  });
+});
+document.getElementById('batchMtgBtn').addEventListener('click',async()=>{
+  const selected=_batchSelectedInOrder();
+  if(selected.length<2)return;
+  if(await _mtgCreateMeeting(selected))_setBatchSelectMode(false);
+});
+document.getElementById('batchMtgChip').addEventListener('click',()=>{
+  _batchAlsoMeeting=!_batchAlsoMeeting;
+  try{localStorage.setItem('batchAlsoMtg',_batchAlsoMeeting?'1':'0');}catch(e){}
+  _updateBatchExportUi();
 });
 
 function updateStats(){
@@ -8866,6 +8907,8 @@ function _searchIsPerson(q){
   if(q.startsWith('결제자 ')||q.startsWith('참석자 '))return true;
   return qL.length>=2&&receipts.some(r=>((r.paidBy||'').trim()&&(r.paidBy||'').toLowerCase().includes(qL))||(r.participants||[]).some(x=>String(x).toLowerCase().includes(qL)));
 }
+// v5.47 — 내역 선택 바: [만남으로 묶기](묶기만, 2건 이상) + 칩 '만남으로도 묶기'(켜면 [더치페이로 보내기]가 보낸 뒤 같은 만남으로도 묶음, `batchAlsoMtg`에 기억). 보내기가 먼저(더치페이 창은 누름 안에서 열어야 함, v5.24), 묶기는 성공 뒤 `_mtgCreateMeeting`(확인·경고 그대로).
+// v5.46 — 검색 품목 줄을 화면 가운데로 다시 맞춘다(`_centerHighlight`: 사진·펼침으로 높이가 늦게 바뀌어도 0.15·0.45·0.9초 뒤 재조정, 사용자가 손대면 중단, 여러 줄이면 묶음의 가운데).
 // v5.45 — 검색해서 연 영수증 상세에서 검색어에 걸린 품목 줄(+ 그 품목에 반영된 할인 줄)을 녹색으로 표시하고 처음 한 번 그 줄로 스크롤한다.
 let _hlScrolledFor=null;
 function _searchHitIdx(r){
@@ -8884,7 +8927,24 @@ function _applyItemHighlight(r,tbl){
   trs.forEach(tr=>{const i=+tr.dataset.idx,it=items[i];if(!it)return;
     if(hit.includes(i)){tr.classList.add('item-hl');if(!first)first=tr;}
     else if((it.amount||0)<0&&discNames.has(it.name||'할인'))tr.classList.add('item-hl','item-hl-sub');});
-  if(first&&_hlScrolledFor!==r.id){_hlScrolledFor=r.id;requestAnimationFrame(()=>{try{first.scrollIntoView({block:'center'});}catch(e){}});}
+  if(first&&_hlScrolledFor!==r.id){_hlScrolledFor=r.id;_centerHighlight(tbl,r.id);}
+}
+// v5.46 — 검색한 품목이 화면 가운데에 오게 스크롤. 사진·품목 펼침 때문에 높이가 늦게 바뀌므로 몇 번 다시 맞추고, 사용자가 손대면(스크롤·터치) 멈춘다.
+// 같은 품목이 여럿이면 그 묶음의 가운데를(화면에 안 들어가면 첫 줄을) 가운데로.
+function _centerHighlight(tbl,rid){
+  const box=tbl.closest('.main-body');if(!box)return;
+  let touched=false;const stop=()=>{touched=true;};
+  ['wheel','touchstart','pointerdown','keydown'].forEach(ev=>box.addEventListener(ev,stop,{once:true,passive:true}));
+  const run=()=>{
+    if(touched||selectedId!==rid||!tbl.isConnected)return;
+    const rows=[...tbl.querySelectorAll('tr.item-hl:not(.item-hl-sub)')];if(!rows.length)return;
+    const cr=box.getBoundingClientRect(),a=rows[0].getBoundingClientRect(),z=rows[rows.length-1].getBoundingClientRect();
+    const span=z.bottom-a.top,fits=span<=cr.height*0.8;
+    const mid=fits?(a.top+z.bottom)/2:(a.top+a.bottom)/2;
+    const dy=mid-(cr.top+cr.height/2);
+    if(Math.abs(dy)>2)box.scrollTop+=dy;
+  };
+  requestAnimationFrame(run);[150,450,900].forEach(t=>setTimeout(run,t));
 }
 // v5.44 — 폰 내역 탭 검색 결과 위 요약 줄({q 구매 N회 · 총 · 평균 단가}). 사람 이름 검색(사람 요약 화면)이면 null.
 function _searchStripData(q,filtered){
