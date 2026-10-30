@@ -8271,7 +8271,7 @@ saveBtn.addEventListener('click',async()=>{
 // ── v3.35 분담 방식 UI 컨트롤러(추가·상세 폼 공용) ──────────────────
 // 참석자 텍스트에서 칩을 만들고, 한턱 토글 + 개별 제외를 관리한다.
 // getState()가 {treat, splitExclude} 를 반환 — 저장 시 그대로 rec에 넣는다.
-// v5.51 — 한턱 중에도 깍두기 가능: 한턱 주체(결제자·공동 한턱 주체)만 '전액' 고정, 나머지는 받음↔깍두기(곁에 있던 사람은 한턱 받는 사람이 아님). 금액은 그대로(결제자 전액).
+// v5.51 — 한턱 중에도 깍두기 가능: 한턱 주체(결제자·공동 한턱 주체)만 '전액' 고정, 나머지는 0원↔깍두기(곁에 있던 사람은 한턱 받는 사람이 아님). 금액은 그대로(결제자 전액).
 function _makeSplitUI(o){
   let treat=false; const excluded=new Set();
   let treatBy=null; // null=개인(paidBy) 한턱 / {type:'relationGroup',groupId,members:[...]}=공동 한턱
@@ -8326,7 +8326,7 @@ function _makeSplitUI(o){
       const subjN=treat?_treatSubjectNames(payer):[];
       const isSubj=treat&&(isPayer||subjN.includes(normalizeName(n)));
       const ex=!isSubj&&excluded.has(n);
-      const st=treat?(isSubj?'전액':(ex?'깍두기':'받음')):(ex?'깍두기':'분담');
+      const st=treat?(isSubj?'전액':(ex?'깍두기':'0원')):(ex?'깍두기':'분담');
       const e=escapeHtml(n);
       return `<div class="ppc${isMe?' me':''}${ex?' excl':''}${treat?' treat':''}" data-n="${e}">`
         +`<span class="ppc-nm">${e}</span>`
@@ -8361,8 +8361,8 @@ function _makeSplitUI(o){
     o.chips.innerHTML=pp.map(n=>{
       const isPayer=payer&&n===payer;
       let cls='pp-chip',tag='';
-      const isSubj=treat&&(isPayer||_treatSubjectNames(payer).includes(normalizeName(n))); // v5.51 — 한턱 주체만 고정, 나머지는 받음↔깍두기
-      if(treat){ if(isSubj){cls+=' payer';tag='<span class="pp-chip-tag">전액</span>';} else if(excluded.has(n)){cls+=' excl';tag='<span class="pp-chip-tag excl">깍두기</span>';} else {cls+=' zero';tag='<span class="pp-chip-tag">받음</span>';} }
+      const isSubj=treat&&(isPayer||_treatSubjectNames(payer).includes(normalizeName(n))); // v5.51 — 한턱 주체만 고정, 나머지는 0원↔깍두기
+      if(treat){ if(isSubj){cls+=' payer';tag='<span class="pp-chip-tag">전액</span>';} else if(excluded.has(n)){cls+=' excl';tag='<span class="pp-chip-tag excl">깍두기</span>';} else {cls+=' zero';tag='<span class="pp-chip-tag">0원</span>';} }
       else if(excluded.has(n)){cls+=' excl';tag='<span class="pp-chip-tag excl">제외</span>';}
       else {cls+=' split';if(isPayer)cls+=' payer';tag='<span class="pp-chip-tag split">분담</span>';}
       // (v3.81부터 Add·Detail 모두 o.cards 칩을 쓴다 — 이 기본 칩 경로는 옵션 없이 호출하는 경우용으로 남김)
