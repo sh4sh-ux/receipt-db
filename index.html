@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.51';
+  const _swVersion='v5.52';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -292,6 +292,7 @@ svg{display:block;flex-shrink:0;}
 .r-card-info{flex:1;min-width:0;}
 .r-card-store-row{display:flex;align-items:center;gap:6px;min-width:0;}
 .r-card-store{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.r-copy-tag{font-weight:500;color:var(--blue-txt,var(--blue));}
 .r-photo-status{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 18px;}
 .r-photo-status svg{width:18px;height:18px;}
 .r-photo-status.missing{color:var(--amber);}
@@ -3022,17 +3023,19 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 }
 /* ══ v4.00 선택 순서 번호 · 일자 칸의 시간 ══ */
 .r-card-no{font-size:11.5px;font-weight:700;line-height:1;color:#fff;font-variant-numeric:tabular-nums;}
-.kv-dt-row{display:flex;align-items:center;gap:10px;min-width:0;}
-.kv-date{position:relative;display:flex;align-items:center;flex:1 1 auto;min-width:0;cursor:pointer;}
+.kv-dt-row{display:flex;align-items:center;gap:0;min-width:0;}
+.kv-date{position:relative;display:flex;align-items:center;flex:1 1 0;min-width:max-content;cursor:pointer;}
 .kv-date-txt{font-size:var(--fs-body);line-height:1.4;color:var(--text-primary);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .kv-date.empty>.kv-date-txt{font-size:13px;font-weight:600;color:var(--blue);}
 .kv-date>.kv-date-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px;cursor:pointer;}
 .kv-date>.kv-date-inp:disabled{cursor:default;}
-.kv-time{position:relative;display:inline-flex;align-items:center;flex:0 0 auto;margin:-6px -8px;padding:6px 8px;cursor:pointer;}
+.kv-time{position:relative;display:flex;align-items:center;flex:1 1 0;min-width:0;margin:-6px 0;padding:6px 0 6px 14px;cursor:pointer;}
+/* v5.52 — 더치페이 일시 칸처럼 날짜·시간을 정확히 반반, 가운데에 구분선(|) */
+.kv-time::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:1px;height:16px;background:var(--sep);}
 /* v4.03 — 시간은 보조 정보: 날짜보다 작고 옅게(빈 칸 '+ 시간'도 회색) */
 .kv-time-txt{font-size:13px;line-height:1.4;color:var(--text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap;}
 .kv-time.empty>.kv-time-txt{font-size:12.5px;font-weight:500;color:var(--text-tertiary);}
-@media(max-width:380px){.kv-dt-row{gap:6px;}.kv-time-txt{font-size:12px;}.kv-time.empty>.kv-time-txt{font-size:12px;}}
+@media(max-width:380px){.kv-time-txt{font-size:12px;}.kv-time.empty>.kv-time-txt{font-size:12px;}}
 @media(max-width:365px){.kv-date-txt{font-size:13px;letter-spacing:-.2px;}}
 .kv-time>.kv-time-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px;cursor:pointer;}
 /* v4.95 — PC·모바일 모두 같은 앱 안 24시간 선택기를 쓴다. */
@@ -4858,7 +4861,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.51';
+const APP_VERSION='v5.52';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -6875,7 +6878,7 @@ function _cardHtml(r, reason){
   return `<div class="r-card${sel}${batchSel}" data-id="${escapeHtml(r.id)}" ${batchA11y} tabindex="0">
     <button class="r-card-check" type="button" tabindex="-1" aria-hidden="true">${batchNo?`<span class="r-card-no">${batchNo}</span>`:''}</button>
     <div class="r-card-info">
-      <div class="r-card-store-row">${photoStatusIcon}<div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div></div>
+      <div class="r-card-store-row">${photoStatusIcon}<div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}${r.isCopy?' <span class="r-copy-tag">(복사본)</span>':''}</div></div>
       <div class="r-card-meta">${meta.join(' · ')}</div>
       ${reasonHtml}
     </div>
@@ -8272,6 +8275,7 @@ saveBtn.addEventListener('click',async()=>{
 // 참석자 텍스트에서 칩을 만들고, 한턱 토글 + 개별 제외를 관리한다.
 // getState()가 {treat, splitExclude} 를 반환 — 저장 시 그대로 rec에 넣는다.
 // v5.51 — 한턱 중에도 깍두기 가능: 한턱 주체(결제자·공동 한턱 주체)만 '전액' 고정, 나머지는 0원↔깍두기(곁에 있던 사람은 한턱 받는 사람이 아님). 금액은 그대로(결제자 전액).
+// v5.52 — 복사본 표시(isCopy)·품목 전체 삭제·일자/시간 반반 레이아웃은 CHANGELOG 참고.
 function _makeSplitUI(o){
   let treat=false; const excluded=new Set();
   let treatBy=null; // null=개인(paidBy) 한턱 / {type:'relationGroup',groupId,members:[...]}=공동 한턱
@@ -12392,6 +12396,7 @@ async function renderDetail(){
           <button class="ghost-mini item-reorder-btn" id="reorderItemBtn" type="button" aria-pressed="false">⇅ 순서</button>
           <button class="ghost-mini" id="addItemBtn">+ 추가</button>
           <button class="ghost-mini" id="pasteItemsBtn" type="button">붙여넣기</button>
+          <button class="ghost-mini" id="clearItemsBtn" type="button">전체 삭제</button>
         </div>
         <table class="items-table" id="itemsTable">
           <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
@@ -12567,6 +12572,20 @@ async function renderDetail(){
   _bindDetailItemTableEvents(r);
 
   document.getElementById('pasteItemsBtn')?.addEventListener('click',()=>_itemsPasteSheet(r));
+  // v5.52 — 품목 전체 삭제(붙여넣기 전에 비우기). 총액도 0원이 되고, 실수 대비 '되돌리기' 알림을 남긴다.
+  document.getElementById('clearItemsBtn')?.addEventListener('click',async()=>{
+    _syncDetailFromInputs(r);
+    if(!(r.items||[]).length){toast('지울 품목이 없어요',{type:'success'});return;}
+    if(!confirm(`품목 ${r.items.length}개를 모두 지울까요? 총액도 0원이 돼요.`))return;
+    const prev={items:JSON.parse(JSON.stringify(r.items)),total:r.total};
+    r.items=[];r.total=0;r.updatedAt=nowISO();
+    await dbPut('receipts',r);await loadAll();await renderDetail();dbxSyncNow(true);
+    toast(`품목 ${prev.items.length}개를 지웠어요`,{type:'success',duration:8000,actionLabel:'되돌리기',action:async()=>{
+      const cur=receipts.find(x=>x.id===r.id);if(!cur)return;
+      cur.items=prev.items;cur.total=prev.total;cur.updatedAt=nowISO();
+      await dbPut('receipts',cur);await loadAll();await renderDetail();dbxSyncNow(true);
+    }});
+  });
   document.getElementById('addItemBtn').addEventListener('click',async()=>{
     _syncDetailFromInputs(r);
     r.items.push({name:'새 품목',quantity:1,unitPrice:0,amount:0,category:'',note:''});
@@ -12693,6 +12712,7 @@ async function renderDetail(){
       const dTotalInp=document.getElementById('dTotalAmt');
       if(dTotalInp) r.total=_parseN(dTotalInp.value);
     }
+    delete r.isCopy; // v5.52 — 저장하면 복사본 표시 해제
     r.updatedAt=nowISO();
     if(r.store&&r.category) await learnCategory(r.store,r.category);
     // v4.08 — scanPath는 화면에서 고치는 값이 아니다. 화면을 연 뒤 백그라운드 이름 정리가 바꿨을 수 있으니 DB 값을 쓴다
@@ -12729,6 +12749,7 @@ async function renderDetail(){
   // v3.47 — meetingId가 있으면(2건 이상) 더치페이 전송 범위 선택, 아니면 기존 단일 전송.
   document.getElementById('sendDutchPayBtn').onclick=()=>{ if(_mtgHasMeeting(r))_mtgOpenDutchScope(r); else sendReceiptToDutchPay(r); };
   // v3.51 — 모바일 [···] 더보기: 기존 헤더 액션(더치페이·되돌리기·삭제) 핸들러를 그대로 재사용
+  document.getElementById('detailCopyBtn').textContent=r.isCopy?'복사본':'복사'; // v5.52
   document.getElementById('detailCopyBtn').onclick=()=>_duplicateReceipt(r);
   const _moreBtn=document.getElementById('detailMoreBtn');
   if(_moreBtn)_moreBtn.onclick=()=>_openDetailMoreMenu(r);
@@ -12792,6 +12813,7 @@ async function _duplicateReceipt(r){
   // 사진 필드를 비우는 것만으로는 상세 렌더 직후 Dropbox 완료본 복구가 같은
   // 날짜·매장·금액의 원본 사진을 다시 붙일 수 있다. 복사본은 명시적으로 복구 제외한다.
   c.photoDetached=true;
+  c.isCopy=true; // v5.52 — 저장하기 전까지 목록·버튼에 '복사본' 표시
   if(src.subId&&Array.isArray(c.tags))c.tags=c.tags.filter(t=>t!=='구독');
   c.id=_newId(c.date);c.createdAt=now;c.updatedAt=now;
   await dbPut('receipts',c);
