@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.52';
+  const _swVersion='v5.53';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -3523,7 +3523,6 @@ body.picker-modal-open{overscroll-behavior:none;}
               </div>
             </div>
             <div class="addx-memo">
-              <div class="section-hd">메모·태그</div>
               <div class="field-g">
                 <label class="field-lbl">메모</label>
                 <textarea id="noteInp" class="field-ta" style="min-height:60px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="메모"></textarea>
@@ -4859,7 +4858,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.52';
+const APP_VERSION='v5.53';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -12290,7 +12289,7 @@ async function renderDetail(){
       document.getElementById('navLedgerBtn')?.classList.add('on');
     }
   });
-  title.textContent=r.store||'(매장명 없음)';
+  title.textContent=(r.store||'(매장명 없음)')+(r.isCopy?' (복사본)':''); // v5.53 — 복사본은 폰에서도 바로 알아보게 제목에
   sub.textContent=`${fmtDateKor(r.date)}${r.time?' '+r.time:''} · ${fmtMoney(r.total)}원`;
   actions.style.display='flex';
   _detailOrigItems=JSON.parse(JSON.stringify(r.items||[]));
@@ -12380,7 +12379,7 @@ async function renderDetail(){
     <div class="detail-expense-block" aria-label="상세내역">
       <div class="det-hd-card" id="detailItemsHeader">
         <div class="det-hd-info">
-          <div class="det-hd-store">${escapeHtml(r.store||'(매장명 없음)')}${_detPaidBy?`<span class="det-payer-badge">${_detPaidBy}</span>`:''}</div>
+          <div class="det-hd-store">${escapeHtml((r.store||'(매장명 없음)')+(r.isCopy?' (복사본)':''))}${_detPaidBy?`<span class="det-payer-badge">${_detPaidBy}</span>`:''}</div>
         </div>
         <div class="det-hd-amt">${fmtMoney(r.total)}원</div>
         <button class="det-expense-toggle" id="detailItemsToggle" type="button" aria-expanded="${_detailItemsExpanded}" aria-controls="detailItemsPanel" aria-label="품목 내역 ${_detailItemsExpanded?'접기':'펼치기'}">
@@ -12432,8 +12431,7 @@ async function renderDetail(){
           ${memoFieldsHtml}
         </div>
       </div>`
-    :`<div class="section-hd detail-memo-desktop">메모·태그</div>
-      ${memoFieldsHtml}`}
+    :`${memoFieldsHtml}`}
 
     <div class="detail-footer">
       <div class="detail-meta">ID: ${escapeHtml(r.id)} · 생성 ${escapeHtml(r.createdAt?r.createdAt.slice(0,16).replace('T',' '):'—')} · 수정 ${escapeHtml(r.updatedAt?r.updatedAt.slice(0,16).replace('T',' '):'—')}</div>
@@ -12519,6 +12517,13 @@ async function renderDetail(){
     });
   }
 
+  // v5.53 — 매장명을 고치는 대로 위쪽 제목(헤더)과 상단 카드 제목도 바로 바꾼다
+  const _storeInp=body.querySelector('[data-field="store"]');
+  if(_storeInp)_storeInp.addEventListener('input',()=>{
+    const v=(_storeInp.value.trim()||'(매장명 없음)')+(r.isCopy?' (복사본)':'');
+    const t=document.getElementById('mainTitle');if(t)t.textContent=v;
+    const hs=body.querySelector('.det-hd-store');if(hs&&hs.firstChild&&hs.firstChild.nodeType===3)hs.firstChild.textContent=v;
+  });
   // 정보 필드 dirty 추적 (날짜·시간 선택기는 공통 위임 핸들러가 연다)
   body.querySelectorAll('.kv .kv-inp').forEach(inp=>{
     inp.addEventListener('input',()=>_detailSetDirty(true));
@@ -12963,7 +12968,7 @@ function _dateOpen(inp){
     // 상세/추가 화면 달력은 portal이 아니므로 기존처럼 각 일자 입력칸의 폭을 그대로 쓴다.
     const kvr=anchor?anchor.getBoundingClientRect():r,width=search?search.width:Math.min(_pickerPcWidth(anchor),vw-16),left=search?search.left:Math.max(8,Math.min(kvr.left,vw-width-8));
     pop.style.width=`${width}px`;pop.style.left=`${left}px`;
-    let top=r.bottom+8;if(top+pop.offsetHeight>vh-8)top=r.top-pop.offsetHeight-8;
+    let top=kvr.bottom+8;if(top+pop.offsetHeight>vh-8)top=kvr.top-pop.offsetHeight-8; // v5.53 — 시간 창과 같은 높이(일자 칸 아래)에서 열린다
     pop.style.top=`${Math.max(8,top)}px`;
   }else{anchor.appendChild(pop);anchor.classList.add('date-open');}
   if(anchor)anchor.classList.add('date-open');
