@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.51';
+  const _swVersion='v5.52';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -292,6 +292,7 @@ svg{display:block;flex-shrink:0;}
 .r-card-info{flex:1;min-width:0;}
 .r-card-store-row{display:flex;align-items:center;gap:6px;min-width:0;}
 .r-card-store{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.r-copy-tag{font-weight:500;color:var(--blue-txt,var(--blue));}
 .r-photo-status{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 18px;}
 .r-photo-status svg{width:18px;height:18px;}
 .r-photo-status.missing{color:var(--amber);}
@@ -3037,14 +3038,14 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .kv-time>.kv-time-inp{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px;cursor:pointer;}
 /* v4.95 — PC·모바일 모두 같은 앱 안 24시간 선택기를 쓴다. */
 .kv.time-open{position:relative;z-index:45;border-color:var(--blue);}
-.time-pop{position:absolute;z-index:46;top:calc(100% + 8px);left:-1px;right:-1px;padding:14px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:var(--app-shadow);cursor:default;}
+.time-pop{position:absolute;z-index:46;top:calc(100% + 8px);left:-1px;right:-1px;padding:0 10px 10px;background:var(--card);border:1px solid var(--sep2);border-radius:14px;box-shadow:var(--app-shadow);cursor:default;box-sizing:border-box;} /* v5.52 — 더치페이 v6.85 시간 창과 같은 규격 */
 .time-pop.up{top:auto;bottom:calc(100% + 8px);}
-.time-pop-head{display:flex;align-items:center;justify-content:center;min-height:40px;margin:-14px -14px 10px;padding:3px 12px;border-bottom:1px solid var(--sep);}
+.time-pop-head{display:flex;align-items:center;justify-content:center;min-height:49px;margin:0 -10px 7px;padding:7px 8px;border-bottom:1px solid var(--sep);}
 .time-pop-title{font-size:13px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}
 .time-pop-fields{display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:start;gap:12px;padding:2px 4px 0;}
 .time-pop-field{display:flex;min-width:0;flex-direction:column;gap:2px;font-size:11px;font-weight:600;color:var(--label3);}
-.time-pop-field>span{padding:0 8px 5px;}
-.time-pop-list{height:216px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;scroll-behavior:auto;user-select:none;-webkit-user-select:none;padding:0 4px;border:0;border-radius:0;background:transparent;scrollbar-width:none;}
+.time-pop-field>span{padding:0 0 5px;text-align:center;}
+.time-pop-list{height:198px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;scroll-behavior:auto;user-select:none;-webkit-user-select:none;padding:0 4px;border:0;border-radius:0;background:transparent;scrollbar-width:none;}
 body.picker-modal-open{overscroll-behavior:none;}
 .time-pop-list::-webkit-scrollbar{display:none;}
 .time-pop-option{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:36px;border:0;border-radius:8px;background:transparent;color:var(--label);font:inherit;font-size:14px;font-weight:400;font-variant-numeric:tabular-nums;cursor:pointer;}
@@ -3055,10 +3056,10 @@ body.picker-modal-open{overscroll-behavior:none;}
 .time-pop-option:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
 .time-pop-colon{align-self:stretch;position:relative;width:1px;margin-top:22px;background:var(--sep);color:transparent;font-size:0;}
 .time-pop-colon::after{content:':';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:4px;background:var(--card);color:var(--label3);font-size:14px;font-weight:700;}
-.time-pop-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:4px;margin-top:12px;}
-.time-pop-btn{height:34px;padding:0 3px;border:0;border-radius:8px;background:transparent;color:var(--label2);font:inherit;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;}
+.time-pop-actions{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--sep);}
+.time-pop-btn{height:32px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--label2);font:inherit;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;}
 .time-pop-btn:hover{background:var(--fill);color:var(--label);}
-.time-pop-btn.done{background:var(--blue);color:#fff;}
+.time-pop-btn.done{margin-left:auto;padding:0 16px;background:var(--blue);color:#fff;}
 .time-pop-btn.done:hover{filter:brightness(1.05);}
 @media(hover:none),(pointer:coarse){
   .kv-time-inp[type="time"]{pointer-events:none;}
@@ -4858,7 +4859,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.51';
+const APP_VERSION='v5.52';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -6875,7 +6876,7 @@ function _cardHtml(r, reason){
   return `<div class="r-card${sel}${batchSel}" data-id="${escapeHtml(r.id)}" ${batchA11y} tabindex="0">
     <button class="r-card-check" type="button" tabindex="-1" aria-hidden="true">${batchNo?`<span class="r-card-no">${batchNo}</span>`:''}</button>
     <div class="r-card-info">
-      <div class="r-card-store-row">${photoStatusIcon}<div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}</div></div>
+      <div class="r-card-store-row">${photoStatusIcon}<div class="r-card-store">${escapeHtml(r.store||'(매장명 없음)')}${r.isCopy?' <span class="r-copy-tag">(복사본)</span>':''}</div></div>
       <div class="r-card-meta">${meta.join(' · ')}</div>
       ${reasonHtml}
     </div>
@@ -8272,6 +8273,7 @@ saveBtn.addEventListener('click',async()=>{
 // 참석자 텍스트에서 칩을 만들고, 한턱 토글 + 개별 제외를 관리한다.
 // getState()가 {treat, splitExclude} 를 반환 — 저장 시 그대로 rec에 넣는다.
 // v5.51 — 한턱 중에도 깍두기 가능: 한턱 주체(결제자·공동 한턱 주체)만 '전액' 고정, 나머지는 0원↔깍두기(곁에 있던 사람은 한턱 받는 사람이 아님). 금액은 그대로(결제자 전액).
+// v5.52 — 복사본 표시(isCopy)·품목 전체 삭제·일자/시간 반반 레이아웃은 CHANGELOG 참고.
 function _makeSplitUI(o){
   let treat=false; const excluded=new Set();
   let treatBy=null; // null=개인(paidBy) 한턱 / {type:'relationGroup',groupId,members:[...]}=공동 한턱
@@ -12392,6 +12394,7 @@ async function renderDetail(){
           <button class="ghost-mini item-reorder-btn" id="reorderItemBtn" type="button" aria-pressed="false">⇅ 순서</button>
           <button class="ghost-mini" id="addItemBtn">+ 추가</button>
           <button class="ghost-mini" id="pasteItemsBtn" type="button">붙여넣기</button>
+          <button class="ghost-mini" id="clearItemsBtn" type="button">전체 삭제</button>
         </div>
         <table class="items-table" id="itemsTable">
           <thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
@@ -12567,6 +12570,20 @@ async function renderDetail(){
   _bindDetailItemTableEvents(r);
 
   document.getElementById('pasteItemsBtn')?.addEventListener('click',()=>_itemsPasteSheet(r));
+  // v5.52 — 품목 전체 삭제(붙여넣기 전에 비우기). 총액도 0원이 되고, 실수 대비 '되돌리기' 알림을 남긴다.
+  document.getElementById('clearItemsBtn')?.addEventListener('click',async()=>{
+    _syncDetailFromInputs(r);
+    if(!(r.items||[]).length){toast('지울 품목이 없어요',{type:'success'});return;}
+    if(!confirm(`품목 ${r.items.length}개를 모두 지울까요? 총액도 0원이 돼요.`))return;
+    const prev={items:JSON.parse(JSON.stringify(r.items)),total:r.total};
+    r.items=[];r.total=0;r.updatedAt=nowISO();
+    await dbPut('receipts',r);await loadAll();await renderDetail();dbxSyncNow(true);
+    toast(`품목 ${prev.items.length}개를 지웠어요`,{type:'success',duration:8000,actionLabel:'되돌리기',action:async()=>{
+      const cur=receipts.find(x=>x.id===r.id);if(!cur)return;
+      cur.items=prev.items;cur.total=prev.total;cur.updatedAt=nowISO();
+      await dbPut('receipts',cur);await loadAll();await renderDetail();dbxSyncNow(true);
+    }});
+  });
   document.getElementById('addItemBtn').addEventListener('click',async()=>{
     _syncDetailFromInputs(r);
     r.items.push({name:'새 품목',quantity:1,unitPrice:0,amount:0,category:'',note:''});
@@ -12693,6 +12710,7 @@ async function renderDetail(){
       const dTotalInp=document.getElementById('dTotalAmt');
       if(dTotalInp) r.total=_parseN(dTotalInp.value);
     }
+    delete r.isCopy; // v5.52 — 저장하면 복사본 표시 해제
     r.updatedAt=nowISO();
     if(r.store&&r.category) await learnCategory(r.store,r.category);
     // v4.08 — scanPath는 화면에서 고치는 값이 아니다. 화면을 연 뒤 백그라운드 이름 정리가 바꿨을 수 있으니 DB 값을 쓴다
@@ -12729,6 +12747,7 @@ async function renderDetail(){
   // v3.47 — meetingId가 있으면(2건 이상) 더치페이 전송 범위 선택, 아니면 기존 단일 전송.
   document.getElementById('sendDutchPayBtn').onclick=()=>{ if(_mtgHasMeeting(r))_mtgOpenDutchScope(r); else sendReceiptToDutchPay(r); };
   // v3.51 — 모바일 [···] 더보기: 기존 헤더 액션(더치페이·되돌리기·삭제) 핸들러를 그대로 재사용
+  document.getElementById('detailCopyBtn').textContent=r.isCopy?'복사본':'복사'; // v5.52
   document.getElementById('detailCopyBtn').onclick=()=>_duplicateReceipt(r);
   const _moreBtn=document.getElementById('detailMoreBtn');
   if(_moreBtn)_moreBtn.onclick=()=>_openDetailMoreMenu(r);
@@ -12792,6 +12811,7 @@ async function _duplicateReceipt(r){
   // 사진 필드를 비우는 것만으로는 상세 렌더 직후 Dropbox 완료본 복구가 같은
   // 날짜·매장·금액의 원본 사진을 다시 붙일 수 있다. 복사본은 명시적으로 복구 제외한다.
   c.photoDetached=true;
+  c.isCopy=true; // v5.52 — 저장하기 전까지 목록·버튼에 '복사본' 표시
   if(src.subId&&Array.isArray(c.tags))c.tags=c.tags.filter(t=>t!=='구독');
   c.id=_newId(c.date);c.createdAt=now;c.updatedAt=now;
   await dbPut('receipts',c);
@@ -12905,7 +12925,7 @@ function _dateOpen(inp){
   if(!inp||inp.disabled||inp.readOnly)return;
   if(_datePicker&&_datePicker.inp===inp){_dateClose(true);return;}
   _dateClose();_timeClose();_kvsClose();_closeAnyCategoryPicker();
-  const anchor=inp.closest('.kv'),portal=!anchor||!!inp.closest('.mtg-sheet'); // v5.49 — 창(.mtg-sheet) 안 날짜칸은 창 밖(body)에 띄운다(창의 스크롤 영역에 잘리던 것)
+  const anchor=inp.closest('.kv'),portal=!anchor||!!inp.closest('.mtg-sheet')||_desktopPickerMq.matches; // v5.52 — PC는 항상 body에 fixed(더치페이 desktop-portal처럼 폭 360, 칸 밑에) // v5.49 — 창(.mtg-sheet) 안 날짜칸은 창 밖(body)에 띄운다(창의 스크롤 영역에 잘리던 것)
   const now=new Date(),match=String(inp.value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/),pageMatch=String(inp.dataset.pickerMonth||'').match(/^(\d{4})-(\d{2})$/);
   const picked=match?new Date(+match[1],+match[2]-1,+match[3]):pageMatch?new Date(+pageMatch[1],+pageMatch[2]-1,1):now;
   const state={year:picked.getFullYear(),month:picked.getMonth(),mode:'day',yearStart:picked.getFullYear()-5};
@@ -12941,7 +12961,7 @@ function _dateOpen(inp){
     const r=inp.getBoundingClientRect(),searchRect=inp.id==='monthNavDate'?document.getElementById('searchInp')?.getBoundingClientRect():null,search=searchRect?.width?searchRect:null,vw=(window.visualViewport&&visualViewport.width)||innerWidth,vh=(window.visualViewport&&visualViewport.height)||innerHeight;
     // 목록의 월 달력은 월 글자(90px)가 아니라 바로 아래 검색 입력의 전체 폭을 기준으로 연다.
     // 상세/추가 화면 달력은 portal이 아니므로 기존처럼 각 일자 입력칸의 폭을 그대로 쓴다.
-    const width=search?search.width:Math.min(Math.max(r.width,280),vw-16),left=search?search.left:Math.max(8,Math.min(r.left,vw-width-8));
+    const kvr=anchor?anchor.getBoundingClientRect():r,width=search?search.width:Math.min(_pickerPcWidth(anchor),vw-16),left=search?search.left:Math.max(8,Math.min(kvr.left,vw-width-8));
     pop.style.width=`${width}px`;pop.style.left=`${left}px`;
     let top=r.bottom+8;if(top+pop.offsetHeight>vh-8)top=r.top-pop.offsetHeight-8;
     pop.style.top=`${Math.max(8,top)}px`;
@@ -12976,6 +12996,8 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='Escape')_dateClose(true);
 },true);
 let _timePicker=null;
+// v5.52 — PC 날짜·시간 창 가로폭 = 오른쪽 패널 일자 칸(.kv) 폭(사용자 요청). 좁은 화면에서도 읽히게 최소 220px.
+function _pickerPcWidth(kv){return Math.max(Math.round(kv?kv.getBoundingClientRect().width:0),220);}
 function _timeClose(focus){
   if(!_timePicker)return;const {pop,backdrop,kv,inp,mobile}=_timePicker;_timePicker=null;pop.remove();backdrop?.remove();kv.classList.remove('time-open');
   if(mobile)_pickerUnlockPage();
@@ -12996,10 +13018,10 @@ function _timeOpen(inp){
   pop.innerHTML=`<div class="time-pop-head"><div class="time-pop-title">시간 선택 · 24시간</div></div><div class="time-pop-fields"><div class="time-pop-field"><span>시</span><div class="time-pop-list" role="listbox" aria-label="시">${options(24,hour,'hour')}</div></div><span class="time-pop-colon" aria-hidden="true">:</span><div class="time-pop-field"><span>분</span><div class="time-pop-list" role="listbox" aria-label="분">${options(60,minute,'minute')}</div></div></div><div class="time-pop-actions"><button type="button" class="time-pop-btn" data-time-now>현재</button><button type="button" class="time-pop-btn" data-time-clear>지우기</button><button type="button" class="time-pop-btn done" data-time-done>완료</button></div>`;
   const mobile=!_desktopTimeMq.matches;let backdrop=null;
   if(mobile){backdrop=document.createElement('div');backdrop.className='time-pop-backdrop';document.body.append(backdrop,pop);pop.classList.add('mobile');_pickerLockPage();}
-  else if(kv.closest('.mtg-sheet')){ // v5.49 — 창 안 시간칸: PC에서 창의 overflow에 잘리지 않게 body에 fixed로
+  else if(true){ // v5.52 — PC는 항상 body에 fixed + 폭 360(더치페이처럼). (v5.49: 창 안 시간칸이 창에 잘리던 것도 같은 방식) — 창 안 시간칸: PC에서 창의 overflow에 잘리지 않게 body에 fixed로
     pop.classList.add('sheet-portal');document.body.appendChild(pop);
     const r=kv.getBoundingClientRect(),vw=(window.visualViewport&&visualViewport.width)||innerWidth,vh=(window.visualViewport&&visualViewport.height)||innerHeight;
-    const width=Math.min(Math.max(r.width,300),vw-16);pop.style.width=width+'px';pop.style.left=Math.max(8,Math.min(r.left,vw-width-8))+'px';
+    const width=Math.min(_pickerPcWidth(kv),vw-16);pop.style.width=width+'px';pop.style.left=Math.max(8,Math.min(r.left,vw-width-8))+'px';
     let top=r.bottom+8;if(top+pop.offsetHeight>vh-8)top=r.top-pop.offsetHeight-8;pop.style.top=Math.max(8,top)+'px';
   }
   else kv.appendChild(pop);
@@ -13033,7 +13055,7 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='Escape')_timeClose(true);
 },true);
 window.addEventListener('resize',()=>{_timeClose(false);_dateClose(false);});
-document.addEventListener('scroll',e=>{if(_datePicker?.portal&&!_datePicker.pop.contains(e.target))_dateClose(false);},true);
+document.addEventListener('scroll',e=>{if(_datePicker?.portal&&!_datePicker.pop.contains(e.target))_dateClose(false);if(_timePicker&&!_timePicker.mobile&&!_timePicker.pop.contains(e.target))_timeClose(false);},true);
 // v4.35 — 정보 상자의 드롭다운(결제자·결제수단)을 카테고리처럼 앱 안 상자로(사용자 요청: 칸에 딱 맞는 폭).
 //   <select>는 값·input/change 이벤트를 그대로 쓰고(저장 경로 불변) 누르는 것만 가로챈다 — select는 pointer-events:none이라
 //   칸(.kv)을 누르면 열리고, 키보드로 select에 오면 Enter·Space·↓로 연다. '__'로 시작하는 값(다른 사람…·대신 결제…)은 선 아래에.
