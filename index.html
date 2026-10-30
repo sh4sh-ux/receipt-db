@@ -12289,7 +12289,7 @@ async function renderDetail(){
       document.getElementById('navLedgerBtn')?.classList.add('on');
     }
   });
-  title.textContent=r.store||'(매장명 없음)';
+  title.textContent=(r.store||'(매장명 없음)')+(r.isCopy?' (복사본)':''); // v5.53 — 복사본은 폰에서도 바로 알아보게 제목에
   sub.textContent=`${fmtDateKor(r.date)}${r.time?' '+r.time:''} · ${fmtMoney(r.total)}원`;
   actions.style.display='flex';
   _detailOrigItems=JSON.parse(JSON.stringify(r.items||[]));
@@ -12379,7 +12379,7 @@ async function renderDetail(){
     <div class="detail-expense-block" aria-label="상세내역">
       <div class="det-hd-card" id="detailItemsHeader">
         <div class="det-hd-info">
-          <div class="det-hd-store">${escapeHtml(r.store||'(매장명 없음)')}${_detPaidBy?`<span class="det-payer-badge">${_detPaidBy}</span>`:''}</div>
+          <div class="det-hd-store">${escapeHtml((r.store||'(매장명 없음)')+(r.isCopy?' (복사본)':''))}${_detPaidBy?`<span class="det-payer-badge">${_detPaidBy}</span>`:''}</div>
         </div>
         <div class="det-hd-amt">${fmtMoney(r.total)}원</div>
         <button class="det-expense-toggle" id="detailItemsToggle" type="button" aria-expanded="${_detailItemsExpanded}" aria-controls="detailItemsPanel" aria-label="품목 내역 ${_detailItemsExpanded?'접기':'펼치기'}">
@@ -12520,7 +12520,7 @@ async function renderDetail(){
   // v5.53 — 매장명을 고치는 대로 위쪽 제목(헤더)과 상단 카드 제목도 바로 바꾼다
   const _storeInp=body.querySelector('[data-field="store"]');
   if(_storeInp)_storeInp.addEventListener('input',()=>{
-    const v=_storeInp.value.trim()||'(매장명 없음)';
+    const v=(_storeInp.value.trim()||'(매장명 없음)')+(r.isCopy?' (복사본)':'');
     const t=document.getElementById('mainTitle');if(t)t.textContent=v;
     const hs=body.querySelector('.det-hd-store');if(hs&&hs.firstChild&&hs.firstChild.nodeType===3)hs.firstChild.textContent=v;
   });
