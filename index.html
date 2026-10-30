@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.50';
+  const _swVersion='v5.51';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -4858,7 +4858,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.50';
+const APP_VERSION='v5.51';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -5387,10 +5387,11 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
     const parts=(r.participants||[]).map(v=>(v||'').trim()).filter((v,i,a)=>v&&a.indexOf(v)===i);
     const treat=!!r.treat&&parts.length>0;
     let members=parts.length?parts.slice():(payer?[payer]:people.slice()),watchers=[];
-    if(parts.length&&!treat){
+    if(parts.length){
       const ex=new Set((r.splitExclude||[]).map(v=>(v||'').trim()).filter(Boolean));
+      if(treat){ex.delete(payer);_treatSubjects(r).forEach(m=>ex.delete(m));} // v5.51 — 한턱 + 깍두기: 한턱 받는 사람만 members, 곁에 있던 사람은 watchers
       const keep=parts.filter(n=>!ex.has(n));
-      if(keep.length){members=keep;watchers=parts.filter(n=>ex.has(n));}
+      if(keep.length&&(!treat||ex.size)){members=keep;watchers=parts.filter(n=>ex.has(n));}
     }
     return {r,payer,people,members,watchers,treat};
   });
@@ -5562,7 +5563,8 @@ function _treatSubjects(r){
 function _treatRecipients(r){
   if(!r||!r.treat)return [];
   const subj=new Set(_treatSubjects(r));
-  return [...receiptPeople(r)].filter(n=>!subj.has(n));
+  const ex=new Set((r.splitExclude||[]).map(normalizeName).filter(Boolean)); // v5.51 — 한턱이어도 곁에 있던 깍두기는 '받은 사람'이 아니다
+  return [...receiptPeople(r)].filter(n=>!subj.has(n)&&!ex.has(n));
 }
 // v3.71 — 공동 한턱 판정: treat && treatBy(관계그룹·members 2명↑). 개인 한턱은 이 조건이 아니면(=treatBy 없음) 그대로.
 function _isCoTreat(r){return !!(r&&r.treat===true&&_isPlainObject(r.treatBy)&&r.treatBy.type==='relationGroup'&&Array.isArray(r.treatBy.members)&&r.treatBy.members.length>=2);}
@@ -5580,7 +5582,7 @@ function _personTreatGiving(name, pool){
 // 한 사람이 '받은' 공동/개인 한턱(receiptPeople 포함 & 주체 아님). helper 수준(§9) — 정확 구분용.
 function _personTreatReceived(name, pool){
   const n=normalizeName(name);
-  return (pool||[]).filter(r=>r.treat===true&&receiptPeople(r).has(n)&&!_treatSubjects(r).includes(n));
+  return (pool||[]).filter(r=>r.treat===true&&receiptPeople(r).has(n)&&!_treatSubjects(r).includes(n)&&!(r.splitExclude||[]).map(normalizeName).includes(n));
 }
 // 관계 그룹 단위 공동 한턱 = treatBy.groupId 일치(전역 receipts, id 유니크). members 수만큼 중복 합산 금지(§11).
 function _relGroupCoTreat(groupId){
@@ -8269,6 +8271,7 @@ saveBtn.addEventListener('click',async()=>{
 // ── v3.35 분담 방식 UI 컨트롤러(추가·상세 폼 공용) ──────────────────
 // 참석자 텍스트에서 칩을 만들고, 한턱 토글 + 개별 제외를 관리한다.
 // getState()가 {treat, splitExclude} 를 반환 — 저장 시 그대로 rec에 넣는다.
+// v5.51 — 한턱 중에도 깍두기 가능: 한턱 주체(결제자·공동 한턱 주체)만 '전액' 고정, 나머지는 받음↔깍두기(곁에 있던 사람은 한턱 받는 사람이 아님). 금액은 그대로(결제자 전액).
 function _makeSplitUI(o){
   let treat=false; const excluded=new Set();
   let treatBy=null; // null=개인(paidBy) 한턱 / {type:'relationGroup',groupId,members:[...]}=공동 한턱
@@ -8289,6 +8292,8 @@ function _makeSplitUI(o){
     }
     return cands;
   };
+  // 한턱 주체 이름(결제자 + 공동 주체) — 깍두기로 바꿀 수 없다(v5.51)
+  const _treatSubjectNames=payer=>{const out=new Set();const pn=normalizeName(payer);if(pn)out.add(pn);if(treatBy&&(treatBy.members||[]).length>=2)treatBy.members.forEach(m=>{const x=normalizeName(m);if(x)out.add(x);});return [...out];};
   const _renderTreatBy=(pp,payer)=>{
     if(!o.treatByBox)return;
     if(!treat){o.treatByBox.innerHTML='';o.treatByBox.classList.remove('on');return;}
@@ -8300,7 +8305,7 @@ function _makeSplitUI(o){
     const only=cands.length<=1; // 관계 그룹 후보 없음 → 주체 선택 UI 숨김(개인만)
     // 요약 문장(§25): 실데이터 동적
     const subj=treatBy&&(treatBy.members||[]).length>=2?treatBy.members:(payer?[payer]:[]);
-    const recip=[...new Set(pp.filter(n=>!subj.includes(n)).concat(payer&&!pp.includes(payer)?[]:[]))].filter(n=>!subj.includes(n));
+    const recip=[...new Set(pp.filter(n=>!subj.includes(n)&&!excluded.has(n)))];
     const total=o.getTotal?(o.getTotal()||0):0;
     const _subjTxt=subj.join(' · ');
     const summary=(subj.length&&total)?`<div class="tb-summary">${escapeHtml(_subjTxt)}${_psnJosa(_subjTxt,'이','가')} ${escapeHtml(recip.length?recip.join(' · '):'참석자')}에게 ${fmtMoney(total)}원 한턱</div>`:'';
@@ -8318,22 +8323,25 @@ function _makeSplitUI(o){
     o.chips.innerHTML=pp.map(n=>{
       const isMe=!!meN&&normalizeName(n)===meN;
       const isPayer=!!payer&&normalizeName(n)===normalizeName(payer);
-      const ex=!treat&&excluded.has(n);
-      const st=treat?(isPayer?'전액':'0원'):(ex?'깍두기':'분담');
+      const subjN=treat?_treatSubjectNames(payer):[];
+      const isSubj=treat&&(isPayer||subjN.includes(normalizeName(n)));
+      const ex=!isSubj&&excluded.has(n);
+      const st=treat?(isSubj?'전액':(ex?'깍두기':'받음')):(ex?'깍두기':'분담');
       const e=escapeHtml(n);
       return `<div class="ppc${isMe?' me':''}${ex?' excl':''}${treat?' treat':''}" data-n="${e}">`
         +`<span class="ppc-nm">${e}</span>`
-        +`<button type="button" class="ppc-state${ex?' excl':''}" data-st="1"${treat?' disabled':''} aria-label="${e} ${st}${treat?'':' — 눌러서 '+(ex?'분담':'깍두기')+'으로'}"><span>${st}</span></button>`
+        +`<button type="button" class="ppc-state${ex?' excl':''}" data-st="1"${isSubj?' disabled':''} aria-label="${e} ${st}${isSubj?'':' — 눌러서 '+(treat?(ex?'한턱 받음':'깍두기'):(ex?'분담':'깍두기'))+'으로'}"><span>${st}</span></button>`
         +(o.onRemove?`<button type="button" class="ppc-x" data-rm="1" aria-label="${e} 빼기">×</button>`:'')
         +`</div>`;
     }).join('');
     o.chips.querySelectorAll('.ppc').forEach(c=>{
       const n=c.dataset.n;
-      c.querySelector('[data-st]').onclick=()=>{if(treat)return;if(excluded.has(n))excluded.delete(n);else excluded.add(n);render();o.onChange&&o.onChange();};
+      c.querySelector('[data-st]').onclick=()=>{if(treat&&(normalizeName(n)===normalizeName(payer)||_treatSubjectNames(payer).includes(normalizeName(n))))return;if(excluded.has(n))excluded.delete(n);else excluded.add(n);render();o.onChange&&o.onChange();};
       const x=c.querySelector('[data-rm]');if(x)x.onclick=()=>o.onRemove(n);
     });
     const total=o.getTotal?(o.getTotal()||0):0;
-    if(treat){o.hint.textContent=`한턱 — ${payer?payer+_psnJosa(payer,'이','가'):'결제자가'} 전액 부담${total?` (${fmtMoney(total)}원)`:''}, 나머지 ${Math.max(pp.length-1,0)}명은 0원(참석은 유지).`;}
+    if(treat){const exT=[...excluded].filter(x=>pp.includes(x)&&!_treatSubjectNames(payer).includes(normalizeName(x))&&normalizeName(x)!==normalizeName(payer));
+      o.hint.textContent=`한턱 — ${payer?payer+_psnJosa(payer,'이','가'):'결제자가'} 전액 부담${total?` (${fmtMoney(total)}원)`:''}, 나머지 ${Math.max(pp.length-1,0)}명은 0원(참석은 유지).`+(exT.length?` 그중 ${exT.length}명은 깍두기(곁에 있던 사람, 한턱 대상 아님).`:'');}
     else{const exl=[...excluded].filter(x=>pp.includes(x));const sn=pp.length-exl.length;
       const per=(total&&sn>0)?` · 1인당 약 ${fmtMoney(Math.round(total/sn))}원`:'';
       o.hint.textContent=exl.length?`${exl.length}명 깍두기(참석 유지·0원) · 나머지 ${sn}명 균등${per}`:`${pp.length}명 균등 분담 (1/N)${per}`;}
@@ -8353,22 +8361,24 @@ function _makeSplitUI(o){
     o.chips.innerHTML=pp.map(n=>{
       const isPayer=payer&&n===payer;
       let cls='pp-chip',tag='';
-      if(treat){ if(isPayer){cls+=' payer';tag='<span class="pp-chip-tag">전액</span>';} else {cls+=' zero';tag='<span class="pp-chip-tag">0원</span>';} }
+      const isSubj=treat&&(isPayer||_treatSubjectNames(payer).includes(normalizeName(n))); // v5.51 — 한턱 주체만 고정, 나머지는 받음↔깍두기
+      if(treat){ if(isSubj){cls+=' payer';tag='<span class="pp-chip-tag">전액</span>';} else if(excluded.has(n)){cls+=' excl';tag='<span class="pp-chip-tag excl">깍두기</span>';} else {cls+=' zero';tag='<span class="pp-chip-tag">받음</span>';} }
       else if(excluded.has(n)){cls+=' excl';tag='<span class="pp-chip-tag excl">제외</span>';}
       else {cls+=' split';if(isPayer)cls+=' payer';tag='<span class="pp-chip-tag split">분담</span>';}
       // (v3.81부터 Add·Detail 모두 o.cards 칩을 쓴다 — 이 기본 칩 경로는 옵션 없이 호출하는 경우용으로 남김)
       const rm=o.onRemove?`<span class="pp-chip-x" data-rm="1" role="button" aria-label="${escapeHtml(n)} 빼기">×</span>`:'';
-      return `<button type="button" class="${cls}" data-n="${escapeHtml(n)}"${treat&&!o.onRemove?' disabled':''}><span class="pp-chip-nm">${escapeHtml(n)}</span>${tag}${rm}</button>`;
+      return `<button type="button" class="${cls}" data-n="${escapeHtml(n)}"${isSubj&&!o.onRemove?' disabled':''}><span class="pp-chip-nm">${escapeHtml(n)}</span>${tag}${rm}</button>`;
     }).join('');
     o.chips.querySelectorAll('[data-n]').forEach(c=>c.onclick=e=>{
       if(o.onRemove&&e&&e.target.closest('[data-rm]')){o.onRemove(c.dataset.n);return;}
-      if(treat)return;
       const n=c.dataset.n;
+      if(treat&&(normalizeName(n)===normalizeName(payer)||_treatSubjectNames(payer).includes(normalizeName(n))))return;
       if(excluded.has(n))excluded.delete(n);else excluded.add(n);
       render();o.onChange&&o.onChange();
     });
     const total=o.getTotal?(o.getTotal()||0):0;
-    if(treat){o.hint.textContent=`한턱 — ${payer?payer+_psnJosa(payer,'이','가'):'결제자가'} 전액 부담${total?` (${fmtMoney(total)}원)`:''}, 나머지 ${Math.max(pp.length-1,0)}명은 0원(참석은 유지).`;}
+    if(treat){const exT=[...excluded].filter(x=>pp.includes(x)&&!_treatSubjectNames(payer).includes(normalizeName(x))&&normalizeName(x)!==normalizeName(payer));
+      o.hint.textContent=`한턱 — ${payer?payer+_psnJosa(payer,'이','가'):'결제자가'} 전액 부담${total?` (${fmtMoney(total)}원)`:''}, 나머지 ${Math.max(pp.length-1,0)}명은 0원(참석은 유지).`+(exT.length?` 그중 ${exT.length}명은 깍두기(곁에 있던 사람, 한턱 대상 아님).`:'');}
     else{const ex=[...excluded].filter(n=>pp.includes(n));const sn=pp.length-ex.length;
       const per=(total&&sn>0)?` · 1인당 약 ${fmtMoney(Math.round(total/sn))}원`:'';
       o.hint.textContent=ex.length?`${ex.length}명 제외(참석 유지·0원) · 나머지 ${sn}명 균등${per}`:`참석자 ${pp.length}명 균등 분담 (1/N)${per}`;}
@@ -8378,7 +8388,7 @@ function _makeSplitUI(o){
   o.treatBar.addEventListener('click',()=>{treat=!treat;render();o.onChange&&o.onChange();});
   return {
     render,
-    getState(){const pp=parts();return {treat,splitExclude:treat?[]:[...excluded].filter(n=>pp.includes(n)),treatBy:(treat&&treatBy&&(treatBy.members||[]).length>=2)?treatBy:null};},
+    getState(){const pp=parts();const payerN=normalizeName((o.getPayer&&o.getPayer())||'');const subjN=_treatSubjectNames(payerN);return {treat,splitExclude:[...excluded].filter(n=>pp.includes(n)&&(!treat||(!subjN.includes(normalizeName(n))&&normalizeName(n)!==payerN))),treatBy:(treat&&treatBy&&(treatBy.members||[]).length>=2)?treatBy:null};},
     setState(t,ex,tb){treat=!!t;excluded.clear();(ex||[]).forEach(n=>excluded.add((n||'').trim()));
       treatBy=(tb&&_isPlainObject(tb)&&Array.isArray(tb.members)&&tb.members.length>=2)?{type:'relationGroup',groupId:tb.groupId||null,members:tb.members.map(v=>String(v||'').trim()).filter(Boolean)}:null;
       render();},
