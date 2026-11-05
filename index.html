@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.54';
+  const _swVersion='v5.55';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -3143,6 +3143,23 @@ body.picker-modal-open{overscroll-behavior:none;}
     -webkit-font-smoothing:auto;
   }
 }
+
+/* v5.55 — 폴더블 안쪽 화면(폭 781~1000px)처럼 오른쪽 패널이 좁을 때: 헤더 버튼을 제목 줄 밑(헤더 아래쪽 오른쪽)으로 내려 제목·‹ 안내가 세로로 접히거나 잘리지 않게 한다 */
+@media(max-width:1000px) and (min-width:781px){
+  .main-top{position:relative;}
+  .main-top>.main-actions{position:absolute;right:28px;bottom:10px;margin:0;transform:none;align-self:auto;gap:5px;}
+  .main-top>.main-actions .detail-header-btn,.main-top>.main-actions .icon-btn{height:30px;min-height:30px;padding:0 9px;}
+  .main-top>.main-actions .icon-btn{width:34px;padding:0;}
+  .main-top-main{min-width:0;flex:1 1 auto;}
+  .main-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+  .main-eye{white-space:nowrap;}
+  .main-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 4px);}
+}
+@media(max-width:860px) and (min-width:781px){
+  /* 오른쪽 패널이 400px 안팎이면 정보 칸과 사진 칸을 나란히 두면 겹친다 → 사진을 정보 아래로 */
+  .detail-info-card{grid-template-columns:1fr;gap:16px;}
+  .detail-info-photo{margin-top:0;min-height:200px;}
+}
 </style>
 <link rel="stylesheet" href="prepaid.css">
 <link rel="stylesheet" href="advance.css">
@@ -4858,7 +4875,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.54';
+const APP_VERSION='v5.55';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
