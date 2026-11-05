@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.53';
+  const _swVersion='v5.54';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -726,7 +726,7 @@ svg{display:block;flex-shrink:0;}
 .items-table .detail-item-name-wrap{display:flex;align-items:center;gap:2px;min-width:0;}
 .items-table .detail-item-name-wrap .item-name-inp{flex:1 1 auto;min-width:0;}
 .detail-items-panel .items-table th:first-child{padding-left:32px;}
-.items-table .detail-item-actions{display:flex;align-items:center;justify-content:flex-end;padding-left:0;padding-right:2px;}
+.items-table .detail-item-actions{display:table-cell;vertical-align:middle;text-align:right;padding-left:0;padding-right:2px;} /* v5.54 — flex면 td가 표 칸이 아니라 행 높이를 못 채워 × 위치·밑줄이 어긋났다 */
 .items-table .item-drag-handle{display:grid;place-items:center;width:24px;height:28px;flex:0 0 24px;padding:0;border:0;background:transparent;color:var(--label3);cursor:grab;touch-action:none;border-radius:6px;}
 .items-table .item-drag-handle svg{display:block;width:16px;height:18px;pointer-events:none;}
 .items-table .item-drag-handle:hover,.items-table .item-drag-handle:focus-visible{color:var(--blue);background:var(--blue-bg);outline:none;}
@@ -4858,7 +4858,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.53';
+const APP_VERSION='v5.54';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
