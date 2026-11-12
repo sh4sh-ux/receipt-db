@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.55';
+  const _swVersion='v5.56';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -4875,7 +4875,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.55';
+const APP_VERSION='v5.56';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -5346,11 +5346,13 @@ function _blobToDataUrl(blob){
 // 휴대폰 사진처럼 큰 원본만 1400px로 줄여 전송한다.
 async function _prepareDutchReceiptImage(srcUrl){
   if(!srcUrl)return '';
-  if(/^data:image\/jpe?g;base64,/i.test(srcUrl)&&srcUrl.length<1500000)return srcUrl;
+  // v5.56 — 보내는 양이 곧 시간이다(봉투 JSON에 사진이 base64로 통째로 들어가 Dropbox로 올라간다). 예전엔 1.5MB 미만 JPEG는 그대로 보냈는데,
+  //   폰 사진은 대개 0.5~1.4MB라 압축을 건너뛰고 건수 × 1MB를 올렸다 → 350KB 넘으면 항상 1400px·품질 .72로 줄인다(글자 읽는 데는 충분).
+  if(/^data:image\/jpe?g;base64,/i.test(srcUrl)&&srcUrl.length<350000)return srcUrl;
   if(String(srcUrl).startsWith('blob:')){
     try{
       const blob=await fetch(srcUrl).then(r=>r.ok?r.blob():null);
-      if(blob&&/^image\/jpe?g$/i.test(blob.type||'')&&blob.size<1100000){
+      if(blob&&/^image\/jpe?g$/i.test(blob.type||'')&&blob.size<260000){
         const data=await _blobToDataUrl(blob);
         if(data&&data.length<1500000)return data;
       }
@@ -5456,7 +5458,7 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
         receiptImage};
     }));
     if(useDbx){
-      progress.update('Dropbox로 보내고 있어요…');
+      { const kb=Math.round(entries.reduce((n,e)=>n+(e.receiptImage||'').length,0)/1024);progress.update(kb>=100?`Dropbox로 보내고 있어요 · 사진 ${kb>=1024?(kb/1024).toFixed(1)+'MB':kb+'KB'}`:'Dropbox로 보내고 있어요…'); }
       const env={version:1,batchId,createdAt:now,entries};
       const ok=await _sendEnvelopeViaDropbox(env);
       if(!ok){_cancelDutchPayHandoff(handoffWin);toast('더치페이로 보내지 못했어요 — Dropbox 연결을 확인하고 다시 시도해주세요',{type:'error',duration:5200});return false;}
@@ -7572,7 +7574,7 @@ function _saveMessageFromValidation(v){
 pasteTa.addEventListener('compositionstart',()=>{_pasteComposing=true;});
 pasteTa.addEventListener('compositionend',()=>{_pasteComposing=false;updatePreview();});
 pasteTa.addEventListener('input',()=>{if(!_pasteComposing)updatePreview();});
-pasteTa.addEventListener('paste',()=>{setTimeout(updatePreview,30);});
+pasteTa.addEventListener('paste',()=>{_addEditedClear();setTimeout(updatePreview,30);});
 
 // 카테고리 SVG 선택기 — 상세 화면과 동일한 아이콘 언어 사용
 const catInpEl=document.getElementById('catInp');
@@ -7648,9 +7650,14 @@ function _updateCatHint(){
   }
 }
 
+// v5.56 — 사용자가 손으로 고친 매장명·일자·시간은 붙여넣은 글을 다시 읽어도(글을 고칠 때마다 updatePreview) 글 속 값으로 덮이지 않는다.
+//   새 글을 붙여넣거나(paste) 화면을 비우면 풀린다. (전엔 시간을 골라도 글을 한 글자만 고치면 글 속 '시간:' 값으로 되돌아갔다)
+var _addEdited={store:false,date:false,time:false};
+function _addEditedClear(){_addEdited.store=_addEdited.date=_addEdited.time=false;}
 function updatePreview(){
   const v=pasteTa.value;
   if(!v.trim()){
+    _addEditedClear();
     _currentParsed=null;
     previewArea.innerHTML=`<div class="empty-state" style="padding:32px 16px;background:var(--fill2);border-radius:var(--rm);border:1px dashed var(--sep2);">텍스트를 붙여넣으면 자동으로 파싱되어 표시됩니다.<br/><span style="font-size:11px;">붙여넣기 후 미리보기에서 직접 수정 가능해요.</span></div>`;
     document.getElementById('gptModeArea')?.classList.remove('qc-parsed');
@@ -7670,6 +7677,9 @@ function updatePreview(){
     if(!(p.store||'').trim())p.store=(document.getElementById('addStore')?.value||'').trim();
     if(!p.date)p.date=document.getElementById('addDate')?.value||'';
     if(!p.time)p.time=document.getElementById('addTime')?.value||''; // v4.00
+    if(_addEdited.store){const sv=(document.getElementById('addStore')?.value||'').trim();if(sv)p.store=sv;}
+    if(_addEdited.date){const dv=document.getElementById('addDate')?.value||'';if(dv)p.date=dv;}
+    if(_addEdited.time)p.time=document.getElementById('addTime')?.value||'';
   }
   _currentParsed=p;
   // 가게명 인식되면 카테고리 자동 채움 (입력란이 비어있거나 이전에 자동 채웠을 때만)
@@ -8510,7 +8520,7 @@ let _addSplitUI=null, _dSplitUI=null, _addPeople=null;
   };
   stEl.addEventListener('compositionstart',()=>{comp=true;});
   stEl.addEventListener('compositionend',()=>{comp=false;pushStore();});
-  stEl.addEventListener('input',()=>{if(!comp)pushStore();});
+  stEl.addEventListener('input',()=>{_addEdited.store=true;if(!comp)pushStore();});
   stEl.addEventListener('blur',()=>{
     const v=stEl.value.trim();
     if(_currentParsed&&!_addxIsDirect())_currentParsed.store=v;
@@ -8519,12 +8529,13 @@ let _addSplitUI=null, _dSplitUI=null, _addPeople=null;
     pushStore();
   });
   dtEl.addEventListener('change',()=>{
+    _addEdited.date=true;
     if(_currentParsed&&!_addxIsDirect()){_currentParsed.date=dtEl.value;_refreshPreviewSummary();}
     else{_addxSyncHeader();_updateDirectSaveBtn();}
   });
   const tmEl=document.getElementById('addTime'); // v4.00 — 시간(선택)
   const pushTime=()=>{if(_currentParsed&&!_addxIsDirect())_currentParsed.time=tmEl.value||'';};
-  tmEl.addEventListener('input',pushTime);tmEl.addEventListener('change',pushTime);
+  tmEl.addEventListener('input',()=>{_addEdited.time=true;pushTime();});tmEl.addEventListener('change',()=>{_addEdited.time=true;pushTime();});
 })();
 
 // ── v3.80 compact 입력 — '항상 펼쳐놓기' → '필요할 때 선택' ──────────────────────────────────────
@@ -8660,6 +8671,7 @@ function clearInputs(){
   _setCategoryValue('',{auto:false});
   document.getElementById('participantsInp').value='';
   document.getElementById('addStore').value=''; // v3.95
+  _addEditedClear();
   { const tm=document.getElementById('addTime'); if(tm){tm.value='';_kvTimeSync(tm);} } // v4.00
   document.getElementById('addDate').value=_addxIsDirect()?_todayYMD():'';
   if(_addSplitUI)_addSplitUI.reset();

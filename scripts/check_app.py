@@ -152,7 +152,7 @@ def main() -> int:
         errors.append("더치페이 전송 중 표시·중복 전송 방지가 없습니다")
     if "let resp=await upload();\n    if(resp.status===409)" not in index:
         errors.append("더치페이 Dropbox 전송이 upload-first/folder-fallback 방식이 아닙니다")
-    if "async function _prepareDutchReceiptImage(srcUrl)" not in index or "srcUrl.length<1500000" not in index:
+    if "async function _prepareDutchReceiptImage(srcUrl)" not in index or "srcUrl.length<350000" not in index:
         errors.append("제한 이내 JPEG의 재압축 생략 경로가 없습니다")
     if "const imgUrl=(r.imageId||_receiptRecoveryImageId(r))?await _ensureReceiptImgUrl(r):null;" not in index:
         errors.append("사진 없는 영수증의 더치페이 전송이 Dropbox 사진 복구 조회를 건너뛰지 않습니다")
