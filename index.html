@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.58';
+  const _swVersion='v5.59';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -4875,7 +4875,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.58';
+const APP_VERSION='v5.59';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -5475,6 +5475,17 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
         items:(r.items||[]).map(it=>({name:it.name||'',quantity:Number(it.quantity)||1,unitPrice:Number(it.unitPrice)||0,amount:Number(it.amount)||0})),
         receiptImage};
     }));
+    // v5.59 — 사진이 있는 영수증인데 사진 준비에 실패했으면 조용히 글만 보내지 않는다: 보내기 전에 알리고, 취소하면 아무것도 보내지 않는다.
+    const _noPhoto=entries.map((e,i)=>({e,r:prepared[i].r})).filter(x=>x.r.imageId&&!x.e.receiptImage);
+    if(_noPhoto.length){
+      const names=_noPhoto.slice(0,3).map(x=>x.e.store||'영수증').join(', ')+(_noPhoto.length>3?` 외 ${_noPhoto.length-3}건`:'');
+      if(!confirm(`사진을 준비하지 못한 영수증이 ${_noPhoto.length}건 있어요.\n(${names})\n\n사진 없이 보낼까요?\n[취소]를 누르면 보내지 않아요. 영수증 앱에서 사진이 보이는지 확인한 뒤 다시 보내 주세요.`)){
+        _cancelDutchPayHandoff(handoffWin);
+        toast('보내지 않았어요 — 사진을 확인한 뒤 다시 보내 주세요',{type:'error',duration:5200});
+        return false;
+      }
+    }
+    const _photoN=entries.filter(e=>e.receiptImage).length;
     if(useDbx){
       { const kb=Math.round(entries.reduce((n,e)=>n+(e.receiptImage||'').length,0)/1024);progress.update(kb>=100?`Dropbox로 보내고 있어요 · 사진 ${kb>=1024?(kb/1024).toFixed(1)+'MB':kb+'KB'}`:'Dropbox로 보내고 있어요…'); }
       const env={version:1,batchId,createdAt:now,entries};
@@ -5483,7 +5494,7 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
       if(getMyName())localStorage.setItem(DUTCH_PAY_NAME_KEY,getMyName());
       progress.update('더치페이를 열고 있어요…');
       _finishDutchPayHandoff(handoffWin,dutchUrl);
-      toast(single?'더치페이로 보냈어요 — 더치페이를 열면 들어가요':`영수증 ${sourceRecords.length}건을 더치페이로 보냈어요 — 더치페이를 열면 들어가요`,{type:'success',duration:4200});
+      toast((single?'더치페이로 보냈어요 — 더치페이를 열면 들어가요':`영수증 ${sourceRecords.length}건을 더치페이로 보냈어요 — 더치페이를 열면 들어가요`)+(_photoN?` · 사진 ${_photoN}장`:''),{type:'success',duration:4200});
       return true;
     }
     const writeEnvelope=(withImg)=>{
