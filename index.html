@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.57';
+  const _swVersion='v5.58';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -4875,7 +4875,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.57';
+const APP_VERSION='v5.58';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -5359,7 +5359,24 @@ async function _prepareDutchReceiptImage(srcUrl){
     }catch(_){}
   }
   const compressed=await _compressToJpegDataUrl(srcUrl,1400,0.72);
-  return compressed&&compressed.length<1500000?compressed:'';
+  // v5.58 — 줄이기에 실패하면(폰에서 큰 사진을 캔버스에 못 그리면 'data:,' 같은 빈 값이 나온다) 사진을 빼지 말고 원본을 보낸다.
+  if(compressed&&/^data:image\/jpe?g;base64,/i.test(compressed)&&compressed.length>1000&&compressed.length<1500000)return compressed;
+  if(/^data:image\/jpe?g;base64,/i.test(srcUrl)&&srcUrl.length<1500000)return srcUrl;
+  if(String(srcUrl).startsWith('blob:')){
+    try{const blob=await fetch(srcUrl).then(r=>r.ok?r.blob():null);
+      if(blob&&/^image\/jpe?g$/i.test(blob.type||'')&&blob.size<1100000){const data=await _blobToDataUrl(blob);if(data&&data.length<1500000)return data;}}catch(_){}
+  }
+  return '';
+}
+// v5.58 — 사진이 이 기기에 아직 없고 Dropbox에서 받는 중이면(_ensureImgUrl이 null) 보내기 전에 잠깐 기다린다(최대 8초).
+//   전엔 받는 중이면 사진 없이 글만 보내 더치페이에 사진이 비었다.
+async function _waitReceiptImgUrl(r,ms=8000){
+  const t0=Date.now();
+  while(Date.now()-t0<ms){
+    try{const u=await _ensureImgUrl(r.imageId,r);if(u)return u;}catch(_){}
+    await new Promise(res=>setTimeout(res,350));
+  }
+  return null;
 }
 // v4.64 — 더치페이 전달 봉투를 Dropbox 파일로 올린다. 더치페이가 열릴 때 읽어 가고 '처리됨' 폴더로 옮긴다(지우지 않음).
 const DUTCH_PAY_INBOX_DIR='/07_Apps/더치페이(Dutch-Pay)/영수증DB 전송';
@@ -5447,7 +5464,8 @@ async function sendReceiptsToDutchPay(records,{single=false}={}){
       try{
         // 사진이 없는 수기 영수증까지 표준 ID를 추측해 Dropbox를 조회하면 선택 건수만큼 전송이 늦어진다.
         // 명시적 imageId 또는 완료 이미지 경로처럼 복구 근거가 있는 기록만 사진을 준비한다.
-        const imgUrl=(r.imageId||_receiptRecoveryImageId(r))?await _ensureReceiptImgUrl(r):null;
+        let imgUrl=(r.imageId||_receiptRecoveryImageId(r))?await _ensureReceiptImgUrl(r):null;
+        if(!imgUrl&&r.imageId&&dbxIsConnected())imgUrl=await _waitReceiptImgUrl(r); // v5.58
         if(imgUrl)receiptImage=await _prepareDutchReceiptImage(imgUrl);
       }catch(_){}
       preparedCount++;
