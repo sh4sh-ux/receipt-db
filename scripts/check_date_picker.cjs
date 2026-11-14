@@ -69,6 +69,7 @@ async function clickTimeOption(page,selector){
   await option.click();
 }
 
+const _now=new Date(),_Y=_now.getFullYear(),_M=String(_now.getMonth()+1).padStart(2,'0'),PICK=`${_Y}-${_M}-21`,PICK_MONTH=`${_Y}년 ${+_M}월`,PICK_DAY=`${+_M}월 21일`;
 async function checkReceipt(browser,profile){
   const {mobile,label}=profile,{context,page}=await openPage(browser,receiptUrl,profile);
   await page.waitForFunction(()=>typeof switchTab==='function'&&typeof receipts!=='undefined');await page.evaluate(()=>{switchTab('list');});await page.waitForTimeout(300);
@@ -77,15 +78,15 @@ async function checkReceipt(browser,profile){
   await assertFits(page,'.date-pop',`영수증 ${label} 월 레이블 달력`);
   if((await page.locator('.date-pop-backdrop').count())!==(mobile?1:0))throw new Error(`영수증 ${label} 월 레이블 배경 수 불일치`);
   if(await page.locator('.date-pop-day.on').count()!==0)throw new Error(`영수증 ${label} 월 달력에서 선택하지 않은 1일이 미리 선택됨`);
-  await page.locator('.date-pop-day[data-date-value="2026-10-21"]').click();
-  if(!/2026년 10월/.test(await page.locator('#monthLabelText').textContent()))throw new Error(`영수증 ${label} 월 레이블 달력 선택 반영 실패`);
+  await page.locator(`.date-pop-day[data-date-value="${PICK}"]`).click();
+  if(!new RegExp(PICK_MONTH).test(await page.locator('#monthLabelText').textContent()))throw new Error(`영수증 ${label} 월 레이블 달력 선택 반영 실패`);
   const pickedRange=await page.evaluate(()=>({from:_trendPick?.from,to:_trendPick?.to,unit:_trendPick?.unit}));
-  if(pickedRange.from!=='2026-10-21'||pickedRange.to!=='2026-10-21'||pickedRange.unit!=='day')throw new Error(`영수증 ${label} 선택 일자가 하루 범위로 연결되지 않음: ${JSON.stringify(pickedRange)}`);
+  if(pickedRange.from!==PICK||pickedRange.to!==PICK||pickedRange.unit!=='day')throw new Error(`영수증 ${label} 선택 일자가 하루 범위로 연결되지 않음: ${JSON.stringify(pickedRange)}`);
   const dayRows=await page.locator('#sideList .r-card-meta').allTextContents();
   if(dayRows.some(text=>!text.trim().startsWith('2026.10.21')))throw new Error(`영수증 ${label} 선택한 일자 외 내역이 표시됨: ${JSON.stringify(dayRows)}`);
-  if(!/10월 21일/.test(await page.locator('#ltInfo').textContent()))throw new Error(`영수증 ${label} 선택 일자 범위 문구가 표시되지 않음`);
+  if(!new RegExp(PICK_DAY).test(await page.locator('#ltInfo').textContent()))throw new Error(`영수증 ${label} 선택 일자 범위 문구가 표시되지 않음`);
   await page.locator('#monthLabel').dispatchEvent('click');
-  if(await page.locator('.date-pop-day.on').getAttribute('data-date-value')!=='2026-10-21')throw new Error(`영수증 ${label} 선택 일자가 달력에 유지되지 않음`);
+  if(await page.locator('.date-pop-day.on').getAttribute('data-date-value')!==PICK)throw new Error(`영수증 ${label} 선택 일자가 달력에 유지되지 않음`);
   await page.locator('#monthLabel').dispatchEvent('click');
   if(await page.locator('.date-pop').count()!==0)throw new Error(`영수증 ${label} 월 레이블 재클릭 닫기 실패`);
   await page.evaluate(()=>{switchTab('input');});await page.waitForTimeout(300); // 날짜 칸(label.kv-date)은 추가 탭에 있다
