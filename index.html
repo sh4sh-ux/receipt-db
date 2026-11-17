@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.59';
+  const _swVersion='v5.60';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -1688,6 +1688,8 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .inm-hint{margin:0 0 14px;padding:0 0 0 16px;font-size:12px;color:var(--label3);line-height:1.7;}
 .inm-save,.inm-cancel{display:block;width:100%;height:46px;border:none;border-radius:var(--rm);font:inherit;font-size:15px;font-weight:700;cursor:pointer;}
 .inm-save{background:var(--blue);color:#fff;}
+.memo-ta{min-height:min(44vh,340px);}
+.memo-peek{resize:none;cursor:pointer;overflow:hidden;}
 .inm-cancel{background:var(--fill);color:var(--blue);margin-top:8px;}
 
 /* v4.43 — 한 번에 7칸(안쪽 너비 = 칸 수/7 × 100%), 옆으로 밀어 넘김 */
@@ -4875,7 +4877,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.59';
+const APP_VERSION='v5.60';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -12393,8 +12395,8 @@ async function renderDetail(){
     </div>`;
   const memoFieldsHtml=`
     <div class="field-g">
-      <label class="field-lbl">메모</label>
-      <textarea id="dNotes" class="field-ta" style="min-height:60px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="메모">${escapeHtml(r.notes||'')}</textarea>
+      <label class="field-lbl">메모 <span class="field-lbl-hint">눌러서 크게 보고 고쳐요</span></label>
+      <textarea id="dNotes" class="field-ta memo-peek" readonly rows="2" style="min-height:60px;font-family:inherit;font-size:13.5px;white-space:pre-wrap;" placeholder="메모를 입력하려면 누르세요">${escapeHtml(r.notes||'')}</textarea>
     </div>
     <div class="field-g">
       <label class="field-lbl">태그 <span class="field-lbl-hint">쉼표로 구분</span></label>
@@ -12715,7 +12717,7 @@ async function renderDetail(){
     refreshPay();
   }
   const dn=document.getElementById('dNotes');
-  if(dn) dn.addEventListener('input',()=>_detailSetDirty(true));
+  if(dn){dn.addEventListener('input',()=>_detailSetDirty(true));_bindMemoSheet(dn);}
   const dt=document.getElementById('dTags');
   if(dt) dt.addEventListener('input',()=>_detailSetDirty(true));
 
@@ -13458,6 +13460,28 @@ function _itemsPasteSheet(r){
     close(()=>toast(`품목 ${parsed.items.length}개를 추가했어요.`,{type:'success'}));
   };
   setTimeout(()=>{try{ta.focus();}catch(_){}},60);
+}
+// v5.60 — 메모: 상세의 메모 칸은 읽기 전용 미리보기(크기 그대로), 누르면 큰 수정 창(_memoSheet). 저장은 칸 값만 바꾸고 _detailSetDirty — 실제 저장은 상단 [저장].
+function _bindMemoSheet(dn){
+  dn.addEventListener('click',()=>_memoSheet(dn));
+  dn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();_memoSheet(dn);}});
+}
+function _memoSheet(dn){
+  const {card,close}=_mtgSheetOpen();
+  card.classList.add('inm-sheet');
+  card.innerHTML=`<div class="mtg-sheet-hd"><div class="mtg-sheet-title">메모</div><button type="button" class="mtg-sheet-x" aria-label="닫기">×</button></div>
+    <textarea class="inm-ta memo-ta" autocomplete="off" spellcheck="false" placeholder="메모를 입력하세요">${escapeHtml(dn.value)}</textarea>
+    <ul class="inm-hint"><li>메모는 더치페이로 보내지 않아요.</li></ul>
+    <button type="button" class="inm-save">저장</button><button type="button" class="inm-cancel">취소</button>`;
+  const ta=card.querySelector('.inm-ta');
+  card.querySelector('.mtg-sheet-x').onclick=()=>close();
+  card.querySelector('.inm-cancel').onclick=()=>close();
+  card.querySelector('.inm-save').onclick=()=>{
+    const cur=document.getElementById('dNotes')||dn;
+    if(ta.value!==cur.value){cur.value=ta.value;cur.dispatchEvent(new Event('input',{bubbles:true}));}
+    close();
+  };
+  setTimeout(()=>{try{ta.focus({preventScroll:true});ta.setSelectionRange(ta.value.length,ta.value.length);ta.scrollTop=ta.scrollHeight;}catch(_){}},60);
 }
 function _itemNameSheet(inp){
   const {card,close}=_mtgSheetOpen();
