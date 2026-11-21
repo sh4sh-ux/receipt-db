@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.61';
+  const _swVersion='v5.62';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -1002,8 +1002,10 @@ th.mtg-chk{background:var(--fill2);}
 /* v4.21 — 목록 창 머리 고정(모든 .mtg-sheet). 제목 줄·필터 줄을 창 끝까지 넓혀(--shp = 창 안쪽 여백만큼) 배경으로 뒤 내용을 가린다.
    스크롤이 시작되면 마지막 고정 줄 아래에만 구분선. 부제(메타)는 위로 사라진다. */
 .mtg-sheet{--shp:22px;}
+.mtg-sheet.mtg-list{height:min(720px,82vh);} /* v5.62 — 결제 밸런스·한턱·만남·단둘이·여럿이 등 목록 창은 내용이 적어도 같은 크기 */
 .mtg-sheet>.mtg-sheet-hd{position:sticky;top:calc(-1 * var(--shp));z-index:4;background:var(--card);margin:calc(-1 * var(--shp)) calc(-1 * var(--shp)) 0;padding:var(--shp) var(--shp) 9px;}
-.mtg-sheet>.pd-filter,.mtg-sheet>.mtl-bar{position:sticky;top:calc(var(--sh-hd,56px) - var(--shp));z-index:4;background:var(--card);margin-left:calc(-1 * var(--shp));margin-right:calc(-1 * var(--shp));padding-left:var(--shp);padding-right:var(--shp);}
+.mtg-sheet>.mtg-sheet-meta{position:sticky;top:calc(var(--sh-hd,56px) - var(--shp));z-index:4;background:var(--card);margin:0 calc(-1 * var(--shp));padding:0 var(--shp) 14px;} /* v5.62 — 부제(17번·보통 14일마다…)도 제목 아래에 고정 */
+.mtg-sheet>.pd-filter,.mtg-sheet>.mtl-bar{position:sticky;top:calc(var(--sh-hd,56px) + var(--sh-meta,0px) - var(--shp));z-index:4;background:var(--card);margin-left:calc(-1 * var(--shp));margin-right:calc(-1 * var(--shp));padding-left:var(--shp);padding-right:var(--shp);}
 .mtg-sheet>.pd-filter{margin-top:0;margin-bottom:0;padding-top:2px;padding-bottom:10px;}
 .mtg-sheet>.mtl-bar{margin-top:0;margin-bottom:0;padding-top:12px;padding-bottom:8px;}
 .mtg-sheet [data-shlast]{transition:box-shadow .15s;}
@@ -4881,7 +4883,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.61';
+const APP_VERSION='v5.62';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -9940,7 +9942,7 @@ function _mtgConfirmedListOpen(){_mtgManageOpen('meetings');}
 //   ⚠️ 진실원 = _personDetailData(Dashboard 요약을 만든 그 컬렉션 그대로). 새 계산·유사 filter 복제 없음 → Summary=Evidence 보장(§35·§71).
 //   row 클릭 → 기존 selectReceipt(§27). 금액은 receipt.total 또는 _receiptShare(기존 함수)만 사용, 새 귀속 계산 없음(§10·§24).
 function _openPersonDetailShell(cfg){
-  const {card,close}=_mtgSheetOpen();
+  const {card,close}=_mtgSheetOpen(); card.classList.add('mtg-list'); // v5.62 — 목록 창은 모두 같은 크기
   let fkey=cfg.initFilter||cfg.defaultFilter||(cfg.filters&&cfg.filters[0]&&cfg.filters[0].key)||'all';
   const paint=()=>{
     const rows=cfg.rows(fkey)||[];
@@ -9951,7 +9953,7 @@ function _openPersonDetailShell(cfg){
         <span class="pd-row-right${cfg.emphasizeRight?' em':''}">${row.rightHtml}${row.tagHtml||''}</span>
         ${row.subHtml?`<span class="pd-row-sub">${row.subHtml}</span>`:''}
       </button>`).join('')
-      :'<div class="pd-empty">해당 내역이 없어요.</div>';
+      :`<div class="pd-empty">${escapeHtml(cfg.emptyMsg||'해당 내역이 없어요.')}</div>`;
     card.innerHTML=`
       <div class="mtg-sheet-hd"><div class="mtg-sheet-title">${escapeHtml(cfg.title)}</div><button class="mtg-sheet-x" id="pdX" type="button" aria-label="닫기">×</button></div>
       ${cfg.subtitle?`<div class="mtg-sheet-meta">${escapeHtml(cfg.subtitle)}</div>`:''}
@@ -10117,10 +10119,12 @@ function _mtgSheetOpen(){
   const syncStick=()=>{
     const hd=card.querySelector(':scope>.mtg-sheet-hd'), fl=card.querySelector(':scope>.pd-filter, :scope>.mtl-bar');
     const hh=hd?hd.offsetHeight:0;
+    const mt=card.querySelector(':scope>.mtg-sheet-meta'), mh=mt?mt.offsetHeight:0;
     card.style.setProperty('--sh-hd',hh+'px');
-    card.style.setProperty('--sh-top',(hh+(fl?fl.offsetHeight:0))+'px');
+    card.style.setProperty('--sh-meta',mh+'px');
+    card.style.setProperty('--sh-top',(hh+mh+(fl?fl.offsetHeight:0))+'px');
     card.querySelectorAll('[data-shlast]').forEach(n=>n.removeAttribute('data-shlast'));
-    const last=fl||hd; if(last)last.setAttribute('data-shlast','');
+    const last=fl||mt||hd; if(last)last.setAttribute('data-shlast','');
   };
   new MutationObserver(syncStick).observe(card,{childList:true});
   card.addEventListener('scroll',()=>card.classList.toggle('is-scrolled',card.scrollTop>2),{passive:true});
@@ -10406,31 +10410,16 @@ function _openDuoDrill(which){
   const sub = which==='tgt'?`나와 단둘이 있을 때`:`${d.name}${_psnJosa(d.name,'과','와')} 단둘이 있을 때`;
   const sorted=[...recs].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id))); // 최신순
   const total=sorted.reduce((s,r)=>s+(r.total||0),0); // 총액 합(§8: 일반 분담은 총액만 — 한턱 금액과 섞지 않음)
-  const {card,close}=_mtgSheetOpen();
   const emptyMsg = which==='tgt'?`단둘이 있을 때 ${d.name}${_psnJosa(d.name,'이','가')} 한턱낸 영수증이 없어요.`
                  : which==='me'?`단둘이 있을 때 내가 한턱낸 영수증이 없어요.`
                  : which==='normal'?'단둘이 일반 분담 영수증이 없어요.'
                  : '한턱 결제자 미상 영수증이 없어요.';
-  const rowsHtml=sorted.length?sorted.map(x=>{
-      // 일반 분담 행은 결제자·1인 부담액(기존 1/N 계산, 불변)을 날짜 줄에 함께 표시(§8). 결제자 없으면 '미상'(§13).
-      const dateLine=isNormal
-        ? `${escapeHtml(fmtDateKor(x.date))} · 결제자 ${escapeHtml(normalizeName(x.paidBy)||'미상')} · 1인 ${fmtMoney(_receiptShare(x,d.name))}원`
-        : escapeHtml(fmtDateKor(x.date));
-      return `<button type="button" class="mtg-drow" data-open="${escapeHtml(x.id)}">
-      <span class="mtg-drow-store">${escapeHtml(x.store||'(매장명 없음)')}</span>
-      <span class="mtg-drow-amt">${fmtMoney(x.total||0)}원</span>
-      <span class="mtg-drow-date">${dateLine}</span>
-    </button>`;}).join('')
-    :`<div class="empty-state" style="padding:22px 8px;">${escapeHtml(emptyMsg)}</div>`;
-  const footLbl=isNormal?'총액 합계':'합계';
-  card.innerHTML=`
-    <div class="mtg-sheet-hd"><div class="mtg-sheet-title">${escapeHtml(title)}</div><button class="mtg-sheet-x" id="duoDrillX" type="button" aria-label="닫기">×</button></div>
-    <div class="mtg-sheet-meta">${fmtMoney(total)}원 · ${sorted.length}건 · ${escapeHtml(sub)}</div>
-    <div class="mtg-sheet-divider"></div>
-    <div class="mtg-drows">${rowsHtml}</div>
-    ${sorted.length?`<div class="duo-drill-foot"><span>${footLbl}</span><b>${fmtMoney(total)}원</b></div>`:''}`;
-  card.querySelector('#duoDrillX').onclick=close;
-  card.querySelectorAll('.mtg-drow[data-open]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.open;_ovNavCtx={kind:'duo',which,label:title};close(()=>selectReceipt(id));}); // v3.90 — Back = 이 목록 복귀
+  // v5.62 — 결제 밸런스·만남 창과 같은 틀(_openPersonDetailShell: 평면 목록·같은 크기). navCtx는 그대로라 ‹ 돌아가기가 이 창으로 온다.
+  _openPersonDetailShell({title, subtitle:`${fmtMoney(total)}원 · ${sorted.length}건 · ${sub}`, emptyMsg,
+    navCtx:{kind:'duo',which},
+    rows:()=>sorted.map(x=>({r:x, rightHtml:`${fmtMoney(x.total||0)}원`,
+      subHtml:isNormal?`${escapeHtml(fmtDateKor(x.date))} · 결제자 ${escapeHtml(normalizeName(x.paidBy)||'미상')} · 1인 ${fmtMoney(_receiptShare(x,d.name))}원`:escapeHtml(fmtDateKor(x.date))})),
+    foot:()=>({label:isNormal?'총액 합계':'합계', amount:total})});
 }
 
 // v3.56 — '자주 함께한 멤버' 섹션(참석 receipt의 동행자 빈도 상위 5). 참석 전용 view에만 있던 것을 통합 대시보드로 이관(데이터 보존).
@@ -10748,7 +10737,7 @@ function _mtgShortStore(s){
 function _openMeetingsSheet(initScope){
   const d=_personDetailData; if(!d)return;
   const nm=d.name, me=d.me, all=d.meetings||[];
-  const {card,close}=_mtgSheetOpen(); card.classList.add('mtl-sheet');
+  const {card,close}=_mtgSheetOpen(); card.classList.add('mtl-sheet','mtg-list');
   let scope=['duo','grp'].includes(initScope)?initScope:'all';
   const opened=new Set();
   const W=['일','월','화','수','목','금','토'];
