@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.60';
+  const _swVersion='v5.61';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -2826,6 +2826,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .mtl-v{font-weight:600;padding-left:10px;white-space:nowrap;}
 .mtl-acts{display:flex;justify-content:flex-start;gap:8px;margin:8px 0 0 6px;} /* v4.20 — 왼쪽 끝을 결제자 점에 맞춤 */
 .mtl-btn{height:32px;padding:0 12px;border-radius:var(--rs);border:1px solid var(--sep2);background:var(--card);color:var(--label2);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
+.pd-filter .mtl-lg{margin-left:auto;align-items:center;font-size:11.5px;gap:10px;}
+@media(max-width:780px){.pd-filter .mtl-lg{display:flex;flex-basis:100%;margin-left:0;margin-top:2px;}}
+.pd-row.open{border-bottom:none;}
+.pd-list>.mtl-stops{padding:0 4px 14px;}
 .mtl-link{display:block;width:100%;margin-top:14px;padding:6px 0;border:0;background:none;font:inherit;font-size:12px;color:var(--label3);text-align:center;cursor:pointer;}
 @media(max-width:780px){
   .mtl-lg{display:none;}
@@ -4877,7 +4881,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.60';
+const APP_VERSION='v5.61';
 
 // 날짜 열기는 아래 공통 앱 달력 위임 핸들러 한 곳에서만 처리한다.
 // 모바일의 date input은 pointer-events:none이라 OS 달력이 함께 뜨지 않는다(v4.94).
@@ -10782,10 +10786,13 @@ function _openMeetingsSheet(initScope){
       const on=opened.has(u.id), mn=mine(u);
       const byTime=_mtgByTime(u.recs);
       const lbl=(r,i)=>byTime?_mtgTime(r):u.recs.length>1?`${i+1}차`:(_mtgTime(r)||'');
-      const sub=[who(u),treat(u)].filter(Boolean).join(' · ');
-      return `<button type="button" class="mtl-row${on?' open':''}" data-u="${escapeHtml(u.id)}" aria-expanded="${on}">`
-        +`<span class="mtl-main"><span class="mtl-d">${escapeHtml(dayLbl(u))}</span><span class="mtl-t">${title(u)}</span>${sub?`<span class="mtl-s">${escapeHtml(sub)}</span>`:''}</span>`
-        +`<span class="mtl-amt">${fmtMoney(u.total)}원<span class="mtl-sl">/</span><span class="mtl-mi">${fmtMoney(mn)}원</span></span>`
+      // v5.61 — 결제 밸런스 창과 같은 모양(.pd-row): 점 = 결제한 사람, 제목 + 총액, 아래 줄 = 날짜 · 각자 몫(상대 주황·나 파랑) · 사람 · 한턱
+      const pbs=[...new Set(u.recs.map(dot))], bar=pbs.length===1?pbs[0]:'n';
+      const sh=n=>u.recs.reduce((a,r)=>a+(_splitShareMap(r).get(n)||0),0);
+      const dl=(u.d1&&u.d1>u.date)?`${fmtDateKor(u.date)} – ${_psnMD(u.d1)}`:fmtDateKor(u.date);
+      const sub=[escapeHtml(dl||'날짜 없음'),`${escapeHtml(nm)} <span class="pa-t">${fmtMoney(sh(nm))}원</span>`,`${escapeHtml(me)} <span class="pa-m">${fmtMoney(mn)}원</span>`,escapeHtml(who(u)),escapeHtml(treat(u))].filter(Boolean).join(' · ');
+      return `<button type="button" class="pd-row pb-${bar}${on?' open':''}" data-u="${escapeHtml(u.id)}" aria-expanded="${on}">`
+        +`<span class="pd-row-store">${title(u)}</span><span class="pd-row-right">${fmtMoney(u.total)}원</span><span class="pd-row-sub">${sub}</span>`
         +`</button>`
         +(on?`<div class="mtl-stops">${u.recs.map((r,i)=>`<button type="button" class="mtl-stop pb-${dot(r)}" data-open="${escapeHtml(r.id)}"><span class="mtl-n">${escapeHtml(lbl(r,i))}</span><span class="mtl-nm">${escapeHtml(r.store||'(매장명 없음)')}${r.treat===true?'<span class="mtl-tr">한턱</span>':''}</span><span class="mtl-v">${fmtMoney(r.total||0)}원</span></button>`).join('')}`
           +`<div class="mtl-acts"><button type="button" class="mtl-btn" data-dutch="${escapeHtml(u.id)}">더치페이로 보내기</button>${(u.mid||u.recs.length>1)?`<button type="button" class="mtl-btn" data-edit="${escapeHtml(u.id)}">편집</button>`:''}</div></div>`:'');
@@ -10793,13 +10800,13 @@ function _openMeetingsSheet(initScope){
     card.innerHTML=`
       <div class="mtg-sheet-hd"><div class="mtg-sheet-title">만남</div><button class="mtg-sheet-x" id="pdX" type="button" aria-label="닫기">×</button></div>
       <div class="mtg-sheet-meta">${escapeHtml([`${all.length}번`,cadence(),last?`마지막 ${_psnMD(last)}`:''].filter(Boolean).join(' · '))}</div>
-      <div class="mtl-bar"><div class="psn-seg" role="tablist" aria-label="범위">${[['all','전체',all.length],['duo','단둘이',duoN],['grp','여럿이',all.length-duoN]].map(([k,l,n])=>`<button type="button" class="psn-seg-b${k===scope?' on':''}" data-mscope="${k}" role="tab" aria-selected="${k===scope}">${l}<em>${n}</em></button>`).join('')}</div>`
-        +`<div class="mtl-lg"><span><i class="t"></i>${escapeHtml(nm)}</span><span><i class="m"></i>${escapeHtml(me)}</span></div></div>
-      <div class="mtl-list">${list.length?groups.map(g=>`<div class="mtl-mh"><span>${mLbl(g.k)}</span><span>${g.l.length}번 · ${fmtMoney(g.l.reduce((a,u)=>a+u.total,0))}원</span></div>${g.l.map(row).join('')}`).join(''):'<div class="pd-empty">해당 만남이 없어요.</div>'}</div>
+      <div class="pd-filter">${[['all','전체'],['duo','단둘이'],['grp','여럿이']].map(([k,l])=>`<button type="button" class="pd-fchip${k===scope?' on':''}" data-mscope="${k}">${l}</button>`).join('')}<div class="mtl-lg" aria-label="점 색 = 결제한 사람"><span><i class="t"></i>${escapeHtml(nm)} 결제</span><span><i class="m"></i>${escapeHtml(me)} 결제</span></div></div>
+      <div class="mtg-sheet-divider"></div>
+      <div class="pd-list">${list.length?list.map(row).join(''):'<div class="pd-empty">해당 만남이 없어요.</div>'}</div>
       ${hasUnlinked?'<button type="button" class="mtl-link" id="mtlOrg">여러 날에 걸친 만남은 영수증을 직접 묶어 주세요 ›</button>':''}`;
     card.querySelector('#pdX').onclick=close;
     card.querySelectorAll('[data-mscope]').forEach(b=>b.onclick=()=>{scope=b.dataset.mscope;paint();});
-    card.querySelectorAll('.mtl-row[data-u]').forEach(b=>b.onclick=()=>{const id=b.dataset.u;if(opened.has(id))opened.delete(id);else opened.add(id);paint();});
+    card.querySelectorAll('.pd-row[data-u]').forEach(b=>b.onclick=()=>{const id=b.dataset.u;if(opened.has(id))opened.delete(id);else opened.add(id);paint();});
     card.querySelectorAll('.mtl-stop[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;_ovNavCtx={kind:'pd',type:'mtg',filter:scope,label:'만남'};close(()=>selectReceipt(id));});
     const unitOf=id=>all.find(u=>u.id===id);
     card.querySelectorAll('[data-dutch]').forEach(b=>b.onclick=()=>{const u=unitOf(b.dataset.dutch);if(!u)return;const recs=u.recs.slice();close(()=>sendReceiptsToDutchPay(recs,{single:recs.length===1}));});
