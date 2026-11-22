@@ -8987,7 +8987,11 @@ function _netItemAmounts(r){
     idxs.forEach(i=>{const v=sh[i]||0;if(v>0){room[i]-=v;out[i].disc+=v;got+=v;out[i].parts.push({name:l.name,amount:-v,share:!exact});if(!exact)out[i].est=true;}});return got;};
   negs.forEach(l=>{
     const ks=_discKeys(l.name);
-    const hit=ks.length?pos.filter((i,k)=>ks.some(w=>posKeys[k].includes(w))):[];
+    // v5.64 — 할인 줄 이름과 가장 많이(글자 수 기준) 겹치는 품목에만 붙인다. '국산' 같은 흔한 낱말 하나만 겹치는 다른 품목(애호박/국산)에는 붙이지 않는다.
+    //   점수가 같은 품목이 여럿이면 예전처럼 모두(추정)로 나눈다.
+    const sc=ks.length?pos.map((i,k)=>ks.reduce((a,w)=>a+(posKeys[k].includes(w)?w.length:0),0)):[];
+    const top=sc.length?Math.max(...sc):0;
+    const hit=top>0?pos.filter((i,k)=>sc[k]===top):[];
     if(hit.length){const got=give(l,hit,hit.length===1);if(hit.length>1)hit.forEach(i=>{out[i].est=true;});if(got<l.amount)general.push({name:l.name,amount:l.amount-got});}
     else general.push(l);
   });
