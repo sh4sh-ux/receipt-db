@@ -745,6 +745,7 @@ svg{display:block;flex-shrink:0;}
 .srch-table{width:100%;border-collapse:collapse;margin-bottom:4px;}
 .srch-table th{font-size:11px;font-weight:600;color:var(--label2);padding:8px 8px;text-align:left;border-bottom:1px solid var(--sep);background:var(--fill2);}
 .srch-table th:last-child,.srch-table td:last-child{text-align:right;}
+.srch-table th.srch-num,.srch-table td.srch-num{text-align:right;white-space:nowrap;} /* v5.65 — 구매 이력의 수량·단가는 머리글과 값 모두 오른쪽 맞춤 */
 .srch-table td{padding:10px 8px;border-bottom:1px solid var(--sep);font-size:13px;color:var(--label);}
 .pp-name-link{border-bottom:1px dotted var(--label3);transition:color .1s,border-color .1s;}
 .pp-row{cursor:pointer;border-radius:var(--rs);transition:background .1s;}
@@ -9148,14 +9149,14 @@ function renderSearchSummaryHtml(q, filtered){
     bodyHtml=`${_sectionToggleHtml('구매 이력',`${hitItems.length}건`,'srch_history',true)}
     <div class="section-body open">
     <table class="srch-table srch-table-pc">
-      <thead><tr><th>일자</th><th>매장명</th><th>품목명</th><th>수량</th>${hasUP?'<th>단가</th>':''}<th>금액</th></tr></thead>
+      <thead><tr><th>일자</th><th>매장명</th><th>품목명</th><th class="srch-num">수량</th>${hasUP?'<th class="srch-num">단가</th>':''}<th>금액</th></tr></thead>
       <tbody>${sorted.map(it=>`
         <tr class="srch-row" data-id="${escapeHtml(it.receiptId)}" role="button" tabindex="0">
           <td style="white-space:nowrap;">${fmtDateKor(it.date)}</td>
           <td>${escapeHtml(it.store||'')}</td>
           <td>${escapeHtml(it.name||'')}${it.disc>0?`<button type="button" class="srch-disc-tag" aria-expanded="false">${it.est?'할인 반영(추정)':'할인 반영'}</button>`:''}<a class="srch-naver" href="https://search.naver.com/search.naver?ssc=tab.shopping.all&query=${encodeURIComponent(it.name||'')}" target="_blank" rel="noopener noreferrer" title="네이버 쇼핑에서 검색" aria-label="네이버 쇼핑에서 검색"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.7" y2="16.7"/></svg></a></td>
-          <td style="text-align:right;">${it.quantity||1}</td>
-          ${hasUP?`<td>${it.unitPrice>0?fmtMoney(it.unitPrice)+'원':'—'}</td>`:''}
+          <td class="srch-num">${it.quantity||1}</td>
+          ${hasUP?`<td class="srch-num">${it.unitPrice>0?fmtMoney(it.unitPrice)+'원':'—'}</td>`:''}
           <td class="${it.amount<0?'amt-neg':''}">${fmtMoney(it.amount)}원${it.disc>0?`<span class="srch-gross">정가 ${fmtMoney(it.gross)}원</span>`:''}</td>
         </tr>${it.disc>0?`<tr class="srch-disc-row" hidden><td colspan="${hasUP?6:5}" style="text-align:left;"><div class="srch-disc-box"><div><span>정가</span><b>${fmtMoney(it.gross)}원</b></div>${it.dlines.map(l=>`<div><span>${escapeHtml(l.name)}${l.share?' (나눈 몫)':''}</span><b class="amt-neg">${fmtMoney(l.amount)}원</b></div>`).join('')}<div class="srch-disc-sum"><span>실구매${it.est?' (추정)':''}</span><b>${fmtMoney(it.amount)}원</b></div>${it.skip&&it.skip.length?`<p>품목을 알 수 없는 할인(${it.skip.map(l=>escapeHtml(l.name)+' '+fmtMoney(l.amount)+'원').join(', ')})은 반영하지 않았어요.</p>`:''}</div></td></tr>`:''}`).join('')}
       </tbody>
