@@ -1008,6 +1008,12 @@ th.mtg-chk{background:var(--fill2);}
 .mtg-sheet>.pd-filter,.mtg-sheet>.mtl-bar{position:sticky;top:calc(var(--sh-hd,56px) + var(--sh-meta,0px) - var(--shp));z-index:4;background:var(--card);margin-left:calc(-1 * var(--shp));margin-right:calc(-1 * var(--shp));padding-left:var(--shp);padding-right:var(--shp);}
 .mtg-sheet>.pd-filter{margin-top:0;margin-bottom:0;padding-top:2px;padding-bottom:10px;}
 .mtg-sheet>.mtl-bar{margin-top:0;margin-bottom:0;padding-top:12px;padding-bottom:8px;}
+.mtg-sheet>.mtg-stick{position:sticky;top:calc(-1 * var(--shp));z-index:4;background:var(--card);margin:calc(-1 * var(--shp)) calc(-1 * var(--shp)) 0;padding:var(--shp) var(--shp) 0;transition:box-shadow .15s;} /* v5.62 — 제목·부제·칩을 한 덩어리로 고정(따로 고정하면 사이가 벌어져 목록이 비쳤다) */
+.mtg-sheet.is-scrolled>.mtg-stick{box-shadow:0 1px 0 var(--divider);}
+.mtg-stick>.mtg-sheet-hd{margin:0;padding:0 0 9px;}
+.mtg-stick>.mtg-sheet-meta{margin:0;padding:0 0 14px;}
+.mtg-stick>.pd-filter{margin:0;padding:2px 0 10px;}
+.mtg-stick>.mtl-bar{margin:0;padding:12px 0 8px;}
 .mtg-sheet [data-shlast]{transition:box-shadow .15s;}
 .mtg-sheet.is-scrolled [data-shlast]{box-shadow:0 1px 0 var(--divider);}
 .mtg-sheet .mtl-mh{position:sticky;top:calc(var(--sh-top,100px) - var(--shp));z-index:3;background:var(--card);}
@@ -9947,7 +9953,10 @@ function _openPersonDetailShell(cfg){
   const paint=()=>{
     const rows=cfg.rows(fkey)||[];
     const foot=cfg.foot?cfg.foot(fkey):null;
-    const filterHtml=(cfg.filters&&cfg.filters.length>1)?`<div class="pd-filter">${cfg.filters.map(f=>`<button type="button" class="pd-fchip${f.key===fkey?' on':''}" data-k="${escapeHtml(f.key)}">${escapeHtml(f.label)}</button>`).join('')}</div>`:'';
+    // v5.62 — 점이 있는 목록(결제 밸런스·한턱·자주 간 곳)은 점 색 = 결제한 사람 범례를 칩 줄 오른쪽에(만남 창과 같음)
+    const legendHtml=(cfg.legend&&rows.some(x=>x.bar))?`<div class="mtl-lg" aria-label="점 색 = 결제한 사람"><span><i class="t"></i>${escapeHtml(cfg.legend[0])} 결제</span><span><i class="m"></i>${escapeHtml(cfg.legend[1])} 결제</span></div>`:'';
+    const chipsHtml=(cfg.filters&&cfg.filters.length>1)?cfg.filters.map(f=>`<button type="button" class="pd-fchip${f.key===fkey?' on':''}" data-k="${escapeHtml(f.key)}">${escapeHtml(f.label)}</button>`).join(''):'';
+    const filterHtml=(chipsHtml||legendHtml)?`<div class="pd-filter">${chipsHtml}${legendHtml}</div>`:'';
     const listHtml=rows.length?rows.map(row=>`<button type="button" class="pd-row${row.bar?' pb-'+row.bar:''}" data-open="${escapeHtml(row.r.id)}">
         <span class="pd-row-store">${escapeHtml(row.r.store||'(매장명 없음)')}</span>
         <span class="pd-row-right${cfg.emphasizeRight?' em':''}">${row.rightHtml}${row.tagHtml||''}</span>
@@ -9971,7 +9980,7 @@ function _openPersonDetailShell(cfg){
 function _openPersonDetail(type,initFilter){
   const d=_personDetailData; if(!d)return;
   // v3.90 — 목록에서 연 영수증 → Back 시 이 목록을 다시 연다(만남 요약과 같은 route.mtg 방식).
-  const _pdShell=cfg=>_openPersonDetailShell({...cfg,initFilter,navCtx:{kind:'pd',type}});
+  const _pdShell=cfg=>_openPersonDetailShell({legend:[d.name,d.me],...cfg,initFilter,navCtx:{kind:'pd',type}});
   const nm=d.name, share=r=>_receiptShare(r,nm);
   const sumT=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
   const sortD=arr=>[...arr].sort((a,b)=>((b.date||'').localeCompare(a.date||''))||String(b.id).localeCompare(String(a.id)));
@@ -10116,15 +10125,21 @@ function _mtgSheetOpen(){
   document.addEventListener('keydown',onKey);
   bd.addEventListener('click',e=>{if(e.target===bd)close();});
   // v4.21 — 모든 목록 창 머리 고정: 제목 줄(+ 필터 줄)은 스크롤해도 위에 남고, 월 제목은 그 아래에 붙는다. 창 내용이 바뀔 때마다 높이를 다시 잰다.
+  let _wrapping=false;
   const syncStick=()=>{
-    const hd=card.querySelector(':scope>.mtg-sheet-hd'), fl=card.querySelector(':scope>.pd-filter, :scope>.mtl-bar');
-    const hh=hd?hd.offsetHeight:0;
-    const mt=card.querySelector(':scope>.mtg-sheet-meta'), mh=mt?mt.offsetHeight:0;
-    card.style.setProperty('--sh-hd',hh+'px');
-    card.style.setProperty('--sh-meta',mh+'px');
-    card.style.setProperty('--sh-top',(hh+mh+(fl?fl.offsetHeight:0))+'px');
-    card.querySelectorAll('[data-shlast]').forEach(n=>n.removeAttribute('data-shlast'));
-    const last=fl||mt||hd; if(last)last.setAttribute('data-shlast','');
+    if(_wrapping)return;
+    // 맨 앞 제목 줄·부제·필터 줄을 한 덩어리(.mtg-stick)로 묶어 함께 고정 — 따로 재서 고정하면 사이가 벌어져 목록이 비쳤다.
+    if(!card.querySelector(':scope>.mtg-stick')){
+      const lead=[];for(const k of card.children){if(k.matches('.mtg-sheet-hd,.mtg-sheet-meta,.pd-filter,.mtl-bar'))lead.push(k);else break;}
+      if(lead.length&&lead[0].matches('.mtg-sheet-hd')){
+        _wrapping=true;
+        const w=document.createElement('div');w.className='mtg-stick';
+        card.insertBefore(w,lead[0]);lead.forEach(n=>w.appendChild(n));
+        setTimeout(()=>{_wrapping=false;},0);
+      }
+    }
+    const st=card.querySelector(':scope>.mtg-stick');
+    card.style.setProperty('--sh-top',(st?st.offsetHeight:0)+'px'); // 월 머리 등 그 아래 고정 줄의 기준
   };
   new MutationObserver(syncStick).observe(card,{childList:true});
   card.addEventListener('scroll',()=>card.classList.toggle('is-scrolled',card.scrollTop>2),{passive:true});
