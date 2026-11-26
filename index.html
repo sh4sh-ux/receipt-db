@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.66';
+  const _swVersion='v5.68';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -4858,7 +4858,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.66';
+const APP_VERSION='v5.68';
 
 const _desktopPickerMq=window.matchMedia('(hover:hover) and (pointer:fine)');
 const THEME_STORAGE_KEY='receiptDbTheme';
@@ -10383,21 +10383,19 @@ function _dpxInnerHtml(){
   let T=0,sT=0,sM=0;
   for(const r of recs){const m=_splitShareMap(r);T+=r.total||0;sT+=m.get(tgt)||0;sM+=m.get(me)||0;}
   const oth=Math.max(0,Math.round(T-sT-sM));
-  const buckets=[{k:'srch',lbl:tgt,v:sT},{k:'me',lbl:me,v:sM}];if(oth>0)buckets.push({k:'etc',lbl:'기타',v:oth});
+  const trt=n=>recs.filter(r=>r.treat===true&&normalizeName(r.paidBy)===n).reduce((a,r)=>a+(r.total||0),0);
+  const tA=trt(tgt),mA=trt(me);
+  const buckets=[{k:'srch',lbl:tgt,v:sT,t:tA},{k:'me',lbl:me,v:sM,t:mA}];if(oth>0)buckets.push({k:'etc',lbl:'기타',v:oth,t:0});
   const pcts=_dpxPct(buckets.map(b=>b.v),T);
   const short=n=>{n=String(n||'');return escapeHtml(n.length>5?n.slice(0,5)+'…':n);};
-  const spendRows=buckets.map((b,i)=>`<div class="dpx-hmn-stat-col"${b.k==='etc'?'':` role="button" tabindex="0" data-psnd="paid" data-scope="${seg}"`}><span class="dpx-hmn-stat-col-lbl dpx-hmn-spend-lbl${b.k==='etc'?'':' dpx-'+b.k}">${short(b.lbl)} 지출</span><div class="dpx-hmn-stat-col-right"><span class="dpx-hmn-pct">${pcts[i]}%</span><span class="dpx-hmn-stat-col-val dpx-neutral">${fmtMoney(b.v)}원</span></div></div>`).join('');
-  const tA=recs.filter(r=>r.treat===true&&normalizeName(r.paidBy)===tgt).reduce((a,r)=>a+(r.total||0),0);
-  const mA=recs.filter(r=>r.treat===true&&normalizeName(r.paidBy)===me).reduce((a,r)=>a+(r.total||0),0);
-  const badges=(tA?`<span class="dpx-hmn-stat-settle dpx-treat">🎉 ${short(tgt)} 한턱 ${fmtMoney(tA)}원</span>`:'')+(mA?`<span class="dpx-hmn-stat-settle dpx-treat">🎉 ${short(me)} 한턱 ${fmtMoney(mA)}원</span>`:'');
-  const treatRow=badges?`<div class="dpx-hmn-stat-col dpx-hmn-col-badges" role="button" tabindex="0" data-psnd="treatn" data-scope="${seg}"><span class="dpx-hmn-stat-col-lbl">한턱</span><div class="dpx-hmn-stat-badges">${badges}</div></div>`:'';
+  const spendRows=buckets.map((b,i)=>`<div class="dpx-hmn-stat-col"${b.k==='etc'?'':` role="button" tabindex="0" data-psnd="paid" data-scope="${seg}"`}><span class="dpx-hmn-stat-col-lbl dpx-hmn-spend-lbl${b.k==='etc'?'':' dpx-'+b.k}">${short(b.lbl)} 지출</span><div class="dpx-hmn-stat-col-right">${b.t>0?`<span class="dpx-hmn-treat" data-psnd="treatn" data-scope="${seg}">🎉 ${fmtMoney(b.t)}</span>`:''}<span class="dpx-hmn-pct">${pcts[i]}%</span><span class="dpx-hmn-stat-col-val dpx-hmn-spend-val dpx-${b.k}">${fmtMoney(b.v)}원</span></div></div>`).join('');
   const days=[...new Set(all.map(m=>m.date).filter(Boolean))].sort();
   let cad='';if(days.length>=3){const span=(new Date(days[days.length-1])-new Date(days[0]))/86400000;cad=`보통 ${Math.max(1,Math.round(span/(days.length-1)))}일마다`;}
   const lastD=all.find(u=>u.date)?.date||'';
   const rhythm=[cad,lastD?`마지막 ${_psnMD(lastD)} (${_psnAgo(lastD)})`:''].filter(Boolean).join(' · ');
   let stat;
   if(units.length){
-    stat=`<div class="dpx-hmn-stat-3"><div class="dpx-hmn-stat-col" role="button" tabindex="0" data-psnd="mtg" data-scope="${seg}"><span class="dpx-hmn-stat-col-lbl">만남</span><div class="dpx-hmn-stat-col-right"><span class="dpx-hmn-stat-col-val dpx-neutral">${units.length}회</span></div></div>${spendRows}<div class="dpx-hmn-stat-col dpx-hmn-total-col"><span class="dpx-hmn-stat-col-lbl">총 지출</span><div class="dpx-hmn-stat-col-right"><span class="dpx-hmn-stat-col-val">${fmtMoney(T)}원</span></div></div>${treatRow}</div>`
+    stat=`<div class="dpx-hmn-stat-3"><div class="dpx-hmn-stat-col" role="button" tabindex="0" data-psnd="mtg" data-scope="${seg}"><span class="dpx-hmn-stat-col-lbl">만남</span><div class="dpx-hmn-stat-col-right"><span class="dpx-hmn-stat-col-val dpx-neutral">${units.length}회</span></div></div>${spendRows}<div class="dpx-hmn-stat-col dpx-hmn-total-col"><span class="dpx-hmn-stat-col-lbl">총 지출</span><div class="dpx-hmn-stat-col-right"><span class="dpx-hmn-stat-col-val">${fmtMoney(T)}원</span></div></div></div>`
       +(rhythm?`<div class="dpx-hmn-stat">${escapeHtml(rhythm)}</div>`:'');
   }else stat=`<div class="dpx-hmn-stat">${st.all?'함께한 만남이 아직 없어요':'이 달에 함께한 만남이 없어요'}</div>`;
   // 기록 카드(만남 하나 = 카드 하나)

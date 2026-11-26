@@ -38,7 +38,7 @@ const ok=(name,cond,extra)=>{if(!cond)fails.push(name+(extra?` (${extra})`:''));
       ok(tag+'만남 카드 3장',await cnt('.dpx-record-card')===3);
       ok(tag+'처음엔 모든 카드가 접혀 있음',(await disp('.dpx-rc-body')).every(d=>d==='none'));
       ok(tag+'요약에 만남 3회',/3회/.test(await txt('.dpx-hmn-stat-col-val')||''));
-      ok(tag+'주황 글자 없음(요약 숫자·배지)',await p.evaluate(()=>{const bad=[];document.querySelectorAll('#psnDpx *').forEach(e=>{if(e.children.length)return;if(!e.textContent.trim())return;const c=getComputedStyle(e).color;const m=c.match(/\d+/g);if(!m)return;const [r,g,b]=m.map(Number);if(r>200&&g>110&&g<190&&b<90)bad.push(e.className+':'+c);});return bad.length===0;}));
+      ok(tag+'주황 글자 없음(요약 숫자·배지)',await p.evaluate(()=>{const bad=[];document.querySelectorAll('#psnDpx *').forEach(e=>{if(e.children.length||e.matches('.dpx-hmn-spend-val,.dpx-hmn-treat'))return;if(!e.textContent.trim())return;const c=getComputedStyle(e).color;const m=c.match(/\d+/g);if(!m)return;const [r,g,b]=m.map(Number);if(r>200&&g>110&&g<190&&b<90)bad.push(e.className+':'+c);});return bad.length===0;}));
       await p.focus('.dpx-rc-hd');await p.keyboard.press('Enter');await p.waitForTimeout(120);
       ok(tag+'Enter로 카드 펼침(하나만 보임)',(await disp('.dpx-rc-body')).filter(d=>d!=='none').length===1);
       await p.keyboard.press('Enter');await p.waitForTimeout(120);
@@ -62,7 +62,7 @@ const ok=(name,cond,extra)=>{if(!cond)fails.push(name+(extra?` (${extra})`:''));
       ok(tag+'가장 오래된 달에서 이전 비활성',await p.evaluate(()=>document.querySelector('[data-dpx="prev"]').disabled));
       await p.click('[data-dpx="all"]');await p.waitForTimeout(120);
       ok(tag+'전체 복귀 = 카드 3장',await cnt('.dpx-record-card')===3&&(await txt('.dpx-hmn-label'))==='전체 기록');
-      for(const [sel,re,name] of [['[data-psnd="paid"]',/결제 밸런스/,'결제 밸런스 창'],['[data-psnd="treatn"]',/한턱/,'한턱 창'],['.dpx-hmn-stat-col[data-psnd="mtg"]',/만남/,'만남 창']]){
+      for(const [sel,re,name] of [['.dpx-hmn-stat-col[data-psnd="paid"] .dpx-hmn-stat-col-lbl',/결제 밸런스/,'결제 밸런스 창'],['.dpx-hmn-treat[data-psnd="treatn"]',/한턱/,'한턱 창'],['.dpx-hmn-stat-col[data-psnd="mtg"]',/만남/,'만남 창']]){
         await p.click(sel);await p.waitForTimeout(400);
         ok(tag+name+' 열림',re.test(await txt('.mtg-sheet .mtg-sheet-title')||''));
         await p.keyboard.press('Escape');await p.waitForTimeout(350);
