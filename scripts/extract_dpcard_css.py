@@ -23,7 +23,7 @@ rc-payer-pill treat-badge pay-ic rc-chev open rc-total rc-total-zero neg
 rc-receipt-wrap rc-receipt-tbl rc-qty rc-unit rc-neg rc-foot-summary receipt-audit ok bad warn rc-foot-cell
 rc-foot-link rc-foot-arrow rc-gift-badge audit-bad
 rc-txns rc-txn-row rc-txn-people rc-txn-amt rc-treat-right rc-treat-badge
-rc-foot rc-saved-at rc-foot-btns rc-load-btn rc-edit-btn rc-btn-ico rc-btn-lbl pm-last-row'''.split())
+rc-item-amt rc-txn-left rc-foot rc-saved-at rc-foot-btns rc-load-btn rc-edit-btn rc-btn-ico rc-btn-lbl pm-last-row'''.split())
 
 
 def split_rules(s):
