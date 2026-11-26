@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.80';
+  const _swVersion='v5.82';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -2019,6 +2019,10 @@ html[data-theme="light"]{ --toast-bg:#FFFFFF; --toast-fg:#111111; --toast-bd:#D4
 .search-wrap input{height:40px;border-radius:10px;transition:border-color .15s,box-shadow .15s,background .15s;}
 .search-wrap input:focus{box-shadow:0 0 0 3px var(--blue-bg);}
 .side-list{padding:4px 0 0;}
+/* ⚠️ 목록 아래 끝을 부드럽게 사라지게 — 스크롤하다 줄 구분선이 하단 바(.side-foot) 구분선 바로 위에 걸리면 두 줄로 보이던 것 */
+@media(min-width:781px){
+  .side-list{padding-bottom:26px;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent calc(100% - 8px));mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent calc(100% - 8px));}
+}
 .side-list>:last-child>.r-card:last-child{border-bottom:0;}
 .r-card{min-height:60px;padding-top:12px;padding-bottom:12px;align-items:center;border-color:color-mix(in srgb,var(--sep) 82%,transparent);}
 .r-card:hover{background:var(--fill2);}
@@ -4861,7 +4865,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.80';
+const APP_VERSION='v5.82';
 
 const _desktopPickerMq=window.matchMedia('(hover:hover) and (pointer:fine)');
 const THEME_STORAGE_KEY='receiptDbTheme';
