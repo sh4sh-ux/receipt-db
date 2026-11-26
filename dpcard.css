@@ -3,7 +3,8 @@
    클래스는 모두 `dpx-` 접두어를 붙였다(영수증 앱의 기존 클래스와 겹치지 않게). 사람 탭 요약(index.html `_psnDpx*`)이 쓴다.
    ⚠️ 더치페이 쪽 모양이 바뀌면 이 파일을 다시 뽑아 갱신한다(원본을 고치지 말고 이 파일 끝의 「영수증 앱 조정」에서만 덮어쓸 것).
    ⚠️ 주황색은 범례(점)에서만 쓴다 — 원본의 주황 한턱 배지는 끝의 조정에서 회색으로 바꿨다. */
-.dpx-root{--detail-bg:#FAFAFA;}
+.dpx-root{--detail-bg:#FAFAFA;font-family:-apple-system,'SF Pro Text','Helvetica Neue',Arial,sans-serif;}
+.dpx-root .dpx-hmn-label{text-align:center;}
 :root[data-theme="dark"] .dpx-root{--detail-bg:var(--fill);}
 /* DPX:BEGIN */
 .dpx-treat-badge{font-size:11px;color:#4355E8;font-weight:600;flex-shrink:0;}
@@ -181,6 +182,7 @@
 :root[data-theme="light"] .dpx-hmn-stat-settle.dpx-treat{background:#FFF1E0;color:#E8710A;}
 .dpx-hmn-stat-settle+.dpx-hmn-stat-settle{margin-left:4px;}
 .dpx-rc-txn-row, .dpx-rc-item-row, .dpx-rc-foot, .dpx-rc-body{border-image:linear-gradient(to right,transparent 16px,var(--sep) 16px,var(--sep) calc(100% - 16px),transparent calc(100% - 16px)) 1;}
+.dpx-pay-ic > svg { width: 20px !important; height: 20px !important; }
 /* DPX:END */
 /* 각자 지출 금액·한턱 색은 더치페이와 같게(나 파랑·상대 주황·기타 회색) */
 .dpx-hmn-treat{color:var(--amber);}
@@ -197,8 +199,4 @@
 .dpx-hmn-label.dpx-static{cursor:default;}
 .dpx-hmn-label.dpx-static:hover{background:none;color:var(--label);}
 .dpx-hmn-stat-col[data-psnd]:hover{background:var(--fill2);}
-.dpx-hmn-stat-3>.dpx-hmn-stat-col:not(.dpx-hmn-col-badges) .dpx-hmn-stat-col-right::after{content:'';display:inline-block;width:10px;margin-left:8px;flex:none;}
-.dpx-hmn-stat-3>.dpx-hmn-stat-col[data-psnd]:not(.dpx-hmn-col-badges) .dpx-hmn-stat-col-right::after{content:'\203A';color:var(--label3);font-size:16px;text-align:center;line-height:1;}
-.dpx-hmn-stat-col.dpx-hmn-col-badges[data-psnd]::after{content:'\203A';color:var(--label3);font-size:16px;order:4;flex:none;}
-@media(max-width:700px){.dpx-hmn-stat-col.dpx-hmn-col-badges[data-psnd]::after{order:2;margin-left:auto;}}
 
