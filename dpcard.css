@@ -192,9 +192,19 @@
 .dpx-root [role="button"]{cursor:pointer;}
 .dpx-hmn-label.dpx-static{cursor:default;}
 .dpx-hmn-label.dpx-static:hover{background:none;color:var(--label);}
-.dpx-pay-ic .cat-icon-mask{width:18px;height:18px;}
+.dpx-pay-ic .cat-icon-mask{width:22px;height:22px;}
 .dpx-hmn-stat-col[data-psnd]:hover{background:var(--fill2);}
 .dpx-hmn-stat-3>.dpx-hmn-stat-col:not(.dpx-hmn-col-badges) .dpx-hmn-stat-col-right::after{content:'';display:inline-block;width:10px;margin-left:8px;flex:none;}
 .dpx-hmn-stat-3>.dpx-hmn-stat-col[data-psnd]:not(.dpx-hmn-col-badges) .dpx-hmn-stat-col-right::after{content:'\203A';color:var(--label3);font-size:16px;text-align:center;line-height:1;}
 .dpx-hmn-stat-col.dpx-hmn-col-badges[data-psnd]::after{content:'\203A';color:var(--label3);font-size:16px;order:4;flex:none;}
 @media(max-width:700px){.dpx-hmn-stat-col.dpx-hmn-col-badges[data-psnd]::after{order:2;margin-left:auto;}}
+
+/* 지출 행: 한턱 배지·펼침 화살표를 금액 왼쪽에(더치페이 기록 보관함과 같은 순서). 폰은 더치페이 3줄 배치를 그대로 쓰고 배지는 이름 줄에 둔다 */
+.dpx-rc-item-row>.dpx-tb-right{margin-left:auto;}
+.dpx-rc-item-row>.dpx-rc-chev{margin-right:2px;}
+.dpx-rc-item-row>.dpx-rc-txn-amt{min-width:76px;text-align:right;flex-shrink:0;}
+.dpx-rc-item-row .dpx-tb-name{display:none;}
+@media(max-width:700px){
+  .dpx-rc-item-row>.dpx-tb-right{display:none;}
+  .dpx-rc-item-row .dpx-tb-name{display:inline;}
+}
