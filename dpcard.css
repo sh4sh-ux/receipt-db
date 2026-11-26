@@ -198,8 +198,4 @@
 .dpx-hmn-label.dpx-static{cursor:default;}
 .dpx-hmn-label.dpx-static:hover{background:none;color:var(--label);}
 .dpx-hmn-stat-col[data-psnd]:hover{background:var(--fill2);}
-.dpx-hmn-stat-3>.dpx-hmn-stat-col:not(.dpx-hmn-col-badges) .dpx-hmn-stat-col-right::after{content:'';display:inline-block;width:10px;margin-left:8px;flex:none;}
-.dpx-hmn-stat-3>.dpx-hmn-stat-col[data-psnd]:not(.dpx-hmn-col-badges) .dpx-hmn-stat-col-right::after{content:'\203A';color:var(--label3);font-size:16px;text-align:center;line-height:1;}
-.dpx-hmn-stat-col.dpx-hmn-col-badges[data-psnd]::after{content:'\203A';color:var(--label3);font-size:16px;order:4;flex:none;}
-@media(max-width:700px){.dpx-hmn-stat-col.dpx-hmn-col-badges[data-psnd]::after{order:2;margin-left:auto;}}
 
