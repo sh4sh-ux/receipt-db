@@ -1,6 +1,6 @@
 const CACHE_PREFIX='receipt-db-shell-';
 // ⚠️ APP_VERSION과 같이 올릴 것(scripts/check_app.py가 확인). 이 파일 내용이 바뀌어야 폰이 새 서비스 워커를 설치한다.
-const APP_VERSION='v5.72';
+const APP_VERSION='v5.73';
 const CACHE_NAME=CACHE_PREFIX+APP_VERSION;
 const SHELL=[
   './prepaid.js',
@@ -8,6 +8,7 @@ const SHELL=[
   './advance.js',
   './advance.css',
   './dpcard.css',
+  './dpicons.js',
   './',
   './index.html',
   './manifest.webmanifest',

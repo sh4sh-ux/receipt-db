@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.72';
+  const _swVersion='v5.73';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -3874,6 +3874,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 
 <script src="prepaid.js"></script>
 <script src="advance.js"></script>
+<script src="dpicons.js"></script>
 <script>
 'use strict';
 
@@ -4860,7 +4861,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.72';
+const APP_VERSION='v5.73';
 
 const _desktopPickerMq=window.matchMedia('(hover:hover) and (pointer:fine)');
 const THEME_STORAGE_KEY='receiptDbTheme';
@@ -10361,6 +10362,11 @@ function _dpxPct(vals,total){ // 각자÷총액, 합 100 보정(가장 큰 칸�
   if(vals.length&&total>0&&s!==100){let mi=0;vals.forEach((v,i)=>{if(v>vals[mi])mi=i;});p[mi]+=100-s;}
   return p;
 }
+function _dpxIcon(cat){
+  const m={'외식':'food','카페':'cafe','술집':'beer','노래방':'mic','쇼핑':'shop','영화':'movie','교통':'car','여행':'plane','숙박':'bed','골프':'golf','스파':'spa','운동':'dumbbell','케이크':'cake','경조사':'event','병원·약국':'medical','기타':'receipt'};
+  const k=m[normalizeCategory(cat)]||'receipt';
+  return (window.DPX_ICONS&&window.DPX_ICONS[k])||'';
+}
 function _dpxInnerHtml(){
   const d=_psnDpxD;if(!d)return '';
   const {tgt,me}=d, st=_psnDpx;
@@ -10413,13 +10419,14 @@ function _dpxInnerHtml(){
     const items=u.recs.map((r,i)=>{
       const uid=`${sid}_${String(r.id).replace(/[^a-zA-Z0-9_]/g,'')}`,rop=st.rc.has(uid);
       const pb=normalizeName(r.paidBy);
-      const lbl=byTime?_mtgTime(r):(u.recs.length>1?`${i+1}차`:(_mtgTime(r)||''));
+      const mems=[...receiptPeople(r)].map(escapeHtml).join(', ');
       const rows=(r.items||[]).map(it=>{const a=it.amount||0,neg=a<0;return `<tr><td${neg?' class="dpx-rc-neg"':''}>${escapeHtml(it.name||'')}</td><td class="dpx-rc-qty">${it.quantity||1}</td><td class="dpx-rc-unit${neg?' dpx-rc-neg':''}">${it.unitPrice?fmtMoney(it.unitPrice):''}</td><td${neg?' class="dpx-rc-neg"':''}>${fmtMoney(a)}</td></tr>`;}).join('');
       const sum=(r.items||[]).reduce((a,it)=>a+(it.amount||0),0),diff=sum-(r.total||0);
       const audit=(r.items||[]).length?(diff===0?`<span class="dpx-receipt-audit dpx-ok">✓ 합계 일치</span>`:`<span class="dpx-receipt-audit dpx-bad">합계 ${diff>0?'+':'−'}${fmtMoney(Math.abs(diff))}원 차이</span>`):'';
       const tbl=(r.items||[]).length?`<div class="dpx-rc-receipt-wrap${rop?' dpx-open':''}" id="dpxr_${uid}"><table class="dpx-rc-receipt-tbl"><colgroup><col><col><col><col></colgroup><thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td><span class="dpx-rc-foot-summary">합계${audit}</span></td><td colspan="2" class="dpx-rc-foot-cell"><button type="button" class="dpx-rc-foot-link" data-dpx="open" data-id="${escapeHtml(r.id)}">영수증<span class="dpx-rc-foot-arrow">›</span></button></td><td>${fmtMoney(sum)}</td></tr></tfoot></table></div>`:'';
-      const ic=typeof getCatSvg==='function'?getCatSvg(r.category||autocategorize(r.store)||'기타'):'';
-      return `<div class="dpx-rc-item-row dpx-rc-3line" role="button" tabindex="0" data-dpx="rcpt" data-uid="${uid}"><span class="dpx-pay-ic">${ic}</span><div class="dpx-rc-item-info"><div class="dpx-rc-item-name-row"><span class="dpx-rc-item-name">${escapeHtml(r.store||'(매장명 없음)')}</span>${pb?`<span class="dpx-rc-payer-pill">${escapeHtml(pb)} 결제</span>`:''}${r.treat===true?'<span class="dpx-treat-badge dpx-tb-name">🎉 한턱</span>':''}</div>${lbl?`<div class="dpx-rc-item-meta">${escapeHtml(lbl)}</div>`:''}</div>${r.treat===true?'<span class="dpx-treat-badge dpx-tb-right">🎉 한턱</span>':''}${tbl?`<span class="dpx-rc-chev${rop?' dpx-open':''}"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:''}<span class="dpx-rc-txn-amt">${fmtMoney(r.total||0)}원</span></div>${tbl}`;
+      const ic=_dpxIcon(r.category||autocategorize(r.store)||'기타');
+      const chev=tbl?`<span class="dpx-rc-chev${rop?' dpx-open':''}" data-dpx-chev="${uid}"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:'';
+      return `<div class="dpx-rc-item-row dpx-rc-3line" role="button" tabindex="0" data-dpx="rcpt" data-uid="${uid}"><span class="dpx-pay-ic">${ic}</span><div class="dpx-rc-item-info"><div class="dpx-rc-item-name-row"><span class="dpx-rc-item-name">${escapeHtml(r.store||'(매장명 없음)')}</span>${pb?`<span class="dpx-rc-payer-pill">${escapeHtml(pb)} 결제</span>`:''}${r.treat===true?'<span class="dpx-treat-badge">🎉 한턱</span>':''}</div><div class="dpx-rc-item-meta">${mems}</div></div>${chev}<span class="dpx-rc-item-amt">${fmtMoney(r.total||0)}원</span></div>${tbl}`;
     }).join('');
     // 분담 내역: 이 만남에서 각자 낸 돈(1/N·한턱 반영)
     const shareMap=new Map();u.recs.forEach(r=>{_splitShareMap(r).forEach((v,k)=>shareMap.set(k,(shareMap.get(k)||0)+v));});

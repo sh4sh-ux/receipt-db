@@ -52,6 +52,7 @@
   .dpx-rc-receipt-tbl tfoot td:first-child{padding-left:6px;}
 }
 .dpx-rc-gift-badge{font-size:11px;font-weight:600;color:var(--green);background:rgba(52,199,89,.12);border-radius:6px;padding:1px 6px;}
+.dpx-rc-txn-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;flex-wrap:wrap;}
 .dpx-pay-ic{cursor:pointer;border:none;font-family:inherit;padding:0;}
 .dpx-pay-ic:hover{box-shadow:0 0 0 2px var(--blue-bg);}
 .dpx-rc-foot-cell{text-align:right;padding-right:14px;}
@@ -120,11 +121,14 @@
 .dpx-rc-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:3em;flex-shrink:1;}
 .dpx-rc-item-meta{font-size:11px;color:var(--label3);margin-top:2px;padding-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .dpx-rc-payer-pill{white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:var(--fill);color:var(--label2);border-radius:100px;padding:2px 8px;font-size:10px;line-height:1;}
+.dpx-rc-item-amt{font-size:13px;font-weight:600;flex-shrink:0;min-width:76px;text-align:right;font-variant-numeric:tabular-nums;}
+.dpx-rc-item-amt.dpx-neg{color:var(--red);}
 @media(max-width:700px){
   .dpx-rc-item-row.dpx-rc-3line{position:relative;}
   .dpx-rc-item-row.dpx-rc-3line .dpx-rc-item-name-row{flex-wrap:wrap;row-gap:4px;}
   .dpx-rc-item-row.dpx-rc-3line .dpx-rc-item-name{flex-basis:100%;padding-right:92px;box-sizing:border-box;white-space:normal;overflow:visible;text-overflow:clip;}
   .dpx-rc-item-row.dpx-rc-3line .dpx-rc-item-meta{padding-right:26px;}
+  .dpx-rc-item-row.dpx-rc-3line>.dpx-rc-item-amt{position:absolute;top:11px;right:16px;}
   .dpx-rc-item-row.dpx-rc-3line>.dpx-rc-chev{position:absolute;bottom:11px;right:16px;margin-right:0;}
 }
 .dpx-rc-txns{padding:0;}
@@ -132,7 +136,7 @@
 .dpx-rc-txn-row:last-child{border-bottom:none;}
 .dpx-rc-txn-people{display:flex;align-items:center;gap:14px;color:var(--label);}
 .dpx-rc-txn-amt{font-weight:600;flex-shrink:0;}
-.dpx-rc-txn-amt{font-family:system-ui,-apple-system,'BlinkMacSystemFont','Apple SD Gothic Neo',Arial,sans-serif;}
+.dpx-rc-item-amt, .dpx-rc-txn-amt{font-family:system-ui,-apple-system,'BlinkMacSystemFont','Apple SD Gothic Neo',Arial,sans-serif;}
 .dpx-rc-section-sep{position:relative;margin-top:2px;}
 .dpx-rc-section-sep::before{content:'';position:absolute;top:0;left:16px;right:16px;height:1px;background:var(--sep);}
 .dpx-rc-treat-right{display:inline-flex;align-items:center;gap:8px;flex-shrink:0;}
@@ -192,19 +196,9 @@
 .dpx-root [role="button"]{cursor:pointer;}
 .dpx-hmn-label.dpx-static{cursor:default;}
 .dpx-hmn-label.dpx-static:hover{background:none;color:var(--label);}
-.dpx-pay-ic .cat-icon-mask{width:22px;height:22px;}
 .dpx-hmn-stat-col[data-psnd]:hover{background:var(--fill2);}
 .dpx-hmn-stat-3>.dpx-hmn-stat-col:not(.dpx-hmn-col-badges) .dpx-hmn-stat-col-right::after{content:'';display:inline-block;width:10px;margin-left:8px;flex:none;}
 .dpx-hmn-stat-3>.dpx-hmn-stat-col[data-psnd]:not(.dpx-hmn-col-badges) .dpx-hmn-stat-col-right::after{content:'\203A';color:var(--label3);font-size:16px;text-align:center;line-height:1;}
 .dpx-hmn-stat-col.dpx-hmn-col-badges[data-psnd]::after{content:'\203A';color:var(--label3);font-size:16px;order:4;flex:none;}
 @media(max-width:700px){.dpx-hmn-stat-col.dpx-hmn-col-badges[data-psnd]::after{order:2;margin-left:auto;}}
 
-/* 지출 행: 한턱 배지·펼침 화살표를 금액 왼쪽에(더치페이 기록 보관함과 같은 순서). 폰은 더치페이 3줄 배치를 그대로 쓰고 배지는 이름 줄에 둔다 */
-.dpx-rc-item-row>.dpx-tb-right{margin-left:auto;}
-.dpx-rc-item-row>.dpx-rc-chev{margin-right:2px;}
-.dpx-rc-item-row>.dpx-rc-txn-amt{min-width:76px;text-align:right;flex-shrink:0;}
-.dpx-rc-item-row .dpx-tb-name{display:none;}
-@media(max-width:700px){
-  .dpx-rc-item-row>.dpx-tb-right{display:none;}
-  .dpx-rc-item-row .dpx-tb-name{display:inline;}
-}
