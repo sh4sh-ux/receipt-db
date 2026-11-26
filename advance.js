@@ -273,9 +273,9 @@ function advShareCanvas(a){
   };
   // 표: 머리 15/400 회색 + 선, 줄 17/500(굵은 칸 17/700) + 옅은 선, 합계 19/800
   const table=(cols,rows,empty,sumLbl,badge,badgeCol,sumAmt)=>{
-    ctx.fillStyle='#9a9aa1';font(15,400);for(const c of cols){ctx.textAlign=c.al;ctx.fillText(c.t,c.x,y+29);}hline(y+44,'#dedee3',1);y+=44;
-    if(!rows.length){ctx.fillStyle='#8e8e93';font(17,400);ctx.textAlign='left';ctx.fillText(empty,IL,y+31);hline(y+ROW,'#ececf0',1);y+=ROW;}
-    for(const row of rows){row.forEach((v,i)=>{const c=cols[i];font(17,c.bold?600:400);ctx.fillStyle=v&&v.c||'#222';ctx.textAlign=c.al;const t=v&&typeof v==='object'?v.t:v;ctx.fillText(c.max?fit(t,c.max):String(t??''),c.x,y+31);});hline(y+ROW,'#ececf0',1);y+=ROW;}
+    ctx.fillStyle='#9a9aa1';font(15,400);for(const c of cols){ctx.textAlign=c.al;ctx.fillText(c.t,c.x,y+29);}hline(y+44,'#dedee3',1.5);y+=44;
+    if(!rows.length){ctx.fillStyle='#8e8e93';font(17,400);ctx.textAlign='left';ctx.fillText(empty,IL,y+31);hline(y+ROW,'#dedee3',2);y+=ROW;}
+    for(const [ri,row] of rows.entries()){row.forEach((v,i)=>{const c=cols[i];font(17,c.bold?600:400);ctx.fillStyle=v&&v.c||'#222';ctx.textAlign=c.al;const t=v&&typeof v==='object'?v.t:v;ctx.fillText(c.max?fit(t,c.max):String(t??''),c.x,y+31);});hline(y+ROW,ri===rows.length-1?'#dedee3':'#ececf0',ri===rows.length-1?2:1);y+=ROW;}
     ctx.fillStyle='#111';font(19,700);ctx.textAlign='left';ctx.fillText(sumLbl,IL,y+35);const lw=ctx.measureText(sumLbl).width;
     if(badge){ctx.fillStyle=badgeCol;font(15,700);ctx.fillText(badge,IL+lw+16,y+35);}
     ctx.fillStyle='#111';font(20,700);ctx.textAlign='right';ctx.fillText(sumAmt,IR,y+35);y+=72+22;
