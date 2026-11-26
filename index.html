@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.65';
+  const _swVersion='v5.66';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -1193,7 +1193,7 @@ button.rel-duo-side{border:none;background:none;padding:0;margin:0;font:inherit;
 .pd-row.pb-t,.pd-row.pb-m,.pd-row.pb-n{position:relative;padding-left:22px;}
 .pd-row.pb-t::before,.pd-row.pb-m::before{content:'';position:absolute;left:6px;top:17px;width:7px;height:7px;border-radius:50%;}
 .pd-row.pb-t::before{background:var(--amber);}.pd-row.pb-m::before{background:var(--blue);} 
-.pd-row-sub .pa-t{color:var(--amber);}.pd-row-sub .pa-m{color:var(--blue-txt);} /* 굵기는 이름과 같게(사용자) */
+.pd-row-sub .pa-t{color:inherit;}.pd-row-sub .pa-m{color:var(--blue-txt);} /* 굵기는 이름과 같게(사용자) */
 .pd-empty{padding:30px 8px;text-align:center;color:var(--label3);font-size:13px;}
 
 .pd-kind{margin-left:8px;font-size:10.5px;font-weight:600;color:var(--label3);vertical-align:2px;}
@@ -3145,6 +3145,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 </style>
 <link rel="stylesheet" href="prepaid.css">
 <link rel="stylesheet" href="advance.css">
+<link rel="stylesheet" href="dpcard.css">
 </head>
 <body>
 
@@ -4857,7 +4858,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.65';
+const APP_VERSION='v5.66';
 
 const _desktopPickerMq=window.matchMedia('(hover:hover) and (pointer:fine)');
 const THEME_STORAGE_KEY='receiptDbTheme';
@@ -10345,88 +10346,145 @@ function _psnJosa(word,withBatchim,withoutBatchim){ // 표시용 조사(이/가)
   if(!(c>=0xAC00&&c<=0xD7A3))return withBatchim;
   return ((c-0xAC00)%28)?withBatchim:withoutBatchim;
 }
+// 사람 탭 요약 = 더치페이 '기록 보관함'과 같은 모양(월 이동 + 요약 카드 + 펼쳐지는 기록 카드).
+// 스타일은 dpcard.css(더치페이 v8.53에서 그대로 가져옴, 클래스 접두어 dpx-). ⚠️ 주황색은 범례(점)에서만 쓴다.
+let _psnDpx={all:true,ym:'',open:new Set(),rc:new Set()};
+let _psnDpxD=null; // 마지막으로 그린 사람({tgt,me}) — 월·범위를 바꿀 때 다시 그리는 데 쓴다
+const _DPX_L='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
+const _DPX_R='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
+function _dpxUnits(){return ((_personDetailData&&_personDetailData.meetings)||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id)));}
+function _dpxMonths(){return [...new Set(_dpxUnits().map(u=>(u.date||'').slice(0,7)).filter(Boolean))].sort();}
+function _dpxPct(vals,total){ // 각자÷총액, 합 100 보정(가장 큰 칸이 잔차를 흡수) — 더치페이와 같은 규칙
+  const p=vals.map(v=>total>0?Math.round(v/total*100):0),s=p.reduce((a,c)=>a+c,0);
+  if(vals.length&&total>0&&s!==100){let mi=0;vals.forEach((v,i)=>{if(v>vals[mi])mi=i;});p[mi]+=100-s;}
+  return p;
+}
+function _dpxInnerHtml(){
+  const d=_psnDpxD;if(!d)return '';
+  const {tgt,me}=d, st=_psnDpx;
+  const all=_dpxUnits(), months=_dpxMonths();
+  const now=_todayYMD().slice(0,7);
+  if(!st.ym||!/^\d{4}-\d{2}$/.test(st.ym))st.ym=months.length?months[months.length-1]:now;
+  const seg=['all','duo','grp'].includes(_psnSeg)?_psnSeg:'all';
+  const inSeg=u=>seg==='all'||(seg==='duo'?!!u.duo:!u.duo);
+  const inPeriod=u=>st.all||(u.date||'').slice(0,7)===st.ym;
+  const units=all.filter(u=>inSeg(u)&&inPeriod(u));
+  const recs=[];const seen=new Set();units.forEach(u=>u.recs.forEach(r=>{if(!seen.has(r.id)){seen.add(r.id);recs.push(r);}}));
+  const ymLbl=ym=>{const [y,m]=ym.split('-');return `${y}년 ${+m}월`;};
+  const first=months[0]||st.ym;
+  const lbl=st.all?'전체 기록':ymLbl(st.ym);
+  const nav=`<div class="dpx-hmn-header">`
+    +`<button type="button" class="dpx-hmn-arr" data-dpx="prev" aria-label="이전 달"${st.all||st.ym<=first?' disabled':''}>${_DPX_L}</button>`
+    +`<span class="dpx-hmn-label dpx-static">${lbl}</span>`
+    +`<button type="button" class="dpx-hmn-arr" data-dpx="next" aria-label="다음 달"${st.all||st.ym>=now?' disabled':''}>${_DPX_R}</button>`
+    +`<button type="button" class="dpx-hmn-all${st.all?' dpx-on':''}" data-dpx="all">전체</button></div>`;
+  const segRow=`<div class="dpx-pm-seg-row" style="margin-top:8px">${[['all','전체'],['duo','단둘이'],['grp','여럿이']].map(([k,l])=>`<button type="button" class="dpx-pm-seg${k===seg?' dpx-on':''}" data-dpx="seg" data-k="${k}">${l}</button>`).join('')}</div>`;
+  // 요약 카드(만남 · 각자 지출 · 총 지출 · 한턱)
+  let T=0,sT=0,sM=0;
+  for(const r of recs){const m=_splitShareMap(r);T+=r.total||0;sT+=m.get(tgt)||0;sM+=m.get(me)||0;}
+  const oth=Math.max(0,Math.round(T-sT-sM));
+  const buckets=[{k:'srch',lbl:tgt,v:sT},{k:'me',lbl:me,v:sM}];if(oth>0)buckets.push({k:'etc',lbl:'기타',v:oth});
+  const pcts=_dpxPct(buckets.map(b=>b.v),T);
+  const short=n=>{n=String(n||'');return escapeHtml(n.length>5?n.slice(0,5)+'…':n);};
+  const spendRows=buckets.map((b,i)=>`<div class="dpx-hmn-stat-col"${b.k==='etc'?'':` role="button" tabindex="0" data-psnd="paid" data-scope="${seg}"`}><span class="dpx-hmn-stat-col-lbl dpx-hmn-spend-lbl${b.k==='etc'?'':' dpx-'+b.k}">${short(b.lbl)} 지출</span><div class="dpx-hmn-stat-col-right"><span class="dpx-hmn-pct">${pcts[i]}%</span><span class="dpx-hmn-stat-col-val dpx-neutral">${fmtMoney(b.v)}원</span></div></div>`).join('');
+  const tA=recs.filter(r=>r.treat===true&&normalizeName(r.paidBy)===tgt).reduce((a,r)=>a+(r.total||0),0);
+  const mA=recs.filter(r=>r.treat===true&&normalizeName(r.paidBy)===me).reduce((a,r)=>a+(r.total||0),0);
+  const badges=(tA?`<span class="dpx-hmn-stat-settle dpx-treat">🎉 ${short(tgt)} 한턱 ${fmtMoney(tA)}원</span>`:'')+(mA?`<span class="dpx-hmn-stat-settle dpx-treat">🎉 ${short(me)} 한턱 ${fmtMoney(mA)}원</span>`:'');
+  const treatRow=badges?`<div class="dpx-hmn-stat-col dpx-hmn-col-badges" role="button" tabindex="0" data-psnd="treatn" data-scope="${seg}"><span class="dpx-hmn-stat-col-lbl">한턱</span><div class="dpx-hmn-stat-badges">${badges}</div></div>`:'';
+  const days=[...new Set(all.map(m=>m.date).filter(Boolean))].sort();
+  let cad='';if(days.length>=3){const span=(new Date(days[days.length-1])-new Date(days[0]))/86400000;cad=`보통 ${Math.max(1,Math.round(span/(days.length-1)))}일마다`;}
+  const lastD=all.find(u=>u.date)?.date||'';
+  const rhythm=[cad,lastD?`마지막 ${_psnMD(lastD)} (${_psnAgo(lastD)})`:''].filter(Boolean).join(' · ');
+  let stat;
+  if(units.length){
+    stat=`<div class="dpx-hmn-stat-3"><div class="dpx-hmn-stat-col" role="button" tabindex="0" data-psnd="mtg" data-scope="${seg}"><span class="dpx-hmn-stat-col-lbl">만남</span><div class="dpx-hmn-stat-col-right"><span class="dpx-hmn-stat-col-val dpx-neutral">${units.length}회</span></div></div>${spendRows}<div class="dpx-hmn-stat-col dpx-hmn-total-col"><span class="dpx-hmn-stat-col-lbl">총 지출</span><div class="dpx-hmn-stat-col-right"><span class="dpx-hmn-stat-col-val">${fmtMoney(T)}원</span></div></div>${treatRow}</div>`
+      +(rhythm?`<div class="dpx-hmn-stat">${escapeHtml(rhythm)}</div>`:'');
+  }else stat=`<div class="dpx-hmn-stat">${st.all?'함께한 만남이 아직 없어요':'이 달에 함께한 만남이 없어요'}</div>`;
+  // 기록 카드(만남 하나 = 카드 하나)
+  const fhd=x=>{if(!x)return '';const [y,m,dd]=x.split('-');return `${y}년 ${+m}월 ${+dd}일`;};
+  const card=u=>{
+    const id=String(u.id),op=st.open.has(id),sid=id.replace(/[^a-zA-Z0-9_]/g,'');
+    const names=[];for(const r of u.recs){const n=_mtgShortStore(r.store);if(!names.includes(n))names.push(n);}
+    const title=`${names[0]||'(매장명 없음)'}${names.length>1?` 외 ${names.length-1}곳`:''}`;
+    const dstr=(u.d1&&u.d1>u.date)?`${fhd(u.date)} ~ ${fhd(u.d1)}`:fhd(u.date);
+    const people=_mtgPeopleUnion(u.recs);
+    const total=u.recs.reduce((a,r)=>a+(r.total||0),0);
+    const byTime=_mtgByTime(u.recs);
+    const items=u.recs.map((r,i)=>{
+      const uid=`${sid}_${String(r.id).replace(/[^a-zA-Z0-9_]/g,'')}`,rop=st.rc.has(uid);
+      const pb=normalizeName(r.paidBy);
+      const lbl=byTime?_mtgTime(r):(u.recs.length>1?`${i+1}차`:(_mtgTime(r)||''));
+      const rows=(r.items||[]).map(it=>{const a=it.amount||0,neg=a<0;return `<tr><td${neg?' class="dpx-rc-neg"':''}>${escapeHtml(it.name||'')}</td><td class="dpx-rc-qty">${it.quantity||1}</td><td class="dpx-rc-unit${neg?' dpx-rc-neg':''}">${it.unitPrice?fmtMoney(it.unitPrice):''}</td><td${neg?' class="dpx-rc-neg"':''}>${fmtMoney(a)}</td></tr>`;}).join('');
+      const sum=(r.items||[]).reduce((a,it)=>a+(it.amount||0),0),diff=sum-(r.total||0);
+      const audit=(r.items||[]).length?(diff===0?`<span class="dpx-receipt-audit dpx-ok">✓ 합계 일치</span>`:`<span class="dpx-receipt-audit dpx-bad">합계 ${diff>0?'+':'−'}${fmtMoney(Math.abs(diff))}원 차이</span>`):'';
+      const tbl=(r.items||[]).length?`<div class="dpx-rc-receipt-wrap${rop?' dpx-open':''}" id="dpxr_${uid}"><table class="dpx-rc-receipt-tbl"><colgroup><col><col><col><col></colgroup><thead><tr><th>품목명</th><th>수량</th><th>단가</th><th>금액</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td><span class="dpx-rc-foot-summary">합계${audit}</span></td><td colspan="2" class="dpx-rc-foot-cell"><button type="button" class="dpx-rc-foot-link" data-dpx="open" data-id="${escapeHtml(r.id)}">영수증<span class="dpx-rc-foot-arrow">›</span></button></td><td>${fmtMoney(sum)}</td></tr></tfoot></table></div>`:'';
+      const ic=typeof getCatSvg==='function'?getCatSvg(r.category||autocategorize(r.store)||'기타'):'';
+      return `<div class="dpx-rc-item-row dpx-rc-3line" role="button" tabindex="0" data-dpx="rcpt" data-uid="${uid}"><span class="dpx-pay-ic">${ic}</span><div class="dpx-rc-item-info"><div class="dpx-rc-item-name-row"><span class="dpx-rc-item-name">${escapeHtml(r.store||'(매장명 없음)')}</span>${pb?`<span class="dpx-rc-payer-pill">${escapeHtml(pb)} 결제</span>`:''}${r.treat===true?'<span class="dpx-treat-badge">🎉 한턱</span>':''}</div>${lbl?`<div class="dpx-rc-item-meta">${escapeHtml(lbl)}</div>`:''}</div><span class="dpx-rc-txn-amt">${fmtMoney(r.total||0)}원</span>${tbl?`<span class="dpx-rc-chev${rop?' dpx-open':''}"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:''}</div>${tbl}`;
+    }).join('');
+    // 분담 내역: 이 만남에서 각자 낸 돈(1/N·한턱 반영)
+    const shareMap=new Map();u.recs.forEach(r=>{_splitShareMap(r).forEach((v,k)=>shareMap.set(k,(shareMap.get(k)||0)+v));});
+    const order=[tgt,me,...[...shareMap.keys()].filter(n=>n!==tgt&&n!==me)].filter(n=>shareMap.has(n));
+    const shareRows=order.map(n=>`<div class="dpx-rc-txn-row"><div class="dpx-rc-txn-people"><span>${escapeHtml(n)}</span></div><span class="dpx-rc-txn-amt">${fmtMoney(shareMap.get(n)||0)}원</span></div>`).join('');
+    const tr=(()=>{if(!u.recs.length||!u.recs.every(r=>r.treat===true))return '';const ps=[...new Set(u.recs.map(r=>normalizeName(r.paidBy)).filter(Boolean))];return ps.length===1?`${ps[0]} 한턱`:'서로 한턱';})();
+    const canEdit=u.mid||u.recs.length>1;
+    return `<div class="dpx-record-card" data-u="${escapeHtml(id)}"><div class="dpx-rc-hd" role="button" tabindex="0" data-dpx="card" data-u="${escapeHtml(id)}"><div class="dpx-rc-meta"><div class="dpx-rc-date">${escapeHtml(dstr)}</div><div class="dpx-rc-name">${escapeHtml(title)}</div><div class="dpx-rc-people">${escapeHtml(people.join(' · '))}${tr?` · ${escapeHtml(tr)}`:''}</div></div><div class="dpx-rc-right"><div class="dpx-rc-amt-line"><div class="dpx-rc-total">${fmtMoney(total)}원</div></div><span class="dpx-rc-chevron${op?' dpx-open':''}">▼</span></div></div>`
+      +`<div class="dpx-rc-body${op?' dpx-open':''}"><div class="dpx-rc-section-title">지출 내역</div>${items}<div class="dpx-rc-section-title dpx-rc-section-sep">분담 내역</div><div class="dpx-rc-txns">${shareRows}</div></div>`
+      +`<div class="dpx-rc-foot"><span class="dpx-rc-saved-at">영수증 ${u.recs.length}건 · ${people.length}명</span><div class="dpx-rc-foot-btns"><button type="button" class="dpx-rc-load-btn" data-dpx="send" data-u="${escapeHtml(id)}">더치페이로 보내기</button>${canEdit?`<button type="button" class="dpx-rc-load-btn dpx-rc-edit-btn" data-dpx="edit" data-u="${escapeHtml(id)}">편집</button>`:''}</div></div></div>`;
+  };
+  const list=units.length?`<div class="dpx-record-list">${units.map(card).join('')}</div>`:'';
+  return `<div class="dpx-hist-month-nav">${nav}${segRow}${stat}</div>${list}`;
+}
+function _psnDpxRedraw(){const box=document.getElementById('psnDpx');if(box)box.innerHTML=_dpxInnerHtml();}
+async function _psnDpxEdit(u){ // 만남 창의 [편집]과 같은 동작
+  let mid=u.mid;
+  if(!mid){const ok=await _mtgCreateMeeting(u.recs);if(!ok)return;mid=(receipts.find(r=>r.id===u.recs[0].id)||{}).meetingId;renderSide();await renderDetail();}
+  if(!mid)return;
+  _mtgManageOpen('meetings',{view:'edit',mid});
+}
+function _psnDpxClick(e){ // 사람 탭 요약의 눌림 처리(위임). 처리했으면 true
+  const t=e.target.closest('[data-dpx]');if(!t)return false;
+  const st=_psnDpx,k=t.dataset.dpx;
+  if(k==='prev'||k==='next'){
+    const months=_dpxMonths();
+    const [y,m]=st.ym.split('-').map(Number);const dt=new Date(y,m-1+(k==='next'?1:-1),1);
+    st.ym=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+    if(months.length&&st.ym<months[0])st.ym=months[0];
+    _psnDpxRedraw();return true;
+  }
+  if(k==='all'){st.all=!st.all;if(!st.all){const months=_dpxMonths();st.ym=months.length?months[months.length-1]:_todayYMD().slice(0,7);}_psnDpxRedraw();return true;}
+  if(k==='seg'){_psnSeg=t.dataset.k;_psnDpxRedraw();return true;}
+  if(k==='card'){
+    const id=t.dataset.u,card=t.closest('.dpx-record-card');if(!card)return true;
+    const body=card.querySelector('.dpx-rc-body'),chev=card.querySelector('.dpx-rc-chevron');
+    const op=body.classList.toggle('dpx-open');if(chev)chev.classList.toggle('dpx-open',op);
+    if(op)st.open.add(id);else st.open.delete(id);return true;
+  }
+  if(k==='rcpt'){
+    const uid=t.dataset.uid,w=document.getElementById('dpxr_'+uid);if(!w)return true;
+    const op=w.classList.toggle('dpx-open');const c=t.querySelector('.dpx-rc-chev');if(c)c.classList.toggle('dpx-open',op);
+    if(op)st.rc.add(uid);else st.rc.delete(uid);return true;
+  }
+  if(k==='open'){e.stopPropagation();selectReceipt(t.dataset.id);return true;}
+  if(k==='send'){const u=_dpxUnits().find(x=>String(x.id)===t.dataset.u);if(u){const recs=u.recs.slice();sendReceiptsToDutchPay(recs,{single:recs.length===1});}return true;}
+  if(k==='edit'){const u=_dpxUnits().find(x=>String(x.id)===t.dataset.u);if(u)_psnDpxEdit(u);return true;}
+  return false;
+}
 function _psnLayoutHtml(d){
   const sum=arr=>arr.reduce((s,r)=>s+(r.total||0),0);
   const tgt=d.tgt, me=d.me;
   const chev='<span class="chev" aria-hidden="true">›</span>';
   const btn=(attrs,label)=>` role="button" tabindex="0" ${attrs} aria-label="${escapeHtml(label)}"`;
-  const pct=(a,b)=>{const t=a+b;if(t<=0)return null;const x=Math.round(a/t*100);return [x,100-x];};
-  const bal=(a,b)=>{const p=pct(a,b);return `<div class="psn-bal" aria-hidden="true">${p?`<i class="t" style="width:${p[0]}%"></i><i class="m" style="width:${p[1]}%"></i>`:''}</div>`;};
-  const subj=n=>`<b>${escapeHtml(n)}${_psnJosa(n,'이','가')}</b>`;
-  const say=(a,b,verb,none)=>{const df=a-b;
-    if(!a&&!b)return `<span class="psn-say-none">${none}</span>`;
-    if(df===0)return `두 사람이 똑같이 ${verb}`;
-    return df>0?`${subj(tgt)} <b class="n t">${fmtMoney(df)}원</b> 더 ${verb}`:`${subj(me)} <b class="n m">${fmtMoney(-df)}원</b> 더 ${verb}`;};
-  const fig=(cls,amt,cnt)=>`<div class="psn-fig ${cls}"><span class="psn-fig-amt${amt?'':' zero'}">${fmtMoney(amt)}원</span><span class="psn-fig-cnt">${cnt}건</span></div>`;
-  const scopes=[
-    {k:'all',label:'전체',recs:d.together},
-    {k:'duo',label:'단둘이',recs:d.together.filter(r=>receiptPeople(r).size===2)},
-    {k:'grp',label:'여럿이',recs:d.together.filter(r=>receiptPeople(r).size>2)},
-  ];
-  const seg=scopes.some(x=>x.k===_psnSeg)?_psnSeg:'all';
-  const hid=k=>k===seg?'':' hidden';
-  const segBtns=`<div class="psn-seg" role="tablist" aria-label="범위">${scopes.map(x=>`<button type="button" class="psn-seg-b${x.k===seg?' on':''}" data-psnseg="${x.k}" role="tab" aria-selected="${x.k===seg}">${x.label}</button>`).join('')}</div>`;
-
-  // ① 결제 밸런스 — 정산 후 각자 실제로 낸 돈(1/N·한턱 반영)
-  const balance=`<section class="psn-card psn-balc psn-v415" aria-label="결제 밸런스">`
-    +`<div class="psn-balc-hd"><div class="psn-hero-title">결제 밸런스</div>${segBtns}</div>`
-    +scopes.map(x=>{
-      const T=sum(x.recs);let st=0,sm=0,stN=0,smN=0;
-      for(const r of x.recs){const m=_splitShareMap(r),a=m.get(tgt)||0,b=m.get(me)||0;st+=a;sm+=b;if(a)stN++;if(b)smN++;}
-      const p=pct(st,sm),has=x.recs.length>0;
-      return `<div class="psn-balp" data-seg="${x.k}"${hid(x.k)}>`
-        +`<div class="psn-say"${has?btn(`data-psnd="paid" data-scope="${x.k}"`,`결제 밸런스 ${x.label} — 영수증 보기`):''}>${say(st,sm,'냈어요','함께한 자리가 없어요')}${has?chev:''}</div>`
-        +bal(st,sm)
-        +`<div class="psn-figs">${fig('t',st,stN)}${p?`<span class="psn-figs-pct"><em class="t">${p[0]}%</em> · <em class="m">${p[1]}%</em></span>`:''}${fig('m',sm,smN)}</div>`
-        +(has?`<div class="psn-trow psn-total"${btn(`data-psnd="paid" data-scope="${x.k}"`,`함께한 자리 총액 ${x.label}`)}><span class="psn-trow-l">함께한 자리 총액<small>${x.recs.length}건${T-st-sm?` · 다른 사람 ${fmtMoney(T-st-sm)}원`:''}</small></span><span class="psn-trow-v">${fmtMoney(T)}원</span>${chev}</div>`:'')
-      +`</div>`;}).join('')
-    +`</section>`;
-
-  // ② 한턱 — 범위 안에서 각자 한턱낸 영수증 금액(전액)
-  const treat=`<section class="psn-card psn-treatc psn-v415" aria-label="한턱">`
-    +scopes.map(x=>{
-      const tT=x.recs.filter(r=>r.treat===true&&normalizeName(r.paidBy)===tgt), mT=x.recs.filter(r=>r.treat===true&&normalizeName(r.paidBy)===me);
-      const tA=sum(tT),mA=sum(mT),has=tT.length+mT.length>0;
-      return `<div class="psn-balp" data-seg="${x.k}"${hid(x.k)}>`
-        +`<div class="psn-balc-hd"><div class="psn-hero-title">한턱</div><span class="psn-hero-r">${x.label} ${x.recs.length}건</span></div>`
-        +`<div class="psn-say"${has?btn(`data-psnd="treatn" data-scope="${x.k}"`,`한턱 ${x.label} — 영수증 보기`):''}>${say(tA,mA,'한턱냈어요','아직 한턱 기록이 없어요')}${has?chev:''}</div>`
-        +(has?bal(tA,mA)+`<div class="psn-figs">${fig('t',tA,tT.length)}${fig('m',mA,mT.length)}</div>`:'')
-      +`</div>`;}).join('')
-    +`</section>`;
-
-  // ③ 만남 — 만남 관리 · 횟수(전체/단둘이/여럿이 → 만남 목록) · 만남 간격 · 자주 간 곳(→ 그 가게 영수증)
-  const ms=d.ms, mts=(_personDetailData&&_personDetailData.meetings)||[];
-  const recent=[...d.together].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id)));
-  const last=recent.find(r=>r.date)?.date||'';
-  const days=[...new Set(mts.map(m=>m.date).filter(Boolean))].sort();
-  let cadence='';
-  if(days.length>=3){const span=(new Date(days[days.length-1])-new Date(days[0]))/86400000;const avg=Math.max(1,Math.round(span/(days.length-1)));cadence=`보통 ${avg}일마다`;}
-  const lastTxt=last?`마지막 ${escapeHtml(_psnMD(last))} (${_psnAgo(last)})`:'';
-  const storeCnt=new Map();for(const r of recent){const s=(r.store||'').trim();if(s)storeCnt.set(s,(storeCnt.get(s)||0)+1);}
+  // ① 요약 = 더치페이 기록 보관함 모양(_dpxInnerHtml) · ② 만남 도구(지출 없는 만남·만남 관리)와 자주 간 곳
+  if(!_psnDpxD||_psnDpxD.tgt!==tgt){_psnDpx.all=true;_psnDpx.ym='';_psnDpx.open=new Set();_psnDpx.rc=new Set();} // 다른 사람으로 바뀌면 전체·접힘부터
+  _psnDpxD={tgt,me};
+  const ms=d.ms;
+  const recentAll=[...d.together];
+  const storeCnt=new Map();for(const r of recentAll){const s2=(r.store||'').trim();if(s2)storeCnt.set(s2,(storeCnt.get(s2)||0)+1);}
   const topStores=[...storeCnt.entries()].sort((a,b)=>b[1]-a[1]).slice(0,3).filter(x=>x[1]>=2);
-  const tile=(k,n,label)=>`<div class="psn-mtile"${n?btn(`data-psnd="mtg" data-scope="${k}"`,`만남 ${label} ${n}회 — 목록`):''}><b>${n}</b><span>${label}${n?chev:''}</span></div>`;
-  const meet=`<section class="psn-card psn-mtgc" aria-label="만남">`
-    +`<div class="psn-balc-hd"><div><div class="psn-hero-title">만남</div><div class="psn-hero-desc">${[cadence,lastTxt].filter(Boolean).join(' · ')||'아직 만남 기록이 없어요'}</div></div>`
-      +`<span class="psn-mgbtns"><button type="button" class="psn-mgbtn" id="relMtgGather" title="지출 없이 만난 자리를 기록">+ 지출 없는 만남</button><button type="button" class="psn-mgbtn" id="relMtgConfirmed">만남 관리</button></span></div>`
-    +`<div class="psn-mtiles">${tile('all',ms.count,'전체')}${tile('duo',ms.duo,'단둘이')}${tile('grp',ms.group,'여럿이')}</div>`
-    +(topStores.length?`<div class="psn-places"><div class="psn-places-l">자주 간 곳</div><div class="psn-pchips">${topStores.map(([st,n])=>`<button type="button" class="psn-pchip" data-psnd="place" data-store="${escapeHtml(st)}"><span>${escapeHtml(st)}</span><em>${n}</em></button>`).join('')}</div></div>`:'')
-    +`</section>`;
-
-  // ④ 최근 함께한 자리 — 왼쪽 색 막대 = 결제자(상대 주황 · 나 파랑)
-  const SHOW=5;
-  const rrow=(r,i)=>{
-    const pb=normalizeName(r.paidBy),w=pb===tgt?' pb-t':pb===me?' pb-m':'';
-    return `<div class="srch-row psn-rrow${w}${i>=SHOW?' more':''}" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">`
-      +`<span class="psn-r-date">${escapeHtml(fmtDateKor(r.date))}</span>`
-      +`<span class="psn-r-store">${escapeHtml(r.store||'(매장명 없음)')}</span>`
-      +`<span class="psn-r-amt">${fmtMoney(r.total||0)}원</span>`
-      +`<span class="psn-r-sub">${pb?`${escapeHtml(pb)} 결제`:'결제자 미상'} · ${receiptPeople(r).size}명</span></div>`;
-  };
-  const recentSec=`<section class="psn-recent"><div class="psn-sec-hd">최근 함께한 자리<span class="r">${recent.length}건</span></div>`
-    +(recent.length
-      ?`<div class="psn-rlist">${recent.map(rrow).join('')}</div>`
-        +(recent.length>SHOW?`<button type="button" class="psn-more-btn" data-psnmore data-label="전체 ${recent.length}건 보기">전체 ${recent.length}건 보기</button>`:'')
-      :`<div class="psn-empty">함께한 영수증이 아직 없어요.</div>`)
+  const dpx=`<div class="dpx-root" id="psnDpx">${_dpxInnerHtml()}</div>`;
+  const tools=`<section class="psn-card psn-mtgc psn-dpx-tools" aria-label="만남 도구">`
+    +`<div class="psn-balc-hd"><div class="psn-hero-title">만남 기록</div><span class="psn-mgbtns"><button type="button" class="psn-mgbtn" id="relMtgGather" title="지출 없이 만난 자리를 기록">+ 지출 없는 만남</button><button type="button" class="psn-mgbtn" id="relMtgConfirmed">만남 관리</button></span></div>`
+    +(topStores.length?`<div class="psn-places"><div class="psn-places-l">자주 간 곳</div><div class="psn-pchips">${topStores.map(([st2,n])=>`<button type="button" class="psn-pchip" data-psnd="place" data-store="${escapeHtml(st2)}"><span>${escapeHtml(st2)}</span><em>${n}</em></button>`).join('')}</div></div>`:'')
     +`</section>`;
 
   // ⑤ 묶이지 않은 영수증 · ⑥ 관계 그룹
@@ -10441,7 +10499,7 @@ function _psnLayoutHtml(d){
       +`<button type="button" class="psn-tab${tab==='all'?' on':''}" data-psntab="all" role="tab" aria-selected="${tab==='all'}">상세 내역</button>`
       +`<span class="psn-tlg" aria-label="색 범례"><span><i class="t"></i>${escapeHtml(tgt)}</span><span><i class="m"></i>${escapeHtml(me)}</span></span>`
     +`</div>`
-    +`<div class="psn-pane" data-pane="sum"${tab==='sum'?'':' hidden'}><div class="psn-one">${typeof advPersonCardHtml==='function'?advPersonCardHtml(tgt):''}${balance}${treat}${meet}${recentSec}${unl}${rel}</div></div>`
+    +`<div class="psn-pane" data-pane="sum"${tab==='sum'?'':' hidden'}><div class="psn-one">${typeof advPersonCardHtml==='function'?advPersonCardHtml(tgt):''}${dpx}${tools}${unl}${rel}</div></div>`
     +`<div class="psn-pane" data-pane="all"${tab==='all'?'':' hidden'}>${detailAll||'<div class="psn-empty">상세 내역이 없어요.</div>'}</div>`
     +`</div>`;
 }
@@ -11608,6 +11666,7 @@ async function renderDetail(){
         }
         return;
       }
+      if(_psnDpxClick(e)){e.preventDefault();return;}
       const sg=e.target.closest('[data-psnseg]');
       if(sg&&body.contains(sg)){
         e.preventDefault();e.stopPropagation();_psnSeg=sg.dataset.psnseg;
@@ -11631,7 +11690,7 @@ async function renderDetail(){
     });
     body.addEventListener('keydown',e=>{
       if(e.key!=='Enter'&&e.key!==' ')return;
-      const t=e.target.closest&&e.target.closest('.psn [data-duo][role="button"], .psn [data-psnd][role="button"]');
+      const t=e.target.closest&&e.target.closest('.psn [data-duo][role="button"], .psn [data-psnd][role="button"], .psn [data-dpx][role="button"]');
       if(t&&body.contains(t)){e.preventDefault();t.click();}
     });
     body.addEventListener('click',e=>{
