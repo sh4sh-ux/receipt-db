@@ -181,6 +181,7 @@
 :root[data-theme="light"] .dpx-hmn-stat-settle.dpx-treat{background:#FFF1E0;color:#E8710A;}
 .dpx-hmn-stat-settle+.dpx-hmn-stat-settle{margin-left:4px;}
 .dpx-rc-txn-row, .dpx-rc-item-row, .dpx-rc-foot, .dpx-rc-body{border-image:linear-gradient(to right,transparent 16px,var(--sep) 16px,var(--sep) calc(100% - 16px),transparent calc(100% - 16px)) 1;}
+.dpx-pay-ic > svg { width: 20px !important; height: 20px !important; }
 /* DPX:END */
 /* 각자 지출 금액·한턱 색은 더치페이와 같게(나 파랑·상대 주황·기타 회색) */
 .dpx-hmn-treat{color:var(--amber);}

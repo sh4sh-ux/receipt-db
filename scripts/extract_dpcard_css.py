@@ -98,6 +98,12 @@ def main():
     css = re.search(r'<style[^>]*>(.*?)</style>', src, re.S).group(1)
     ver = re.search(r"APP_VERSION\s*=\s*'(v[\d.]+)'", src)
     text = emit(process(split_rules(css)))
+    # 아이콘 크기(.pay-ic > svg 20px)는 index.html이 아니라 category-grid.css에 있다 — 같이 가져온다
+    grid = SRC.parent / 'category-grid.css'
+    if grid.exists():
+        m = re.search(r'\.pay-ic\s*>\s*svg\s*\{[^}]*\}', grid.read_text(encoding='utf8'))
+        if m:
+            text += re.sub(r'\s+', ' ', m.group(0)).replace('.pay-ic', '.dpx-pay-ic') + '\n'
     cur = OUT.read_text(encoding='utf8')
     a, b = cur.index('/* DPX:BEGIN */'), cur.index('/* DPX:END */')
     new = cur[:a] + '/* DPX:BEGIN */\n' + text + cur[b:]
