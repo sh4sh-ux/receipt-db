@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.70';
+  const _swVersion='v5.71';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -4860,7 +4860,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.70';
+const APP_VERSION='v5.71';
 
 const _desktopPickerMq=window.matchMedia('(hover:hover) and (pointer:fine)');
 const THEME_STORAGE_KEY='receiptDbTheme';
@@ -10428,7 +10428,7 @@ function _dpxInnerHtml(){
     const tr=(()=>{if(!u.recs.length||!u.recs.every(r=>r.treat===true))return '';const ps=[...new Set(u.recs.map(r=>normalizeName(r.paidBy)).filter(Boolean))];return ps.length===1?`${ps[0]} 한턱`:'서로 한턱';})();
     const canEdit=u.mid||u.recs.length>1;
     return `<div class="dpx-record-card" data-u="${escapeHtml(id)}"><div class="dpx-rc-hd" role="button" tabindex="0" data-dpx="card" data-u="${escapeHtml(id)}"><div class="dpx-rc-meta"><div class="dpx-rc-date">${escapeHtml(dstr)}</div><div class="dpx-rc-name">${escapeHtml(title)}</div><div class="dpx-rc-people">${escapeHtml(people.join(' · '))}${tr?` · ${escapeHtml(tr)}`:''}</div></div><div class="dpx-rc-right"><div class="dpx-rc-amt-line"><div class="dpx-rc-total">${fmtMoney(total)}원</div></div><span class="dpx-rc-chevron${op?' dpx-open':''}">▼</span></div></div>`
-      +`<div class="dpx-rc-body${op?' dpx-open':''}"><div class="dpx-rc-section-title">지출 내역</div>${items}<div class="dpx-rc-section-title dpx-rc-section-sep">분담 내역</div><div class="dpx-rc-txns">${shareRows}</div></div>`
+      +`<div class="dpx-rc-body${op?' dpx-open':''}"><div class="dpx-rc-section-title">지출 내역</div>${items}<div class="dpx-rc-section-title">분담 내역</div><div class="dpx-rc-txns">${shareRows}</div></div>`
       +`<div class="dpx-rc-foot"><span class="dpx-rc-saved-at">영수증 ${u.recs.length}건 · ${people.length}명</span><div class="dpx-rc-foot-btns"><button type="button" class="dpx-rc-load-btn" data-dpx="send" data-u="${escapeHtml(id)}">더치페이로 보내기</button>${canEdit?`<button type="button" class="dpx-rc-load-btn dpx-rc-edit-btn" data-dpx="edit" data-u="${escapeHtml(id)}">편집</button>`:''}</div></div></div>`;
   };
   const list=units.length?`<div class="dpx-record-list">${units.map(card).join('')}</div>`:'';
