@@ -16,7 +16,7 @@ OUT = ROOT / 'dpcard.css'
 
 TARGET = set('''hist-month-nav hmn-header hmn-arr hmn-label hmn-all hmn-stat hmn-stat-3 hmn-stat-col hmn-stat-col-div
 hmn-stat-col-lbl hmn-stat-col-val hmn-stat-col-right hmn-col-badges hmn-stat-badges hmn-stat-settle treat hmn-pct
-hmn-spend-lbl hmn-spend-val hmn-total-col hmn-bal-col pm-seg-row pm-seg on
+hmn-treat hmn-spend-lbl hmn-spend-val hmn-total-col hmn-bal-col pm-seg-row pm-seg on
 record-list record-card rc-hd rc-meta rc-date rc-name rc-people rc-right rc-amt-line rc-chevron rc-body
 rc-section-title rc-section-sep rc-item-row rc-3line rc-item-info rc-item-name-row rc-item-name rc-item-meta
 rc-payer-pill treat-badge pay-ic rc-chev open rc-total rc-total-zero neg

@@ -62,7 +62,7 @@ const ok=(name,cond,extra)=>{if(!cond)fails.push(name+(extra?` (${extra})`:''));
       ok(tag+'가장 오래된 달에서 이전 비활성',await p.evaluate(()=>document.querySelector('[data-dpx="prev"]').disabled));
       await p.click('[data-dpx="all"]');await p.waitForTimeout(120);
       ok(tag+'전체 복귀 = 카드 3장',await cnt('.dpx-record-card')===3&&(await txt('.dpx-hmn-label'))==='전체 기록');
-      for(const [sel,re,name] of [['[data-psnd="paid"]',/결제 밸런스/,'결제 밸런스 창'],['[data-psnd="treatn"]',/한턱/,'한턱 창'],['.dpx-hmn-stat-col[data-psnd="mtg"]',/만남/,'만남 창']]){
+      for(const [sel,re,name] of [['.dpx-hmn-stat-col[data-psnd="paid"] .dpx-hmn-stat-col-lbl',/결제 밸런스/,'결제 밸런스 창'],['.dpx-hmn-treat[data-psnd="treatn"]',/한턱/,'한턱 창'],['.dpx-hmn-stat-col[data-psnd="mtg"]',/만남/,'만남 창']]){
         await p.click(sel);await p.waitForTimeout(400);
         ok(tag+name+' 열림',re.test(await txt('.mtg-sheet .mtg-sheet-title')||''));
         await p.keyboard.press('Escape');await p.waitForTimeout(350);
