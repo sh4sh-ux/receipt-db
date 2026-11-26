@@ -178,8 +178,11 @@
 .dpx-hmn-stat-settle+.dpx-hmn-stat-settle{margin-left:4px;}
 .dpx-rc-txn-row, .dpx-rc-item-row, .dpx-rc-foot, .dpx-rc-body{border-image:linear-gradient(to right,transparent 16px,var(--sep) 16px,var(--sep) calc(100% - 16px),transparent calc(100% - 16px)) 1;}
 /* DPX:END */
-/* 한턱 금액: 주황은 범례 점에서만 쓴다 */
-.dpx-hmn-treat{color:var(--label2);}
+/* 각자 지출 금액·한턱 색은 더치페이와 같게(나 파랑·상대 주황·기타 회색) */
+.dpx-hmn-treat{color:var(--amber);}
+.dpx-hmn-spend-val.dpx-me{color:var(--blue);}
+.dpx-hmn-spend-val.dpx-srch{color:var(--amber);}
+.dpx-hmn-spend-val.dpx-etc{color:var(--label3);}
 
 /* ── 영수증 앱 조정 (원본에 없음) ── */
 .dpx-hmn-spend-lbl.dpx-srch::before{background:var(--amber);}
