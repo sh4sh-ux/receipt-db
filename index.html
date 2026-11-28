@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.86';
+  const _swVersion='v5.87';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -748,7 +748,8 @@ svg{display:block;flex-shrink:0;}
 .srch-table{width:100%;border-collapse:collapse;margin-bottom:4px;}
 .srch-table th{font-size:11px;font-weight:600;color:var(--label2);padding:8px 8px;text-align:left;border-bottom:1px solid var(--sep);background:var(--fill2);}
 .srch-table th:last-child,.srch-table td:last-child{text-align:right;}
-.srch-table th.srch-num,.srch-table td.srch-num{text-align:right;white-space:nowrap;} 
+.srch-table th.srch-num,.srch-table td.srch-num{text-align:right;white-space:nowrap;}
+.srch-table th.srch-ctr,.srch-table td.srch-ctr{text-align:center;white-space:nowrap;} 
 .srch-table td{padding:10px 8px;border-bottom:1px solid var(--sep);font-size:13px;color:var(--label);}
 .pp-name-link{border-bottom:1px dotted var(--label3);transition:color .1s,border-color .1s;}
 .pp-row{cursor:pointer;border-radius:var(--rs);transition:background .1s;}
@@ -4870,7 +4871,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.86';
+const APP_VERSION='v5.87';
 
 const _desktopPickerMq=window.matchMedia('(hover:hover) and (pointer:fine)');
 const THEME_STORAGE_KEY='receiptDbTheme';
@@ -9081,13 +9082,13 @@ function renderSearchSummaryHtml(q, filtered){
     bodyHtml=`<div class="section-hd" style="margin-top:0;">영수증 목록 <span style="font-weight:500;color:var(--label3);text-transform:none;letter-spacing:0;">${filtered.length}건</span></div>
     ${chips}
     <table class="srch-table">
-      <thead><tr><th>일자</th><th>매장명</th>${hasPlat?'<th>플랫폼</th>':''}<th>카테고리</th><th>총액</th></tr></thead>
+      <thead><tr><th>일자</th><th>매장명</th>${hasPlat?'<th class="srch-ctr">플랫폼</th>':''}<th class="srch-ctr">카테고리</th><th>총액</th></tr></thead>
       <tbody>${sorted.map(r=>`
         <tr class="srch-row" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
           <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
           <td>${escapeHtml(r.store||'')}</td>
-          ${hasPlat?`<td>${escapeHtml(_receiptPlatform(r)||'—')}</td>`:''}
-          <td>${escapeHtml(getCategoryLabel(r.category)||'—')}</td>
+          ${hasPlat?`<td class="srch-ctr">${escapeHtml(_receiptPlatform(r)||'—')}</td>`:''}
+          <td class="srch-ctr">${escapeHtml(getCategoryLabel(r.category)||'—')}</td>
           <td>${fmtMoney(r.total||0)}원</td>
         </tr>`).join('')}
       </tbody>
