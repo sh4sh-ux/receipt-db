@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.84';
+  const _swVersion='v5.85';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -4865,7 +4865,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.84';
+const APP_VERSION='v5.85';
 
 const _desktopPickerMq=window.matchMedia('(hover:hover) and (pointer:fine)');
 const THEME_STORAGE_KEY='receiptDbTheme';
@@ -6339,7 +6339,7 @@ function fmtDateGroup(iso){
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 // 오픈마켓 자동 태그 — 가게명이 오픈마켓 플랫폼이면 '오픈마켓' + 플랫폼 이름 태그를 더한다(사용자 지시: 전부 오픈마켓, 플랫폼별로 나눠서).
 // 이미 있는 태그는 건드리지 않고 지운 태그를 되살리지도 않는다(저장할 때·기존 영수증 1회 정리 때만 호출).
-const OPEN_MARKETS=[['쿠팡',['쿠팡','coupang']],['11번가',['11번가']],['G마켓',['g마켓','지마켓','gmarket']],['옥션',['옥션']],['스마트스토어',['스마트스토어','네이버쇼핑','네이버 쇼핑']],['SSG',['ssg','쓱닷컴']],['티몬',['티몬']],['위메프',['위메프']],['알리',['알리익스프레스','aliexpress','알리 ']],['테무',['테무','temu']],['토스쇼핑',['토스쇼핑','토스 쇼핑']]];
+const OPEN_MARKETS=[['쿠팡',['쿠팡','coupang']],['11번가',['11번가']],['G마켓',['g마켓','지마켓','gmarket']],['옥션',['옥션']],['네이버',['스마트스토어','네이버쇼핑','네이버 쇼핑','네이버플러스','네이버 플러스','브랜드스토어']],['SSG',['ssg','쓱닷컴']],['티몬',['티몬']],['위메프',['위메프']],['알리',['알리익스프레스','aliexpress','알리 ']],['테무',['테무','temu']],['토스쇼핑',['토스쇼핑','토스 쇼핑']]];
 function _openMarketTags(store){
   const t=String(store||'').toLowerCase();if(!t)return [];
   const hit=OPEN_MARKETS.find(([,kws])=>kws.some(k=>t.includes(k)));
@@ -6348,10 +6348,23 @@ function _openMarketTags(store){
 function _omMarketTags(market){
   const m=String(market||'').trim();if(!m)return [];
   const t=_openMarketTags(m);if(t.length)return t;
-  if(/네이버/.test(m))return ['오픈마켓','스마트스토어'];
+  if(/네이버/.test(m))return ['오픈마켓','네이버'];
   return ['오픈마켓',m.slice(0,20)];
 }
 function _omAddTags(tags,store,market){for(const x of [..._openMarketTags(store),..._omMarketTags(market)])if(!tags.includes(x))tags.push(x);return tags;}
+async function _omRenameNaver(){
+  try{
+    if(localStorage.getItem('om_rename_naver_v1'))return;
+    for(const r of receipts.slice()){
+      const t=r.tags||[];
+      if(t.includes('오픈마켓')&&t.includes('스마트스토어')){
+        const nt=t.filter(x=>x!=='스마트스토어');if(!nt.includes('네이버'))nt.push('네이버');
+        await dbPut('receipts',{...r,tags:nt,updatedAt:nowISO()});
+      }
+    }
+    localStorage.setItem('om_rename_naver_v1','1');await loadAll();try{renderSide();}catch(e){}
+  }catch(e){}
+}
 async function _omBackfill(){
   try{
     if(localStorage.getItem('om_backfill_v1'))return;
@@ -16530,7 +16543,7 @@ function _dbxBindEvents(){
     await loadStoreCatMap();
     await loadRelationGroups();
     await loadAll();
-    _omBackfill();
+    _omBackfill().then(_omRenameNaver);
     // 화면 폭 기준 초기 탭: 데스크탑 → 추가, 모바일 → 내역 목록
     if(!_isMobileLayout()) switchTab('input');
     else{_mobileListMode='list';switchTab('list');}
