@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.82';
+  const _swVersion='v5.83';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -4865,7 +4865,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.82';
+const APP_VERSION='v5.83';
 
 const _desktopPickerMq=window.matchMedia('(hover:hover) and (pointer:fine)');
 const THEME_STORAGE_KEY='receiptDbTheme';
@@ -6329,6 +6329,29 @@ function fmtDateGroup(iso){
   const[y,m]=iso.split('-');return `${y}년 ${parseInt(m,10)}월`;
 }
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+// 오픈마켓 자동 태그 — 가게명이 오픈마켓 플랫폼이면 '오픈마켓' + 플랫폼 이름 태그를 더한다(사용자 지시: 전부 오픈마켓, 플랫폼별로 나눠서).
+// 이미 있는 태그는 건드리지 않고 지운 태그를 되살리지도 않는다(저장할 때·기존 영수증 1회 정리 때만 호출).
+const OPEN_MARKETS=[['쿠팡',['쿠팡','coupang']],['11번가',['11번가']],['G마켓',['g마켓','지마켓','gmarket']],['옥션',['옥션']],['스마트스토어',['스마트스토어','네이버쇼핑','네이버 쇼핑']],['SSG',['ssg','쓱닷컴']],['티몬',['티몬']],['위메프',['위메프']],['알리',['알리익스프레스','aliexpress','알리 ']],['테무',['테무','temu']],['토스쇼핑',['토스쇼핑','토스 쇼핑']]];
+function _openMarketTags(store){
+  const t=String(store||'').toLowerCase();if(!t)return [];
+  const hit=OPEN_MARKETS.find(([,kws])=>kws.some(k=>t.includes(k)));
+  return hit?['오픈마켓',hit[0]]:[];
+}
+function _omAddTags(tags,store){for(const x of _openMarketTags(store))if(!tags.includes(x))tags.push(x);return tags;}
+async function _omBackfill(){
+  try{
+    if(localStorage.getItem('om_backfill_v1'))return;
+    let n=0;
+    for(const r of receipts.slice()){
+      if(r.subId||(r.tags||[]).includes('오픈마켓'))continue;
+      const add=_openMarketTags(r.store);if(!add.length)continue;
+      const tags=(r.tags||[]).slice();let ch=false;for(const x of add)if(!tags.includes(x)){tags.push(x);ch=true;}
+      if(ch){await dbPut('receipts',{...r,tags,updatedAt:nowISO()});n++;}
+    }
+    localStorage.setItem('om_backfill_v1','1');
+    if(n){await loadAll();try{renderSide();}catch(e){}toast(`오픈마켓 영수증 ${n}건에 태그를 붙였어요`);dbxSyncNow(true);}
+  }catch(e){}
+}
 function nowISO(){return new Date().toISOString();}
 function _newId(date){
   // rec_YYYYMMDD_NNN_<rand> — 같은 날짜 중 가장 큰 NNN +1 뒤에 기기별 난스를 붙인다.
@@ -8109,6 +8132,7 @@ const _addSaveCore=async()=>{
   const _gjName=_gjComposed();const _gjP=_gjPerson();
   if(_gjName)p.store=_gjName;
   if(_gjP&&!tags.includes(_gjP))tags.push(_gjP);
+  _omAddTags(tags,p.store);
   // 이름 비어있는 품목은 자동 제거 (편집 중 빈 라인이 남았을 수 있음)
   const cleanItems=(p.items||[])
     .filter(it=>(it.name||'').trim())
@@ -8652,6 +8676,7 @@ async function _saveDirectEntry(){
   const tags=(document.getElementById('tagInp').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const finalCat=document.getElementById('catInp').value.trim();
   if(_gjP&&!tags.includes(_gjP))tags.push(_gjP);
+  _omAddTags(tags,finalStore);
   const rec={
     id,
     date:dateVal,
@@ -16490,6 +16515,7 @@ function _dbxBindEvents(){
     await loadStoreCatMap();
     await loadRelationGroups();
     await loadAll();
+    _omBackfill();
     // 화면 폭 기준 초기 탭: 데스크탑 → 추가, 모바일 → 내역 목록
     if(!_isMobileLayout()) switchTab('input');
     else{_mobileListMode='list';switchTab('list');}
