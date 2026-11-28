@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.85';
+  const _swVersion='v5.86';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -740,6 +740,11 @@ svg{display:block;flex-shrink:0;}
 .srch-stat-lbl{font-size:10.5px;color:var(--label3);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;}
 .srch-stat-val{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;}
 .srch-stat-avg .srch-stat-lbl,.srch-stat-avg .srch-stat-val{color:var(--blue-txt);}
+.om-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;}
+.om-chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:100px;border:1px solid var(--sep);background:var(--card);color:var(--label);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
+.om-chip b{font-weight:600;color:var(--label2);}.om-chip span{font-weight:400;color:var(--label3);font-variant-numeric:tabular-nums;}
+.om-chip.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue-txt);}
+@media(hover:hover){.om-chip:hover{border-color:var(--blue);}}
 .srch-table{width:100%;border-collapse:collapse;margin-bottom:4px;}
 .srch-table th{font-size:11px;font-weight:600;color:var(--label2);padding:8px 8px;text-align:left;border-bottom:1px solid var(--sep);background:var(--fill2);}
 .srch-table th:last-child,.srch-table td:last-child{text-align:right;}
@@ -4865,7 +4870,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.85';
+const APP_VERSION='v5.86';
 
 const _desktopPickerMq=window.matchMedia('(hover:hover) and (pointer:fine)');
 const THEME_STORAGE_KEY='receiptDbTheme';
@@ -6339,7 +6344,7 @@ function fmtDateGroup(iso){
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 // 오픈마켓 자동 태그 — 가게명이 오픈마켓 플랫폼이면 '오픈마켓' + 플랫폼 이름 태그를 더한다(사용자 지시: 전부 오픈마켓, 플랫폼별로 나눠서).
 // 이미 있는 태그는 건드리지 않고 지운 태그를 되살리지도 않는다(저장할 때·기존 영수증 1회 정리 때만 호출).
-const OPEN_MARKETS=[['쿠팡',['쿠팡','coupang']],['11번가',['11번가']],['G마켓',['g마켓','지마켓','gmarket']],['옥션',['옥션']],['네이버',['스마트스토어','네이버쇼핑','네이버 쇼핑','네이버플러스','네이버 플러스','브랜드스토어']],['SSG',['ssg','쓱닷컴']],['티몬',['티몬']],['위메프',['위메프']],['알리',['알리익스프레스','aliexpress','알리 ']],['테무',['테무','temu']],['토스쇼핑',['토스쇼핑','토스 쇼핑']]];
+const OPEN_MARKETS=[['쿠팡이츠',['쿠팡이츠']],['쿠팡',['쿠팡','coupang']],['11번가',['11번가']],['G마켓',['g마켓','지마켓','gmarket']],['옥션',['옥션']],['네이버',['스마트스토어','네이버쇼핑','네이버 쇼핑','네이버플러스','네이버 플러스','브랜드스토어','네이버페이']],['SSG',['ssg','쓱닷컴']],['티몬',['티몬']],['위메프',['위메프']],['알리',['알리익스프레스','aliexpress','알리 ']],['테무',['테무','temu']],['토스쇼핑',['토스쇼핑','토스 쇼핑']]];
 function _openMarketTags(store){
   const t=String(store||'').toLowerCase();if(!t)return [];
   const hit=OPEN_MARKETS.find(([,kws])=>kws.some(k=>t.includes(k)));
@@ -6352,6 +6357,30 @@ function _omMarketTags(market){
   return ['오픈마켓',m.slice(0,20)];
 }
 function _omAddTags(tags,store,market){for(const x of [..._openMarketTags(store),..._omMarketTags(market)])if(!tags.includes(x))tags.push(x);return tags;}
+function _receiptPlatform(r){
+  const t=r.tags||[];const hit=OPEN_MARKETS.find(([n])=>t.includes(n));
+  if(hit)return hit[0];
+  return t.includes('오픈마켓')?(_openMarketTags(r.store)[1]||''):'';
+}
+async function _omPlatformFix(){
+  try{
+    if(localStorage.getItem('om_platform_v1'))return;
+    let n=0;
+    for(const r of receipts.slice()){
+      if(r.subId)continue;
+      const t=(r.tags||[]).slice();const add=_openMarketTags(r.store);if(!add.length)continue;
+      const plat=add[1];const has=OPEN_MARKETS.map(([x])=>x).filter(x=>t.includes(x));
+      let ch=false,nt=t;
+      if(t.includes('오픈마켓')){
+        if(!has.length){nt=[...t,plat];ch=true;}
+        else if(plat==='쿠팡이츠'&&has.includes('쿠팡')){nt=t.filter(x=>x!=='쿠팡');nt.push('쿠팡이츠');ch=true;}
+      }else if(/네이버페이/.test(r.store||'')){nt=[...t,'오픈마켓',plat];ch=true;}
+      if(ch){await dbPut('receipts',{...r,tags:nt,updatedAt:nowISO()});n++;}
+    }
+    localStorage.setItem('om_platform_v1','1');
+    if(n){await loadAll();try{renderSide();}catch(e){}}
+  }catch(e){}
+}
 async function _omRenameNaver(){
   try{
     if(localStorage.getItem('om_rename_naver_v1'))return;
@@ -9044,16 +9073,21 @@ function renderSearchSummaryHtml(q, filtered){
     // 영수증 레벨 매칭 — 목록 테이블
     const sorted=[...filtered].sort((a,b)=>b.date.localeCompare(a.date));
     const total=sorted.reduce((s,r)=>s+(r.total||0),0);
-    const hasPayer=sorted.some(r=>r.paidBy);
+    const plat=new Map();
+    sorted.forEach(r=>{const pl=_receiptPlatform(r);if(pl){const o=plat.get(pl)||{n:0,sum:0};o.n++;o.sum+=(r.total||0);plat.set(pl,o);}});
+    const hasPlat=plat.size>0;
+    const curQ=(searchQuery||'').trim();
+    const chips=hasPlat?`<div class="om-chips">${plat.has(curQ)?'<button type="button" class="om-chip" data-srchq="오픈마켓">오픈마켓 전체</button>':''}${[...plat.entries()].sort((x,y)=>y[1].n-x[1].n).map(([k,o])=>`<button type="button" class="om-chip${curQ===k?' on':''}" data-srchq="${escapeHtml(k)}">${escapeHtml(k)} <b>${o.n}건</b><span>${fmtMoney(o.sum)}원</span></button>`).join('')}</div>`:'';
     bodyHtml=`<div class="section-hd" style="margin-top:0;">영수증 목록 <span style="font-weight:500;color:var(--label3);text-transform:none;letter-spacing:0;">${filtered.length}건</span></div>
+    ${chips}
     <table class="srch-table">
-      <thead><tr><th>일자</th><th>매장명</th><th>카테고리</th>${hasPayer?'<th>결제자</th>':''}<th>총액</th></tr></thead>
+      <thead><tr><th>일자</th><th>매장명</th>${hasPlat?'<th>플랫폼</th>':''}<th>카테고리</th><th>총액</th></tr></thead>
       <tbody>${sorted.map(r=>`
         <tr class="srch-row" data-id="${escapeHtml(r.id)}" role="button" tabindex="0">
           <td style="white-space:nowrap;">${fmtDateKor(r.date)}</td>
           <td>${escapeHtml(r.store||'')}</td>
+          ${hasPlat?`<td>${escapeHtml(_receiptPlatform(r)||'—')}</td>`:''}
           <td>${escapeHtml(getCategoryLabel(r.category)||'—')}</td>
-          ${hasPayer?`<td>${escapeHtml(r.paidBy||'—')}</td>`:''}
           <td>${fmtMoney(r.total||0)}원</td>
         </tr>`).join('')}
       </tbody>
@@ -11672,6 +11706,10 @@ function _ledgerPeriodLabel(){
 
 
 function _bindReceiptRows(root){
+  root.querySelectorAll('.om-chip[data-srchq]').forEach(b=>{
+    if(b.dataset.bound)return;b.dataset.bound='1';
+    b.addEventListener('click',()=>{const inp=document.getElementById('searchInp');if(!inp)return;inp.value=b.dataset.srchq;inp.dispatchEvent(new Event('input',{bubbles:true}));_applySearchInput(true);});
+  });
   root.querySelectorAll('.srch-row[data-id]').forEach(row=>{
     if(row.dataset.bound)return;
     row.dataset.bound='true';
@@ -16543,7 +16581,7 @@ function _dbxBindEvents(){
     await loadStoreCatMap();
     await loadRelationGroups();
     await loadAll();
-    _omBackfill().then(_omRenameNaver);
+    _omBackfill().then(_omRenameNaver).then(_omPlatformFix);
     // 화면 폭 기준 초기 탭: 데스크탑 → 추가, 모바일 → 내역 목록
     if(!_isMobileLayout()) switchTab('input');
     else{_mobileListMode='list';switchTab('list');}
