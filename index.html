@@ -59,7 +59,7 @@
 // 설치형 앱은 온라인에서 항상 최신 문서를 먼저 받고, 연결이 끊긴 경우에만
 // 버전별 앱 셸 캐시로 되돌아간다. 새 워커가 활성화되면 열린 옛 문서를 한 번만 자동 갱신한다.
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  const _swVersion='v5.83';
+  const _swVersion='v5.84';
   let _swRegistration=null,_swReloading=false;
   const _checkAppUpdate=async()=>{
     try{
@@ -4865,7 +4865,7 @@ body.picker-modal-open{overscroll-behavior:none;}
 //   ⑧ 분담 칩 여백. ⑨ 참석 내역 인원/분담금 우측정렬. ⑩ 전역 tabular-nums(더치페이식 숫자·콤마 정렬).
 // v3.35 — 사람별 분담 정확도: 한턱(treat)·깍두기(splitExclude/제외) + '참석자별 분담'→'사람별 분담'(적응형
 //   부제) + 이름 클릭→인물 검색. 계산은 _receiptShare/_participantSplit 단일 진실원으로 통일.
-const APP_VERSION='v5.83';
+const APP_VERSION='v5.84';
 
 const _desktopPickerMq=window.matchMedia('(hover:hover) and (pointer:fine)');
 const THEME_STORAGE_KEY='receiptDbTheme';
@@ -6074,6 +6074,7 @@ const GPT_PROMPT=`이 영수증을 정확히 아래 형식으로만 정리해줘
 시간: HH:MM
 총액: ##,###원
 결제수단: 카드 또는 현금 또는 계좌이체
+판매처: 오픈마켓 이름
 
 품목명 | 수량 | 단가 | 금액
 
@@ -6082,7 +6083,9 @@ const GPT_PROMPT=`이 영수증을 정확히 아래 형식으로만 정리해줘
 쿠폰 할인 | 1 | -500 | -500
 
 규칙:
-- 시간은 영수증에 찍힌 결제(거래) 시각을 24시간제로 적고, 영수증에 시간이 없으면 시간 줄을 빼줘.
+- 시간은 영수증에 찍힌 결제(거래) 시각을 24시간제로 적어줘. '결제일자'·'거래일시'처럼 날짜 옆에 시각이 붙어 있으면 그 시각을 써. 영수증에 시간이 없으면 시간 줄을 빼줘.
+- 판매처는 쿠팡·11번가·G마켓·옥션·네이버 스마트스토어·SSG·티몬·위메프·알리·테무 같은 오픈마켓·온라인몰에서 산 경우에만 그 이름을 적고(네이버페이·카카오페이·토스페이 같은 결제 서비스 영수증이어도 상품 주문번호·판매자 정보가 있으면 어느 몰인지 판단해서 적어줘), 오프라인 매장이거나 모르겠으면 판매처 줄을 통째로 빼줘.
+- 결제 서비스(네이버파이낸셜·카카오페이·토스페이 등)나 PG사가 가맹점으로 찍혀 있고 '판매자 정보'가 따로 있으면, 매장명에는 가맹점이 아니라 판매자 상호를 적어줘.
 - 총액은 상품 합계가 아니라 할인·쿠폰·포인트 등을 반영한 실제 최종 결제금액으로 적어줘.
 - 품목명, 옵션(사이즈 포함), 단가가 모두 같은 상품이 여러 줄이면 반드시 한 줄로 합쳐줘.
 - 같은 상품을 합칠 때 수량은 합산하고 금액은 단가 × 수량으로 계산해줘.
@@ -6109,12 +6112,12 @@ function _parseDate(s){
   if(!m)return '';
   return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
 }
-const _RX_LABEL=/(매장명|일자|날짜|시간|총액|합계|결제수단)\s*[:：]/g;
+const _RX_LABEL=/(매장명|일자|날짜|시간|총액|합계|결제수단|판매처)\s*[:：]/g;
 const _RX_ITEM_TAIL=/(\|\s*-?[\d.,]+\s*\|\s*-?[\d.,]+\s*\|\s*(?:-?[\d.,]+|증정품))[ \t]+(?=[^\s|])/g;
 function _unflattenReceiptText(raw){
   return String(raw).split(/\r?\n/).map(line=>{
     let l=line;
-    if((l.match(_RX_LABEL)||[]).length>=2)l=l.replace(/\s+(?=(?:매장명|일자|날짜|시간|총액|합계|결제수단)\s*[:：])/g,'\n');
+    if((l.match(_RX_LABEL)||[]).length>=2)l=l.replace(/\s+(?=(?:매장명|일자|날짜|시간|총액|합계|결제수단|판매처)\s*[:：])/g,'\n');
     l=l.replace(/\s+(?=품목명\s*\|\s*수량\s*\|\s*단가\s*\|\s*금액)/g,'\n').replace(/(품목명\s*\|\s*수량\s*\|\s*단가\s*\|\s*금액)[ \t]+(?=[^\s|])/g,'$1\n');
     if((l.match(/\|\s*-?[\d.,]+\s*\|\s*-?[\d.,]+\s*\|\s*(?:-?[\d.,]+|증정품)/g)||[]).length>=2)l=l.replace(_RX_ITEM_TAIL,'$1\n');
     return l;
@@ -6147,6 +6150,11 @@ function parseReceiptText(raw){
     }
     if(/^총액\s*[:：]/.test(line)||/^합계\s*[:：]/.test(line)){
       out.total=_stripNum(line.replace(/^(총액|합계)\s*[:：]\s*/,''));continue;
+    }
+    if(/^판매처\s*[:：]/.test(line)){
+      const v=line.replace(/^판매처\s*[:：]\s*/,'').trim();
+      if(v&&!/^(없음|해당\s*없음|-|x)$/i.test(v))out.market=v;
+      continue;
     }
     // 결제수단 — 링크(#r=)나 붙여넣기만으로 폼이 완성되도록 읽는다.
     // 이 줄이 없으면 항상 기본값 '카드'로 남아 현금 영수증을 손으로 고쳐야 했다.
@@ -6337,7 +6345,13 @@ function _openMarketTags(store){
   const hit=OPEN_MARKETS.find(([,kws])=>kws.some(k=>t.includes(k)));
   return hit?['오픈마켓',hit[0]]:[];
 }
-function _omAddTags(tags,store){for(const x of _openMarketTags(store))if(!tags.includes(x))tags.push(x);return tags;}
+function _omMarketTags(market){
+  const m=String(market||'').trim();if(!m)return [];
+  const t=_openMarketTags(m);if(t.length)return t;
+  if(/네이버/.test(m))return ['오픈마켓','스마트스토어'];
+  return ['오픈마켓',m.slice(0,20)];
+}
+function _omAddTags(tags,store,market){for(const x of [..._openMarketTags(store),..._omMarketTags(market)])if(!tags.includes(x))tags.push(x);return tags;}
 async function _omBackfill(){
   try{
     if(localStorage.getItem('om_backfill_v1'))return;
@@ -8132,7 +8146,7 @@ const _addSaveCore=async()=>{
   const _gjName=_gjComposed();const _gjP=_gjPerson();
   if(_gjName)p.store=_gjName;
   if(_gjP&&!tags.includes(_gjP))tags.push(_gjP);
-  _omAddTags(tags,p.store);
+  _omAddTags(tags,p.store,p.market);
   // 이름 비어있는 품목은 자동 제거 (편집 중 빈 라인이 남았을 수 있음)
   const cleanItems=(p.items||[])
     .filter(it=>(it.name||'').trim())
@@ -12574,6 +12588,7 @@ function _receiptCopyText(r){
   if(r.time)head.push(`시간: ${r.time}`);
   head.push(`총액: ${fmtMoney(r.total||0)}원`);
   if(pm)head.push(`결제수단: ${pm}`);
+  if((r.tags||[]).includes('오픈마켓')){const mk=(r.tags||[]).find(x=>OPEN_MARKETS.some(([n])=>n===x));if(mk)head.push(`판매처: ${mk}`);}
   const lines=(r.items||[]).map(it=>`${String(it.name||'').replace(/\|/g,'/')} | ${it.quantity||0} | ${fmtMoney(it.unitPrice||0)} | ${(it.amount||0)===0?'증정품':fmtMoney(it.amount)}`);
   return head.join('\n')+'\n\n품목명 | 수량 | 단가 | 금액\n\n'+lines.join('\n');
 }
